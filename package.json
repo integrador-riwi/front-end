@@ -1,12 +1,15 @@
 {
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
+  "name": "front-end",
+  "version": "1.0.0",
+  "description": "Frontend SPA for RIWI integrator project platform",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "vite": "^7.3.1"
