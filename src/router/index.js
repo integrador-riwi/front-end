@@ -1,4 +1,4 @@
-import "../css/main.css";
+import "../../src/assets/styles/main.css";
 
 class App {
   constructor() {
