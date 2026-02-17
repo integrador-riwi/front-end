@@ -1,4 +1,4 @@
-import "../../src/assets/styles/main.css";
+// import "./../assets/styles/main.css";
 
 class App {
   constructor() {
@@ -6,8 +6,10 @@ class App {
     this.init();
   }
 
-  init() {
-    this.app.innerHTML = "<h1>Start</h1><p>Melo</p>";
+  async init() {
+    // this.app.innerHTML = "<h1>Start</h1><p>Melo</p>";
+    const html = await fetch(`./../../pages/login.html`).then(r => r.text())
+    this.app.innerHTML = html;
   }
 }
 
