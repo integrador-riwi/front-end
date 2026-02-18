@@ -1,0 +1,73 @@
+:root {
+  --accent: #6b5cff;
+  --accent-glow: rgba(107, 92, 255, 0.22);
+  --accent-dim: rgba(107, 92, 255, 0.1);
+  --navy: #181e4b;
+  --lilac: #eaa2fc;
+  --mint: #5acca4;
+  --coral: #fe654f;
+  --gold: #e6ca52;
+
+  --bg: #f4f3ff;
+  --bg-panel: #ffffff;
+  --bg-input: #fafafe;
+  --border: rgba(107, 92, 255, 0.15);
+  --bg-header: #aea8a8c9;
+
+  --text-primary: #181e4b;
+  --text-muted: #7b7fa8;
+  --text-dim: #b8bbd6;
+  --text-gray-200: #edf2f7;
+  --text-gray-400: #6b7280;
+  --text-gray-500: #a0aec0;
+  --text-gray-700: #4a5568;
+  --text-gray-800: #2d3748;
+
+  --danger: #fe654f;
+  --danger-dim: rgba(254, 101, 79, 0.1);
+  --main-font: "Ubuntu", sans-serif;
+
+  --color-primary: #6b5cff;
+  --color-primary-dark: #5646e8;
+  --color-sidebar: #181e4b;
+  --color-bg: #f3f4f8;
+  --color-surface: #ffffff;
+  --color-text-main: #181e4b;
+  --color-text-header: #a0aec0;
+  --color-title-header: #2d3748;
+  --color-button-icon-theme: #a0aec0;
+  --color-button-text-theme: #4a5568;
+  --color-button-text-primary : #a0aec0;
+  --color-hover-button: #f7fafc;
+  --bg-card: #eaedf1c4;
+  
+  --green-100: #dbfff2;
+  --pink-100: #fcedff;
+
+  --color-accent: #eaa2fc;
+  --color-success: #5acca4;
+  --color-warning: #e6ca52;
+  --color-alert: #fe654f;
+
+  --text-main: #1f2937;
+  --text-sidebar: #a0aec0;
+}
+
+.dark{
+    --color-primary: #5646e8;
+    --color-bg: #121212;
+    --color-surface: #1e1e1e;
+    --color-text-main: #fff;
+    --color-text-header: #e4e1e1;
+    --color-title-header: #ffffff;
+    --color-button-icon-theme: #6b7280;
+    --color-button-text-theme: #edf2f7;
+    --color-hover-button: #4a5568;
+    --green-100: #1ad895;
+    --pink-100: #f7d9fe;
+    --text-muted: #bfc1d7;
+}
+
+.bg-primary-dark {
+  background-color: var(--color-primary-dark);
+}
