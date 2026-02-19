@@ -3,6 +3,8 @@ import Header from "../components/header/header.js";
 import { getUser, clearSession } from "../utils/auth.js";
 import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
+import "../assets/styles/projects.css";
+import "../assets/styles/components.css";
 
 export default class CreateEvent {
   constructor(router) {
@@ -19,9 +21,9 @@ export default class CreateEvent {
     if (!dashboard) {
       clearSession(this.router);
       return;
-    }    
-
-    const mainContent = await fetch (`../../pages/create_dashboard.html`).then(r => r.text())
+    }
+    
+    const mainContent = await fetch (`../../pages/teams_dashboard.html`).then(r => r.text())
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -31,7 +33,6 @@ export default class CreateEvent {
       </main>
     `;
     this.header.mountBreadcrumb();
-    this.header.attachEventHandlers();
 
     this.navbar.attachEventHandlers();
     dashboard.attachEventHandlers?.();

@@ -8,36 +8,23 @@ export const HEADER_LINKS_BY_VIEW = {
     { label: "Dashboard",         route: "dashboard",      },
     { label: "Teams & Projects",  route: "projects",       },
   ],
-  TL_SOFT_SKILLS: [
-    { label: "Dashboard",         route: "dashboard",      },
-    { label: "Projects to Grade", route: "evaluations",    },
-    { label: "My Evaluations",    route: "my-evaluations", },
-    { label: "Teams & Projects",  route: "projects",       },
-    { label: "Events",            route: "events",         },
-  ],
-  TL_ENGLISH: [
-    { label: "Dashboard",         route: "dashboard",      },
-    { label: "Projects to Grade", route: "evaluations",    },
-    { label: "My Evaluations",    route: "my-evaluations", },
-    { label: "Teams & Projects",  route: "projects",       },
-    { label: "Events",            route: "events",         },
-  ],
-  CODER: [
-    { label: "Dashboard",    route: "dashboard",    },
-    { label: "My Project",   route: "my-project",   },
-    { label: "Deliverables", route: "deliverables", },
-    { label: "My Grades",    route: "my-grades",    },
-    { label: "Feedback",     route: "feedback",     },
-    { label: "Events",       route: "events",       },
-  ],
-  STAFF: [
-    { label: "Dashboard",        route: "dashboard",     },
-    { label: "Events",           route: "events",        },
-    { label: "Teams & Projects", route: "projects",      },
-    { label: "Final Results",    route: "final-results", },
-  ],
+};
+
+export const HEADER_LAYOUT_BY_ROUTE = {
+  "events/create": {
+    variant: "create-event",
+    title: "Create New Event",
+  },
+  "projects": {
+    variant: "teams",
+    title: null,
+  },
 };
 
 export const getHeaderLinks = (view) => {
   return HEADER_LINKS_BY_VIEW[view] ?? [];
+};
+
+export const getHeaderLayout = (route) => {
+  return HEADER_LAYOUT_BY_ROUTE[route] ?? null;
 };
