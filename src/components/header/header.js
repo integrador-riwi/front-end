@@ -87,11 +87,7 @@ export default class Header {
           </div>
 
           <div class="d-flex align-items-center gap-2">
-            <button class="app-btn-outline d-flex align-items-center gap-2">
-              ${icons.visibility()}
-              Preview
-            </button>
-
+  
             <button class="app-btn-primary d-flex align-items-center gap-2">
               ${icons.save()}
               Publish Event
@@ -114,27 +110,10 @@ export default class Header {
         <nav class="app-breadcrumb">
           <ol id="breadcrumb" class="breadcrumb mb-3"></ol>
         </nav>
-
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-
-          <div class="w-100" style="max-width: 380px;">
-            <input 
-              type="text"
-              class="app-search-input"
-              placeholder="Search projects, tasks, or people..."
-            />
-          </div>
-
-          <div>
-            <button class="app-btn-primary">
-              New Project
-            </button>
-          </div>
-
-        </div>
-
+          <h1 class="app-page-title mb-0">
+              Projects Overview
+          </h1>
       </div>
-
     </header>
   `;
   }

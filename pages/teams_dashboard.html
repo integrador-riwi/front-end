@@ -1,12 +1,20 @@
-<main class="container py-5">
+<main class="container py-3">
   <div
-    class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4"
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
   >
-    <div>
-      <h1 class="app-page-title mb-2">Projects Overview</h1>
-      <p class="app-page-subtitle mb-0">
-        Manage and track progress across all departments
-      </p>
+    <div class="d-flex w-100 gap-3">
+      <div class="w-100" style="max-width: 480px">
+        <input
+          type="text"
+          class="app-search-input"
+          placeholder="Search projects, tasks, or people..."
+        />
+      </div>
+
+      <button class="app-btn-primary d-flex align-items-center gap-2">
+        <i class="bi bi-search"></i>
+        Search
+      </button>
     </div>
 
     <div class="d-none d-md-flex app-view-toggle">
@@ -18,403 +26,86 @@
       </button>
     </div>
   </div>
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4"
+  >
+    <div></div>
+  </div>
 
   <div class="d-flex flex-wrap gap-2 mb-5 overflow-auto pb-2">
     <button class="app-filter-btn active">All Projects</button>
 
     <button class="app-filter-btn">
       <span class="app-tag-dot engineering"></span>
-      Engineering
+      Turing
     </button>
 
     <button class="app-filter-btn">
       <span class="app-tag-dot marketing"></span>
-      Marketing
+      Tesla
     </button>
 
     <button class="app-filter-btn">
       <span class="app-tag-dot design"></span>
-      Design
+      Hamilton
     </button>
 
     <button class="app-filter-btn">
       <span class="app-tag-dot hr"></span>
-      HR & Ops
+      Thompson
+    </button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot hr"></span>
+      Ritchie
     </button>
   </div>
 
   <div class="row g-4">
-    <div
-      class="col-12 col-md-6 col-lg-4"
-    >
-<div class="app-project-card">
-
-    <div class="app-project-image">
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk" alt="Project image" class="img-fluid">
-      <span class="app-project-badge engineering">
-        Engineering
-      </span>
-      <button class="app-card-menu">
-        <span class="material-icons-round">more_horiz</span>
-      </button>
-    </div>
-
-    <div class="p-4">
-      <h5 class="app-card-title">
-        API Migration V2
-      </h5>
-
-      <p class="app-card-text">
-        Moving legacy endpoints to the new serverless architecture...
-      </p>
-
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="app-avatar-group">
-          <!-- avatars -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="app-project-card">
+        <div class="app-project-image">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
+            alt="Project image"
+            class="img-fluid"
+          />
+          <span class="app-project-badge engineering"> Turing </span>
+          <button class="app-card-menu">
+            <span class="material-icons-round d-flex">more_horiz</span>
+          </button>
         </div>
 
-        <div class="app-date-badge">
-          <span class="material-icons-round small me-1">schedule</span>
-          Oct 24
-        </div>
-      </div>
+        <div class="p-4">
+          <h5 class="app-card-title">API Migration V2</h5>
 
-      <div class="d-flex justify-content-between small mb-1">
-        <span>Progress</span>
-        <span class="app-progress-text">75%</span>
-      </div>
+          <p class="app-card-text">
+            Moving legacy endpoints to the new serverless architecture...
+          </p>
 
-      <div class="progress app-progress-bar">
-        <div class="progress-bar" style="width:75%"></div>
-      </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="app-avatar-group">
+              <!-- avatars -->
+            </div>
 
-    </div>
-  </div>
-      <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          API Migration V2
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2">
-          Moving legacy endpoints to the new serverless architecture to improve
-          latency and scale.
-        </p>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex -space-x-3">
-            <img
-              alt="User 1"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
-            />
-            <img
-              alt="User 2"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR7RwLA5-B6IgGrG27LG4t3pIPYPkBMK-UOqQPDZsFflbFkPAzkBG7JLTJIZRXv3RE4T02ltjJiNS0OyGsa9X6HHAQ-PPLzc_H3C9mOCeIGzP4dydACJ3qD3_dtwHVPHIPOxQqTZGlBak4D_qm5-4rjgBpSQIOH58SmSNhYAfOS8VCTvt2PPCxA8LRpTHpuzSP0nuymPt4qSllY1lE5vwo_wMqbFtt-L-RI32iDhVdJXFsMT-jBvYSHR_Xr3UoJ5jMa_ZqxfvhWPc"
-            />
-            <img
-              alt="User 3"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhbYpkAJjWPIjiQ5GvTP2FlMZHWE-oj6xaeA_NDg_ZPAKrW_NHRvYfPnZnL5P6nbjCsDYNyb6IiWEY_CG8PzTtQpXO34FEL-lJEWPDCJY_eFmw3K78UHsXEP9DE5cWdKdhdQ4fQdkUF9vA3t7E6n19_jdBW-fbUlzNFJkw7xIsuF_eGWqG-d99OiHGQdZnkZA6yn-UzfWbDeShL8C9KeJ08AQzqpFUZ-bqk7S-vr9ghPlnRw8USSqOjLYippSFOq8M8FhRhi3yoj0"
-            />
-            <div
-              class="flex items-center justify-center w-8 h-8 text-xs font-medium text-gray-600 bg-gray-100 border-2 border-white rounded-full dark:border-gray-800 dark:bg-gray-700 dark:text-gray-300"
-            >
-              +2
+            <div class="app-date-badge">
+              <span class="material-icons-round small me-1">schedule</span>
+              Oct 24
             </div>
           </div>
-          <div
-            class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded"
-          >
-            <span class="material-icons-round text-sm mr-1">schedule</span>
-            Oct 24
+
+          <div class="d-flex justify-content-between small mb-1">
+            <span>Progress</span>
+            <span class="app-progress-text">75%</span>
+          </div>
+
+          <div class="progress app-progress-bar">
+            <div class="progress-bar" style="width: 75%"></div>
           </div>
         </div>
-        <div
-          class="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
-        >
-          <span>Progress</span>
-          <span class="text-purple-600 dark:text-purple-400">75%</span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 dark:bg-gray-700">
-          <div class="bg-primary h-1.5 rounded-full" style="width: 75%"></div>
-        </div>
       </div>
+      
     </div>
-    <div
-      class="col-12 col-md-6 col-lg-4"
-    >
-      <div class="relative h-40 overflow-hidden bg-gray-100 dark:bg-slate-800">
-        <img
-          alt="Design sketches"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSqlO0WbDoMPbCANXhiAsMHKyJb26Ps8p45JQOaBashn_3GHyAReE2JsjPrck4P2M8KyEt-ZnxUFTIr8Ygpq0OcvvAQli_bDTFRTkA7wVQx8HU-AOxvm9Wnh7slppEBm-1P6RUmdtjBd-yh1h-MRx4n0A29s4rYsraU4s9gK2jfcJzsGIw2r7EuWTyBoKb49KeMmOfVP2ur5xjIaiQ5lHv4BmUrEz_LZ7CNsRDoAynX2Xy7SXoR8_LHrTQGizTWJ2XhD9lpuwIrcE"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-        ></div>
-        <div class="absolute top-4 left-4">
-          <span
-            class="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900 dark:text-emerald-100 rounded-full backdrop-blur-sm"
-            >Design</span
-          >
-        </div>
-        <button
-          class="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-        >
-          <span class="material-icons-round text-lg">more_horiz</span>
-        </button>
-      </div>
-      <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Mobile App Redesign
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2">
-          Complete UI overhaul focusing on dark mode accessibility and
-          simplified nav.
-        </p>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex -space-x-3">
-            <img
-              alt="User 4"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9XbJ0E0iUbk_8OJZmvvnKHY7mZgACmrnuI_HpQibNjotLfofpUuYtMiYNq43kk8IHX5tf6KeIzrMoxLiXxZuslU5ZUjZ1TLY88usmkzyGcDxZ7rcUmpT61RxKB4IFIIhZubpd3Qt24RlabEWBZvRKyanZmBzZq7wa4x5Vu0KWz2PXipCE-UP7ZO3G1Vqd6BhFQtjqletLU_tuMnJ-FtxjNr3RvUhmoyHcMKcjXmEf262EJU03gmAAAw0chpoWWij0F1KM5_1LhaU"
-            />
-            <img
-              alt="User 5"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWFLtE7w-kF3tESQnYUhxJaw0BFq-9B6oApzp21jwL3RDup9hlxmoAzQJI05aWKbfQwI83po3jNwMxG3rBSdhbQTBHGZYbrIHg1B_JiHOULrTcBkq3TqVxjCyYIcLSa_fElhZfiLTlJ-wJLNZHlk4C9hW484gz97y8lkj3Y0u5l0PoCy6FrHuYAvsSWseFV1XbbEDMwKfcvRk5KDy-NkP5HZ53FMNAuhybrj0uswLmLL_o41-h4pyH3OUhKa_iFU3HALI2olYtOUg"
-            />
-          </div>
-          <div
-            class="flex items-center text-xs text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-300 px-2 py-1 rounded"
-          >
-            <span class="material-icons-round text-sm mr-1">warning</span>
-            Due Tomorrow
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
-        >
-          <span>Progress</span>
-          <span class="text-emerald-600 dark:text-emerald-400">45%</span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 dark:bg-gray-700">
-          <div
-            class="bg-tag-design h-1.5 rounded-full"
-            style="width: 45%"
-          ></div>
-        </div>
-      </div>
-    </div>
-    <div
-      class="col-12 col-md-6 col-lg-4"
-    >
-      <div class="relative h-40 overflow-hidden">
-        <img
-          alt="Marketing meeting"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvrqwVQk9SRZKYibSoBPYmucePNK7Wg4vk8vGxQi7oPFm-IQbPogVz-r77SbwLMYbkepQjIOqTjlcwz0wye5dVPBSwEcLee0gAMOKT5a1k1XRxjRdCkx4C9STnj9y5IK0y-GdGF-LX2puE96m2oWS6daA26zRHY6rCWksiFcA9bfRxig2b4aX3be180-k4Ai0tQ97xTwT9q-uIWDYnJXPLNT2mrnwcnh92RbVSt3iLoisFMvSwccVGEIKc1XjyQqAewEm43Ez3U3o"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-        ></div>
-        <div class="absolute top-4 left-4">
-          <span
-            class="px-3 py-1 text-xs font-semibold text-orange-700 bg-orange-100 dark:bg-orange-900 dark:text-orange-100 rounded-full backdrop-blur-sm"
-            >Marketing</span
-          >
-        </div>
-        <button
-          class="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-        >
-          <span class="material-icons-round text-lg">more_horiz</span>
-        </button>
-      </div>
-      <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Q4 Campaign Launch
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2">
-          Coordination of social media assets, ad spend allocation, and
-          influencer...
-        </p>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex -space-x-3">
-            <img
-              alt="User 6"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDx5FyQibwBq5D_1SB6Bhdk4LYPdTzeMuYvIR5u2v3jQOdiWOQqet_S_WXByPE-o922uLtdHitjZLn79ELlNRdX1smKvQCjzMki-2dX5EGuVYvZP8ujC6x3iPQYEWe1Mif6hto5POJBU2WoUlO4tYhE9xRN4cqwNcL08y1D5rvM8qpIrc3GznXbRyWaAD6pfEcLy1851nsMrLT5XxHeluTRvsHV3CBW0gsjpFfZUteL7L8VXxNuHotzVk_1NzkJQsaSivsqG85GBo"
-            />
-            <img
-              alt="User 7"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCojoh26gsbnKHibQ4c65u4usFZDkm6KsqbGZe8xQlnnTON27JWWPTqKdaahwj6_lacbG2sW_kRBPvkf2RECN07UD1Xz9J_t9WON24fjbPXJGB22VE99_titSuT79MwGeiVi1_dtoO4_Kr-ynAi1VXfcglvXg3e2TXu8zYzSA-GcfITTiSLWCPdJ8upUJAOS30MzJEJ-qHoFg5lVjkTlcp8OtD_mXAsa44Dfp_TpqAmmQcEKhD66RkeARJ64AT2U1ui0RJi7_kKwXo"
-            />
-            <img
-              alt="User 8"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2_CteWzMQHuTUYRM7P4ZgqLJ40cr5qJW1VY7qzLYTcBVNZ24TTw_dtKbBWAVhapfcblPm0nYwre8RZymw8t1YVSWzWmbITXgVfH8TMay3bwwum0DsmkJpiQy_-EPKeng1te1pQyyZVQp26GBYF3qLa-k0adQuoF64vCIwMUvsIvN7jJL92WA5cqci606vObcPc8r5hQyT4Pb5dN1yM9GLSx-Y_8__GietHfKPRAf-6OahDH1RBN58Zj2vpuUnr4awe5Xa8iuIs8I"
-            />
-            <img
-              alt="User 9"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs01O5yiTmndY_Lvv5Y9IzW1DG0vsTjveYhN-r0gWga22NiA7ARUZu3hsl6JDaYKqB2MVO_Ab7qkRq_NSCltEndqa8wIlxV3fLqaPfBNsazljxyDPpMgCIJixRTqp7c1palfo8e8Bn6w0hF0EkaJdUzkZV8B3aupwlLQazqdMHsMmK9XwafZQs3GL77BWzekczcc0OEvDLJKU-Ax4O6XnDig9i3h3_m4CwkNW5C47LXMixrgP-vBYhGxE5h7rCySD8GgSPEZi-xD4"
-            />
-          </div>
-          <div
-            class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded"
-          >
-            <span class="material-icons-round text-sm mr-1">schedule</span>
-            Nov 12
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
-        >
-          <span>Progress</span>
-          <span class="text-orange-600 dark:text-orange-400">15%</span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 dark:bg-gray-700">
-          <div
-            class="bg-tag-marketing h-1.5 rounded-full"
-            style="width: 15%"
-          ></div>
-        </div>
-      </div>
-    </div>
-    <div
-      class="col-12 col-md-6 col-lg-4"
-    >
-      <div class="relative h-40 overflow-hidden">
-        <img
-          alt="Data charts"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOv5jY75V1Bg--vUllpX8lBLYpXrVfO8Pq6Iu6ZpIC6xU7Asz2Sbke2mRxF4-Dv0lYfiu6-PQG5VJvKDte7WCgLlH5cnXfdfwoM8ncIkVs38dQZPc9tfeqCjXCmXTATpHesolWbDJOzegJLKnFW5gDnWccM5ZLMBtofAY3qo69C656K-EI3C8z4c7jB89LIkOXz2rIO3Lwki4vLGS72yWNmjqVJQfSMRMdKKtq1DTPIeY-hiM2Mk3sjcodcP1psV7PZsptfBKLOJU"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-        ></div>
-        <div class="absolute top-4 left-4">
-          <span
-            class="px-3 py-1 text-xs font-semibold text-purple-700 bg-purple-100 dark:bg-purple-900 dark:text-purple-100 rounded-full backdrop-blur-sm"
-            >Engineering</span
-          >
-        </div>
-        <button
-          class="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-        >
-          <span class="material-icons-round text-lg">more_horiz</span>
-        </button>
-      </div>
-      <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Data Warehouse Integration
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2">
-          Setting up ETL pipelines from Salesforce to Snowflake for the
-          analytics team.
-        </p>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex -space-x-3">
-            <div
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-green-200 text-green-800 text-xs font-bold border-2 border-white dark:border-card-dark"
-            >
-              JS
-            </div>
-          </div>
-          <div
-            class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded"
-          >
-            <span class="material-icons-round text-sm mr-1">schedule</span>
-            Dec 01
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
-        >
-          <span>Progress</span>
-          <span class="text-purple-600 dark:text-purple-400">90%</span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 dark:bg-gray-700">
-          <div class="bg-primary h-1.5 rounded-full" style="width: 90%"></div>
-        </div>
-      </div>
-    </div>
-    <div
-      class="col-12 col-md-6 col-lg-4"
-    >
-      <div class="relative h-40 overflow-hidden">
-        <img
-          alt="Office handshake"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLDQN7G6NavuD75aNeNSuCWywW0LnUgiMD1O2UxUuke6HpkMHhPsfnNLuomWxvbI8sPmusAQ9bgZOTScpObdyS68ztKe24PkZjZ-tquTmWemre8GuMtYB8qDe5o58M1eVTMtAKGgcJqyuTvtLrzGsdPUl8VCvLsTwHV3PnRPeusq_iKwxpNiOyY0wwBdri1ho083Z0Nl-e4EkKqPuIbhq_OfhMOOafo7sEI2ANE73v-QkkkfpbaxAGKEz-E23Elu_ZnPJ8zC0a3To"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-        ></div>
-        <div class="absolute top-4 left-4">
-          <span
-            class="px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-100 rounded-full backdrop-blur-sm"
-            >HR &amp; Ops</span
-          >
-        </div>
-        <button
-          class="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-        >
-          <span class="material-icons-round text-lg">more_horiz</span>
-        </button>
-      </div>
-      <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          Onboarding Revamp
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2">
-          Creating new training modules and welcome kits for remote employees.
-        </p>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex -space-x-3">
-            <img
-              alt="User 10"
-              class="w-8 h-8 rounded-full border-2 border-white dark:border-card-dark"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsRY7dQWMVZotU2w5m5m2XJUQtXOPyQlsxcAA3YaEBPUEN_irDJkwuQfM3I_ACs_OfBeX9WGMT9d7xtJQaniStmdl4RMgTe_JNNf-k36oBh4esBu5Ql_gpC5LyTJ7ePpr1CGaqfF89S9vnyUfR5HjOptBLLOpOt8Z4ecvLlkPCe2trojxVSLHb3hZQbhsUdKDXmy6iuegS0exDBUYe_P3L1bUbb1vr6p1CkHX_4LmoSibNyaocd4TO_IHiQlBNMAf-Ogf66WLmmiQ"
-            />
-            <div
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-teal-800 text-teal-100 text-xs font-bold border-2 border-white dark:border-card-dark"
-            >
-              AK
-            </div>
-          </div>
-          <div
-            class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded"
-          >
-            <span class="material-icons-round text-sm mr-1">schedule</span>
-            Oct 30
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
-        >
-          <span>Progress</span>
-          <span class="text-yellow-600 dark:text-yellow-500">30%</span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 dark:bg-gray-700">
-          <div class="bg-tag-hr h-1.5 rounded-full" style="width: 30%"></div>
-        </div>
-      </div>
-    </div>
-    <button
-      class="group flex flex-col items-center justify-center h-full min-h-[400px] bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-primary hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-300"
-    >
-      <div
-        class="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-      >
-        <span class="material-icons-round text-3xl">add</span>
-      </div>
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
-        New Project
-      </h3>
-      <p class="text-sm text-center text-gray-500 dark:text-gray-400 px-8">
-        Create a new project workspace for your team.
-      </p>
-    </button>
+    </div>    
   </div>
 </main>
