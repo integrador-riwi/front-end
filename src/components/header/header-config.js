@@ -1,8 +1,8 @@
 export const HEADER_LINKS_BY_ROLE = {
   ADMIN: [
     { label: "Events",            route: "events"           },
-    { label: "Create New",        route: "events/create"    },
     { label: "Management",        route: "projects"         },
+    { label: "Create New",        route: "events/create"    },
   ],
   TL_DEVELOPMENT: [
     { label: "Dashboard",         route: "dashboard",      },

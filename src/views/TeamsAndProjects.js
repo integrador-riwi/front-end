@@ -4,12 +4,12 @@ import { getUser, clearSession } from "../utils/auth.js";
 import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
 
-export default class CreateEvent {
+export default class TeamsAndProjects {
   constructor(router) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
-    this.header = new Header(router);
+    this.header = new Header(router)
   }
 
   async render() {
@@ -33,8 +33,6 @@ export default class CreateEvent {
         ${mainContent}
       </main>
     `;
-    this.header.mountBreadcrumb();
-    this.header.attachEventHandlers();
 
     this.navbar.attachEventHandlers();
     dashboard.attachEventHandlers?.();

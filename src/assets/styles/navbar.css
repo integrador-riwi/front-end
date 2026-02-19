@@ -102,7 +102,7 @@
   color: #ffffff;
 }
 
-.nav-link.active {
+.nav-link .active {
   background-color: #6c63ff;
   color: #ffffff;
 }

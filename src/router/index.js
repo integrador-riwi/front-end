@@ -3,6 +3,7 @@ import "../assets/styles/main.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import CreateEvent from "../views/createEvent.js";
+import Teams from "../views/TeamsAndProjects.js";
 
 class App {
   constructor() {
@@ -40,6 +41,9 @@ class App {
         break;
       case "events/create":
         this.currentView = new CreateEvent(this);
+        break;
+      case "projects":
+        this.currentView = new Teams(this);
         break;
       default:
         this.navigate("login");

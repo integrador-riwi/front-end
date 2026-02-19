@@ -98,7 +98,7 @@ export const icons = {
     320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 
     357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z"/></svg>`,
 
-    chevron_rigth: () => `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - 
+    chevron_right: () => `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - 
       https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path fill="rgb(160, 174, 192)" d="M471.1 
       297.4C483.6 309.9 483.6 330.2 471.1 342.7L279.1 534.7C266.6 547.2 246.3 547.2 233.8 534.7C221.3 522.2 221.3 501.9 233.8 489.4L403.2 320L233.9 150.6C221.4 
       138.1 221.4 117.8 233.9 105.3C246.4 92.8 266.7 92.8 279.2 105.3L471.2 297.3z"/></svg>`,

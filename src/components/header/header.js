@@ -10,9 +10,45 @@ export default class Header {
     this.currentRoute = "events/create";
   }
 
-  render() {
-    const links = getHeaderLinks(this.user?.role);
+  mountBreadcrumb() {
+    const links = getHeaderLinks(this.user.role);
 
+    const breadcrumbHTML = this.renderBreadcrumb({
+      links,
+      currentRoute: this.currentRoute,
+      icons
+    });
+
+    const container = document.getElementById("breadcrumb");
+
+    if (container) {
+      container.innerHTML = breadcrumbHTML;
+    }
+  }
+
+  renderBreadcrumb({ links, currentRoute, icons }) {
+    const orderedItems = links
+      .filter(link => 
+        currentRoute.startsWith(link.route) ||
+        link.route === "projects"
+      )
+
+    return orderedItems
+      .map((item, index) => {
+        const isLast = index === orderedItems.length - 1;
+
+        return `
+          <li class="${isLast ? 'text-[var(--color-primary)] font-medium' : ''}">
+            ${item.label}
+          </li>
+          ${!isLast ? `<li>${icons.chevron_right()}</li>` : ''}
+        `;
+      })
+      .join("");
+  }
+
+  render() {
+    
     return `
         <header
           class="bg-[var(--color-surface)] text-[var(--color-text-header)] shadow-sm sticky top-0 z-20"
@@ -23,21 +59,7 @@ export default class Header {
             >
               <div>
                 <nav class="flex text-sm mb-1">
-                  <ol class="flex items-center space-x-2">
-                    <li>Events</li>
-                    <li>
-                      <span
-                        >${icons.chevron_rigth()}</span
-                      >
-                    </li>
-                    <li>Management</li>
-                    <li>
-                      <span
-                        >${icons.chevron_rigth()}</span
-                      >
-                    </li>
-                    <li class="text-[var(--color-primary)]">Create New</li>
-                  </ol>
+                  <ol id="breadcrumb" class="flex items-center space-x-2"></ol>
                 </nav>
                 <h1 class="text-2xl font-bold text-[var(--color-title-header)]">
                   Create New Event
@@ -66,16 +88,18 @@ export default class Header {
   setActiveRoute(route) {
     console.log(route)
     this.currentRoute = route;
+    this.mountBreadcrumb();
   }
 
   attachEventHandlers() {
     document.querySelectorAll(".nav-link").forEach(btn => {
       btn.addEventListener("click", () => {
+        this.setActiveRoute(btn.dataset.route);
+        this.router.navigate(btn.dataset.route);
         document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         this.currentRoute = btn.dataset.route;
         this.router.navigate(btn.dataset.route);
-        console.log(btn.dataset.route)
       });
     });
 
