@@ -31,6 +31,7 @@ class App {
 
   navigate(route) {
     this.app.innerHTML = "";
+    this.currentRoute = route;
 
     switch (route) {
       case "login":

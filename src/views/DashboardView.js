@@ -18,13 +18,8 @@ export default class DashboardView {
       clearSession(this.router);
       return;
     }
-    console.log(this.navbar)
-    console.log(dashboard.render())
     
-
     const mainContent = await fetch (`../../pages/admin_dashboard.html`).then(r => r.text())
-
-    console.log(mainContent)
 
     app.innerHTML = `
       ${this.navbar.render()}

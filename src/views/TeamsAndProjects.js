@@ -4,12 +4,12 @@ import { getUser, clearSession } from "../utils/auth.js";
 import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
 
-export default class TeamsAndProjects {
+export default class CreateEvent {
   constructor(router) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
-    this.header = new Header(router)
+    this.header = new Header(router);
   }
 
   async render() {
@@ -19,10 +19,7 @@ export default class TeamsAndProjects {
     if (!dashboard) {
       clearSession(this.router);
       return;
-    }
-    console.log(this.navbar)
-    console.log(dashboard.render())
-    
+    }    
 
     const mainContent = await fetch (`../../pages/create_dashboard.html`).then(r => r.text())
 
@@ -33,6 +30,8 @@ export default class TeamsAndProjects {
         ${mainContent}
       </main>
     `;
+    this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
 
     this.navbar.attachEventHandlers();
     dashboard.attachEventHandlers?.();

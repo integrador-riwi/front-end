@@ -1,5 +1,5 @@
 import "../../assets/styles/header.css";
-import { getHeaderLinks} from "./header-config.js";
+import { getHeaderLinks } from "./header-config.js";
 import { getCurrentUser, logout } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
 
@@ -7,16 +7,17 @@ export default class Header {
   constructor(router) {
     this.router = router;
     this.user = getCurrentUser();
-    this.currentRoute = "events/create";
   }
 
   mountBreadcrumb() {
-    const links = getHeaderLinks(this.user.role);
+    const route = this.router.currentRoute;
+
+    const links = getHeaderLinks(route);
 
     const breadcrumbHTML = this.renderBreadcrumb({
       links,
-      currentRoute: this.currentRoute,
-      icons
+      currentRoute: route,
+      icons,
     });
 
     const container = document.getElementById("breadcrumb");
@@ -27,28 +28,24 @@ export default class Header {
   }
 
   renderBreadcrumb({ links, currentRoute, icons }) {
-    const orderedItems = links
-      .filter(link => 
-        currentRoute.startsWith(link.route) ||
-        link.route === "projects"
-      )
+    if (!links || links.length === 0) return "";
 
-    return orderedItems
+    return links
       .map((item, index) => {
-        const isLast = index === orderedItems.length - 1;
+        const isLast = index === links.length - 1;
 
         return `
-          <li class="${isLast ? 'text-[var(--color-primary)] font-medium' : ''}">
-            ${item.label}
-          </li>
-          ${!isLast ? `<li>${icons.chevron_right()}</li>` : ''}
-        `;
+        <li class="${isLast ? "text-[var(--color-primary)] font-medium" : ""}">
+          ${item.label}
+        </li>
+        ${!isLast ? `<li>${icons.chevron_right()}</li>` : ""}
+      `;
       })
       .join("");
   }
 
   render() {
-    
+
     return `
         <header
           class="bg-[var(--color-surface)] text-[var(--color-text-header)] shadow-sm sticky top-0 z-20"
@@ -85,20 +82,13 @@ export default class Header {
     `;
   }
 
-  setActiveRoute(route) {
-    console.log(route)
-    this.currentRoute = route;
-    this.mountBreadcrumb();
-  }
-
   attachEventHandlers() {
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.setActiveRoute(btn.dataset.route);
-        this.router.navigate(btn.dataset.route);
-        document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        this.currentRoute = btn.dataset.route;
         this.router.navigate(btn.dataset.route);
       });
     });

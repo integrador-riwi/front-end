@@ -20,10 +20,7 @@ export default class CreateEvent {
       clearSession(this.router);
       return;
     }
-    console.log(this.navbar)
-    console.log(dashboard.render())
     
-
     const mainContent = await fetch (`../../pages/create_dashboard.html`).then(r => r.text())
 
     app.innerHTML = `
@@ -34,7 +31,6 @@ export default class CreateEvent {
       </main>
     `;
     this.header.mountBreadcrumb();
-    this.header.attachEventHandlers();
 
     this.navbar.attachEventHandlers();
     dashboard.attachEventHandlers?.();

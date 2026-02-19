@@ -1,15 +1,12 @@
-export const HEADER_LINKS_BY_ROLE = {
-  ADMIN: [
+export const HEADER_LINKS_BY_VIEW = {
+  "events/create": [
     { label: "Events",            route: "events"           },
     { label: "Management",        route: "projects"         },
     { label: "Create New",        route: "events/create"    },
   ],
-  TL_DEVELOPMENT: [
+  "projects": [
     { label: "Dashboard",         route: "dashboard",      },
-    { label: "Projects to Grade", route: "evaluations",    },
-    { label: "My Evaluations",    route: "my-evaluations", },
     { label: "Teams & Projects",  route: "projects",       },
-    { label: "Events",            route: "events",         },
   ],
   TL_SOFT_SKILLS: [
     { label: "Dashboard",         route: "dashboard",      },
@@ -41,10 +38,6 @@ export const HEADER_LINKS_BY_ROLE = {
   ],
 };
 
-export const getHeaderLinks = (role) => {
-  return HEADER_LINKS_BY_ROLE[role] ?? [];
-};
-
-export const getRoleLabel = (role) => {
-  return ROLE_LABELS[role] ?? "User";
+export const getHeaderLinks = (view) => {
+  return HEADER_LINKS_BY_VIEW[view] ?? [];
 };
