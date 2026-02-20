@@ -1,5 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
+import AdminDashboard from "../components/dashboards/AdminDashboard.js";
 import { getUser, clearSession } from "../utils/auth.js";
 import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
@@ -12,6 +13,7 @@ export default class CreateEvent {
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
+    this.dashboard = new AdminDashboard(this.user);
   }
 
   async render() {
@@ -33,7 +35,7 @@ export default class CreateEvent {
       </main>
     `;
     this.header.mountBreadcrumb();
-
+    this.dashboard.render();
     this.navbar.attachEventHandlers();
     dashboard.attachEventHandlers?.();
   }

@@ -99,6 +99,46 @@
   padding: 6px;
 }
 
+.app-avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.app-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-surface);
+  margin-left: -8px;
+  transition: transform 0.2s ease;
+}
+
+.app-avatar:first-child {
+  margin-left: 0;
+}
+
+.app-avatar:hover {
+  transform: translateY(-2px);
+  z-index: 2;
+}
+
+.app-avatar-more {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+  border: 2px solid var(--color-surface);
+}
+
+
 /* PROGRESS */
 .app-progress-bar {
   height: 6px;
