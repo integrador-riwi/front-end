@@ -64,6 +64,7 @@ export default class Navbar {
   }
 
   setActiveRoute(route) {
+    console.log(route)
     this.currentRoute = route;
   }
 
@@ -74,6 +75,7 @@ export default class Navbar {
         btn.classList.add("active");
         this.currentRoute = btn.dataset.route;
         this.router.navigate(btn.dataset.route);
+        console.log(btn.dataset.route)
       });
     });
 

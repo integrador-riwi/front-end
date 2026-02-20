@@ -1,0 +1,111 @@
+<main class="container py-3">
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
+  >
+    <div class="d-flex w-100 gap-3">
+      <div class="w-100" style="max-width: 480px">
+        <input
+          type="text"
+          class="app-search-input"
+          placeholder="Search projects, tasks, or people..."
+        />
+      </div>
+
+      <button class="app-btn-primary d-flex align-items-center gap-2">
+        <i class="bi bi-search"></i>
+        Search
+      </button>
+    </div>
+
+    <div class="d-none d-md-flex app-view-toggle">
+      <button class="app-toggle-btn active">
+        <span class="material-icons-round">grid_view</span>
+      </button>
+      <button class="app-toggle-btn">
+        <span class="material-icons-round">view_list</span>
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4"
+  >
+    <div></div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mb-5 overflow-auto pb-2">
+    <button class="app-filter-btn active">All Projects</button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot engineering"></span>
+      Turing
+    </button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot marketing"></span>
+      Tesla
+    </button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot design"></span>
+      Hamilton
+    </button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot hr"></span>
+      Thompson
+    </button>
+
+    <button class="app-filter-btn">
+      <span class="app-tag-dot hr"></span>
+      Ritchie
+    </button>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="app-project-card">
+        <div class="app-project-image">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
+            alt="Project image"
+            class="img-fluid"
+          />
+          <span class="app-project-badge engineering"> Turing </span>
+          <button class="app-card-menu">
+            <span class="material-icons-round d-flex">more_horiz</span>
+          </button>
+        </div>
+
+        <div class="p-4">
+          <h5 class="app-card-title">API Migration V2</h5>
+
+          <p class="app-card-text">
+            Moving legacy endpoints to the new serverless architecture...
+          </p>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="app-avatar-group">
+              <!-- avatars -->
+            </div>
+
+            <div class="app-date-badge">
+              <span class="material-icons-round small me-1">schedule</span>
+              Oct 24
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between small mb-1">
+            <span>Progress</span>
+            <span class="app-progress-text">75%</span>
+          </div>
+
+          <div class="progress app-progress-bar">
+            <div class="progress-bar" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    </div>    
+  </div>
+</main>

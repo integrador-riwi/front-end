@@ -2,6 +2,8 @@
 import "../assets/styles/main.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
+import CreateEvent from "../views/createEvent.js";
+import Teams from "../views/TeamsAndProjects.js";
 
 class App {
   constructor() {
@@ -11,6 +13,13 @@ class App {
   }
 
   init() {
+    if (!localStorage.getItem("user")) {
+    localStorage.setItem("user", JSON.stringify({
+      name: "Carlos López",
+      role: "ADMIN" 
+    }));
+    localStorage.setItem("token", "fake-token-123");
+  }
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -22,6 +31,7 @@ class App {
 
   navigate(route) {
     this.app.innerHTML = "";
+    this.currentRoute = route;
 
     switch (route) {
       case "login":
@@ -30,6 +40,12 @@ class App {
       case "dashboard":
         this.currentView = new DashboardView(this);
         break;
+      case "events/create":
+        this.currentView = new CreateEvent(this);
+        break;
+      case "projects":
+        this.currentView = new Teams(this);
+        break;
       default:
         this.navigate("login");
     }
@@ -37,5 +53,6 @@ class App {
     this.currentView.render();
   }
 }
+
 
 new App();
