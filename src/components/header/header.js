@@ -79,7 +79,7 @@ export default class Header {
           
           <div>
             <nav class="app-breadcrumb">
-              <ol id="breadcrumb" class="breadcrumb mb-1"></ol>
+              <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
             </nav>
             <h1 class="app-page-title mb-0">
               ${layout.title}
@@ -108,7 +108,7 @@ export default class Header {
       <div class="container app-header-inner">
         
         <nav class="app-breadcrumb">
-          <ol id="breadcrumb" class="breadcrumb mb-3"></ol>
+          <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
         </nav>
           <h1 class="app-page-title mb-0">
               Projects Overview
