@@ -64,7 +64,11 @@ export default class Header {
     }
 
     if (layout.variant === "teams") {
-      return this.renderTeamsHeader();
+      return this.renderTeamsHeader(layout);
+    }
+
+    if (layout.variant === "ranking") {
+      return this.renderRankingHeader(layout);
     }
 
     return "";
@@ -79,7 +83,7 @@ export default class Header {
           
           <div>
             <nav class="app-breadcrumb">
-              <ol id="breadcrumb" class="breadcrumb mb-1"></ol>
+              <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
             </nav>
             <h1 class="app-page-title mb-0">
               ${layout.title}
@@ -101,17 +105,34 @@ export default class Header {
   `;
   }
 
-  renderTeamsHeader() {
+  renderTeamsHeader(layout) {
     return `
     <header class="app-header">
       
       <div class="container app-header-inner">
         
         <nav class="app-breadcrumb">
-          <ol id="breadcrumb" class="breadcrumb mb-3"></ol>
+          <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
         </nav>
           <h1 class="app-page-title mb-0">
-              Projects Overview
+              ${layout.title}
+          </h1>
+      </div>
+    </header>
+  `;
+  }
+
+    renderRankingHeader(layout) {
+    return `
+    <header class="app-header">
+      
+      <div class="container app-header-inner">
+        
+        <nav class="app-breadcrumb">
+          <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
+        </nav>
+          <h1 class="app-page-title mb-0">
+              ${layout.title}
           </h1>
       </div>
     </header>

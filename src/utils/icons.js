@@ -98,5 +98,11 @@ export const icons = {
     320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 
     357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z"/></svg>`,
 
+    ranking: () => `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" 
+      stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <rect width="48" height="48" fill="currentColor" fill-opacity="0.01"></rect> <rect x="4" 
+      y="18" width="13" height="24" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></rect> <rect x="17" y="6" width="13" height="36" 
+      stroke="currentColor" stroke-width="4" stroke-linejoin="round"></rect> <rect x="30" y="26" width="13" height="16" stroke="currentColor" stroke-width="4" stroke-linecap="round" 
+      stroke-linejoin="round"></rect> </g></svg>`,
+
 };
 
