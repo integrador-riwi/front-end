@@ -8,6 +8,10 @@ export const HEADER_LINKS_BY_VIEW = {
     { label: "Dashboard",         route: "dashboard",      },
     { label: "Teams & Projects",  route: "projects",       },
   ],
+  "ranking": [
+    { label: "Event",         route: "events",      },
+    { label: "Ranking",       route: "ranking",       },
+  ],
 };
 
 export const HEADER_LAYOUT_BY_ROUTE = {
@@ -17,7 +21,11 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   },
   "projects": {
     variant: "teams",
-    title: null,
+    title: "Projects Overview",
+  },
+  "ranking": {
+    variant: "ranking",
+    title: "Ranking",
   },
 };
 

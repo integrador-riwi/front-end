@@ -4,6 +4,7 @@ import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import CreateEvent from "../views/createEvent.js";
 import Teams from "../views/TeamsAndProjects.js";
+import Ranking from "../views/Ranking.js";
 
 class App {
   constructor() {
@@ -45,6 +46,9 @@ class App {
         break;
       case "projects":
         this.currentView = new Teams(this);
+        break;
+      case "ranking":
+        this.currentView = new Ranking(this);
         break;
       default:
         this.navigate("login");

@@ -71,3 +71,9 @@
 .bg-primary-dark {
   background-color: var(--color-primary-dark);
 }
+
+body {
+  font-family: var(--main-font);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+}
