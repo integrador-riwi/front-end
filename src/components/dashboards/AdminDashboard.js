@@ -3,6 +3,8 @@ export default class AdminDashboard {
   constructor(user) {
     this.user = user;
   }
-
+ render(){
+    
+ }
   
 }
