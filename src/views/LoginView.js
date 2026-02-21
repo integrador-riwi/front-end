@@ -1,5 +1,6 @@
-import { saveSession }  from "../utils/auth.js";
-import { renderErrorBox }         from "../utils/helpers.js";
+import { saveUser } from "../utils/auth.js";
+import { loginUser } from "../services/api.js";
+import { renderErrorBox } from "../utils/helpers.js";
 import "../assets/styles/login.css";
 
 export default class LoginView {
@@ -113,11 +114,11 @@ export default class LoginView {
     this.render();
 
     try {
-      const { token, user } = await loginUser(this.email, this.password);
-      saveSession(token, user)
+      const response = await loginUser(this.email, this.password);
+      saveUser(response.data.user);
       this.router.navigate("dashboard");
     } catch (err) {
-      this.error   = err.response?.data?.message || "Login failed. Try again.";
+      this.error = err.response?.data?.message || err.message || "Login failed. Try again.";
       this.loading = false;
       this.render();
     }
