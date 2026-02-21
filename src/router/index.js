@@ -1,7 +1,7 @@
-// frontend/src/router/index.js
 import "../assets/styles/main.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
+import { isAuthenticated } from "../utils/auth.js";
 
 class App {
   constructor() {
@@ -11,9 +11,7 @@ class App {
   }
 
   init() {
-    const token = localStorage.getItem("token");
-
-    if (token) {
+    if (isAuthenticated()) {
       this.navigate("dashboard");
     } else {
       this.navigate("login");

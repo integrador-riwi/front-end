@@ -1,5 +1,18 @@
+export const setToken = (token) => {
+  localStorage.setItem("token", token);
+};
+
+export const getToken = () => {
+  return localStorage.getItem("token");
+};
+
 export const clearAuth = () => {
+  localStorage.removeItem("token");
   localStorage.removeItem("user");
+};
+
+export const isAuthenticated = () => {
+  return !!getToken();
 };
 
 export const getUser = () => {
@@ -11,19 +24,14 @@ export function saveUser(user) {
   localStorage.setItem("user", JSON.stringify(user));
 }
 
-export function clearSession(router) {
-  localStorage.removeItem("user");
-  router.navigate("login");
+export function saveSession(token, user) {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
 }
 
-export async function checkAuth() {
-  try {
-    const { getMe } = await import('../services/api.js');
-    const response = await getMe();
-    saveUser(response.data);
-    return true;
-  } catch {
-    clearAuth();
-    return false;
+export function clearSession(router) {
+  clearAuth();
+  if (router) {
+    router.navigate("login");
   }
 }

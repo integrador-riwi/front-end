@@ -1,4 +1,4 @@
-import { saveUser } from "../utils/auth.js";
+import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
 import "../assets/styles/login.css";
@@ -115,7 +115,7 @@ export default class LoginView {
 
     try {
       const response = await loginUser(this.email, this.password);
-      saveUser(response.data.user);
+      saveSession(response.data.token, response.data.user);
       this.router.navigate("dashboard");
     } catch (err) {
       this.error = err.response?.data?.message || err.message || "Login failed. Try again.";

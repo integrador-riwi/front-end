@@ -1,11 +1,17 @@
 const API_BASE_URL = 'https://back-end-production-7f2c.up.railway.app/api';
 
+function getToken() {
+  return localStorage.getItem('token');
+}
+
 export async function apiFetch(endpoint, options = {}) {
+  const token = getToken();
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options.headers,
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
