@@ -9,7 +9,6 @@
   --gold:         #e6ca52;
 
   --bg:           #f4f3ff;
-  --bg-panel:     #ffffff;
   --bg-input:     #fafafe;
   --border:       rgba(107,92,255,0.15);
 
@@ -21,19 +20,12 @@
   --danger-dim:   rgba(254,101,79,0.1);
 }
 
-/* ── Reset scoped to login ── */
-.login-shell *,
-.login-shell *::before,
-.login-shell *::after {
-  box-sizing: border-box;
-}
-
 body {
   background: var(--bg);
   font-family: 'Ubuntu', sans-serif;
 }
 
-/* ── Layout ── */
+/* ── Shell ── */
 .login-shell {
   display: flex;
   min-height: 100vh;
@@ -43,18 +35,10 @@ body {
    LEFT PANEL
 ──────────────────────────── */
 .login-left {
-  display: none;
   width: 50%;
   position: relative;
   overflow: hidden;
   background: var(--navy);
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .login-left { display: flex; }
 }
 
 /* Animated dot grid */
@@ -67,7 +51,7 @@ body {
   animation: gridShift 18s linear infinite;
 }
 
-/* Vignette over the grid */
+/* Vignette */
 .login-left::after {
   content: '';
   position: absolute;
@@ -77,18 +61,15 @@ body {
 }
 
 @keyframes gridShift {
-  0%   { background-position: 0 0; }
-  100% { background-position: 36px 36px; }
+  from { background-position: 0 0; }
+  to   { background-position: 36px 36px; }
 }
 
 .left-content {
   position: relative;
   z-index: 1;
-  text-align: center;
-  padding: 3rem;
   max-width: 400px;
 }
-
 
 .left-title {
   font-size: 2.1rem;
@@ -108,14 +89,6 @@ body {
 }
 
 /* Pill tags */
-.left-tags {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 2.5rem;
-}
-
 .tag {
   font-size: 0.7rem;
   font-weight: 500;
@@ -145,9 +118,6 @@ body {
 ──────────────────────────── */
 .login-right {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 2.5rem 1.5rem;
   background: var(--bg);
   position: relative;
@@ -157,13 +127,24 @@ body {
   .login-right { width: 50%; padding: 2.5rem 3.5rem; }
 }
 
-
+/* Diagonal stripe texture */
+.login-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(107,92,255,0.025) 0px,
+    rgba(107,92,255,0.025) 1px,
+    transparent 1px,
+    transparent 12px
+  );
+  pointer-events: none;
+}
 
 /* Form card */
 .form-card {
-  width: 100%;
   max-width: 420px;
-  position: relative;
   z-index: 1;
   color: var(--text-primary);
   animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -174,10 +155,7 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-
 /* Form header */
-.form-header { margin-bottom: 2.25rem; }
-
 .form-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -231,18 +209,15 @@ body {
   animation: fadeUp 0.3s ease both;
 }
 
-/* Fields */
-.field { margin-bottom: 1.25rem; }
-
-.field label {
-  display: block;
+/* Field labels */
+.field-label {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-muted);
-  margin-bottom: 0.45rem;
   letter-spacing: 0.03em;
 }
 
+/* Input wrapper */
 .input-wrap { position: relative; }
 
 .input-wrap svg {
@@ -257,39 +232,29 @@ body {
   transition: color 0.2s;
 }
 
-.input-wrap input {
-  width: 100%;
-  padding: 0.82rem 1rem 0.82rem 2.75rem;
-  background: var(--bg-input);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  color: var(--text-primary);
+/* Override Bootstrap's .form-control */
+.custom-input {
+  padding: 0.82rem 1rem 0.82rem 2.75rem !important;
+  background: var(--bg-input) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 11px !important;
+  color: var(--text-primary) !important;
   font-family: 'Ubuntu', sans-serif;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  box-shadow: 0 1px 3px rgba(107,92,255,0.06);
+  font-size: 0.95rem !important;
+  box-shadow: 0 1px 3px rgba(107,92,255,0.06) !important;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
 }
 
-.input-wrap input::placeholder { color: var(--text-dim); }
+.custom-input::placeholder { color: var(--text-dim); }
 
-.input-wrap input:focus {
-  border-color: var(--accent);
-  background: #fff;
-  box-shadow: 0 0 0 3.5px var(--accent-dim);
+.custom-input:focus {
+  border-color: var(--accent) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3.5px var(--accent-dim) !important;
+  outline: none !important;
 }
 
 .input-wrap:focus-within svg { color: var(--accent); }
-
-
-.field-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.45rem;
-}
-
-.field-row label { margin-bottom: 0; }
 
 .forgot-link {
   font-size: 0.78rem;
@@ -298,14 +263,11 @@ body {
   opacity: 0.75;
   transition: opacity 0.2s;
 }
-
 .forgot-link:hover { opacity: 1; text-decoration: underline; }
 
 /* Submit button */
 .btn-submit {
-  width: 100%;
   padding: 0.88rem 1rem;
-  margin-top: 0.25rem;
   background: var(--accent);
   color: #fff;
   font-family: 'Ubuntu', sans-serif;
@@ -313,7 +275,6 @@ body {
   font-weight: 600;
   border: none;
   border-radius: 11px;
-  cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
@@ -332,18 +293,27 @@ body {
 .btn-submit:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 28px var(--accent-glow), 0 2px 6px rgba(107,92,255,0.25);
+  color: #fff;
+  background: var(--accent);
 }
 
 .btn-submit:active  { transform: scale(0.985); }
 .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-/* Palette accent bar */
-.accent-bar {
-  display: flex;
-  gap: 4px;
-  margin-top: 2rem;
+/* mobile-only app name */
+.mobile-app-name {
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 3rem;
+  padding-bottom: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent) 30%, var(--lilac) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* Palette accent bar */
 .accent-bar span {
   height: 3px;
   border-radius: 99px;

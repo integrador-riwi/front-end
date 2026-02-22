@@ -1,6 +1,7 @@
-import { saveSession }  from "../utils/auth.js";
-import { renderErrorBox }         from "../utils/helpers.js";
-import "../assets/styles/login.css";
+import { saveSession } from "../utils/auth.js";
+import { loginUser } from "../services/api.js";
+import { renderErrorBox } from "../utils/helpers.js";
+import "../assets/styles/login.css"
 
 export default class LoginView {
   constructor(router) {
@@ -16,17 +17,18 @@ export default class LoginView {
     app.innerHTML = `
       <main class="login-shell">
 
-        <section class="login-left">
+        <!-- ── LEFT PANEL ── -->
+        <section class="login-left d-none d-md-flex flex-column justify-content-center align-items-center">
           <div class="blob blob-1"></div>
           <div class="blob blob-2"></div>
           <div class="blob blob-3"></div>
-          <div class="left-content">
+          <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit,
               sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
             </p>
-            <div class="left-tags">
+            <div class="left-tags d-flex flex-wrap justify-content-center gap-2 mt-4">
               <span class="tag tag-lilac">Collaborate</span>
               <span class="tag tag-mint">Track Progress</span>
               <span class="tag tag-gold">Grow Together</span>
@@ -34,10 +36,16 @@ export default class LoginView {
           </div>
         </section>
 
-        <section class="login-right">
-          <div class="form-card">
+        <!-- ── RIGHT PANEL ── -->
+        <section class="login-right d-flex align-items-center justify-content-center">
+          <div class="form-card w-100">
 
-            <header class="form-header">
+            <!-- Mobile-only app name -->
+            <div class="d-flex d-md-none justify-content-center mb-4">
+              <span class="mobile-app-name">TeamUp</span>
+            </div>
+
+            <header class="form-header mb-4">
               <p class="form-eyebrow">Welcome back</p>
               <h2 class="form-title">Sign in to your<br/>account</h2>
               <p class="form-subtitle">Enter your credentials to continue.</p>
@@ -45,11 +53,14 @@ export default class LoginView {
 
             ${renderErrorBox(this.error)}
 
-            <form id="loginForm">
-              <div class="field">
-                <label for="email">Email Address</label>
+            <form id="loginForm" novalidate>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="email" class="form-label field-label">Email Address</label>
                 <div class="input-wrap">
-                  <input id="email" type="email" placeholder="name@correo.com"
+                  <input id="email" type="email" class="form-control custom-input"
+                         placeholder="name@correo.com"
                          autocomplete="email" required value="${this.email}" />
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -58,13 +69,15 @@ export default class LoginView {
                 </div>
               </div>
 
-              <div class="field">
-                <div class="field-row">
-                  <label for="password">Password</label>
+              <!-- Password -->
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label for="password" class="form-label field-label mb-0">Password</label>
                   <a href="#" class="forgot-link">Forgot password?</a>
                 </div>
                 <div class="input-wrap">
-                  <input id="password" type="password" placeholder="••••••••"
+                  <input id="password" type="password" class="form-control custom-input"
+                         placeholder="••••••••"
                          autocomplete="current-password" required />
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -73,13 +86,14 @@ export default class LoginView {
                 </div>
               </div>
 
-              <button type="submit" class="btn-submit" id="submitBtn"
+              <button type="submit" class="btn btn-submit w-100 mt-1" id="submitBtn"
                       ${this.loading ? "disabled" : ""}>
                 ${this.loading ? "Signing in..." : "Sign in"}
               </button>
+
             </form>
 
-            <div class="accent-bar">
+            <div class="accent-bar d-flex gap-1 mt-4">
               <span style="background:#6b5cff;"></span>
               <span style="background:#eaa2fc;"></span>
               <span style="background:#5acca4;"></span>
@@ -113,11 +127,11 @@ export default class LoginView {
     this.render();
 
     try {
-      const { token, user } = await loginUser(this.email, this.password);
-      saveSession(token, user)
+      const response = await loginUser(this.email, this.password);
+      saveSession(response.data.token, response.data.user);
       this.router.navigate("dashboard");
     } catch (err) {
-      this.error   = err.response?.data?.message || "Login failed. Try again.";
+      this.error = err.response?.data?.message || err.message || "Login failed. Try again.";
       this.loading = false;
       this.render();
     }

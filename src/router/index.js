@@ -1,7 +1,7 @@
-// frontend/src/router/index.js
 import "../assets/styles/main.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
+import { isAuthenticated } from "../utils/auth.js";
 import CreateEvent from "../views/createEvent.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
@@ -14,16 +14,7 @@ class App {
   }
 
   init() {
-    if (!localStorage.getItem("user")) {
-    localStorage.setItem("user", JSON.stringify({
-      name: "Carlos López",
-      role: "ADMIN" 
-    }));
-    localStorage.setItem("token", "fake-token-123");
-  }
-    const token = localStorage.getItem("token");
-
-    if (token) {
+    if (isAuthenticated()) {
       this.navigate("dashboard");
     } else {
       this.navigate("login");
@@ -57,6 +48,5 @@ class App {
     this.currentView.render();
   }
 }
-
 
 new App();
