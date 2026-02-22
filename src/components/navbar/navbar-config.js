@@ -1,5 +1,14 @@
 import { icons } from "../../utils/icons.js";
 
+
+const TL_BASE_LINKS = [
+  { label: "Dashboard",         route: "dashboard",      icon: "calendar" },
+  { label: "Projects to Grade", route: "evaluations",    icon: "edit" },
+  { label: "My Evaluations",    route: "my-evaluations", icon: "check" },
+  { label: "Teams & Projects",  route: "projects",       icon: "globe" },
+  { label: "Events",            route: "events",         icon: "calendar" },
+];
+
 export const NAV_LINKS_BY_ROLE = {
   ADMIN: [
     { label: "Events",            route: "events",        icon: "calendar" },
@@ -11,27 +20,9 @@ export const NAV_LINKS_BY_ROLE = {
     { label: "QR Voting",         route: "qr",            icon: "qr" },
     { label: "Finalists & Votes", route: "finalists",     icon: "trophy" },
   ],
-  TL_DEVELOPMENT: [
-    { label: "Dashboard",         route: "dashboard",      icon: "calendar" },
-    { label: "Projects to Grade", route: "evaluations",    icon: "edit" },
-    { label: "My Evaluations",    route: "my-evaluations", icon: "check" },
-    { label: "Teams & Projects",  route: "projects",       icon: "globe" },
-    { label: "Events",            route: "events",         icon: "calendar" },
-  ],
-  TL_SOFT_SKILLS: [
-    { label: "Dashboard",         route: "dashboard",      icon: "calendar" },
-    { label: "Projects to Grade", route: "evaluations",    icon: "edit" },
-    { label: "My Evaluations",    route: "my-evaluations", icon: "check" },
-    { label: "Teams & Projects",  route: "projects",       icon: "globe" },
-    { label: "Events",            route: "events",         icon: "calendar" },
-  ],
-  TL_ENGLISH: [
-    { label: "Dashboard",         route: "dashboard",      icon: "calendar" },
-    { label: "Projects to Grade", route: "evaluations",    icon: "edit" },
-    { label: "My Evaluations",    route: "my-evaluations", icon: "check" },
-    { label: "Teams & Projects",  route: "projects",       icon: "globe" },
-    { label: "Events",            route: "events",         icon: "calendar" },
-  ],
+  TL_DEVELOPMENT: TL_BASE_LINKS,
+  TL_SOFT_SKILLS: TL_BASE_LINKS,
+  TL_ENGLISH:     TL_BASE_LINKS,
   CODER: [
     { label: "My Project",   route: "coderHome",   icon: "globe" },
     { label: "My Grades",    route: "my-grades",    icon: "bulb" },

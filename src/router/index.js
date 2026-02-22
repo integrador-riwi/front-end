@@ -17,6 +17,8 @@ class App {
   }
 
   init(){
+    const user = getCurrentUser();
+    this.user = user;
     if (!isAuthenticated()) {
       this.navigate("login");
       return;
