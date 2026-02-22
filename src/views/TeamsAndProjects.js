@@ -40,10 +40,6 @@ export default class Teams {
     const app = document.getElementById("app");
     
 
-    if (!dashboard) {
-      clearSession(this.router);
-      return;
-    }
     
     const mainContent = await fetch (`../../pages/teams_dashboard.html`).then(r => r.text())
 

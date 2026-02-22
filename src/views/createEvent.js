@@ -15,11 +15,7 @@ export default class CreateEvent {
   async render() {
     const app = document.getElementById("app");
 
-    if (!dashboard) {
-      clearSession(this.router);
-      return;
-    }
-    
+  
     const mainContent = await fetch (`../../pages/create_dashboard.html`).then(r => r.text())
 
     app.innerHTML = `
