@@ -26,8 +26,8 @@ export const NAV_LINKS_BY_ROLE = {
   CODER: [
     { label: "My Project",   route: "coderHome",   icon: "globe" },
     { label: "My Grades",    route: "my-grades",    icon: "bulb" },
-    { label: "Feedback",     route: "feedback",     icon: "chat" },
     { label: "Events",       route: "events",       icon: "calendar" },
+    { label: "Project Settings",       route: "projectSettings",       icon: "calendar" },
   ],
   STAFF: [
     { label: "Dashboard",        route: "dashboard",     icon: "calendar" },
