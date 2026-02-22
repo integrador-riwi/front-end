@@ -7,6 +7,7 @@ export const NAV_LINKS_BY_ROLE = {
     { label: "Teams & Projects",  route: "projects",      icon: "globe" },
     { label: "Rubrics",           route: "rubrics",       icon: "bulb" },
     { label: "Evaluation Rules",  route: "rules",         icon: "settings" },
+    { label: "Ranking",           route: "ranking",       icon: "ranking" },
     { label: "QR Voting",         route: "qr",            icon: "qr" },
     { label: "Finalists & Votes", route: "finalists",     icon: "trophy" },
   ],

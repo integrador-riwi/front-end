@@ -2,6 +2,9 @@ import "../assets/styles/main.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
+import CreateEvent from "../views/createEvent.js";
+import Teams from "../views/TeamsAndProjects.js";
+import Ranking from "../views/Ranking.js";
 
 class App {
   constructor() {
@@ -20,6 +23,7 @@ class App {
 
   navigate(route) {
     this.app.innerHTML = "";
+    this.currentRoute = route;
 
     switch (route) {
       case "login":
@@ -27,6 +31,15 @@ class App {
         break;
       case "dashboard":
         this.currentView = new DashboardView(this);
+        break;
+      case "events/create":
+        this.currentView = new CreateEvent(this);
+        break;
+      case "projects":
+        this.currentView = new Teams(this);
+        break;
+      case "ranking":
+        this.currentView = new Ranking(this);
         break;
       default:
         this.navigate("login");
