@@ -6,7 +6,7 @@ function getToken() {
 
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
-  
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -28,6 +28,7 @@ export async function apiFetch(endpoint, options = {}) {
   return data;
 }
 
+// Auth
 export async function loginUser(email, password) {
   return apiFetch('/auth/login', {
     method: 'POST',
@@ -46,3 +47,12 @@ export async function getMe() {
 export async function refreshTokens() {
   return apiFetch('/auth/refresh', { method: 'POST' });
 }
+
+// Teams 
+/**
+ * Returns the team the user belongs to, or throws if they have none.
+ * Backend: GET /users/:id/team
+ */
+/* export async function getUserTeam(userId) {
+  return apiFetch(`/users/${userId}/team`, { method: 'GET' });
+} */
