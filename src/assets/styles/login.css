@@ -1,7 +1,7 @@
 :root {
   --accent:       #6b5cff;
   --accent-glow:  rgba(107,92,255,0.22);
-  --accent-dim:   rgba(107,92,255,0.1);
+  --accent-dim:   rgba(107,92,255,0.10);
   --navy:         #181e4b;
   --lilac:        #eaa2fc;
   --mint:         #5acca4;
@@ -9,7 +9,6 @@
   --gold:         #e6ca52;
 
   --bg:           #f4f3ff;
-  --bg-panel:     #ffffff;
   --bg-input:     #fafafe;
   --border:       rgba(107,92,255,0.15);
 
@@ -18,43 +17,18 @@
   --text-dim:     #b8bbd6;
 
   --danger:       #fe654f;
-  --danger-dim:   rgba(254,101,79,0.1);
-}
-
-/* ── Reset scoped to login ── */
-.login-shell *,
-.login-shell *::before,
-.login-shell *::after {
-  box-sizing: border-box;
+  --danger-dim:   rgba(254,101,79,0.10);
 }
 
 body {
   background: var(--bg);
   font-family: 'Ubuntu', sans-serif;
+  color: var(--text-primary);
 }
 
-/* ── Layout ── */
-.login-shell {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* ────────────────────────────
-   LEFT PANEL
-──────────────────────────── */
+/* ── Left panel ── */
 .login-left {
-  display: none;
-  width: 50%;
-  position: relative;
-  overflow: hidden;
   background: var(--navy);
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .login-left { display: flex; }
 }
 
 /* Animated dot grid */
@@ -65,15 +39,17 @@ body {
   background-image: radial-gradient(rgba(107,92,255,0.35) 1.5px, transparent 1.5px);
   background-size: 36px 36px;
   animation: gridShift 18s linear infinite;
+  z-index: 0;
 }
 
-/* Vignette over the grid */
+/* Vignette */
 .login-left::after {
   content: '';
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 25%, var(--navy) 100%);
   pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes gridShift {
@@ -81,20 +57,10 @@ body {
   100% { background-position: 36px 36px; }
 }
 
-.left-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 3rem;
-  max-width: 400px;
-}
-
-
 .left-title {
   font-size: 2.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin-bottom: 1rem;
   background: linear-gradient(135deg, #ffffff 30%, #eaa2fc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -108,14 +74,6 @@ body {
 }
 
 /* Pill tags */
-.left-tags {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 2.5rem;
-}
-
 .tag {
   font-size: 0.7rem;
   font-weight: 500;
@@ -135,37 +93,34 @@ body {
   filter: blur(60px);
   pointer-events: none;
   opacity: 0.12;
+  z-index: 0;
 }
 .blob-1 { width: 240px; height: 240px; top: -80px;  left: -80px;  background: var(--accent); }
 .blob-2 { width: 180px; height: 180px; bottom: -60px; right: -40px; background: var(--lilac); }
 .blob-3 { width: 120px; height: 120px; top: 40%;   right: 10%;   background: var(--mint); opacity: 0.08; }
 
-/* ────────────────────────────
-   RIGHT PANEL
-──────────────────────────── */
+/* ── Right panel ── */
 .login-right {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem 1.5rem;
   background: var(--bg);
-  position: relative;
 }
 
-@media (min-width: 768px) {
-  .login-right { width: 50%; padding: 2.5rem 3.5rem; }
+/* Diagonal stripe texture */
+.login-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(107,92,255,0.025) 0px,
+    rgba(107,92,255,0.025) 1px,
+    transparent 1px,
+    transparent 12px
+  );
+  pointer-events: none;
 }
 
-
-
-/* Form card */
+/* Form card animation */
 .form-card {
-  width: 100%;
-  max-width: 420px;
-  position: relative;
-  z-index: 1;
-  color: var(--text-primary);
   animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -174,14 +129,8 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-
-/* Form header */
-.form-header { margin-bottom: 2.25rem; }
-
+/* Eyebrow badge */
 .form-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -190,7 +139,6 @@ body {
   background: var(--accent-dim);
   padding: 0.3rem 0.75rem;
   border-radius: 99px;
-  margin-bottom: 1rem;
 }
 
 .form-eyebrow::before {
@@ -200,6 +148,7 @@ body {
   border-radius: 50%;
   background: var(--accent);
   display: inline-block;
+  margin-right: 0.4rem;
 }
 
 .form-title {
@@ -207,13 +156,12 @@ body {
   font-weight: 700;
   letter-spacing: -0.025em;
   color: var(--navy);
-  margin-bottom: 0.4rem;
   line-height: 1.2;
 }
 
 .form-subtitle {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
 }
 
 /* Error box */
@@ -231,18 +179,16 @@ body {
   animation: fadeUp 0.3s ease both;
 }
 
-/* Fields */
-.field { margin-bottom: 1.25rem; }
-
-.field label {
-  display: block;
+/* Field label */
+.field-label {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-muted);
-  margin-bottom: 0.45rem;
   letter-spacing: 0.03em;
+  margin-bottom: 0.45rem;
 }
 
+/* Input wrapper (icon positioning) */
 .input-wrap { position: relative; }
 
 .input-wrap svg {
@@ -255,42 +201,34 @@ body {
   color: var(--text-dim);
   pointer-events: none;
   transition: color 0.2s;
+  z-index: 5;
 }
 
-.input-wrap input {
-  width: 100%;
-  padding: 0.82rem 1rem 0.82rem 2.75rem;
-  background: var(--bg-input);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  color: var(--text-primary);
-  font-family: 'Ubuntu', sans-serif;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  box-shadow: 0 1px 3px rgba(107,92,255,0.06);
+/* Custom input — overrides Bootstrap's .form-control */
+.custom-input {
+  padding: 0.82rem 1rem 0.82rem 2.75rem !important;
+  background: var(--bg-input) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 11px !important;
+  color: var(--text-primary) !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 1px 3px rgba(107,92,255,0.06) !important;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
 }
 
-.input-wrap input::placeholder { color: var(--text-dim); }
+.custom-input::placeholder { color: var(--text-dim); }
 
-.input-wrap input:focus {
-  border-color: var(--accent);
-  background: #fff;
-  box-shadow: 0 0 0 3.5px var(--accent-dim);
+.custom-input:focus {
+  border-color: var(--accent) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3.5px var(--accent-dim) !important;
+  outline: none !important;
 }
 
 .input-wrap:focus-within svg { color: var(--accent); }
 
-
-.field-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.45rem;
-}
-
-.field-row label { margin-bottom: 0; }
-
+/* Forgot link */
 .forgot-link {
   font-size: 0.78rem;
   color: var(--accent);
@@ -298,26 +236,23 @@ body {
   opacity: 0.75;
   transition: opacity 0.2s;
 }
-
 .forgot-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Submit button */
+/* Submit button — overrides Bootstrap's .btn */
 .btn-submit {
-  width: 100%;
-  padding: 0.88rem 1rem;
+  padding: 0.88rem 1rem !important;
   margin-top: 0.25rem;
-  background: var(--accent);
-  color: #fff;
-  font-family: 'Ubuntu', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 11px;
-  cursor: pointer;
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 11px !important;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
-  box-shadow: 0 4px 18px var(--accent-glow), 0 1px 3px rgba(107,92,255,0.2);
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s !important;
+  box-shadow: 0 4px 18px var(--accent-glow), 0 1px 3px rgba(107,92,255,0.2) !important;
   letter-spacing: 0.01em;
 }
 
@@ -331,21 +266,16 @@ body {
 
 .btn-submit:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 28px var(--accent-glow), 0 2px 6px rgba(107,92,255,0.25);
+  box-shadow: 0 8px 28px var(--accent-glow), 0 2px 6px rgba(107,92,255,0.25) !important;
 }
 
 .btn-submit:active  { transform: scale(0.985); }
 .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 /* Palette accent bar */
-.accent-bar {
-  display: flex;
-  gap: 4px;
-  margin-top: 2rem;
-}
-
 .accent-bar span {
   height: 3px;
   border-radius: 99px;
   flex: 1;
+  display: block;
 }
