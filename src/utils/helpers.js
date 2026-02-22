@@ -1,25 +1,3 @@
-import AdminDashboard from "../components/dashboards/AdminDashboard.js";
-import CoderDashboard from "../components/dashboards/CoderDashboard.js";
-import StaffDashboard from "../components/dashboards/StaffDashboard.js";
-import TLDashboard    from "../components/dashboards/TLDashboard.js";
-
-
-//dashboard helpers
-const DASHBOARD_MAP = {
-  ADMIN:          AdminDashboard,
-  TL_DEVELOPMENT: TLDashboard,
-  TL_SOFT_SKILLS: TLDashboard,
-  TL_ENGLISH:     TLDashboard,
-  CODER:          CoderDashboard,
-  STAFF:          StaffDashboard,
-};
-
-export function getDashboardForRole(role, user) {
-  const DashboardClass = DASHBOARD_MAP[role];
-  return DashboardClass ? new DashboardClass(user) : null;
-}
-
-
 //Login form helpers
 export function renderErrorBox(message) {
   if (!message) return "";

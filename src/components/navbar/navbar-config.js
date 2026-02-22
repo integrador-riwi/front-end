@@ -34,7 +34,6 @@ export const NAV_LINKS_BY_ROLE = {
   ],
   CODER: [
     { label: "My Project",   route: "coderHome",   icon: "globe" },
-    { label: "Deliverables", route: "deliverables", icon: "upload" },
     { label: "My Grades",    route: "my-grades",    icon: "bulb" },
     { label: "Feedback",     route: "feedback",     icon: "chat" },
     { label: "Events",       route: "events",       icon: "calendar" },

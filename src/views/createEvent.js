@@ -1,7 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser, clearSession } from "../utils/auth.js";
-import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -15,7 +14,6 @@ export default class CreateEvent {
 
   async render() {
     const app = document.getElementById("app");
-    const dashboard = getDashboardForRole(this.user?.role, this.user);
 
     if (!dashboard) {
       clearSession(this.router);

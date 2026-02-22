@@ -21,13 +21,18 @@ class App {
       this.navigate("login");
       return;
     }
-
-    console.log(this.user)
+    console.log("USER FROM STORAGE:", this.user);
+console.log("ROLE:", this.user?.role);
+  
+    console.log("User:", this.user);
+console.log("Role:", this.user?.role);
+console.log("Authenticated:", isAuthenticated());
     switch (this.user?.role) {
       case "ADMIN":
         this.navigate("dashboard");
         break;
       case "CODER":
+        console.log("hello")
         this.navigate("coderHome");
         break;
       default:
@@ -60,11 +65,15 @@ class App {
         this.currentView = new coderHome(this)
         break;
       default:
-        this.navigate("login");
-      console.log(this.currentRoute)
+        return this.navigate("login");
     }
-
+   
+  if (!this.currentView) {
+  console.error("No view created for route:", route);
+  return;
+}
     this.currentView.render();
+  
   }
 }
 
