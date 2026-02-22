@@ -1,7 +1,7 @@
 :root {
   --accent:       #6b5cff;
   --accent-glow:  rgba(107,92,255,0.22);
-  --accent-dim:   rgba(107,92,255,0.10);
+  --accent-dim:   rgba(107,92,255,0.1);
   --navy:         #181e4b;
   --lilac:        #eaa2fc;
   --mint:         #5acca4;
@@ -17,17 +17,27 @@
   --text-dim:     #b8bbd6;
 
   --danger:       #fe654f;
-  --danger-dim:   rgba(254,101,79,0.10);
+  --danger-dim:   rgba(254,101,79,0.1);
 }
 
 body {
   background: var(--bg);
   font-family: 'Ubuntu', sans-serif;
-  color: var(--text-primary);
 }
 
-/* ── Left panel ── */
+/* ── Shell ── */
+.login-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ────────────────────────────
+   LEFT PANEL
+──────────────────────────── */
 .login-left {
+  width: 50%;
+  position: relative;
+  overflow: hidden;
   background: var(--navy);
 }
 
@@ -39,7 +49,6 @@ body {
   background-image: radial-gradient(rgba(107,92,255,0.35) 1.5px, transparent 1.5px);
   background-size: 36px 36px;
   animation: gridShift 18s linear infinite;
-  z-index: 0;
 }
 
 /* Vignette */
@@ -49,18 +58,24 @@ body {
   inset: 0;
   background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 25%, var(--navy) 100%);
   pointer-events: none;
-  z-index: 0;
 }
 
 @keyframes gridShift {
-  0%   { background-position: 0 0; }
-  100% { background-position: 36px 36px; }
+  from { background-position: 0 0; }
+  to   { background-position: 36px 36px; }
+}
+
+.left-content {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
 }
 
 .left-title {
   font-size: 2.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  margin-bottom: 1rem;
   background: linear-gradient(135deg, #ffffff 30%, #eaa2fc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -93,15 +108,23 @@ body {
   filter: blur(60px);
   pointer-events: none;
   opacity: 0.12;
-  z-index: 0;
 }
 .blob-1 { width: 240px; height: 240px; top: -80px;  left: -80px;  background: var(--accent); }
 .blob-2 { width: 180px; height: 180px; bottom: -60px; right: -40px; background: var(--lilac); }
 .blob-3 { width: 120px; height: 120px; top: 40%;   right: 10%;   background: var(--mint); opacity: 0.08; }
 
-/* ── Right panel ── */
+/* ────────────────────────────
+   RIGHT PANEL
+──────────────────────────── */
 .login-right {
+  width: 100%;
+  padding: 2.5rem 1.5rem;
   background: var(--bg);
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .login-right { width: 50%; padding: 2.5rem 3.5rem; }
 }
 
 /* Diagonal stripe texture */
@@ -119,8 +142,11 @@ body {
   pointer-events: none;
 }
 
-/* Form card animation */
+/* Form card */
 .form-card {
+  max-width: 420px;
+  z-index: 1;
+  color: var(--text-primary);
   animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -129,8 +155,11 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Eyebrow badge */
+/* Form header */
 .form-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -139,6 +168,7 @@ body {
   background: var(--accent-dim);
   padding: 0.3rem 0.75rem;
   border-radius: 99px;
+  margin-bottom: 1rem;
 }
 
 .form-eyebrow::before {
@@ -148,7 +178,6 @@ body {
   border-radius: 50%;
   background: var(--accent);
   display: inline-block;
-  margin-right: 0.4rem;
 }
 
 .form-title {
@@ -156,12 +185,13 @@ body {
   font-weight: 700;
   letter-spacing: -0.025em;
   color: var(--navy);
+  margin-bottom: 0.4rem;
   line-height: 1.2;
 }
 
 .form-subtitle {
   font-size: 0.875rem;
-  color: var(--text-muted) !important;
+  color: var(--text-muted);
 }
 
 /* Error box */
@@ -179,16 +209,15 @@ body {
   animation: fadeUp 0.3s ease both;
 }
 
-/* Field label */
+/* Field labels */
 .field-label {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.03em;
-  margin-bottom: 0.45rem;
 }
 
-/* Input wrapper (icon positioning) */
+/* Input wrapper */
 .input-wrap { position: relative; }
 
 .input-wrap svg {
@@ -201,17 +230,16 @@ body {
   color: var(--text-dim);
   pointer-events: none;
   transition: color 0.2s;
-  z-index: 5;
 }
 
-/* Custom input — overrides Bootstrap's .form-control */
+/* Override Bootstrap's .form-control */
 .custom-input {
   padding: 0.82rem 1rem 0.82rem 2.75rem !important;
   background: var(--bg-input) !important;
   border: 1.5px solid var(--border) !important;
   border-radius: 11px !important;
   color: var(--text-primary) !important;
-  font-family: 'Ubuntu', sans-serif !important;
+  font-family: 'Ubuntu', sans-serif;
   font-size: 0.95rem !important;
   box-shadow: 0 1px 3px rgba(107,92,255,0.06) !important;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
@@ -228,7 +256,6 @@ body {
 
 .input-wrap:focus-within svg { color: var(--accent); }
 
-/* Forgot link */
 .forgot-link {
   font-size: 0.78rem;
   color: var(--accent);
@@ -238,21 +265,20 @@ body {
 }
 .forgot-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Submit button — overrides Bootstrap's .btn */
+/* Submit button */
 .btn-submit {
-  padding: 0.88rem 1rem !important;
-  margin-top: 0.25rem;
-  background: var(--accent) !important;
-  color: #fff !important;
-  font-family: 'Ubuntu', sans-serif !important;
-  font-size: 0.95rem !important;
-  font-weight: 600 !important;
-  border: none !important;
-  border-radius: 11px !important;
+  padding: 0.88rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 11px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s !important;
-  box-shadow: 0 4px 18px var(--accent-glow), 0 1px 3px rgba(107,92,255,0.2) !important;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 4px 18px var(--accent-glow), 0 1px 3px rgba(107,92,255,0.2);
   letter-spacing: 0.01em;
 }
 
@@ -266,16 +292,30 @@ body {
 
 .btn-submit:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 28px var(--accent-glow), 0 2px 6px rgba(107,92,255,0.25) !important;
+  box-shadow: 0 8px 28px var(--accent-glow), 0 2px 6px rgba(107,92,255,0.25);
+  color: #fff;
+  background: var(--accent);
 }
 
 .btn-submit:active  { transform: scale(0.985); }
 .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* mobile-only app name */
+.mobile-app-name {
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 3rem;
+  padding-bottom: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent) 30%, var(--lilac) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* Palette accent bar */
 .accent-bar span {
   height: 3px;
   border-radius: 99px;
   flex: 1;
-  display: block;
 }

@@ -1,7 +1,7 @@
 import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
-import "../assets/styles/login.css";
+import "../assets/styles/login.css"
 
 export default class LoginView {
   constructor(router) {
@@ -15,15 +15,15 @@ export default class LoginView {
   render() {
     const app = document.getElementById("app");
     app.innerHTML = `
-      <main class="login-shell d-flex min-vh-100">
+      <main class="login-shell">
 
-        <!-- LEFT PANEL -->
-        <section class="login-left d-none d-md-flex flex-column justify-content-center align-items-center position-relative overflow-hidden w-100">
+        <!-- ── LEFT PANEL ── -->
+        <section class="login-left d-none d-md-flex flex-column justify-content-center align-items-center">
           <div class="blob blob-1"></div>
           <div class="blob blob-2"></div>
           <div class="blob blob-3"></div>
-          <div class="left-content text-center px-5 position-relative z-1" style="max-width:400px">
-            <h1 class="left-title mb-3">TeamUp</h1>
+          <div class="left-content text-center px-5">
+            <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit,
               sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -36,27 +36,33 @@ export default class LoginView {
           </div>
         </section>
 
-        <!-- RIGHT PANEL -->
-        <section class="login-right d-flex align-items-center justify-content-center w-100 w-md-50 px-3 px-md-5 position-relative">
-          <div class="form-card w-100 position-relative z-1" style="max-width:420px">
+        <!-- ── RIGHT PANEL ── -->
+        <section class="login-right d-flex align-items-center justify-content-center">
+          <div class="form-card w-100">
+
+            <!-- Mobile-only app name -->
+            <div class="d-flex d-md-none justify-content-center mb-4">
+              <span class="mobile-app-name">TeamUp</span>
+            </div>
 
             <header class="form-header mb-4">
-              <p class="form-eyebrow d-inline-flex align-items-center gap-2 mb-3">Welcome back</p>
-              <h2 class="form-title mb-1">Sign in to your<br/>account</h2>
-              <p class="form-subtitle text-muted">Enter your credentials to continue.</p>
+              <p class="form-eyebrow">Welcome back</p>
+              <h2 class="form-title">Sign in to your<br/>account</h2>
+              <p class="form-subtitle">Enter your credentials to continue.</p>
             </header>
 
             ${renderErrorBox(this.error)}
 
-            <form id="loginForm">
+            <form id="loginForm" novalidate>
+
               <!-- Email -->
               <div class="mb-3">
                 <label for="email" class="form-label field-label">Email Address</label>
                 <div class="input-wrap">
                   <input id="email" type="email" class="form-control custom-input"
-                         placeholder="name@correo.com" autocomplete="email"
-                         required value="${this.email}" />
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                         placeholder="name@correo.com"
+                         autocomplete="email" required value="${this.email}" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                     <polyline points="22,6 12,13 2,6"/>
                   </svg>
@@ -64,25 +70,27 @@ export default class LoginView {
               </div>
 
               <!-- Password -->
-              <div class="mb-4">
+              <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                   <label for="password" class="form-label field-label mb-0">Password</label>
                   <a href="#" class="forgot-link">Forgot password?</a>
                 </div>
                 <div class="input-wrap">
                   <input id="password" type="password" class="form-control custom-input"
-                         placeholder="••••••••" autocomplete="current-password" required />
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                         placeholder="••••••••"
+                         autocomplete="current-password" required />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-submit w-100" id="submitBtn"
+              <button type="submit" class="btn btn-submit w-100 mt-1" id="submitBtn"
                       ${this.loading ? "disabled" : ""}>
                 ${this.loading ? "Signing in..." : "Sign in"}
               </button>
+
             </form>
 
             <div class="accent-bar d-flex gap-1 mt-4">
