@@ -17,8 +17,6 @@ export function renderCoderTeam({ user, team }) {
           <!-- Project hero -->
           <div class="ct-hero-card rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              <span class="ct-eyebrow">${teamName.toUpperCase()}</span>
-              <span class="ct-badge-active">Active</span>
             </div>
 
             <h1 class="ct-hero-title mb-1">${projectName}</h1>

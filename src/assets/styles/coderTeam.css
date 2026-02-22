@@ -39,29 +39,6 @@
 
 .ct-hero-card > * { position: relative; z-index: 1; }
 
-/* Pills inside hero */
-.ct-eyebrow {
-  font-size: 0.67rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lilac);
-  background: rgba(234,162,252,0.12);
-  border: 1px solid rgba(234,162,252,0.22);
-  padding: 4px 12px;
-  border-radius: 99px;
-}
-
-.ct-badge-active {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--mint);
-  background: rgba(90,204,164,0.12);
-  border: 1px solid rgba(90,204,164,0.25);
-  padding: 4px 12px;
-  border-radius: 99px;
-}
-
 /* Titles */
 .ct-hero-title {
   font-size: clamp(1.35rem, 3vw, 1.9rem);
