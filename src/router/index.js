@@ -5,21 +5,36 @@ import { isAuthenticated } from "../utils/auth.js";
 import CreateEvent from "../views/createEvent.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
+import coderHome from "../views/coderHome.js";
+import { getCurrentUser } from "../utils/helpers.js";
 
 class App {
   constructor() {
     this.app = document.getElementById("app");
     this.currentView = null;
+    this.user = getCurrentUser();
     this.init();
   }
 
-  init() {
-    if (isAuthenticated()) {
-      this.navigate("dashboard");
-    } else {
+  init(){
+    if (!isAuthenticated()) {
       this.navigate("login");
+      return;
+    }
+
+    console.log(this.user)
+    switch (this.user?.role) {
+      case "ADMIN":
+        this.navigate("dashboard");
+        break;
+      case "CODER":
+        this.navigate("coderHome");
+        break;
+      default:
+        this.navigate("login");
     }
   }
+
 
   navigate(route) {
     this.app.innerHTML = "";
@@ -41,8 +56,12 @@ class App {
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+      case "coderHome":
+        this.currentView = new coderHome(this)
+        break;
       default:
         this.navigate("login");
+      console.log(this.currentRoute)
     }
 
     this.currentView.render();
