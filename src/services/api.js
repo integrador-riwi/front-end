@@ -56,3 +56,8 @@ export async function refreshTokens() {
 /* export async function getUserTeam(userId) {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
+
+// Events
+export async function getEvents() {
+  return apiFetch('/events', { method: 'GET' });
+}
