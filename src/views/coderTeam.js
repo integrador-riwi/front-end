@@ -1,15 +1,15 @@
 export function renderCoderTeam({ user, team }) {
   const { name: teamName, members = [], project = null } = team;
 
-  const grade        = project?.grade               ?? null;
-  const dueDate      = project?.final_delivery_date ?? "TBD";
-  const projectName  = project?.name                ?? teamName;
-  const projectDesc  = project?.description         ?? "No description yet.";
-  const deliverables = project?.deliverables        ?? null;
+  const grade = project?.grade ?? null;
+  const dueDate = project?.final_delivery_date ?? "TBD";
+  const projectName = project?.name ?? teamName;
+  const projectDesc = project?.description ?? "No description yet.";
+  const deliverables = project?.deliverables ?? null;
 
   return `
     <div class="container-xl px-3 px-md-4 py-4">
-      <div class="row g-4 align-items-start">
+      <div class="row g-4 align-items-start coderteam-container">
 
         <!-- ══ LEFT COLUMN ══ -->
         <div class="col-12 col-lg-8 d-flex flex-column gap-4">
@@ -53,8 +53,8 @@ export function renderCoderTeam({ user, team }) {
                     <div class="ct-mini-avatar">${m.name.charAt(0)}</div>
                   `).join("")}
                   ${members.length > 3
-                    ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
-                    : ""}
+      ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
+      : ""}
                 </div>
               </div>
 
@@ -73,7 +73,7 @@ export function renderCoderTeam({ user, team }) {
           <!-- Comments -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#6b5cff" stroke-width="2"
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
                    style="width:16px;height:16px;flex-shrink:0">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
@@ -95,8 +95,20 @@ export function renderCoderTeam({ user, team }) {
         </div>
 
         <!-- ══ RIGHT COLUMN ══ -->
-        <div class="col-12 col-lg-4">
-          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4">
+          <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
+                <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
+                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Settings
+                </button>
+            </div>
+
             <h2 class="ct-section-title mb-3">Project Team</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members.map((m, i) => `
@@ -134,9 +146,9 @@ export function renderCoderTeam({ user, team }) {
 // ─────────────────────────────────────────────────────────────
 function renderDeliverables(d) {
   const items = [
-    { key: "video_url",         icon: "", label: "Pitch Video",   url: d?.video_url         ?? null, color: "#eaa2fc" },
-    { key: "repo_url",          icon: "", label: "Repository",    url: d?.repo_url          ?? null, color: "#5acca4" },
-    { key: "preview_photo_url", icon: "", label: "Preview Photo", url: d?.preview_photo_url ?? null, color: "#e6ca52" },
+    { key: "video_url", icon: "", label: "Pitch Video", url: d?.video_url ?? null, color: "var(--color-accent)" },
+    { key: "repo_url", icon: "", label: "Repository", url: d?.repo_url ?? null, color: "var(--color-success)" },
+    { key: "preview_photo_url", icon: "", label: "Preview Photo", url: d?.preview_photo_url ?? null, color: "var(--color-warning)" },
   ];
 
   return `

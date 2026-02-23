@@ -1,7 +1,7 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
-import { renderCoderTeam }   from "./coderTeam.js";
+import { renderCoderTeam } from "./coderTeam.js";
 import { renderCoderNoTeam } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
 
@@ -9,24 +9,24 @@ export default class CoderHome {
   constructor(router, { user, team } = {}) {
     this.router = router;
     this.navbar = new Navbar(router);
-    this.user   = getUser();
-    this.team   =  {
-  name: "Alpha Squad",
-  members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
-  project: {
-    name: "Campus Navigator",
-    description: "React Native app for campus navigation.",
-    grade: 87.5,
-    final_delivery_date: "2026-03-15",
-    deliverables: {
-      video_url: "https://youtube.com/watch?v=xxx",
-      presentation_url: "https://slides.google.com/xxx",
-      repo_url: "https://github.com/team/repo",
-      preview_photo_url: null,
-    }
-  }
-}, 
-    this.searchQuery = "";
+    this.user = getUser();
+    this.team = {
+      name: "Alpha Squad",
+      members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
+      project: {
+        name: "Campus Navigator",
+        description: "React Native app for campus navigation.",
+        grade: 87.5,
+        final_delivery_date: "2026-03-15",
+        deliverables: {
+          video_url: "https://youtube.com/watch?v=xxx",
+          presentation_url: "https://slides.google.com/xxx",
+          repo_url: "https://github.com/team/repo",
+          preview_photo_url: null,
+        }
+      }
+    },
+      this.searchQuery = "";
 
     // Available teams. It is show only when there is no team 
     this.teams = [
@@ -37,9 +37,9 @@ export default class CoderHome {
         status: "full",
         members: [
           { id: 1, name: "Alice", avatar: "A" },
-          { id: 2, name: "Bob",   avatar: "B" },
+          { id: 2, name: "Bob", avatar: "B" },
           { id: 3, name: "Carol", avatar: "C" },
-          { id: 4, name: "Dave",  avatar: "D" },
+          { id: 4, name: "Dave", avatar: "D" },
         ],
         maxMembers: 6,
       },
@@ -49,7 +49,7 @@ export default class CoderHome {
         description: "Building a React Native app for campus navigation.",
         status: "open",
         members: [
-          { id: 5, name: "Emma",  avatar: "E" },
+          { id: 5, name: "Emma", avatar: "E" },
           { id: 6, name: "Frank", avatar: "F" },
         ],
         maxMembers: 6,
@@ -62,7 +62,7 @@ export default class CoderHome {
         members: [
           { id: 7, name: "Grace", avatar: "G" },
           { id: 8, name: "Henry", avatar: "H" },
-          { id: 9, name: "Ivy",   avatar: "I" },
+          { id: 9, name: "Ivy", avatar: "I" },
         ],
         maxMembers: 6,
       },
@@ -78,11 +78,11 @@ export default class CoderHome {
     const content = this.team
       ? renderCoderTeam({ user: this.user, team: this.team })
       : renderCoderNoTeam({
-          user:           this.user,
-          teams:          this.getFilteredTeams(),
-          searchQuery:    this.searchQuery,
-          availableCount: this.getAvailableCount(),
-        });
+        user: this.user,
+        teams: this.getFilteredTeams(),
+        searchQuery: this.searchQuery,
+        availableCount: this.getAvailableCount(),
+      });
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -127,6 +127,16 @@ export default class CoderHome {
       btn.addEventListener("click", () => this.handleJoinTeam(btn.dataset.teamId));
     });
 
+    // ── Team view handlers ──
+    const btnProjectSettings = document.querySelector(".btn-project-settings");
+    if (btnProjectSettings) {
+      btnProjectSettings.addEventListener("click", (e) => {
+        const route = e.currentTarget.dataset.route;
+        if (route) {
+          this.router.navigate(route);
+        }
+      });
+    }
   }
 
   // ─────────────────────────────────────────
@@ -134,11 +144,11 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   handleCreateTeam(e) {
     e.preventDefault();
-    const teamName     = document.getElementById("teamName").value;
+    const teamName = document.getElementById("teamName").value;
     const projectTopic = document.getElementById("projectTopic").value;
     // TODO: replace with API call
     console.log("Creating team:", { teamName, projectTopic });
     alert(`Team "${teamName}" created successfully!`);
   }
- }
- 
+}
+
