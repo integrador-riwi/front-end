@@ -10,7 +10,7 @@ export default class CoderHome {
     this.router = router;
     this.navbar = new Navbar(router);
     this.user   = getUser();
-    this.team   = this.team = {
+    this.team   =  {
   name: "Alpha Squad",
   members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
   project: {

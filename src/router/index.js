@@ -7,6 +7,7 @@ import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
+import ProjectSettings from "../views/projectSettings.js";
 
 class App {
   constructor() {
@@ -65,6 +66,9 @@ console.log("Authenticated:", isAuthenticated());
         break;
       case "coderHome":
         this.currentView = new coderHome(this)
+        break;
+      case "projectSettings":
+        this.currentView = new ProjectSettings(this)
         break;
       default:
         return this.navigate("login");

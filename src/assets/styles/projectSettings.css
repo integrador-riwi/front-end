@@ -1,0 +1,239 @@
+
+.cs-main{
+margin-left: 224px;
+  min-height: 100vh;
+}
+
+
+/* ── Breadcrumb ── */
+.cs-breadcrumb { font-size: 0.8rem; }
+.cs-bc-link    { color: var(--text-muted); cursor: pointer; transition: color 0.15s; }
+.cs-bc-link:hover { color: var(--accent); }
+.cs-bc-sep     { color: var(--text-dim); }
+.cs-bc-current { color: var(--text-primary); font-weight: 600; }
+
+/* ── Page header ── */
+.cs-page-title {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--main-font);
+  letter-spacing: -0.02em;
+}
+.cs-page-sub { font-size: 0.875rem; color: var(--text-muted); }
+
+/* ── Card ── */
+.cs-card {
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(107,92,255,0.07);
+}
+
+.cs-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--main-font);
+}
+.cs-card-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Labels ── */
+.cs-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ── Inputs ── */
+.cs-input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-family: var(--main-font);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: block;
+}
+.cs-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--bg-panel);
+}
+.cs-input::placeholder { color: var(--text-dim); }
+
+.cs-textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* Repo input with icon */
+.cs-input-icon-wrap { position: relative; }
+
+.cs-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.cs-input-with-icon { padding-left: 38px; }
+
+/* ── Buttons ── */
+.cs-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--main-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 12px var(--accent-glow);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.cs-btn-primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.cs-btn-invite {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: var(--accent);
+  color: #fff; border: none;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.cs-btn-invite:hover { background: var(--color-primary-dark); transform: scale(1.06); }
+
+.cs-btn-copy {
+  padding: 10px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--main-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.cs-btn-copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.cs-btn-remove {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.cs-btn-remove svg { width: 12px; height: 12px; }
+.cs-btn-remove:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-dim);
+}
+
+/* ── Danger zone ── */
+.cs-danger-card {
+  background: var(--danger-dim);
+  border: 1.5px solid rgba(254,101,79,0.2);
+}
+.cs-danger-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--danger);
+  font-family: var(--main-font);
+}
+.cs-danger-sub { font-size: 0.875rem; color: var(--danger); opacity: 0.75; }
+
+.cs-btn-danger {
+  padding: 8px 18px;
+  background: none;
+  border: 1.5px solid var(--danger);
+  border-radius: 9px;
+  color: var(--danger);
+  font-family: var(--main-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.cs-btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ── Member list ── */
+.cs-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.cs-avatar-color-0 { background: var(--accent); }
+.cs-avatar-color-1 { background: var(--mint);   color: var(--navy); }
+.cs-avatar-color-2 { background: var(--coral); }
+.cs-avatar-color-3 { background: var(--gold);   color: var(--navy); }
+
+.cs-member-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.cs-member-role { font-size: 0.75rem; color: var(--text-muted); }
+
+.cs-lead-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(107,92,255,0.2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cs-you-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.cs-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(107,92,255,0.15);
+  padding: 1px 9px;
+  border-radius: 99px;
+}
