@@ -8,6 +8,7 @@ import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/projectSettings.js";
+import EventsView from "../views/EventsView.js";
 
 class App {
   constructor() {
@@ -17,7 +18,7 @@ class App {
     this.init();
   }
 
-  init(){
+  init() {
     const user = getCurrentUser();
     this.user = user;
     if (!isAuthenticated()) {
@@ -25,11 +26,11 @@ class App {
       return;
     }
     console.log("USER FROM STORAGE:", this.user);
-console.log("ROLE:", this.user?.role);
-  
+    console.log("ROLE:", this.user?.role);
+
     console.log("User:", this.user);
-console.log("Role:", this.user?.role);
-console.log("Authenticated:", isAuthenticated());
+    console.log("Role:", this.user?.role);
+    console.log("Authenticated:", isAuthenticated());
     switch (this.user?.role) {
       case "ADMIN":
         this.navigate("dashboard");
@@ -55,6 +56,9 @@ console.log("Authenticated:", isAuthenticated());
       case "dashboard":
         this.currentView = new DashboardView(this);
         break;
+      case "events":
+        this.currentView = new EventsView(this);
+        break;
       case "events/create":
         this.currentView = new CreateEvent(this);
         break;
@@ -73,13 +77,13 @@ console.log("Authenticated:", isAuthenticated());
       default:
         return this.navigate("login");
     }
-   
-  if (!this.currentView) {
-  console.error("No view created for route:", route);
-  return;
-}
+
+    if (!this.currentView) {
+      console.error("No view created for route:", route);
+      return;
+    }
     this.currentView.render();
-  
+
   }
 }
 

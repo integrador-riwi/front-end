@@ -5,9 +5,9 @@ import "../assets/styles/projectSettings.css";
 export default class ProjectSettings {
   constructor(router) {
     this.router = router;
-    this.user   = getUser();
+    this.user = getUser();
     this.navbar = new Navbar(router);
-    this.team    = null;
+    this.team = null;
     this.project = null;
   }
 
@@ -15,28 +15,28 @@ export default class ProjectSettings {
     const app = document.getElementById("app");
 
     // TODO: replace with real API calls
-     this.team    = {
-  name: "Alpha Squad",
-  members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
-  project: {
-    name: "Campus Navigator",
-    description: "React Native app for campus navigation.",
-    grade: 87.5,
-    final_delivery_date: "2026-03-15",
-    deliverables: {
-      video_url: "https://youtube.com/watch?v=xxx",
-      presentation_url: "https://slides.google.com/xxx",
-      repo_url: "https://github.com/team/repo",
-      preview_photo_url: null,
+    this.team = {
+      name: "Alpha Squad",
+      members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
+      project: {
+        name: "Campus Navigator",
+        description: "React Native app for campus navigation.",
+        grade: 87.5,
+        final_delivery_date: "2026-03-15",
+        deliverables: {
+          video_url: "https://youtube.com/watch?v=xxx",
+          presentation_url: "https://slides.google.com/xxx",
+          repo_url: "https://github.com/team/repo",
+          preview_photo_url: null,
+        }
+      }
     }
-  }
-}
 
     const { team } = this;
-    const projectName = team?.name        ?? "Untitled Project";
+    const projectName = team?.name ?? "Untitled Project";
     const projectDesc = team?.description ?? "";
-    const repoUrl     = team?.repo_url    ?? "";
-    const members     = team?.members        ?? [];
+    const repoUrl = team?.repo_url ?? "";
+    const members = team?.members ?? [];
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -188,7 +188,7 @@ export default class ProjectSettings {
 
   renderMember(m, i) {
     const isLead = m.team_role === "LEADER" || i === 0;
-    const isMe   = m.id_user === this.user?.id_user;
+    const isMe = m.id_user === this.user?.id_user;
     return `
       <li class="d-flex align-items-center gap-3" data-member-id="${m.id_user}">
         <div class="cs-avatar cs-avatar-color-${i % 4}">${m.name.charAt(0)}</div>
@@ -200,13 +200,13 @@ export default class ProjectSettings {
           <p class="cs-member-role mb-0">${isLead ? "Lead" : "Member"}</p>
         </div>
         ${isLead
-          ? `<span class="cs-lead-badge">LEAD</span>`
-          : `<button class="cs-btn-remove" data-member-id="${m.id_user}" title="Remove">
+        ? `<span class="cs-lead-badge">LEAD</span>`
+        : `<button class="cs-btn-remove" data-member-id="${m.id_user}" title="Remove">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                </svg>
              </button>`
-        }
+      }
       </li>
     `;
   }
