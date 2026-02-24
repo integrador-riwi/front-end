@@ -16,6 +16,7 @@ class App {
     this.app = document.getElementById("app");
     this.currentView = null;
     this.user = getCurrentUser();
+    this.currentParams = {};
     this.init();
   }
 
@@ -46,9 +47,10 @@ class App {
   }
 
 
-  navigate(route) {
+  navigate(route, params = {}) {
     this.app.innerHTML = "";
     this.currentRoute = route;
+    this.currentParams = params;
 
     switch (route) {
       case "login":
@@ -64,7 +66,7 @@ class App {
         this.currentView = new CreateEvent(this);
         break;
       case "details":
-        this.currentView = new EventDetails(this);
+        this.currentView = new EventDetails(this, params);
         break;
       case "projects":
         this.currentView = new Teams(this);
