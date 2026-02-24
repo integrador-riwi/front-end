@@ -1,6 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
-import { getEvents } from "../services/api.js";
+import { getEvents } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -20,39 +20,13 @@ export default class EventsView {
     async fetchEvents() {
         try {
             this.loading = true;
-            // const data = await getEvents();
-
-            // MOCK DATA for visualization
-            const data = [
-                {
-                    id: 1,
-                    title: "Capstone project Basic Route cohort 4",
-                    description: "Final evaluation event for the Basic Route program. Coders will present their fundamental projects demonstrating core logical and programming concepts.",
-                    date: "2025-11-01T08:00:00", // Past date
-                },
-                {
-                    id: 2,
-                    title: "Capstone project Advanced Route cohort 4",
-                    description: "End of program capstone for the Advanced Route. Coders will present their full-stack applications and production-ready deployments.",
-                    date: "2025-12-15T09:00:00", // Past date
-                },
-                {
-                    id: 3,
-                    title: "Capstone project Basic Route Cohort 6",
-                    description: "Upcoming capstone presentations for the newest Basic Route cohort. Get ready to see innovative terminal and web applications.",
-                    date: "2026-08-20T10:00:00", // Future date
-                }
-            ];
-
-            // Assuming data is an array of events. Sort by date if available
+            
+            const response = await getEvents();
+            
+            const data = response.data?.events || response.events || [];
+            
             if (Array.isArray(data)) {
                 this.events = data.sort((a, b) => {
-                    const dateA = a.date || a.start_date || a.createdAt || "";
-                    const dateB = b.date || b.start_date || b.createdAt || "";
-                    return new Date(dateA) - new Date(dateB);
-                });
-            } else if (data && Array.isArray(data.events)) {
-                this.events = data.events.sort((a, b) => {
                     const dateA = a.date || a.start_date || a.createdAt || "";
                     const dateB = b.date || b.start_date || b.createdAt || "";
                     return new Date(dateA) - new Date(dateB);
@@ -62,7 +36,7 @@ export default class EventsView {
             }
         } catch (err) {
             console.error("Failed to fetch events:", err);
-            this.error = "Error loading events. Please try again later.";
+            this.error = err.message || "Error loading events. Please try again later.";
         } finally {
             this.loading = false;
         }
@@ -86,6 +60,7 @@ export default class EventsView {
         const title = event.title || event.name || "Untitled Event";
         const desc = event.description || "No description provided.";
         const date = event.date || event.start_date || event.createdAt;
+        const eventId = event.id;
 
         return `
         <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column flex-md-row gap-4 align-items-md-center mb-4" style="border-left: 5px solid var(--color-primary);">
@@ -115,7 +90,7 @@ export default class EventsView {
           
           <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column gap-2" style="min-width: 150px;">
           
-            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
               Details
             </button>
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
@@ -207,7 +182,6 @@ export default class EventsView {
     async render() {
         const app = document.getElementById("app");
 
-        // Initial render with loading state
         app.innerHTML = `
       ${this.navbar.render()}
       ${this.header.render()}
@@ -247,7 +221,6 @@ export default class EventsView {
         this.header.mountBreadcrumb();
         this.navbar.attachEventHandlers();
 
-        // Fetch data and re-render the list container
         await this.fetchEvents();
 
         const container = document.getElementById("events-container");
@@ -262,13 +235,14 @@ export default class EventsView {
       viewProjectBtns.forEach(btn => {
           btn.addEventListener('click', (e) => {
               const route = e.currentTarget.dataset.route;
-              if (route) {
-                  this.router.navigate(route);
+              const eventId = e.currentTarget.dataset.eventId;
+              if (route && eventId) {
+                  this.router.navigate(route, { eventId });
               }
           });
       });
       const newEventBtn = document.getElementById("new-event-button");
-      newEventBtn.addEventListener("click", () => {
+      newEventBtn?.addEventListener("click", () => {
         this.router.navigate('events/create');
       })
     }
