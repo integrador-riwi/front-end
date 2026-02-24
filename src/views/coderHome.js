@@ -2,7 +2,7 @@ import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
 import { renderCoderTeam } from "./coderTeam.js";
-import { renderCoderNoTeam } from "./coderNoTeam.js";
+import { renderCoderNoTeam, setupAIAnalysis } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
 
 export default class CoderHome {
@@ -10,30 +10,24 @@ export default class CoderHome {
     this.router = router;
     this.navbar = new Navbar(router);
     this.user = getUser();
-    this.team = {
-      name: "Alpha Squad",
-      members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
-      project: {
-        name: "Campus Navigator",
-        description: "React Native app for campus navigation.",
-        grade: 87.5,
-        final_delivery_date: "2026-03-15",
-        deliverables: {
-          video_url: "https://youtube.com/watch?v=xxx",
-          presentation_url: "https://slides.google.com/xxx",
-          repo_url: "https://github.com/team/repo",
-          preview_photo_url: null,
-        }
-      }
-    },
-      this.searchQuery = "";
 
-    // Available teams. It is show only when there is no team 
+    this.searchQuery = "";
+    
+    this.aiResult = null;
+    this.isAnalyzing = false;
+    
+    // Store form values to prevent clearing on re-render
+    this.formData = {
+      teamName: "",
+      projectTopic: ""
+    };
+
     this.teams = [
       {
         id: 1,
         name: "Quantum Leap",
-        description: "Exploring quantum computing algorithms for financial models.",
+        description:
+          "Exploring quantum computing algorithms for financial models.",
         status: "full",
         members: [
           { id: 1, name: "Alice", avatar: "A" },
@@ -57,7 +51,8 @@ export default class CoderHome {
       {
         id: 3,
         name: "Data Miners",
-        description: "Machine Learning project focusing on social media sentiment analysis.",
+        description:
+          "Machine Learning project focusing on social media sentiment analysis.",
         status: "pending",
         members: [
           { id: 7, name: "Grace", avatar: "G" },
@@ -70,7 +65,7 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
-  // Main render 
+  // Main render
   // ─────────────────────────────────────────
   render() {
     const app = document.getElementById("app");
@@ -78,11 +73,15 @@ export default class CoderHome {
     const content = this.team
       ? renderCoderTeam({ user: this.user, team: this.team })
       : renderCoderNoTeam({
-        user: this.user,
-        teams: this.getFilteredTeams(),
-        searchQuery: this.searchQuery,
-        availableCount: this.getAvailableCount(),
-      });
+          user: this.user,
+          teams: this.getFilteredTeams(),
+          searchQuery: this.searchQuery,
+          availableCount: this.getAvailableCount(),
+          formData: this.formData,
+          analyzeSimilarity: this.aiResult !== null || this.isAnalyzing,
+          aiResult: this.aiResult,
+          isAnalyzing: this.isAnalyzing
+        });
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -93,6 +92,10 @@ export default class CoderHome {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+    
+    if (!this.team) {
+      setupAIAnalysis(this);
+    }
   }
 
   // ─────────────────────────────────────────
@@ -101,14 +104,15 @@ export default class CoderHome {
   getFilteredTeams() {
     if (!this.searchQuery.trim()) return this.teams;
     const q = this.searchQuery.toLowerCase();
-    return this.teams.filter(t =>
-      t.name.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q)
+    return this.teams.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q),
     );
   }
 
   getAvailableCount() {
-    return this.teams.filter(t => t.status === "open").length;
+    return this.teams.filter((t) => t.status === "open").length;
   }
 
   // ─────────────────────────────────────────
@@ -116,15 +120,19 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   attachEventHandlers() {
     // ── No-team view handlers ──
-    document.getElementById("createTeamForm")?.addEventListener("submit", (e) => this.handleCreateTeam(e));
+    document
+      .getElementById("createTeamForm")
+      ?.addEventListener("submit", (e) => this.handleCreateTeam(e));
 
     document.getElementById("teamSearch")?.addEventListener("input", (e) => {
       this.searchQuery = e.target.value;
       this.render();
     });
 
-    document.querySelectorAll(".btn-join").forEach(btn => {
-      btn.addEventListener("click", () => this.handleJoinTeam(btn.dataset.teamId));
+    document.querySelectorAll(".btn-join").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleJoinTeam(btn.dataset.teamId),
+      );
     });
 
     // ── Team view handlers ──
@@ -150,5 +158,8 @@ export default class CoderHome {
     console.log("Creating team:", { teamName, projectTopic });
     alert(`Team "${teamName}" created successfully!`);
   }
+  
+  handleJoinTeam(teamId) {
+    console.log("Join team:", teamId);
+  }
 }
-
