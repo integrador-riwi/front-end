@@ -1,18 +1,19 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
-import { getEvents } from "../services/api.js";
+import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
 
 export default class EventDetails {
-  constructor(router) {
+  constructor(router, params = {}) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
-    this.event = [];
+    this.eventId = params.eventId || null;
+    this.event = null;
     this.loading = true;
     this.error = null;
   }
@@ -20,21 +21,17 @@ export default class EventDetails {
   async fetchCurrentEvent() {
     try {
       this.loading = true;
-      // const data = await getEvents();
-
-      // MOCK DATA for visualization
-      const data = {
-        id: 3,
-        title: "Capstone project Basic Route Cohort 6",
-        description:
-          "Upcoming capstone presentations for the newest Basic Route cohort. Get ready to see innovative terminal and web applications.",
-        date: "2026-08-20T10:00:00", // Future date
-        location: "Medellin",
-      };
-      return data;
+      
+      if (!this.eventId) {
+        throw new Error('Event ID not provided');
+      }
+      
+      const response = await getEventById(this.eventId);
+      this.event = response.data || response;
+      
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error = "Error loading event. Please try again later.";
+      this.error = err.message || "Error loading event. Please try again later.";
     } finally {
       this.loading = false;
     }
@@ -54,13 +51,24 @@ export default class EventDetails {
     });
   }
 
+  getStatusBadge(status) {
+    if (status === 'COMPLETED') {
+      return '<span class="badge-status mb-3 d-inline-block">● Completed</span>';
+    } else if (status === 'UPCOMING') {
+      return '<span class="badge-status mb-3 d-inline-block">● Upcoming</span>';
+    } else if (status === 'IN_PROGRESS') {
+      return '<span class="badge-status mb-3 d-inline-block">● In Progress</span>';
+    }
+    return '<span class="badge-status mb-3 d-inline-block">● ' + status + '</span>';
+  }
+
   renderEvent(event) {
     const title = event.title || event.name || "Untitled Event";
     const desc = event.description || "No description provided.";
 
     return `
         <div class="col-lg-8">
-            <span class="badge-status mb-3 d-inline-block">● In Progress</span>
+            ${this.getStatusBadge(event.status)}
             <h1 class="fw-bold mb-3">${title}</h1>
             <p class="text-muted fs-5">
                 ${desc}
@@ -82,11 +90,34 @@ export default class EventDetails {
       `;
   }
 
-  renderEventLocation(event) {
-
+  renderEventInfo(event) {
     return `
-        <small class="text-muted">Location</small>
-        <p class="fw-semibold mb-0">${event.location}</p>        
+        <small class="text-muted">Event Type</small>
+        <p class="fw-semibold mb-0">${event.event_type || 'N/A'}</p>
+        
+        <small class="text-muted mt-3 d-block">Cohort</small>
+        <p class="fw-semibold mb-0">${event.cohort || 'N/A'}</p>
+        
+        <small class="text-muted mt-3 d-block">Route</small>
+        <p class="fw-semibold mb-0">${event.route || 'N/A'}</p>
+      `;
+  }
+
+  renderLoading() {
+    return `
+        <div class="d-flex justify-content-center align-items-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      `;
+  }
+
+  renderError(message) {
+    return `
+        <div class="alert alert-danger rounded-4 mt-4" role="alert">
+          ${message}
+        </div>
       `;
   }
 
@@ -108,24 +139,39 @@ export default class EventDetails {
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
 
-    // Fetch data and re-render the list container
-    const event = await this.fetchCurrentEvent();
-
     const eventContainer = document.getElementById("event-container");
     const dateContainer = document.getElementById("event-date");
     const locationContainer = document.getElementById("event-location");
 
-    if (!eventContainer || !dateContainer || !locationContainer) return;
+    if (!eventContainer || !dateContainer || !locationContainer) {
+      console.error("Container elements not found");
+      return;
+    }
 
-    eventContainer.innerHTML = this.renderEvent(event);
-    dateContainer.innerHTML = this.renderEventDate(event);
-    locationContainer.innerHTML = this.renderEventLocation(event);
+    eventContainer.innerHTML = this.renderLoading();
+    
+    await this.fetchCurrentEvent();
+
+    if (this.error) {
+      eventContainer.innerHTML = this.renderError(this.error);
+      return;
+    }
+
+    if (!this.event) {
+      eventContainer.innerHTML = this.renderError("Event not found");
+      return;
+    }
+
+    eventContainer.innerHTML = this.renderEvent(this.event);
+    dateContainer.innerHTML = this.renderEventDate(this.event);
+    locationContainer.innerHTML = this.renderEventInfo(this.event);
+    
     this.attachEventHandlers();
   }
 
   attachEventHandlers() {
     const viewProjectsBtn = document.getElementById("view-projects-btn");
-    viewProjectsBtn.addEventListener("click", (e) => {
+    viewProjectsBtn?.addEventListener("click", (e) => {
         const route = e.currentTarget.dataset.route;
         if (route) {
           this.router.navigate(route);
