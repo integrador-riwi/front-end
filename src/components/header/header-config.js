@@ -12,6 +12,10 @@ export const HEADER_LINKS_BY_VIEW = {
     { label: "Event",         route: "events",      },
     { label: "Ranking",       route: "ranking",       },
   ],
+  "details": [
+    { label: "Events",         route: "events",      },
+    { label: "Details",       route: "details",       },
+  ],
 };
 
 export const HEADER_LAYOUT_BY_ROUTE = {
@@ -26,6 +30,10 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   "ranking": {
     variant: "ranking",
     title: "Ranking",
+  },
+  "details": {
+    variant: "details",
+    title: "Event Details",
   },
 };
 

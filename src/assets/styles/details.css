@@ -1,0 +1,79 @@
+@import url("./root.css");
+
+/* Cards */
+.card-soft {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(107,92,255,0.05);
+}
+
+/* Buttons */
+.btn-accent {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-weight: 500;
+}
+
+.btn-accent:hover {
+  background: var(--accent-dark);
+}
+
+.btn-outline-accent {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 12px;
+}
+
+.btn-outline-accent:hover {
+  background: rgba(107,92,255,0.08);
+}
+
+/* Badge */
+.badge-status {
+  background: rgba(90, 204, 164, 0.15);
+  color: var(--mint);
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+}
+
+/* Timeline */
+.timeline {
+  border-left: 2px solid var(--border);
+  padding-left: 20px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px white;
+}
+
+/* Gradient stats card */
+.stats-card {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(107,92,255,0.3);
+}
+
+.stat-box {
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 18px;
+}

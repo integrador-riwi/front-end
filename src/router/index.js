@@ -3,6 +3,7 @@ import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
 import CreateEvent from "../views/createEvent.js";
+import EventDetails from "../views/eventDetails.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
@@ -61,6 +62,9 @@ class App {
         break;
       case "events/create":
         this.currentView = new CreateEvent(this);
+        break;
+      case "details":
+        this.currentView = new EventDetails(this);
         break;
       case "projects":
         this.currentView = new Teams(this);

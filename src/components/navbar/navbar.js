@@ -68,7 +68,6 @@ export default class Navbar {
 
 
   setActiveRoute(route) {
-    console.log(route)
     this.currentRoute = route;
 
     document.querySelectorAll(".nav-link").forEach(btn => {
@@ -81,7 +80,6 @@ export default class Navbar {
       btn.addEventListener("click", () => {
         this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
-        console.log(btn.dataset.route)
       });
     });
 

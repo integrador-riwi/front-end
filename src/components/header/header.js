@@ -64,11 +64,15 @@ export default class Header {
     }
 
     if (layout.variant === "teams") {
-      return this.renderTeamsHeader(layout);
+      return this.renderHeader(layout);
     }
 
     if (layout.variant === "ranking") {
-      return this.renderRankingHeader(layout);
+      return this.renderHeader(layout);
+    }
+
+    if (layout.variant === "details") {
+      return this.renderHeader(layout);
     }
 
     return "";
@@ -105,7 +109,7 @@ export default class Header {
   `;
   }
 
-  renderTeamsHeader(layout) {
+  renderHeader(layout) {
     return `
     <header class="app-header">
       
@@ -122,7 +126,7 @@ export default class Header {
   `;
   }
 
-    renderRankingHeader(layout) {
+    renderHeader(layout) {
     return `
     <header class="app-header">
       
