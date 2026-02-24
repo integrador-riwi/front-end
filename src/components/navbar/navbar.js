@@ -43,7 +43,7 @@ export default class Navbar {
 
         <!-- User + logout -->
         <div class="sidebar-footer p-3">
-          <div class="sidebar-user d-flex align-items-center gap-2 rounded mb-1 px-2 py-2">
+          <div class="sidebar-user d-flex align-items-center gap-2 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
             <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
               ${getInitials(this.user?.name)}
             </div>
@@ -86,6 +86,11 @@ export default class Navbar {
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
       logout();
       this.router.navigate("login");
+    });
+
+    document.getElementById("profileBtn")?.addEventListener("click", () => {
+      this.setActiveRoute("profile");
+      this.router.navigate("profile");
     });
   }
 }

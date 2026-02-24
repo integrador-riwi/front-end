@@ -1,0 +1,171 @@
+.profile-container {
+    background-color: var(--color-bg);
+    color: var(--color-text-main);
+    font-family: var(--main-font);
+    width: 100%;
+}
+
+.profile-viewport {
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.profile-header {
+    border-bottom: 1px solid var(--border);
+    background-color: var(--color-surface);
+}
+
+.profile-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-title-header);
+    margin-bottom: 0.25rem;
+}
+
+.profile-subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-header);
+    margin: 0;
+}
+
+.profile-content {
+    width: 100%;
+    max-width: 1000px;
+}
+
+.profile-card {
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card-topbar {
+    height: 6px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+
+.profile-card-main {
+    min-width: 300px;
+}
+
+.profile-card-details {
+    min-width: 500px;
+}
+
+@media (max-width: 768px) {
+    .profile-content {
+        flex-direction: column;
+    }
+
+    .profile-card-main,
+    .profile-card-details {
+        min-width: 100%;
+    }
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--Lilac, #eaa2fc));
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    box-shadow: 0 8px 16px var(--accent-dim);
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+
+.profile-role {
+    font-size: 0.95rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.clan-badge {
+    display: inline-block;
+    background-color: var(--accent-dim);
+    color: var(--color-primary-dark);
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+}
+
+
+.profile-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-title-header);
+    border-bottom: 2px solid var(--accent-dim);
+    padding-bottom: 0.5rem;
+}
+
+.profile-about-title {
+    font-size: 1.25rem;
+    border-color: var(--border) !important;
+}
+
+.profile-info-box {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    line-height: 1.6;
+}
+
+.profile-info-link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.profile-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.profile-value {
+    font-size: 1.05rem;
+    color: var(--color-text-main);
+    line-height: 1.6;
+    margin: 0;
+    background-color: var(--bg-input);
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.profile-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.profile-link:hover {
+    background-color: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
+}

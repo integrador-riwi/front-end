@@ -10,6 +10,7 @@ import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/projectSettings.js";
 import EventsView from "../views/EventsView.js";
+import ProfileView from "../views/ProfileView.js";
 
 class App {
   constructor() {
@@ -79,6 +80,9 @@ class App {
         break;
       case "projectSettings":
         this.currentView = new ProjectSettings(this)
+        break;
+      case "profile":
+        this.currentView = new ProfileView(this);
         break;
       default:
         return this.navigate("login");
