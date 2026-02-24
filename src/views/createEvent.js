@@ -26,8 +26,8 @@ export default class CreateEvent {
       </main>
     `;
     this.header.mountBreadcrumb();
-
+    this.header.attachEventHandlers();
     this.navbar.attachEventHandlers();
-    dashboard.attachEventHandlers?.();
+    //dashboard.attachEventHandlers?.();
   }
 }

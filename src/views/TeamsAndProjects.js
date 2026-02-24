@@ -69,6 +69,6 @@ export default class Teams {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    dashboard.attachEventHandlers?.();
+    //dashboard.attachEventHandlers?.();
   }
 }

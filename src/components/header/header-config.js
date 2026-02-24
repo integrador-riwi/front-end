@@ -1,7 +1,7 @@
 export const HEADER_LINKS_BY_VIEW = {
   "events/create": [
     { label: "Events",            route: "events"           },
-    { label: "Management",        route: "projects"         },
+    { label: "Management",        route: "settings"         },
     { label: "Create New",        route: "events/create"    },
   ],
   "projects": [

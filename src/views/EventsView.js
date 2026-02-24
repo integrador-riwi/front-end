@@ -4,6 +4,7 @@ import { getEvents } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
+import { icons } from "./../utils/icons.js";
 
 export default class EventsView {
     constructor(router) {
@@ -113,8 +114,9 @@ export default class EventsView {
           </div>
           
           <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column gap-2" style="min-width: 150px;">
-            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="projects" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
-              View Projects
+          
+            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+              Details
             </button>
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
               View Finalists
@@ -214,18 +216,25 @@ export default class EventsView {
           
           <!-- Page Header -->
           <div class="d-flex flex-column gap-2 mb-5 pb-3 border-bottom" style="border-color: var(--border) !important;">
-            <div class="d-flex align-items-center gap-3">
-              <div class="p-3 rounded-circle" style="background-color: var(--accent-dim); color: var(--color-primary);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" style="background-color: var(--accent-dim); color: var(--color-primary);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <h1 class="mb-0 fw-bold" style="color: var(--color-primary); font-size: 2.25rem; letter-spacing: -0.5px;">Upcoming Events</h1>
               </div>
-              <h1 class="mb-0 fw-bold" style="color: var(--color-primary); font-size: 2.25rem; letter-spacing: -0.5px;">Upcoming Events</h1>
+              <button id="new-event-button" class="app-btn-primary d-flex align-items-center gap-2">
+              ${icons.add()}
+              New Event
+            </button>
             </div>
             <p class="mb-0 ms-5 ps-3" style="color: var(--text-sidebar); font-size: 1.05rem;">Discover and track ongoing and past project capstones and events.</p>
+            
           </div>
 
           <div id="events-container">
@@ -249,14 +258,18 @@ export default class EventsView {
     }
 
     attachEventHandlers() {
-        const viewProjectBtns = document.querySelectorAll('.btn-view-projects');
-        viewProjectBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const route = e.currentTarget.dataset.route;
-                if (route) {
-                    this.router.navigate(route);
-                }
-            });
-        });
+      const viewProjectBtns = document.querySelectorAll('.btn-view-projects');
+      viewProjectBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+              const route = e.currentTarget.dataset.route;
+              if (route) {
+                  this.router.navigate(route);
+              }
+          });
+      });
+      const newEventBtn = document.getElementById("new-event-button");
+      newEventBtn.addEventListener("click", () => {
+        this.router.navigate('events/create');
+      })
     }
 }

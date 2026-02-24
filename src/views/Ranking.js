@@ -159,6 +159,6 @@ export default class Ranking {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    dashboard.attachEventHandlers?.();
+    //dashboard.attachEventHandlers?.();
   }
 }

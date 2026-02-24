@@ -13,6 +13,7 @@ export const NAV_LINKS_BY_ROLE = {
   ADMIN: [
     { label: "Events", route: "events", icon: "calendar" },
     { label: "Create Event", route: "events/create", icon: "plus" },
+    { label: "Event Details", route: "details", icon: "details" },
     { label: "Teams & Projects", route: "projects", icon: "globe" },
     { label: "Rubrics", route: "rubrics", icon: "bulb" },
     { label: "Evaluation Rules", route: "rules", icon: "settings" },
