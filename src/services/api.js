@@ -63,3 +63,17 @@ export async function refreshTokens() {
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
 }
+
+// AI - Similar Projects Search
+export async function searchSimilarProjects(
+  query,
+  limit = 3,
+  minSimilarity = 0.7,
+  excludeProjectId = null,
+) {
+  let url = `/teams/search?q=${encodeURIComponent(query)}&limit=${limit}&min_similarity=${minSimilarity}`;
+  if (excludeProjectId) {
+    url += `&exclude_project=${excludeProjectId}`;
+  }
+  return apiFetch(url, { method: "GET" });
+}
