@@ -104,5 +104,19 @@ export const icons = {
       stroke="currentColor" stroke-width="4" stroke-linejoin="round"></rect> <rect x="30" y="26" width="13" height="16" stroke="currentColor" stroke-width="4" stroke-linecap="round" 
       stroke-linejoin="round"></rect> </g></svg>`,
 
+    add: () => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" 
+      stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M15 12L12 12M12 12L9 12M12 12L12 9M12 12L12 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> 
+      <path d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7" stroke="currentColor" 
+      stroke-width="1.5" stroke-linecap="round"></path> </g></svg>`,
+    
+    details: () => `<svg viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="currentColor"><g id="SVGRepo_bgCarrier" stroke-width="0">
+      </g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>details</title> <g id="Page-1" stroke="none" stroke-width="1" fill="none" 
+      fill-rule="evenodd"> <g id="Combined-Shape" fill="currentColor" transform="translate(64.000000, 64.000000)"> <path d="M384,64 L384,384 L64,384 L64,64 L384,64 Z M341.333333,106.666667 L106.666667,
+      106.666667 L106.666667,341.333333 L341.333333,341.333333 L341.333333,106.666667 Z M320,1.42108547e-14 L320,42.6666667 L42.666,42.666 L42.6666667,320 L1.42108547e-14,320 L1.42108547e-14,1.42108547e-14 
+      L320,1.42108547e-14 Z M298.666667,234.666667 L298.666667,277.333333 L149.333333,277.333333 L149.333333,234.666667 L298.666667,234.666667 Z M298.666667,149.333333 L298.666667,192 L149.333333,192 
+      L149.333333,149.333333 L298.666667,149.333333 Z"> </path> </g> </g> </g></svg>`,
+
+      
+
 };
 

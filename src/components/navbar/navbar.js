@@ -1,8 +1,7 @@
-import "../../assets/styles/navbar.css";
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
 import { getInitials, getCurrentUser, logout } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
-
+import "../../assets/styles/navbar.css"
 export default class Navbar {
   constructor(router) {
     this.router = router;
@@ -14,23 +13,24 @@ export default class Navbar {
     const links = getNavLinks(this.user?.role);
 
     return `
-      <aside class="sidebar">
+      <!-- ── Sidebar ── -->
+      <aside class="sidebar d-flex flex-column">
 
         <!-- Brand -->
-        <div class="sidebar-brand">
-          <div class="sidebar-brand-icon">
+        <div class="sidebar-brand d-flex align-items-center gap-3">
+          <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
             ${icons.teamUp()}
           </div>
           <span class="sidebar-brand-name">TeamUp</span>
         </div>
 
         <!-- Nav links -->
-        <nav class="sidebar-nav">
-          <ul>
+        <nav class="sidebar-nav flex-grow-1 overflow-auto py-3 px-2">
+          <ul class="d-flex flex-column gap-1 list-unstyled m-0 p-0">
             ${links.map(link => `
               <li>
                 <button
-                  class="nav-link ${this.currentRoute === link.route ? "active" : ""}"
+                  class="nav-link d-flex align-items-center gap-3 w-100 ${this.currentRoute === link.route ? "active" : ""}"
                   data-route="${link.route}"
                 >
                   ${getIcon(link.icon)}
@@ -42,16 +42,18 @@ export default class Navbar {
         </nav>
 
         <!-- User + logout -->
-        <div class="sidebar-footer">
-          <div class="sidebar-user">
-            <div class="sidebar-avatar">${getInitials(this.user?.name)}</div>
-            <div class="sidebar-user-info">
-              <p class="sidebar-user-name">${this.user?.name ?? "User"}</p>
-              <p class="sidebar-user-role">${getRoleLabel(this.user?.role)}</p>
+        <div class="sidebar-footer p-3">
+          <div class="sidebar-user d-flex align-items-center gap-2 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
+            <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
+              ${getInitials(this.user?.name)}
+            </div>
+            <div class="sidebar-user-info flex-grow-1 overflow-hidden">
+              <p class="sidebar-user-name text-truncate mb-0">${this.user?.name ?? "User"}</p>
+              <p class="sidebar-user-role text-truncate mb-0">${getRoleLabel(this.user?.role)}</p>
             </div>
           </div>
 
-          <button class="sidebar-logout" id="logoutBtn">
+          <button class="sidebar-logout d-flex align-items-center gap-3 w-100" id="logoutBtn">
             ${icons.logout()}
             Sign out
           </button>
@@ -59,29 +61,36 @@ export default class Navbar {
 
       </aside>
 
+      <!-- Main content offset -->
       <div class="sidebar-offset"></div>
     `;
   }
 
+
   setActiveRoute(route) {
-    console.log(route)
     this.currentRoute = route;
+
+    document.querySelectorAll(".nav-link").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.route === route);
+    });
   }
 
   attachEventHandlers() {
     document.querySelectorAll(".nav-link").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        this.currentRoute = btn.dataset.route;
+        this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
-        console.log(btn.dataset.route)
       });
     });
 
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
       logout();
       this.router.navigate("login");
+    });
+
+    document.getElementById("profileBtn")?.addEventListener("click", () => {
+      this.setActiveRoute("profile");
+      this.router.navigate("profile");
     });
   }
 }

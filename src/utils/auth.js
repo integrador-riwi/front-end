@@ -20,15 +20,25 @@ export const getUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-export function clearSession(router) {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  router.navigate("login");
+export function saveUser(user) {
+  localStorage.setItem("user", JSON.stringify(user));
 }
-
 
 export function saveSession(token, user) {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));
 }
 
+export function clearSession(router) {
+  clearAuth();
+  if (router) {
+    router.navigate("login");
+  }
+}
+
+export function updateUser(data) {
+  const current = getUser() || {};
+  const next = { ...current, ...data };
+  localStorage.setItem("user", JSON.stringify(next));
+  return next;
+}

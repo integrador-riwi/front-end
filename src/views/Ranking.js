@@ -1,7 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser, clearSession } from "../utils/auth.js";
-import { getDashboardForRole } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/ranking.css";
 import "../assets/styles/components.css";
@@ -16,13 +15,9 @@ export default class Ranking {
 
   async render() {
     const app = document.getElementById("app");
-    const dashboard = getDashboardForRole(this.user?.role, this.user);
 
-    if (!dashboard) {
-      clearSession(this.router);
-      return;
-    }
 
+  
     const mainContent = await fetch(`../../pages/ranking_dashboard.html`).then(
       (r) => r.text(),
     );
@@ -164,6 +159,6 @@ export default class Ranking {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    dashboard.attachEventHandlers?.();
+    //dashboard.attachEventHandlers?.();
   }
 }

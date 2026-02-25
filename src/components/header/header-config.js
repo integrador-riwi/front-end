@@ -1,7 +1,7 @@
 export const HEADER_LINKS_BY_VIEW = {
   "events/create": [
     { label: "Events",            route: "events"           },
-    { label: "Management",        route: "projects"         },
+    { label: "Management",        route: "settings"         },
     { label: "Create New",        route: "events/create"    },
   ],
   "projects": [
@@ -11,6 +11,10 @@ export const HEADER_LINKS_BY_VIEW = {
   "ranking": [
     { label: "Event",         route: "events",      },
     { label: "Ranking",       route: "ranking",       },
+  ],
+  "details": [
+    { label: "Events",         route: "events",      },
+    { label: "Details",       route: "details",       },
   ],
 };
 
@@ -26,6 +30,10 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   "ranking": {
     variant: "ranking",
     title: "Ranking",
+  },
+  "details": {
+    variant: "details",
+    title: "Event Details",
   },
 };
 
