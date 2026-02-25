@@ -5,11 +5,12 @@
   border: 1px solid var(--border);
   background: var(--bg-panel);
   transition: all .25s ease;
+  width: 100%;
+  justify-content: space-around;
 }
 
-/* ---------------- Buttons ---------------- */
 .btn-primary-custom {
-  background: var(--primary);
+  background: var(--accent);
   border: none;
   border-radius: 16px;
   font-weight: 600;
@@ -23,7 +24,6 @@
   color: white;
 }
 
-/* ---------------- Voting Status ---------------- */
 .status-badge {
   padding: 6px 14px;
   border-radius: 999px;
@@ -37,10 +37,9 @@
 }
 
 /* ---------------- Finalist Cards ---------------- */
-.team-card {
+.teamF-card {
   border-radius: 16px;
   border: 1px solid var(--border-card);
-  padding: 12px 18px;
   background: var(--card);
   display: flex;
   align-items: center;
@@ -48,11 +47,26 @@
   transition: .25s ease;
   cursor: pointer;
   min-width: 220px;
+  padding: 0.5rem;
 }
 
-.team-card:hover {
+.teamF-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.team-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #e9f2ff;
+  color: #0d6efd;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* ---------------- Audience Preview ---------------- */
