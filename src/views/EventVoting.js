@@ -161,89 +161,93 @@ export default class QRVoting {
   }
 
   renderFinalistsSection(finalists = []) {
-    if (!finalists.length) {
-      return `
-      <div class="text-muted">No teams available</div>
-    `;
-    }
+  if (!finalists.length) {
+    return `<div class="text-muted">No teams available</div>`;
+  }
 
-    return finalists
-      .map(
-        (team, index) => `
+  return finalists
+    .map(team => this.renderTeamCard(team))
+    .join("");
+}
+
+  renderTeamCard(team, { selectable = false } = {}) {
+  if (!team) return "";
+
+  const initials = (team.team_name || "NA")
+    .split(" ")
+    .map(word => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return `
     <div class="col-md-6 col-lg-4">
-    <div class="teamF-card d-flex flex-column">
-      <div class="rounded-circle bg-light text-primary fw-bold d-flex align-items-center justify-content-center"
-           style="width:45px;height:45px;">
-        ${team.initial || index + 1}
-      </div>
-      <div>
-        <strong>${team.team_name || "Unnamed Team"}</strong><br>
-        <small class="text-muted">
-          ${team.category || "General Category"}
-        </small>
-      </div>
+      <div class="teamF-card ${selectable ? "selectable-team" : ""} 
+           d-flex flex-column align-items-center"
+           ${selectable ? `data-id="${team.id}"` : ""}>
+           
+        <div class="team-avatar">
+          ${initials}
+        </div>
+
+        <div class="mt-2 text-center">
+          <strong>${team.team_name || "Unnamed Team"}</strong><br>
+          <small class="text-muted">
+            ${team.project_name || "Project"}
+          </small>
+        </div>
+
       </div>
     </div>
-  `,
-      )
-      .join("");
-  }
+  `;
+}
 
   renderAvailableTeams(finalists = []) {
   if (!finalists.length) {
     return `<div class="text-muted">No teams available</div>`;
   }
 
+  // 🔥 Comparación profesional por ID
+  const rankedIds = this.ranking
+    .filter(Boolean)
+    .map(team => team.id);
+
   const available = finalists.filter(
-    (team) => !this.ranking.includes(team)
+    team => !rankedIds.includes(team.id)
   );
 
-  return available.map((team) => {
+  if (!available.length) {
+    return `<div class="text-muted">All teams have been ranked</div>`;
+  }
 
-    const initials = team.team_name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    return `
-      <div class="col-md-6 col-lg-4">
-        <div class="teamF-card selectable-team d-flex flex-column align-items-center"
-             data-id="${team.id}">
-             
-          <div class="team-avatar">
-            ${initials}
-          </div>
-
-          <div class="mt-2 text-center">
-            <strong>${team.team_name}</strong><br>
-            <small class="text-muted">
-              ${team.project_name || "Project"}
-            </small>
-          </div>
-
-        </div>
-      </div>
-    `;
-  }).join("");
+  return available
+    .map(team => this.renderTeamCard(team, { selectable: true }))
+    .join("");
 }
 
-  attachTeamSelection() {
-    document.querySelectorAll(".selectable-team").forEach((card) => {
-      card.addEventListener("click", (e) => {
-        const id = e.currentTarget.dataset.id;
-        const team = this.event.finalists.find((t) => t.id == id);
+attachTeamSelection() {
+  document.querySelectorAll(".selectable-team").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      const id = e.currentTarget.dataset.id;
+      const team = this.event.finalists.find((t) => t.id == id);
 
-        const emptyIndex = this.ranking.findIndex((slot) => slot === null);
+    if (this.ranking.some(t => t?.id === team.id)) return;
+      if (!team) return;
 
-        if (emptyIndex !== -1) {
-          this.ranking[emptyIndex] = team;
-          this.renderVotingView();
-        }
-      });
+
+      const fillOrder = [1, 0, 2];
+
+      const emptyIndex = fillOrder.find(
+        (index) => this.ranking[index] === null
+      );
+
+      if (emptyIndex !== undefined) {
+        this.ranking[emptyIndex] = team;
+        this.renderVotingView();
+      }
     });
-  }
+  });
+}
 
   async render() {
     const app = document.getElementById("app");
