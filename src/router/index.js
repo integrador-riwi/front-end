@@ -8,7 +8,7 @@ import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
-import ProjectSettings from "../views/projectSettings.js";
+import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 
