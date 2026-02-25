@@ -24,6 +24,25 @@ class App {
   init() {
     const user = getCurrentUser();
     this.user = user;
+
+    const params = new URLSearchParams(window.location.search);
+    const githubSuccess = params.get("github");
+    const githubError = params.get("error");
+
+    if (githubSuccess === "success" || githubError) {
+      window.history.replaceState({}, "", "/");
+      if (!isAuthenticated()) {
+        this.navigate("login");
+        return;
+      }
+      this.navigate("profile", {
+        githubSuccess: githubSuccess === "success",
+        githubUsername: params.get("username"),
+        githubError: githubError,
+      });
+      return;
+    }
+
     if (!isAuthenticated()) {
       this.navigate("login");
       return;
@@ -39,14 +58,13 @@ class App {
         this.navigate("dashboard");
         break;
       case "CODER":
-        console.log("hello")
+        console.log("hello");
         this.navigate("coderHome");
         break;
       default:
         this.navigate("login");
     }
   }
-
 
   navigate(route, params = {}) {
     this.app.innerHTML = "";
@@ -76,10 +94,10 @@ class App {
         this.currentView = new Ranking(this);
         break;
       case "coderHome":
-        this.currentView = new coderHome(this)
+        this.currentView = new coderHome(this);
         break;
       case "projectSettings":
-        this.currentView = new ProjectSettings(this)
+        this.currentView = new ProjectSettings(this);
         break;
       case "profile":
         this.currentView = new ProfileView(this);
@@ -93,7 +111,6 @@ class App {
       return;
     }
     this.currentView.render();
-
   }
 }
 

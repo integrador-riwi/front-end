@@ -28,6 +28,15 @@ export default class ProfileView {
     this.successMessage = "";
     this.githubStatus = null;
 
+    // Leer params del router
+    const params = router.currentParams ?? {};
+    if (params.githubSuccess) {
+      this.successMessage = `GitHub conectado correctamente${params.githubUsername ? ` como @${params.githubUsername}` : ""}.`;
+    }
+    if (params.githubError) {
+      this.errorMessage = `Error al conectar GitHub: ${params.githubError}`;
+    }
+
     this.loadProfile();
   }
 
