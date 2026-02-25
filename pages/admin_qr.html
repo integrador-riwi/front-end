@@ -27,11 +27,8 @@
           <div class="card-custom p-4 text-center">
             <h5 class="fw-bold mb-1">Scan to Vote</h5>
             <p class="text-muted small mb-3">Audience access link</p>
-
-            <div class="border border-4 rounded-4 p-3 mb-3" style="border-color: var(--primary);">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VoteNow"
-                   class="img-fluid">
-            </div>
+            <div id="qr-container" class="border border-4 mt-4 text-center" style="border-color: var(--accent);"></div>
+            
 
             <button class="btn btn-primary-custom w-100 mb-2">
               Download QR

@@ -6,6 +6,8 @@ import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
 
+import QRCode from "qrcode";
+
 export default class QRVoting {
   constructor(router, params = {}) {
     this.router = router;
@@ -97,6 +99,21 @@ export default class QRVoting {
       this.loading = false;
     }
   }
+
+  generateQRCode(eventId) {
+  const qrContainer = document.getElementById("qr-container");
+
+  if (!qrContainer) return;
+
+  const publicUrl = `${window.location.origin}/#/vote/${eventId}`;
+
+  QRCode.toCanvas(publicUrl, { width: 250 }, function (error, canvas) {
+    if (error) console.error(error);
+
+    qrContainer.innerHTML = "";
+    qrContainer.appendChild(canvas);
+  });
+}
 
   renderVotingView() {
     const slotsContainer = document.getElementById("ranking-slots");
@@ -268,6 +285,9 @@ attachTeamSelection() {
     this.navbar.attachEventHandlers();
 
     await this.fetchCurrentEvent();
+    if (this.event?.id) {
+  this.generateQRCode(this.event.id);
+}
 
     if (this.error) return;
 
