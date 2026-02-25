@@ -7,6 +7,8 @@ export function renderCoderTeam({ user, team }) {
   const projectDesc = project?.description ?? "No description yet.";
   const deliverables = project?.deliverables ?? null;
 
+  const repoUrl = team.repo_url ?? deliverables?.repo_url ?? null;
+
   return `
     <div class="container-xl px-3 px-md-4 py-4">
       <div class="row g-4 align-items-start coderteam-container">
@@ -27,7 +29,9 @@ export function renderCoderTeam({ user, team }) {
               <!-- Grade -->
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Grade</span>
-                ${grade !== null ? `
+                ${
+                  grade !== null
+                    ? `
                   <div class="d-flex align-items-center gap-2">
                     <span class="ct-stat-value">${grade.toFixed(1)}</span>
                     <span class="ct-grade-chip ${gradeClass(grade)}">${gradeLabel(grade)}</span>
@@ -36,7 +40,9 @@ export function renderCoderTeam({ user, team }) {
                     <div class="ct-grade-bar ${gradeClass(grade)}" style="width:${grade}%"></div>
                   </div>
                   <span class="ct-grade-hint">${grade} / 100</span>
-                ` : `<span class="ct-not-graded">Not graded yet</span>`}
+                `
+                    : `<span class="ct-not-graded">Not graded yet</span>`
+                }
               </div>
 
               <!-- Due date -->
@@ -49,12 +55,19 @@ export function renderCoderTeam({ user, team }) {
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Team</span>
                 <div class="ct-mini-avatars mt-1">
-                  ${members.slice(0, 3).map(m => `
+                  ${members
+                    .slice(0, 3)
+                    .map(
+                      (m) => `
                     <div class="ct-mini-avatar">${m.name.charAt(0)}</div>
-                  `).join("")}
-                  ${members.length > 3
-      ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
-      : ""}
+                  `,
+                    )
+                    .join("")}
+                  ${
+                    members.length > 3
+                      ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
+                      : ""
+                  }
                 </div>
               </div>
 
@@ -65,9 +78,9 @@ export function renderCoderTeam({ user, team }) {
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="ct-section-title mb-0">Project Deliverables</h2>
-              <span class="ct-pill-badge">${deliverableCount(deliverables)} / 3 submitted</span>
+              <span class="ct-pill-badge">${deliverableCount(deliverables, repoUrl)} / 3 submitted</span>
             </div>
-            ${renderDeliverables(deliverables)}
+            ${renderDeliverables(deliverables, repoUrl)}
           </div>
 
           <!-- Comments -->
@@ -111,7 +124,9 @@ export function renderCoderTeam({ user, team }) {
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
-              ${members.map((m, i) => `
+              ${members
+                .map(
+                  (m, i) => `
                 <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
                   <div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>
                   <div class="overflow-hidden">
@@ -119,7 +134,9 @@ export function renderCoderTeam({ user, team }) {
                     <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
                   </div>
                 </li>
-              `).join("")}
+              `,
+                )
+                .join("")}
             </ul>
 
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
@@ -144,16 +161,36 @@ export function renderCoderTeam({ user, team }) {
 // ─────────────────────────────────────────────────────────────
 // Deliverables
 // ─────────────────────────────────────────────────────────────
-function renderDeliverables(d) {
+function renderDeliverables(d, repoUrl) {
   const items = [
-    { key: "video_url", icon: "", label: "Pitch Video", url: d?.video_url ?? null, color: "var(--color-accent)" },
-    { key: "repo_url", icon: "", label: "Repository", url: d?.repo_url ?? null, color: "var(--color-success)" },
-    { key: "preview_photo_url", icon: "", label: "Preview Photo", url: d?.preview_photo_url ?? null, color: "var(--color-warning)" },
+    {
+      key: "video_url",
+      icon: "",
+      label: "Pitch Video",
+      url: d?.video_url ?? null,
+      color: "var(--color-accent)",
+    },
+    {
+      key: "repo_url",
+      icon: "",
+      label: "Repository",
+      url: repoUrl,
+      color: "var(--color-success)",
+    },
+    {
+      key: "preview_photo_url",
+      icon: "",
+      label: "Preview Photo",
+      url: d?.preview_photo_url ?? null,
+      color: "var(--color-warning)",
+    },
   ];
 
   return `
     <div class="d-flex flex-column gap-2">
-      ${items.map(item => `
+      ${items
+        .map(
+          (item) => `
         <div class="d-flex align-items-center justify-content-between gap-3 rounded-3 px-3 py-3
                     ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
              data-field="${item.key}">
@@ -166,23 +203,44 @@ function renderDeliverables(d) {
             </div>
             <div class="overflow-hidden">
               <span class="ct-del-label d-block text-truncate">${item.label}</span>
-              <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
-                ${item.url ? "Submitted" : "Pending"}
-              </span>
+              ${
+                item.url && item.key === "repo_url"
+                  ? `
+                <a href="${item.url}" target="_blank" rel="noopener"
+                   class="ct-del-status ct-status-done text-truncate d-block"
+                   style="max-width:180px; font-size:0.75rem;">
+                  ${item.url}
+                </a>
+              `
+                  : `
+                <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
+                  ${item.url ? "Submitted" : "Pending"}
+                </span>
+              `
+              }
             </div>
           </div>
 
           <!-- Right: actions -->
           <div class="d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
-            ${item.url ? `
+            ${
+              item.url
+                ? `
               <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
-              <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-            ` : `
+              ${
+                item.key !== "repo_url"
+                  ? `
+                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              `
+                  : ""
+              }
+            `
+                : `
               <div class="d-flex align-items-center gap-2">
                 <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
                 <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
@@ -192,23 +250,32 @@ function renderDeliverables(d) {
                   </svg>
                 </button>
               </div>
-            `}
+            `
+            }
 
-            <!-- Edit row hidden by default -->
-            <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
-              <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-                     value="${item.url ?? ""}" placeholder="New URL…" />
-              <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${item.key}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </button>
-              <button class="ct-btn-cancel ct-edit-cancel" data-field="${item.key}">✕</button>
-            </div>
+            <!-- Edit row hidden by default (not shown for repo) -->
+            ${
+              item.key !== "repo_url"
+                ? `
+              <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
+                <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
+                       value="${item.url ?? ""}" placeholder="New URL…" />
+                <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${item.key}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+                <button class="ct-btn-cancel ct-edit-cancel" data-field="${item.key}">✕</button>
+              </div>
+            `
+                : ""
+            }
           </div>
 
         </div>
-      `).join("")}
+      `,
+        )
+        .join("")}
     </div>
   `;
 }
@@ -229,9 +296,9 @@ export function renderComment({ name, initial, time, text }) {
   `;
 }
 
-function deliverableCount(d) {
-  if (!d) return 0;
-  return [d.video_url, d.repo_url, d.preview_photo_url].filter(Boolean).length;
+function deliverableCount(d, repoUrl) {
+  const repo = repoUrl ?? d?.repo_url ?? null;
+  return [d?.video_url, repo, d?.preview_photo_url].filter(Boolean).length;
 }
 
 function gradeClass(g) {
@@ -253,5 +320,9 @@ function formatDate(dateStr) {
   const d = new Date(dateStr);
   return isNaN(d.getTime())
     ? dateStr
-    : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    : d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 }
