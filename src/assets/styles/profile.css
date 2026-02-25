@@ -169,3 +169,120 @@
     color: white;
     transform: translateY(-1px);
 }
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.profile-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.profile-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    background-color: var(--bg-input);
+    color: var(--color-text-main);
+    font-family: var(--main-font);
+    transition: border 0.2s ease;
+}
+
+.profile-input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 92, 255, 0.2);
+}
+
+.profile-btn {
+    align-self: flex-start;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--color-primary), var(--accent));
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.9rem 2.25rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.profile-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(107, 92, 255, 0.25);
+}
+
+.profile-alert {
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.profile-alert-error {
+    background-color: rgba(254, 101, 79, 0.12);
+    color: var(--color-alert);
+    border: 1px solid rgba(254, 101, 79, 0.35);
+}
+
+.profile-alert-success {
+    background-color: rgba(90, 202, 164, 0.12);
+    color: var(--color-success);
+    border: 1px solid rgba(90, 202, 164, 0.5);
+}
+
+.profile-github-status {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.status-pill {
+    padding: 0.35rem 0.9rem;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+}
+
+.status-ok {
+    color: var(--color-success);
+    border-color: rgba(90, 202, 164, 0.4);
+}
+
+.status-warn {
+    color: var(--color-alert);
+    border-color: rgba(254, 101, 79, 0.4);
+}
+
+.profile-github-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    background-color: var(--color-primary);
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-github-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(107, 92, 255, 0.25);
+}

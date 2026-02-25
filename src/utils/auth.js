@@ -35,3 +35,10 @@ export function clearSession(router) {
     router.navigate("login");
   }
 }
+
+export function updateUser(data) {
+  const current = getUser() || {};
+  const next = { ...current, ...data };
+  localStorage.setItem("user", JSON.stringify(next));
+  return next;
+}
