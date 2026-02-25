@@ -6,6 +6,7 @@ import CreateEvent from "../views/createEvent.js";
 import EventDetails from "../views/eventDetails.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
+import QRVoting from "../views/EventVoting.js";
 import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/projectSettings.js";
@@ -73,6 +74,9 @@ class App {
         break;
       case "ranking":
         this.currentView = new Ranking(this);
+        break;
+      case "qr-voting":
+        this.currentView = new QRVoting(this);
         break;
       case "coderHome":
         this.currentView = new coderHome(this)
