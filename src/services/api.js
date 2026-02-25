@@ -59,6 +59,30 @@ export async function refreshTokens() {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
 
+export async function getMyProfile() {
+  const response = await apiFetch("/auth/me", { method: "GET" });
+  return response.data ?? response;
+}
+
+export async function updateProfile(profileData = {}) {
+  const response = await apiFetch("/auth/profile", {
+    method: "PUT",
+    body: profileData,
+  });
+
+  return response.data ?? response;
+}
+
+export async function getGithubStatus() {
+  const response = await apiFetch("/auth/github/status", { method: "GET" });
+  return response.data ?? response;
+}
+
+export async function getGithubAuthUrl() {
+  const response = await apiFetch("/auth/github/url", { method: "GET" });
+  return response.data?.url ?? response.url ?? null;
+}
+
 // Events
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
