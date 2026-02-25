@@ -83,13 +83,6 @@ export async function getGithubAuthUrl() {
   return response.data?.url ?? response.url ?? null;
 }
 
-export async function exchangeGithubCode(code, state = null) {
-  return apiFetch("/auth/github/exchange", {
-    method: "POST",
-    body: { code, state },
-  });
-}
-
 // Events
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });

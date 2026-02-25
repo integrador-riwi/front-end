@@ -11,7 +11,6 @@ import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
-import GithubCallbackView from "../views/GithubCallbackView.js";
 
 class App {
   constructor() {
@@ -19,13 +18,6 @@ class App {
     this.currentView = null;
     this.user = getCurrentUser();
     this.currentParams = {};
-
-    if (window.location.pathname === "/settings/github") {
-      this.currentView = new GithubCallbackView(this);
-      this.currentView.render();
-      return;
-    }
-
     this.init();
   }
 
