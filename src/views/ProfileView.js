@@ -3,92 +3,96 @@ import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getInitials, getCurrentUser } from "../utils/helpers.js";
 import {
-    getMyProfile,
-    getGithubStatus,
-    getGithubAuthUrl,
-    updateProfile,
+  getMyProfile,
+  getGithubStatus,
+  getGithubAuthUrl,
+  updateProfile,
 } from "../services/api.js";
 import { updateUser } from "../utils/auth.js";
 
 export default class ProfileView {
-    constructor(router) {
-        this.router = router;
+  constructor(router) {
+    this.router = router;
+    this.user = getCurrentUser();
+    this.navbar = new Navbar(router);
+    this.navbar.setActiveRoute("profile");
+
+    this.profileDetails = null;
+    this.profileForm = {
+      description: "",
+      clan: this.user?.clan ?? "",
+    };
+    this.isLoading = true;
+    this.isSaving = false;
+    this.errorMessage = "";
+    this.successMessage = "";
+    this.githubStatus = null;
+
+    this.loadProfile();
+  }
+
+  async loadProfile() {
+    try {
+      if (!this.user) {
         this.user = getCurrentUser();
-        this.navbar = new Navbar(router);
-        this.navbar.setActiveRoute("profile");
+      }
 
-        this.profileDetails = null;
-        this.profileForm = {
-            description: "",
-            clan: this.user?.clan ?? "",
-        };
-        this.isLoading = true;
-        this.isSaving = false;
-        this.errorMessage = "";
-        this.successMessage = "";
-        this.githubStatus = null;
+      const data = await getMyProfile();
+      const profile = data?.profile ?? {};
+      const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
 
-        this.loadProfile();
+      this.profileDetails = {
+        ...profile,
+        clan: clanValue,
+      };
+
+      this.profileForm = {
+        description: profile.description ?? "",
+        clan: clanValue,
+      };
+
+      this.user =
+        updateUser({
+          id_user: data?.id_user ?? this.user?.id_user,
+          name: data?.name ?? this.user?.name,
+          email: data?.email ?? this.user?.email,
+          role: data?.role ?? this.user?.role,
+          clan: data?.clan ?? clanValue,
+        }) || this.user;
+
+      this.errorMessage = "";
+    } catch (error) {
+      console.error("Failed to load profile", error);
+      this.errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "No se pudo cargar tu perfil.";
+      this.profileDetails = this.profileDetails || {
+        github_url: "",
+        description: "",
+        clan: this.profileForm.clan,
+      };
+    } finally {
+      await this.loadGithubStatus();
+      this.isLoading = false;
+      this.render();
     }
+  }
 
-    async loadProfile() {
-        try {
-            if (!this.user) {
-                this.user = getCurrentUser();
-            }
-
-            const data = await getMyProfile();
-            const profile = data?.profile ?? {};
-            const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
-
-            this.profileDetails = {
-                ...profile,
-                clan: clanValue,
-            };
-
-            this.profileForm = {
-                description: profile.description ?? "",
-                clan: clanValue,
-            };
-
-            this.user = updateUser({
-                id_user: data?.id_user ?? this.user?.id_user,
-                name: data?.name ?? this.user?.name,
-                email: data?.email ?? this.user?.email,
-                role: data?.role ?? this.user?.role,
-                clan: data?.clan ?? clanValue,
-            }) || this.user;
-
-            this.errorMessage = "";
-        } catch (error) {
-            console.error("Failed to load profile", error);
-            this.errorMessage = error?.response?.data?.message || error?.message || "No se pudo cargar tu perfil.";
-            this.profileDetails = this.profileDetails || {
-                github_url: "",
-                description: "",
-                clan: this.profileForm.clan,
-            };
-        } finally {
-            await this.loadGithubStatus();
-            this.isLoading = false;
-            this.render();
-        }
+  async loadGithubStatus() {
+    try {
+      this.githubStatus = await getGithubStatus();
+    } catch (error) {
+      console.warn("No se pudo obtener el estado de GitHub", error);
+      this.githubStatus = null;
     }
+  }
 
-    async loadGithubStatus() {
-        try {
-            this.githubStatus = await getGithubStatus();
-        } catch (error) {
-            console.warn("No se pudo obtener el estado de GitHub", error);
-            this.githubStatus = null;
-        }
-    }
+  render() {
+    const app = document.getElementById("app");
 
-    render() {
-        const app = document.getElementById("app");
-
-        if (this.isLoading) {
-            app.innerHTML = `
+    if (this.isLoading) {
+      app.innerHTML = `
               ${this.navbar.render()}
               <main class="coder-home-main d-flex justify-content-center align-items-center" style="min-height: 100vh;">
                   <div class="spinner-border text-primary" role="status">
@@ -96,17 +100,17 @@ export default class ProfileView {
                   </div>
               </main>
            `;
-            this.navbar.attachEventHandlers();
-            return;
-        }
+      this.navbar.attachEventHandlers();
+      return;
+    }
 
-        const githubLink = this.profileDetails?.github_url;
-        const statusLabel = this.githubStatus?.connected
-            ? this.githubStatus.expired
-                ? "Conexión expirada"
-                : "Conectado"
-            : "No conectado";
-        app.innerHTML = `
+    const githubLink = this.profileDetails?.github_url;
+    const statusLabel = this.githubStatus?.connected
+      ? this.githubStatus.expired
+        ? "Conexión expirada"
+        : "Conectado"
+      : "No conectado";
+    app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main profile-viewport">
         <div class="container-xl px-3 px-md-4 py-5">
@@ -162,90 +166,92 @@ export default class ProfileView {
       </main>
     `;
 
-        this.navbar.attachEventHandlers();
-        this.attachEventHandlers();
-    }
+    this.navbar.attachEventHandlers();
+    this.attachEventHandlers();
+  }
 
-    attachEventHandlers() {
-        const form = document.getElementById("profileForm");
-        form?.addEventListener("submit", (e) => this.handleSave(e));
+  attachEventHandlers() {
+    const form = document.getElementById("profileForm");
+    form?.addEventListener("submit", (e) => this.handleSave(e));
 
-        form?.querySelectorAll("input, textarea").forEach((input) => {
-            input.addEventListener("input", (event) => {
-                const { name, value } = event.target;
-                if (!name) return;
-                this.profileForm = {
-                    ...this.profileForm,
-                    [name]: value,
-                };
-                this.errorMessage = "";
-                this.successMessage = "";
-            });
-        });
-
-        const githubBtn = document.getElementById("connectGithubBtn");
-        githubBtn?.addEventListener("click", async () => {
-            try {
-                const url = await getGithubAuthUrl();
-                if (!url) {
-                    throw new Error("No se pudo obtener la URL de GitHub");
-                }
-                window.open(url, "_blank");
-                this.successMessage = "Se abrirá GitHub para conectar. Recarga la página cuando termines.";
-                this.render();
-            } catch (error) {
-                console.error("Error al obtener URL de GitHub", error);
-                this.errorMessage = error?.message || "No se pudo iniciar la conexión con GitHub.";
-                this.render();
-            }
-        });
-    }
-
-    async handleSave(event) {
-        event.preventDefault();
-
-        if (this.isSaving) return;
-
-        this.isSaving = true;
+    form?.querySelectorAll("input, textarea").forEach((input) => {
+      input.addEventListener("input", (event) => {
+        const { name, value } = event.target;
+        if (!name) return;
+        this.profileForm = {
+          ...this.profileForm,
+          [name]: value,
+        };
         this.errorMessage = "";
         this.successMessage = "";
-        this.render();
+      });
+    });
 
-        try {
-            const updatedProfile = await updateProfile({
-                description: this.profileForm.description,
-                clan: this.profileForm.clan,
-            });
-
-            this.profileDetails = {
-                ...this.profileDetails,
-                ...updatedProfile,
-            };
-
-            const clanValue = updatedProfile.clan ?? this.profileForm.clan;
-            this.profileForm = {
-                description: updatedProfile.description ?? this.profileForm.description,
-                clan: clanValue,
-            };
-
-            this.user = updateUser({ clan: clanValue }) || this.user;
-            this.successMessage = "Perfil actualizado correctamente.";
-        } catch (error) {
-            console.error("Error updating profile", error);
-            this.errorMessage = error?.response?.data?.message || error?.message || "No se pudo guardar el perfil.";
-        } finally {
-            this.isSaving = false;
-            this.render();
+    const githubBtn = document.getElementById("connectGithubBtn");
+    githubBtn?.addEventListener("click", async () => {
+      try {
+        const url = await getGithubAuthUrl();
+        if (!url) {
+          throw new Error("No se pudo obtener la URL de GitHub");
         }
+        window.location.href = url;
+      } catch (error) {
+        console.error("Error al obtener URL de GitHub", error);
+        this.errorMessage =
+          error?.message || "No se pudo iniciar la conexión con GitHub.";
+        this.render();
+      }
+    });
+  }
+
+  async handleSave(event) {
+    event.preventDefault();
+
+    if (this.isSaving) return;
+
+    this.isSaving = true;
+    this.errorMessage = "";
+    this.successMessage = "";
+    this.render();
+
+    try {
+      const updatedProfile = await updateProfile({
+        description: this.profileForm.description,
+        clan: this.profileForm.clan,
+      });
+
+      this.profileDetails = {
+        ...this.profileDetails,
+        ...updatedProfile,
+      };
+
+      const clanValue = updatedProfile.clan ?? this.profileForm.clan;
+      this.profileForm = {
+        description: updatedProfile.description ?? this.profileForm.description,
+        clan: clanValue,
+      };
+
+      this.user = updateUser({ clan: clanValue }) || this.user;
+      this.successMessage = "Perfil actualizado correctamente.";
+    } catch (error) {
+      console.error("Error updating profile", error);
+      this.errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "No se pudo guardar el perfil.";
+    } finally {
+      this.isSaving = false;
+      this.render();
     }
+  }
 }
 
 function escapeHtml(value) {
-    if (value === null || value === undefined) return "";
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
