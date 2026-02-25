@@ -4,22 +4,27 @@ import Navbar from "../components/navbar/navbar";
 import { renderCoderTeam } from "./coderTeam.js";
 import { renderCoderNoTeam, setupAIAnalysis } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
+import { createTeam as createTeamRequest, apiFetch } from "../services/api.js";
 
 export default class CoderHome {
   constructor(router, { user, team } = {}) {
     this.router = router;
     this.navbar = new Navbar(router);
     this.user = getUser();
+    this.team = team || null;
 
     this.searchQuery = "";
-    
+
     this.aiResult = null;
     this.isAnalyzing = false;
-    
+    this.isCreatingTeam = false;
+    this.createTeamError = "";
+    this.createTeamSuccess = "";
+
     // Store form values to prevent clearing on re-render
     this.formData = {
       teamName: "",
-      projectTopic: ""
+      projectTopic: "",
     };
 
     this.teams = [
@@ -65,6 +70,35 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
+  // Init — load team from API before rendering
+  // ─────────────────────────────────────────
+  async init() {
+    try {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      const teams = data?.teams ?? [];
+
+      if (teams.length > 0) {
+        const t = teams[0];
+        // Load full team details (members, project)
+        const teamDetail = await apiFetch(`/teams/${t.id_team}`, {
+          method: "GET",
+        });
+        const full = teamDetail?.data ?? teamDetail;
+        this.team = {
+          ...full,
+          members: full.members ?? [],
+          project: full.project ?? null,
+        };
+      }
+    } catch (e) {
+      // No team or error — stay on no-team view
+      this.team = null;
+    }
+    this.render();
+  }
+
+  // ─────────────────────────────────────────
   // Main render
   // ─────────────────────────────────────────
   render() {
@@ -80,7 +114,12 @@ export default class CoderHome {
           formData: this.formData,
           analyzeSimilarity: this.aiResult !== null || this.isAnalyzing,
           aiResult: this.aiResult,
-          isAnalyzing: this.isAnalyzing
+          isAnalyzing: this.isAnalyzing,
+          createTeamState: {
+            isCreating: this.isCreatingTeam,
+            error: this.createTeamError,
+            success: this.createTeamSuccess,
+          },
         });
 
     app.innerHTML = `
@@ -92,7 +131,7 @@ export default class CoderHome {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
-    
+
     if (!this.team) {
       setupAIAnalysis(this);
     }
@@ -150,15 +189,60 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   // Actions
   // ─────────────────────────────────────────
-  handleCreateTeam(e) {
+  async handleCreateTeam(e) {
     e.preventDefault();
-    const teamName = document.getElementById("teamName").value;
-    const projectTopic = document.getElementById("projectTopic").value;
-    // TODO: replace with API call
-    console.log("Creating team:", { teamName, projectTopic });
-    alert(`Team "${teamName}" created successfully!`);
+    const teamNameInput = document.getElementById("teamName");
+    const projectTopicInput = document.getElementById("projectTopic");
+    const rawTeamName = teamNameInput?.value ?? "";
+    const teamName = rawTeamName.trim();
+    const projectTopic = projectTopicInput?.value ?? "";
+
+    this.formData = {
+      teamName: rawTeamName,
+      projectTopic,
+    };
+
+    if (!teamName) {
+      this.createTeamError = "El nombre del equipo es obligatorio.";
+      this.createTeamSuccess = "";
+      this.render();
+      return;
+    }
+
+    this.isCreatingTeam = true;
+    this.createTeamError = "";
+    this.createTeamSuccess = "";
+    this.render();
+
+    try {
+      const response = await createTeamRequest({
+        name: teamName,
+        description: projectTopic,
+      });
+      const payload = response?.data ?? response;
+      this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" creado correctamente.`;
+      this.formData = { teamName: "", projectTopic: "" };
+
+      if (payload) {
+        this.team = {
+          ...payload,
+          members: payload.members ?? [],
+          project: payload.project ?? null,
+        };
+      }
+    } catch (error) {
+      this.createTeamError =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "No se pudo crear el equipo.";
+      this.createTeamSuccess = "";
+    } finally {
+      this.isCreatingTeam = false;
+      this.render();
+    }
   }
-  
+
   handleJoinTeam(teamId) {
     console.log("Join team:", teamId);
   }

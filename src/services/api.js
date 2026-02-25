@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://back-end-one-tau.vercel.app/api";
+const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -58,6 +58,20 @@ export async function refreshTokens() {
 /* export async function getUserTeam(userId) {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
+
+export async function createTeam(teamData) {
+  const payload =
+    typeof teamData === "string" ? { name: teamData } : { ...teamData };
+
+  if (payload.name) {
+    payload.name = payload.name.trim();
+  }
+
+  return apiFetch("/teams", {
+    method: "POST",
+    body: payload,
+  });
+}
 
 export async function getMyProfile() {
   const response = await apiFetch("/auth/me", { method: "GET" });

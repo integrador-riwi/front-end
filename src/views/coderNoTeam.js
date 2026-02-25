@@ -1,6 +1,7 @@
 import { searchSimilarProjects } from "../services/api.js";
 
-export function renderCoderNoTeam({ user, teams, searchQuery, availableCount, formData, analyzeSimilarity, aiResult, isAnalyzing }) {
+export function renderCoderNoTeam({ user, teams, searchQuery, availableCount, formData, analyzeSimilarity, aiResult, isAnalyzing, createTeamState }) {
+  const { isCreating = false, error: createTeamError = "", success: createTeamSuccess = "" } = createTeamState || {};
   return `
     <div class="team-selection-container">
 
@@ -31,11 +32,13 @@ export function renderCoderNoTeam({ user, teams, searchQuery, availableCount, fo
             You'll be the team administrator.
           </p>
           <form id="createTeamForm">
+            ${createTeamError ? `<div class="alert alert-danger rounded-4 mb-3">${escapeHtml(createTeamError)}</div>` : ""}
+            ${createTeamSuccess ? `<div class="alert alert-success rounded-4 mb-3">${escapeHtml(createTeamSuccess)}</div>` : ""}
             <div class="form-group">
               <label class="form-label" for="teamName">Team Name</label>
               <input type="text" id="teamName" class="form-input"
                      placeholder="e.g., The Code Wizards" 
-                     value="${formData?.teamName || ''}" 
+                      value="${formData?.teamName || ''}" 
                      required />
             </div>
             <div class="form-group">
@@ -58,8 +61,8 @@ export function renderCoderNoTeam({ user, teams, searchQuery, availableCount, fo
                 ` : ''}
               </div>
             </div>
-            <button type="submit" class="btn-create-team">
-              Create Team
+            <button type="submit" class="btn-create-team" ${isCreating ? 'disabled' : ''}>
+              ${isCreating ? 'Creating...' : 'Create Team'}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
@@ -265,4 +268,14 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

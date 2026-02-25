@@ -94,7 +94,10 @@ class App {
         this.currentView = new Ranking(this);
         break;
       case "coderHome":
+      case "coderHome":
         this.currentView = new coderHome(this);
+        this.currentView.init();
+        return;
         break;
       case "projectSettings":
         this.currentView = new ProjectSettings(this);

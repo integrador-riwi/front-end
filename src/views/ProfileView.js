@@ -140,10 +140,12 @@ export default class ProfileView {
                        <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                         <div class="mt-3">
                           <p class="profile-label mb-1">GitHub actual</p>
-                          ${githubLink ? `<a class="profile-link" href="${escapeHtml(githubLink)}" target="_blank">${escapeHtml(githubLink)}</a>` : `<p class="profile-value">Sin conexión</p>`}
+                          ${githubLink
+                            ? `<a class="profile-link" href="${escapeHtml(githubLink)}" target="_blank">${this.githubStatus?.github?.username ? `@${escapeHtml(this.githubStatus.github.username)}` : escapeHtml(githubLink)}</a>`
+                            : `<p class="profile-value">Sin conexión</p>`}
                           <div class="profile-github-status">
                             <span class="status-pill ${this.githubStatus?.connected ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                            <button type="button" class="profile-github-btn" id="connectGithubBtn">Conectar GitHub</button>
+                            <button type="button" class="profile-github-btn" id="connectGithubBtn" ${this.githubStatus?.connected ? "disabled" : ""}>Conectar GitHub</button>
                           </div>
                         </div>
                       </div>
