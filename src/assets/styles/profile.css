@@ -1,6 +1,6 @@
 .profile-container {
     background-color: var(--color-bg);
-    color: var(--color-text-main);
+    color: var(--text-primary);
     font-family: var(--main-font);
     width: 100%;
 }
@@ -12,7 +12,7 @@
 
 .profile-header {
     border-bottom: 1px solid var(--border);
-    background-color: var(--color-surface);
+    background-color: var(--bg-panel);
 }
 
 .profile-title {
@@ -76,17 +76,17 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--Lilac, #eaa2fc));
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent, #eaa2fc));
     color: white;
     font-size: 2.5rem;
     font-weight: bold;
-    box-shadow: 0 8px 16px var(--accent-dim);
+    box-shadow: 0 8px 16px var(--color-primary-dim);
 }
 
 .profile-name {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--color-text-main);
+    color: var(--text-primary);
 }
 
 .profile-role {
@@ -99,7 +99,7 @@
 
 .clan-badge {
     display: inline-block;
-    background-color: var(--accent-dim);
+    background-color: var(--color-primary-dim);
     color: var(--color-primary-dark);
     padding: 0.4rem 1.2rem;
     border-radius: 20px;
@@ -113,7 +113,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--color-title-header);
-    border-bottom: 2px solid var(--accent-dim);
+    border-bottom: 2px solid var(--color-primary-dim);
     padding-bottom: 0.5rem;
 }
 
@@ -149,7 +149,7 @@
 
 .profile-value {
     font-size: 1.05rem;
-    color: var(--color-text-main);
+    color: var(--text-primary);
     line-height: 1.6;
     margin: 0;
     background-color: var(--bg-input);
@@ -190,7 +190,7 @@
     padding: 0.85rem 1rem;
     font-size: 0.95rem;
     background-color: var(--bg-input);
-    color: var(--color-text-main);
+    color: var(--text-primary);
     font-family: var(--main-font);
     transition: border 0.2s ease;
 }
@@ -205,7 +205,7 @@
     align-self: flex-start;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(120deg, var(--color-primary), var(--accent));
+    background: linear-gradient(120deg, var(--color-primary), var(--color-primary));
     color: white;
     font-size: 0.95rem;
     font-weight: 600;

@@ -75,7 +75,7 @@ export default class EventsView {
           </div>
 
           <div class="flex-grow-1">
-            <h3 class="mb-2 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); word-break: break-word;">${title}</h3>
+            <h3 class="mb-2 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); word-break: break-word;">${title}</h3>
             <p class="mb-2" style="font-size: 0.95rem; color: var(--text-sidebar);">${desc}</p>
             <div class="d-flex flex-wrap gap-3 mt-3">
               <div class="d-flex align-items-center gap-1" style="font-size: 0.85rem; color: var(--text-sidebar);">
@@ -90,7 +90,7 @@ export default class EventsView {
           
           <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column gap-2" style="min-width: 150px;">
           
-            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dim)'" onmouseout="this.style.background='transparent'">
               Details
             </button>
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
@@ -146,7 +146,7 @@ export default class EventsView {
         ${inProgressEvents.length > 0 ? `
             <div class="mb-5">
                 <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--color-primary); font-weight: 700;">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--mint);"></span>
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--color-success);"></span>
                   In Progress
                 </h2>
                 <div class="d-flex flex-column">
@@ -192,7 +192,7 @@ export default class EventsView {
           <div class="d-flex flex-column gap-2 mb-5 pb-3 border-bottom" style="border-color: var(--border) !important;">
             <div class="d-flex align-items-center justify-content-between gap-3">
               <div class="d-flex align-items-center gap-3">
-                <div class="p-3 rounded-circle" style="background-color: var(--accent-dim); color: var(--color-primary);">
+                <div class="p-3 rounded-circle" style="background-color: var(--color-primary-dim); color: var(--color-primary);">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />

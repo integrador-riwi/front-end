@@ -8,7 +8,7 @@ margin-left: 224px;
 /* ── Breadcrumb ── */
 .cs-breadcrumb { font-size: 0.8rem; }
 .cs-bc-link    { color: var(--text-muted); cursor: pointer; transition: color 0.15s; }
-.cs-bc-link:hover { color: var(--accent); }
+.cs-bc-link:hover { color: var(--color-primary); }
 .cs-bc-sep     { color: var(--text-dim); }
 .cs-bc-current { color: var(--text-primary); font-weight: 600; }
 
@@ -62,8 +62,8 @@ margin-left: 224px;
   display: block;
 }
 .cs-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-dim);
   background: var(--bg-panel);
 }
 .cs-input::placeholder { color: var(--text-dim); }
@@ -83,7 +83,7 @@ margin-left: 224px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px; height: 16px;
-  color: var(--accent);
+  color: var(--color-primary);
   pointer-events: none;
 }
 
@@ -95,7 +95,7 @@ margin-left: 224px;
   align-items: center;
   gap: 8px;
   padding: 10px 22px;
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -103,18 +103,18 @@ margin-left: 224px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 3px 12px var(--accent-glow);
+  box-shadow: 0 3px 12px var(--color-primary-glow);
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 .cs-btn-primary:hover {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px var(--accent-glow);
+  box-shadow: 0 6px 20px var(--color-primary-glow);
 }
 
 .cs-btn-invite {
   width: 40px; height: 40px; flex-shrink: 0;
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff; border: none;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
@@ -136,9 +136,9 @@ margin-left: 224px;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 .cs-btn-copy:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-dim);
 }
 
 .cs-btn-remove {
@@ -153,30 +153,30 @@ margin-left: 224px;
 }
 .cs-btn-remove svg { width: 12px; height: 12px; }
 .cs-btn-remove:hover {
-  color: var(--danger);
-  border-color: var(--danger);
-  background: var(--danger-dim);
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+  background: var(--color-warning-dim);
 }
 
 /* ── Danger zone ── */
 .cs-danger-card {
-  background: var(--danger-dim);
+  background: var(--color-warning-dim);
   border: 1.5px solid rgba(254,101,79,0.2);
 }
 .cs-danger-title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--danger);
+  color: var(--color-warning);
   font-family: var(--main-font);
 }
-.cs-danger-sub { font-size: 0.875rem; color: var(--danger); opacity: 0.75; }
+.cs-danger-sub { font-size: 0.875rem; color: var(--color-warning); opacity: 0.75; }
 
 .cs-btn-danger {
   padding: 8px 18px;
   background: none;
-  border: 1.5px solid var(--danger);
+  border: 1.5px solid var(--color-warning);
   border-radius: 9px;
-  color: var(--danger);
+  color: var(--color-warning);
   font-family: var(--main-font);
   font-size: 0.875rem;
   font-weight: 600;
@@ -185,21 +185,21 @@ margin-left: 224px;
   transition: background 0.15s, color 0.15s;
 }
 .cs-btn-danger:hover {
-  background: var(--danger);
+  background: var(--color-warning);
   color: #fff;
 }
 
 /* ── Member list ── */
 .cs-avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: var(--accent); color: #fff;
+  background: var(--color-primary); color: #fff;
   font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
-.cs-avatar-color-0 { background: var(--accent); }
-.cs-avatar-color-1 { background: var(--mint);   color: var(--navy); }
-.cs-avatar-color-2 { background: var(--coral); }
-.cs-avatar-color-3 { background: var(--gold);   color: var(--navy); }
+.cs-avatar-color-0 { background: var(--color-primary); }
+.cs-avatar-color-1 { background: var(--color-success);   color: var(--text-primary); }
+.cs-avatar-color-2 { background: var(--color-alert); }
+.cs-avatar-color-3 { background: var(--color-warning);   color: var(--text-primary); }
 
 .cs-member-name {
   font-size: 0.875rem;
@@ -212,8 +212,8 @@ margin-left: 224px;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--accent);
-  background: var(--accent-dim);
+  color: var(--color-primary);
+  background: var(--color-primary-dim);
   border: 1px solid rgba(107,92,255,0.2);
   padding: 2px 8px;
   border-radius: 99px;
@@ -231,8 +231,8 @@ margin-left: 224px;
 .cs-count-badge {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-dim);
+  color: var(--color-primary);
+  background: var(--color-primary-dim);
   border: 1px solid rgba(107,92,255,0.15);
   padding: 1px 9px;
   border-radius: 99px;

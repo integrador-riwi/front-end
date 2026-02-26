@@ -1,12 +1,11 @@
 :root {
-  --accent: #6b5cff;
-  --accent-glow: rgba(107, 92, 255, 0.22);
-  --accent-dim: rgba(107, 92, 255, 0.1);
-  --navy: #181e4b;
-  --lilac: #eaa2fc;
-  --mint: #5acca4;
-  --coral: #fe654f;
-  --gold: #e6ca52;
+  --color-primary: #6b5cff;
+  --color-primary-glow: rgba(107, 92, 255, 0.22);
+  --color-primary-dim: rgba(107, 92, 255, 0.1);
+  --color-accent: #eaa2fc;
+  --color-success: #5acca4;
+  --color-alert: #fe654f;
+  --color-warning: #e6ca52;
   --border:rgb(241 245 249 / 1);
   --border-card:rgb(108 92 255 / 0.3);
   --card:#6b5cff0d;
@@ -26,16 +25,12 @@
   --text-gray-700: #4a5568;
   --text-gray-800: #2d3748;
 
-  --danger: #fe654f;
-  --danger-dim: rgba(254, 101, 79, 0.1);
+  --color-warning-dim: rgba(254, 101, 79, 0.1);
   --main-font: "Ubuntu", sans-serif;
 
-  --color-primary: #6b5cff;
   --color-primary-dark: #5646e8;
   --color-sidebar: #181e4b;
   --color-bg: #f3f4f8;
-  --color-surface: #ffffff;
-  --color-text-main: #181e4b;
   --color-text-header: #a0aec0;
   --color-title-header: #2d3748;
   --color-button-icon-theme: #a0aec0;
@@ -47,11 +42,6 @@
   --green-100: #dbfff2;
   --pink-100: #fcedff;
 
-  --color-accent: #eaa2fc;
-  --color-success: #5acca4;
-  --color-warning: #e6ca52;
-  --color-alert: #fe654f;
-
   --text-main: #1f2937;
   --text-sidebar: #a0aec0;
 }
@@ -59,8 +49,8 @@
 .dark{
     --color-primary: #5646e8;
     --color-bg: #121212;
-    --color-surface: #1e1e1e;
-    --color-text-main: #fff;
+    --bg-panel: #1e1e1e;
+    --text-primary: #fff;
     --color-text-header: #e4e1e1;
     --color-title-header: #ffffff;
     --color-button-icon-theme: #6b7280;
@@ -78,5 +68,5 @@
 body {
   font-family: var(--main-font);
   background-color: var(--color-bg);
-  color: var(--color-text-main);
+  color: var(--text-primary);
 }

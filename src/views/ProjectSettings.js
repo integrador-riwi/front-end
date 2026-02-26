@@ -65,7 +65,7 @@ export default class ProjectSettings {
               <div class="bg-white rounded-4 p-4 cs-card">
                 <h2 class="cs-card-title d-flex align-items-center gap-2 mb-4">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                       style="width:18px;height:18px;color:var(--accent)">
+                       style="width:18px;height:18px;color:var(--color-primary)">
                     <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
                     <line x1="8" y1="18" x2="21" y2="18"/>
                     <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
@@ -130,7 +130,7 @@ export default class ProjectSettings {
 
                 <h2 class="cs-card-title d-flex align-items-center gap-2 mb-1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                       style="width:18px;height:18px;color:var(--accent)">
+                       style="width:18px;height:18px;color:var(--color-primary)">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>

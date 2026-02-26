@@ -1,7 +1,7 @@
 /* TITLES */
 .app-page-title {
   font-weight: 700;
-  color: var(--color-text-main);
+  color: var(--text-primary);
 }
 
 .app-page-subtitle {
@@ -10,7 +10,7 @@
 
 /* TOGGLE */
 .app-view-toggle {
-  background: var(--color-surface);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
   padding: 4px;
   border-radius: 8px;
@@ -34,9 +34,9 @@
   padding: 6px 16px;
   border-radius: 50px;
   border: 1px solid var(--border);
-  background: var(--color-surface);
+  background: var(--bg-panel);
   font-size: 14px;
-  color: var(--color-text-main);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -50,7 +50,7 @@
 
 /* CARD */
 .app-project-card {
-  background: var(--color-surface);
+  background: var(--bg-panel);
   border-radius: 16px;
   border: 1px solid var(--border);
   transition: 0.3s ease;
@@ -109,7 +109,7 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-surface);
+  border: 2px solid var(--bg-panel);
   margin-left: -8px;
   transition: transform 0.2s ease;
 }
@@ -135,7 +135,7 @@
   align-items: center;
   justify-content: center;
   margin-left: -8px;
-  border: 2px solid var(--color-surface);
+  border: 2px solid var(--bg-panel);
 }
 
 

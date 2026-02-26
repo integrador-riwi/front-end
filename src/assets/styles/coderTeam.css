@@ -14,7 +14,7 @@
    HERO CARD
 ══════════════════════════════ */
 .ct-hero-card {
-  background: var(--navy);
+  background: var(--text-primary);
   box-shadow: 0 8px 32px rgba(24, 30, 75, 0.22);
   position: relative;
   overflow: hidden;
@@ -36,7 +36,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 25%, var(--navy) 100%);
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 25%, var(--text-primary) 100%);
   pointer-events: none;
 }
 
@@ -116,24 +116,24 @@
 }
 
 .ct-grade-bar.ct-grade-excellent {
-  background: var(--mint);
+  background: var(--color-success);
 }
 
 .ct-grade-bar.ct-grade-good {
-  background: var(--accent);
+  background: var(--color-primary);
 }
 
 .ct-grade-bar.ct-grade-average {
-  background: var(--gold);
+  background: var(--color-warning);
 }
 
 .ct-grade-bar.ct-grade-low {
-  background: var(--coral);
+  background: var(--color-alert);
 }
 
 .ct-grade-chip.ct-grade-excellent {
   background: rgba(90, 204, 164, 0.18);
-  color: var(--mint);
+  color: var(--color-success);
   border: 1px solid rgba(90, 204, 164, 0.3);
 }
 
@@ -145,13 +145,13 @@
 
 .ct-grade-chip.ct-grade-average {
   background: rgba(230, 202, 82, 0.18);
-  color: var(--gold);
+  color: var(--color-warning);
   border: 1px solid rgba(230, 202, 82, 0.3);
 }
 
 .ct-grade-chip.ct-grade-low {
   background: rgba(254, 101, 79, 0.18);
-  color: var(--coral);
+  color: var(--color-alert);
   border: 1px solid rgba(254, 101, 79, 0.3);
 }
 
@@ -164,7 +164,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff;
   font-size: 0.62rem;
   font-weight: 700;
@@ -252,7 +252,7 @@
 }
 
 .ct-status-done {
-  color: var(--mint);
+  color: var(--color-success);
 }
 
 .ct-status-pending {
@@ -263,7 +263,7 @@
 .ct-btn-open {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--color-primary);
   background: rgba(107, 92, 255, 0.07);
   border: 1px solid rgba(107, 92, 255, 0.18);
   padding: 6px 14px;
@@ -276,7 +276,7 @@
 
 .ct-btn-open:hover {
   background: rgba(107, 92, 255, 0.14);
-  color: var(--accent);
+  color: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -306,13 +306,13 @@
 }
 
 .ct-btn-edit:hover {
-  color: var(--accent);
-  border-color: var(--accent) !important;
+  color: var(--color-primary);
+  border-color: var(--color-primary) !important;
   background: rgba(107, 92, 255, 0.05);
 }
 
 .ct-btn-submit {
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -336,7 +336,7 @@
 }
 
 .ct-url-input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(107, 92, 255, 0.1);
 }
 
@@ -363,7 +363,7 @@
 }
 
 .ct-btn-cancel:hover {
-  color: var(--coral);
+  color: var(--color-alert);
 }
 
 /* ══════════════════════════════
@@ -387,7 +387,7 @@
 }
 
 .ct-comment-input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(107, 92, 255, 0.1);
   background: #fff;
 }
@@ -397,7 +397,7 @@
 }
 
 .ct-btn-post {
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff;
   border: none;
   padding: 9px 22px;
@@ -450,7 +450,7 @@
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
-  background: var(--accent);
+  background: var(--color-primary);
 }
 
 .ct-avatar-sm {
@@ -467,23 +467,23 @@
 }
 
 .ct-avatar-color-0 {
-  background: var(--accent);
+  background: var(--color-primary);
   color: #fff;
 }
 
 .ct-avatar-color-1 {
-  background: var(--mint);
-  color: var(--navy);
+  background: var(--color-success);
+  color: var(--text-primary);
 }
 
 .ct-avatar-color-2 {
-  background: var(--coral);
+  background: var(--color-alert);
   color: #fff;
 }
 
 .ct-avatar-color-3 {
-  background: var(--gold);
-  color: var(--navy);
+  background: var(--color-warning);
+  color: var(--text-primary);
 }
 
 /* ══════════════════════════════
@@ -541,7 +541,7 @@
 }
 
 .ct-btn-add-member:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-dim);
 }

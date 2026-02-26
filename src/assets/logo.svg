@@ -1,0 +1,21 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="grad_left" x1="100" y1="200" x2="200" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#181e4b" /> <stop offset="100%" stop-color="#6b5cff" /> </linearGradient>
+        <linearGradient id="grad_right" x1="200" y1="100" x2="300" y2="200" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5acca4" /> <stop offset="100%" stop-color="#181e4b" /> </linearGradient>
+    </defs>
+
+    <g transform="translate(75, 60)">
+        <path d="M 60 160 L 140 80 C 155 65, 175 65, 190 80 L 180 90 C 170 80, 160 80, 150 90 L 70 170 C 50 190, 30 190, 10 170 C -10 150, -10 130, 10 110 L 60 160 Z" 
+              fill="url(#grad_left)"/>
+        
+        <path d="M 190 80 C 205 65, 225 65, 240 80 L 320 160 C 340 180, 340 200, 320 220 C 300 240, 280 240, 260 220 L 180 140 C 170 130, 160 130, 150 140 L 160 150 L 250 240 C 285 275, 315 275, 350 240 C 385 205, 385 175, 350 140 L 270 60 C 245 35, 215 35, 190 60 L 190 80 Z" 
+              fill="#5acca4"/> </g>
+
+    <g font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" transform="translate(0, 30)">
+        <text x="85" y="330" font-size="64" fill="#181e4b" letter-spacing="-1">Team</text>
+        <text x="235" y="330" font-size="64" fill="#6b5cff" letter-spacing="-1">Up</text>
+        <circle cx="335" cy="322" r="8" fill="#fe654f"/>
+    </g>
+</svg>
