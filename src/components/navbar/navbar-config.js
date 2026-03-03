@@ -26,10 +26,10 @@ export const NAV_LINKS_BY_ROLE = {
   TL_ENGLISH: TL_BASE_LINKS,
   CODER: [
     { label: "My Project", route: "coderHome", icon: "globe" },
-    { label: "Teams & Projects", route: "projects", icon: "globe" },
-    { label: "My Grades", route: "my-grades", icon: "bulb" },
-    { label: "Events", route: "events", icon: "calendar" },
-    { label: "Project Settings", route: "projectSettings", icon: "calendar" },
+    // { label: "Teams & Projects", route: "projects", icon: "globe" },
+    // { label: "My Grades", route: "my-grades", icon: "bulb" },
+    // { label: "Events", route: "events", icon: "calendar" },
+    // { label: "Project Settings", route: "projectSettings", icon: "calendar" },
   ],
   STAFF: [
     { label: "Dashboard", route: "dashboard", icon: "calendar" },
