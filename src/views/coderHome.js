@@ -4,7 +4,15 @@ import Navbar from "../components/navbar/navbar";
 import { renderCoderTeam } from "./coderTeam.js";
 import { renderCoderNoTeam, setupAIAnalysis } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
-import { createTeam as createTeamRequest, apiFetch } from "../services/api.js";
+import {
+  createTeam as createTeamRequest,
+  apiFetch,
+  getAvailableCoders,
+  inviteMember,
+  acceptInvitation,
+  rejectInvitation,
+  leaveTeam,
+} from "../services/api.js";
 
 export default class CoderHome {
   constructor(router, { user, team } = {}) {
@@ -20,6 +28,7 @@ export default class CoderHome {
     this.isCreatingTeam = false;
     this.createTeamError = "";
     this.createTeamSuccess = "";
+    this.pendingInvitations = [];
 
     // Store form values to prevent clearing on re-render
     this.formData = {
@@ -77,10 +86,10 @@ export default class CoderHome {
       const response = await apiFetch("/teams/my-teams", { method: "GET" });
       const data = response?.data ?? response;
       const teams = data?.teams ?? [];
+      this.pendingInvitations = data?.pendingInvitations ?? [];
 
       if (teams.length > 0) {
         const t = teams[0];
-        // Load full team details (members, project)
         const teamDetail = await apiFetch(`/teams/${t.id_team}`, {
           method: "GET",
         });
@@ -91,8 +100,40 @@ export default class CoderHome {
           project: full.project ?? null,
         };
       }
+
+      // Load real available teams for the no-team view
+      if (!this.team) {
+        try {
+          const teamsRes = await apiFetch("/teams?limit=50", { method: "GET" });
+          const teamsData = teamsRes?.data ?? teamsRes;
+          const rawTeams = teamsData?.teams ?? [];
+          this.teams = rawTeams.map((t) => ({
+            id: t.id_team,
+            name: t.name,
+            description: t.description ?? "No description.",
+            status:
+              parseInt(t.member_count) >= 5
+                ? "full"
+                : this.pendingInvitations.some(
+                      (inv) => inv.id_team === t.id_team,
+                    )
+                  ? "pending"
+                  : "open",
+            members: Array.from(
+              { length: parseInt(t.member_count) || 0 },
+              (_, i) => ({
+                id: i,
+                name: "?",
+                avatar: "?",
+              }),
+            ),
+            maxMembers: 5,
+          }));
+        } catch (_) {
+          // keep mock teams as fallback
+        }
+      }
     } catch (e) {
-      // No team or error — stay on no-team view
       this.team = null;
     }
     this.render();
@@ -122,10 +163,17 @@ export default class CoderHome {
           },
         });
 
+    const pendingBanner =
+      !this.team && this.pendingInvitations.length > 0
+        ? this._renderPendingInvitationsBanner()
+        : "";
+
     app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main">
+        ${pendingBanner}
         ${content}
+        ${this._renderInviteModal()}
       </main>
     `;
 
@@ -174,6 +222,18 @@ export default class CoderHome {
       );
     });
 
+    // ── Pending invitations handlers ──
+    document.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleAcceptInvitation(btn.dataset.invitationId),
+      );
+    });
+    document.querySelectorAll(".btn-reject-invitation").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleRejectInvitation(btn.dataset.invitationId),
+      );
+    });
+
     // ── Team view handlers ──
     const btnProjectSettings = document.querySelector(".btn-project-settings");
     if (btnProjectSettings) {
@@ -184,6 +244,52 @@ export default class CoderHome {
         }
       });
     }
+
+    // ── Add member button → open modal ──
+    document.getElementById("addMemberBtn")?.addEventListener("click", () => {
+      this._openInviteModal();
+    });
+
+    // ── Leave team button ──
+    document
+      .getElementById("leaveTeamBtn")
+      ?.addEventListener("click", async () => {
+        const confirmed = confirm(
+          "¿Estás seguro de que quieres salir del equipo?",
+        );
+        if (!confirmed) return;
+
+        try {
+          await leaveTeam(this.team.id_team);
+          this.team = null;
+          this.render();
+          this.attachEventHandlers();
+        } catch (err) {
+          alert(
+            "Error al salir del equipo: " +
+              (err?.message ?? "Intenta de nuevo"),
+          );
+        }
+      });
+
+    // ── Modal: close ──
+    document
+      .getElementById("inviteModalClose")
+      ?.addEventListener("click", () => {
+        this._closeInviteModal();
+      });
+    document
+      .getElementById("inviteModalBackdrop")
+      ?.addEventListener("click", () => {
+        this._closeInviteModal();
+      });
+
+    // ── Modal: search input ──
+    document
+      .getElementById("inviteSearchInput")
+      ?.addEventListener("input", (e) => {
+        this._searchCoders(e.target.value);
+      });
   }
 
   // ─────────────────────────────────────────
@@ -245,5 +351,159 @@ export default class CoderHome {
 
   handleJoinTeam(teamId) {
     console.log("Join team:", teamId);
+  }
+
+  // ─────────────────────────────────────────
+  // Pending invitations
+  // ─────────────────────────────────────────
+  async handleAcceptInvitation(invitationId) {
+    try {
+      await acceptInvitation(invitationId);
+      await this.init(); // reload — user now has a team
+    } catch (err) {
+      alert(err?.message ?? "No se pudo aceptar la invitación.");
+    }
+  }
+
+  async handleRejectInvitation(invitationId) {
+    try {
+      await rejectInvitation(invitationId);
+      this.pendingInvitations = this.pendingInvitations.filter(
+        (inv) => String(inv.id_invitation) !== String(invitationId),
+      );
+      this.render();
+    } catch (err) {
+      alert(err?.message ?? "No se pudo rechazar la invitación.");
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Invite-member modal
+  // ─────────────────────────────────────────
+  _renderPendingInvitationsBanner() {
+    return `
+      <div class="pending-invitations-banner">
+        <p class="pib-title">📬 Tienes ${this.pendingInvitations.length} invitación(es) pendiente(s)</p>
+        <div class="pib-list">
+          ${this.pendingInvitations
+            .map(
+              (inv) => `
+            <div class="pib-item">
+              <span>Equipo: <strong>${inv.team_name ?? inv.id_team}</strong></span>
+              <div class="pib-actions">
+                <button class="btn-accept-invitation pib-btn pib-accept"
+                        data-invitation-id="${inv.id_invitation}">Aceptar</button>
+                <button class="btn-reject-invitation pib-btn pib-reject"
+                        data-invitation-id="${inv.id_invitation}">Rechazar</button>
+              </div>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  _renderInviteModal() {
+    return `
+      <div id="inviteModalBackdrop" class="invite-modal-backdrop" style="display:none;">
+        <div class="invite-modal" role="dialog" aria-modal="true">
+          <div class="invite-modal-header">
+            <h3 class="invite-modal-title">Invitar miembro</h3>
+            <button id="inviteModalClose" class="invite-modal-close" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="invite-modal-body">
+            <input id="inviteSearchInput" type="text" class="invite-search-input"
+                   placeholder="Buscar coder por nombre o email…" />
+            <div id="inviteCodersList" class="invite-coders-list">
+              <p class="invite-hint">Escribe para buscar coders disponibles.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _openInviteModal() {
+    const backdrop = document.getElementById("inviteModalBackdrop");
+    if (backdrop) backdrop.style.display = "flex";
+    document.getElementById("inviteSearchInput")?.focus();
+  }
+
+  _closeInviteModal() {
+    const backdrop = document.getElementById("inviteModalBackdrop");
+    if (backdrop) backdrop.style.display = "none";
+  }
+
+  _searchDebounceTimer = null;
+  _searchCoders(query) {
+    clearTimeout(this._searchDebounceTimer);
+    this._searchDebounceTimer = setTimeout(() => this._fetchCoders(query), 400);
+  }
+
+  async _fetchCoders(query) {
+    const listEl = document.getElementById("inviteCodersList");
+    if (!listEl) return;
+
+    listEl.innerHTML = `<p class="invite-hint">Buscando…</p>`;
+
+    try {
+      const teamId = this.team?.id_team;
+      if (!teamId) return;
+
+      const res = await getAvailableCoders(teamId, query);
+      const data = res?.data ?? res;
+      const coders = data?.coders ?? [];
+
+      if (coders.length === 0) {
+        listEl.innerHTML = `<p class="invite-hint">No se encontraron coders disponibles.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = coders
+        .map(
+          (c) => `
+        <div class="invite-coder-item">
+          <div class="invite-coder-avatar">${c.name?.charAt(0) ?? "?"}</div>
+          <div class="invite-coder-info">
+            <span class="invite-coder-name">${c.name}</span>
+            <span class="invite-coder-email">${c.email}</span>
+          </div>
+          ${
+            c.hasPendingInvitation
+              ? `<span class="invite-status-pending">Invitado</span>`
+              : `<button class="invite-btn-send" data-user-id="${c.id_user}">Invitar</button>`
+          }
+        </div>
+      `,
+        )
+        .join("");
+
+      listEl.querySelectorAll(".invite-btn-send").forEach((btn) => {
+        btn.addEventListener("click", () => this._sendInvite(btn));
+      });
+    } catch (err) {
+      listEl.innerHTML = `<p class="invite-hint invite-error">${err?.message ?? "Error al buscar."}</p>`;
+    }
+  }
+
+  async _sendInvite(btn) {
+    const userId = btn.dataset.userId;
+    const teamId = this.team?.id_team;
+    if (!teamId || !userId) return;
+
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+
+    try {
+      await inviteMember(teamId, Number(userId));
+      btn.textContent = "✓ Invitado";
+      btn.classList.add("invite-status-pending");
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Invitar";
+      alert(err?.message ?? "No se pudo enviar la invitación.");
+    }
   }
 }

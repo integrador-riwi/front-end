@@ -102,6 +102,35 @@ export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
 }
 
+// Invitations
+export async function getAvailableCoders(teamId, search = "") {
+  const url = `/teams/${teamId}/available?search=${encodeURIComponent(search)}&limit=20`;
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function inviteMember(teamId, userId) {
+  return apiFetch(`/teams/${teamId}/members`, {
+    method: "POST",
+    body: { userId, role: "DEVELOPER" },
+  });
+}
+
+export async function acceptInvitation(invitationId) {
+  return apiFetch(`/teams/invitations/${invitationId}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function rejectInvitation(invitationId) {
+  return apiFetch(`/teams/invitations/${invitationId}/reject`, {
+    method: "POST",
+  });
+}
+
+export async function leaveTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/leave`, { method: "DELETE" });
+}
+
 // AI - Similar Projects Search
 export async function searchSimilarProjects(
   query,

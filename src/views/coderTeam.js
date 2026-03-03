@@ -150,6 +150,17 @@ export function renderCoderTeam({ user, team }) {
               </svg>
               Add Member
             </button>
+
+            <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
+                    id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   style="width:15px;height:15px">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Leave Team
+            </button>
           </div>
         </div>
 
