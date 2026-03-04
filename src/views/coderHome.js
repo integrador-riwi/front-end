@@ -29,6 +29,7 @@ export default class CoderHome {
     this.navbar = new Navbar(router);
     this.user = getUser();
     this.team = team || null;
+    this.isLeader = false;
 
     this.searchQuery = "";
 
@@ -122,6 +123,10 @@ export default class CoderHome {
           members: full.members ?? [],
           project: full.project ?? null,
         };
+        const currentUserId = this.user?.id_user;
+        this.isLeader = (full.members ?? []).some(
+          (m) => m.id_user === currentUserId && m.team_role === "LEADER",
+        );
       }
 
       // Load real available teams for the no-team view
@@ -180,7 +185,11 @@ export default class CoderHome {
 
     const content = this.team
       ? (() => {
-          const html = renderCoderTeam({ user: this.user, team: this.team });
+          const html = renderCoderTeam({
+            user: this.user,
+            team: this.team,
+            isLeader: this.isLeader,
+          });
           setTimeout(() => loadProjectBrief(), 0);
           return html;
         })()
@@ -369,14 +378,18 @@ export default class CoderHome {
     const btnProjectSettings = document.querySelector(".btn-project-settings");
     if (btnProjectSettings) {
       btnProjectSettings.addEventListener("click", (e) => {
+        if (!this.isLeader) return;
         const route = e.currentTarget.dataset.route;
         if (route) {
-          this.router.navigate(route);
+          this.router.navigate(route, {
+            team: this.team,
+            isLeader: this.isLeader,
+          });
         }
       });
     }
 
-    // ── Add member button → open modal ──
+    // ── Add member button → open modal (leader only) ──
     document.getElementById("addMemberBtn")?.addEventListener("click", () => {
       this._openInviteModal();
     });
