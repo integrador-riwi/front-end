@@ -88,6 +88,21 @@
   font-family: "Ubuntu", sans-serif;
 }
 
+.ct-repo-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: rgba(107, 92, 255, 0.2);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.ct-repo-link:hover {
+  background: rgba(107, 92, 255, 0.35);
+  transform: translateY(-1px);
+}
+
 /* Grade bar */
 .ct-grade-chip {
   font-size: 0.65rem;
