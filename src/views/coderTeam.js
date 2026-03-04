@@ -26,29 +26,12 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
 
             <div class="d-flex flex-wrap gap-4 pt-3 mt-3 ct-stats-divider">
 
-              <!-- Grade -->
-              <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Grade</span>
-                ${
-                  grade !== null
-                    ? `
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="ct-stat-value">${grade.toFixed(1)}</span>
-                    <span class="ct-grade-chip ${gradeClass(grade)}">${gradeLabel(grade)}</span>
-                  </div>
-                  <div class="ct-grade-track mt-1">
-                    <div class="ct-grade-bar ${gradeClass(grade)}" style="width:${grade}%"></div>
-                  </div>
-                  <span class="ct-grade-hint">${grade} / 100</span>
-                `
-                    : `<span class="ct-not-graded">Not graded yet</span>`
-                }
-              </div>
+              <!-- Grade - hidden for now -->
 
               <!-- Due date -->
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Due Date</span>
-                <span class="ct-stat-value">${formatDate(dueDate)}</span>
+                <span class="ct-stat-value">Mon, Mar 9 2026</span>
               </div>
 
               <!-- Repo Link -->
