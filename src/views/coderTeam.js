@@ -74,7 +74,7 @@ export function renderCoderTeam({ user, team }) {
             </div>
           </div>
 
-          <!-- Project Brief -->
+          <!-- Activity -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <div class="d-flex align-items-center justify-content-between mb-3">
               <div class="d-flex align-items-center gap-2">
@@ -85,9 +85,9 @@ export function renderCoderTeam({ user, team }) {
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                <h2 class="ct-section-title mb-0">Project Brief</h2>
+                <h2 class="ct-section-title mb-0">Activity</h2>
               </div>
-              <a id="downloadBriefBtn" href="#" download="project-brief.md"
+              <a id="downloadBriefBtn" href="#" download="crudactivity-supcrud.md"
                  class="ct-btn-download d-flex align-items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      style="width:13px;height:13px">
@@ -358,7 +358,7 @@ function formatDate(dateStr) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Project Brief — enunciado embebido y renderizador de markdown
+// Activity — enunciado embebido y renderizador de markdown
 // ─────────────────────────────────────────────────────────────
 
 const PROJECT_BRIEF_MD = `# **SupCrud by Crudzaso**
@@ -780,16 +780,23 @@ Debe publicarse en Docusaurus e incluir:
 ---
 `;
 
-export function loadProjectBrief() {
+export async function loadProjectBrief() {
   const container = document.getElementById("project-brief-content");
   if (!container) return;
-  container.innerHTML = _renderMarkdown(PROJECT_BRIEF_MD);
 
-  // Botón descarga: genera blob del md original
-  const btn = document.getElementById("downloadBriefBtn");
-  if (btn) {
-    const blob = new Blob([PROJECT_BRIEF_MD], { type: "text/markdown" });
-    btn.href = URL.createObjectURL(blob);
+  try {
+    const response = await fetch("/crudactivity-supcrud.md");
+    const md = await response.text();
+
+    container.innerHTML = _renderMarkdown(md);
+
+    const btn = document.getElementById("downloadBriefBtn");
+    if (btn) {
+      const blob = new Blob([md], { type: "text/markdown" });
+      btn.href = URL.createObjectURL(blob);
+    }
+  } catch (e) {
+    container.innerHTML = "<p>Error loading Activity.</p>";
   }
 }
 
