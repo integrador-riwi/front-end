@@ -170,7 +170,11 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
                 .map(
                   (m, i) => `
                 <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
-                  <div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>
+                  ${
+                    m.github_avatar_url
+                      ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+                      : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
+                  }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0">${m.name}</p>
                     <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
