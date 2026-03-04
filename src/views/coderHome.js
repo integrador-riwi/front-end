@@ -177,8 +177,8 @@ export default class CoderHome {
     }
     this.render();
 
-    // Polling: solo si el usuario NO tiene equipo todavía
-    if (!this.team) {
+    // Polling: sin equipo (espera invitaciones) o líder (espera join requests)
+    if (!this.team || this.isLeader) {
       this._startPolling();
     } else {
       this._stopPolling();
@@ -289,14 +289,11 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
-  // Polling de invitaciones (solo sin equipo)
+  // Polling de invitaciones y join requests
   // ─────────────────────────────────────────
   _startPolling() {
     this._stopPolling();
-    this._pollingInterval = setInterval(
-      () => this._checkNewInvitations(),
-      15000,
-    );
+    this._pollingInterval = setInterval(() => this._checkUpdates(), 5000);
   }
 
   _stopPolling() {
@@ -306,26 +303,48 @@ export default class CoderHome {
     }
   }
 
-  async _checkNewInvitations() {
-    if (this.team) {
-      this._stopPolling();
-      return;
-    }
+  async _checkUpdates() {
     try {
-      const response = await apiFetch("/teams/my-teams", { method: "GET" });
-      const data = response?.data ?? response;
-      const newInvitations = data?.pendingInvitations ?? [];
-      const currentIds = this.pendingInvitations
-        .map((i) => i.id_invitation)
-        .sort()
-        .join(",");
-      const newIds = newInvitations
-        .map((i) => i.id_invitation)
-        .sort()
-        .join(",");
-      if (currentIds !== newIds) {
-        this.pendingInvitations = newInvitations;
-        this._updateInvitationsBanner();
+      // Coder sin equipo: chequear invitaciones nuevas
+      if (!this.team) {
+        const response = await apiFetch("/teams/my-teams", { method: "GET" });
+        const data = response?.data ?? response;
+        const newInvitations = data?.pendingInvitations ?? [];
+        const currentIds = this.pendingInvitations
+          .map((i) => i.id_invitation)
+          .sort()
+          .join(",");
+        const newIds = newInvitations
+          .map((i) => i.id_invitation)
+          .sort()
+          .join(",");
+        if (currentIds !== newIds) {
+          this.pendingInvitations = newInvitations;
+          this._updateInvitationsBanner();
+        }
+        return;
+      }
+
+      // Líder con equipo: chequear join requests nuevos
+      if (this.isLeader && this.team?.id_team) {
+        const res = await apiFetch(
+          `/teams/${this.team.id_team}/join-requests`,
+          { method: "GET" },
+        );
+        const newRequests = res?.data ?? res ?? [];
+        const currentIds = this.pendingJoinRequests
+          .map((r) => r.id_request)
+          .sort()
+          .join(",");
+        const newIds = newRequests
+          .map((r) => r.id_request)
+          .sort()
+          .join(",");
+        if (currentIds !== newIds) {
+          this.pendingJoinRequests = newRequests;
+          // Refresh the invite modal's join requests list if it's open
+          this.inviteModal?.refreshJoinRequests?.();
+        }
       }
     } catch (_) {
       /* silencioso */
