@@ -381,6 +381,8 @@ export async function loadProjectBrief() {
   const container = document.getElementById("project-brief-content");
   if (!container) return;
 
+  container.innerHTML = `<div class="ct-brief-loading"><span class="ct-spinner"></span></div>`;
+
   try {
     const response = await fetch("/crudactivity-supcrud.md");
     const md = await response.text();
