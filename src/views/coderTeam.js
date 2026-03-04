@@ -396,7 +396,9 @@ function formatDate(dateStr) {
 // Project Brief markdown loader
 // Llamar después de renderizar: loadProjectBrief()
 // ─────────────────────────────────────────────────────────────
-export async function loadProjectBrief(briefUrl = "/crudactivity-supcrud.md") {
+export async function loadProjectBrief(
+  briefUrl = "../../public/crudactivity-supcrud.md",
+) {
   const container = document.getElementById("project-brief-content");
   if (!container) return;
 
