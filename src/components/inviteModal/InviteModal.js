@@ -136,17 +136,15 @@ export default class InviteModal {
         <div class="join-request-item">
           <div>
             <strong>${_esc(req.user_name)}</strong>
-            <span style="font-size:0.8rem;color:#6b7280;">(${_esc(req.user_email)})</span>
+            <span class="join-request-email">(${_esc(req.user_email)})</span>
           </div>
-          <div style="display:flex;gap:0.5rem;">
-            <button class="btn-accept-join-request"
-                    data-request-id="${req.id_request}"
-                    style="padding:0.25rem 0.75rem;background:#10b981;color:white;border:none;border-radius:4px;cursor:pointer;">
+          <div class="pib-actions">
+            <button class="btn-accept-join-request pib-btn pib-accept"
+                    data-request-id="${req.id_request}">
               Aceptar
             </button>
-            <button class="btn-reject-join-request"
-                    data-request-id="${req.id_request}"
-                    style="padding:0.25rem 0.75rem;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">
+            <button class="btn-reject-join-request pib-btn pib-reject"
+                    data-request-id="${req.id_request}">
               Rechazar
             </button>
           </div>
