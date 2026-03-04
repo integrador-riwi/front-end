@@ -21,6 +21,7 @@ import {
   getTeamJoinRequests,
   acceptJoinRequest,
   rejectJoinRequest,
+  cancelJoinRequest,
 } from "../services/api.js";
 
 export default class CoderHome {
@@ -374,6 +375,13 @@ export default class CoderHome {
       );
     });
 
+    // ── Cancel join request handlers ──
+    document.querySelectorAll(".btn-cancel-join-request").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleCancelJoinRequest(btn.dataset.requestId, btn),
+      );
+    });
+
     // ── Team view handlers ──
     const btnProjectSettings = document.querySelector(".btn-project-settings");
     if (btnProjectSettings) {
@@ -501,18 +509,54 @@ export default class CoderHome {
     }
 
     requestToJoinTeam(teamId)
-      .then(() => {
-        alert("Request sent successfully! The team leader will review it.");
-        this.render();
-        this.attachEventHandlers();
+      .then((res) => {
+        // Update local state so the card shows pending immediately
+        this.pendingJoinRequests = [
+          ...this.pendingJoinRequests,
+          {
+            id_request: res?.data?.id_request ?? res?.id_request,
+            id_team: Number(teamId),
+            team_name:
+              this.teams.find((t) => t.id === Number(teamId))?.name ?? "",
+          },
+        ];
+        this._updateTeamList();
+        this._showJoinFeedback(
+          "✓ Solicitud enviada. El líder del equipo la revisará.",
+          "success",
+        );
       })
       .catch((err) => {
-        alert("Error: " + (err?.message ?? "Try again"));
         if (btn) {
           btn.disabled = false;
           btn.textContent = "Request to Join";
         }
+        this._showJoinFeedback(
+          err?.message ?? "No se pudo enviar la solicitud.",
+          "error",
+        );
       });
+  }
+
+  _showJoinFeedback(message, type) {
+    const existing = document.getElementById("join-feedback-banner");
+    if (existing) existing.remove();
+
+    const banner = document.createElement("div");
+    banner.id = "join-feedback-banner";
+    banner.style.cssText = `
+      padding: 0.85rem 1.25rem; border-radius: 10px; margin-bottom: 1rem;
+      font-size: 0.9rem; font-weight: 500;
+      background: ${type === "success" ? "#f0fdf4" : "#fef2f2"};
+      border: 1px solid ${type === "success" ? "#86efac" : "#fca5a5"};
+      color: ${type === "success" ? "#16a34a" : "#dc2626"};
+    `;
+    banner.textContent = message;
+
+    const container = document.querySelector(".team-selection-container");
+    if (container) container.insertBefore(banner, container.firstChild);
+
+    setTimeout(() => banner.remove(), 4000);
   }
 
   // ─────────────────────────────────────────
@@ -555,6 +599,29 @@ export default class CoderHome {
     }
   }
 
+  async handleCancelJoinRequest(requestId, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cancelando…";
+    }
+    try {
+      await cancelJoinRequest(requestId);
+      this.pendingJoinRequests = this.pendingJoinRequests.filter(
+        (r) => String(r.id_request) !== String(requestId),
+      );
+      this.render();
+    } catch (err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Cancelar";
+      }
+      this._showJoinFeedback(
+        err?.message ?? "No se pudo cancelar la solicitud.",
+        "error",
+      );
+    }
+  }
+
   // ─────────────────────────────────────────
   // Invite-member modal
   // ─────────────────────────────────────────
@@ -594,7 +661,10 @@ export default class CoderHome {
               (req) => `
             <div class="pib-item">
               <span>Equipo: <strong>${req.team_name ?? req.id_team}</strong></span>
-              <span class="pib-status" style="color: #f59e0b;">Pendiente</span>
+              <div class="pib-actions">
+                <button class="btn-cancel-join-request pib-btn pib-reject"
+                        data-request-id="${req.id_request}">Cancelar</button>
+              </div>
             </div>
           `,
             )
