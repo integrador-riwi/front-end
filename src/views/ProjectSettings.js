@@ -146,7 +146,9 @@ export default class ProjectSettings {
                   <div>
                     <label class="cs-label">Project Name</label>
                     <input type="text" class="cs-input" id="settingProjectName"
-                           value="${escHtml(projectName)}" placeholder="Enter project name" />
+                           value="${escHtml(projectName)}" placeholder="Enter project name"
+                           readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
+                    <p class="cs-hint mt-1">El nombre del proyecto no puede editarse.</p>
                   </div>
                   <div>
                     <label class="cs-label">Description</label>
@@ -318,18 +320,9 @@ export default class ProjectSettings {
   // ─────────────────────────────────────────
   async handleSave() {
     const btn = document.getElementById("saveSettingsBtn");
-    const name = document.getElementById("settingProjectName")?.value.trim();
     const description = document
       .getElementById("settingProjectDesc")
       ?.value.trim();
-
-    if (!name) {
-      this._showFeedback(
-        "El nombre del proyecto no puede estar vacío.",
-        "error",
-      );
-      return;
-    }
 
     if (btn) {
       btn.disabled = true;
@@ -340,10 +333,9 @@ export default class ProjectSettings {
       const projectId =
         this.project?.id_project ?? this.team?.project?.id_project;
       if (projectId) {
-        await updateProject(projectId, { name, description });
+        await updateProject(projectId, { description });
       } else {
-        // No project yet — update team name as fallback
-        await updateTeam(this.team.id_team, { name });
+        await updateTeam(this.team.id_team, {});
       }
       this._showFeedback("Changes saved successfully.", "success");
     } catch (err) {
