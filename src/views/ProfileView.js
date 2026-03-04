@@ -195,7 +195,9 @@ export default class ProfileView {
                         </div>
                         <div class="profile-form-field">
                           <label class="profile-label" for="clan">Clan</label>
-                          <input id="clan" name="clan" type="text" class="profile-input" placeholder="Nombre del clan" value="${escapeHtml(this.profileForm.clan)}" />
+                          <input id="clan" name="clan" type="text" class="profile-input" value="${escapeHtml(this.profileForm.clan || "N/A")}"
+                                 readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
+                          <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">El clan es asignado por un administrador.</p>
                         </div>
                        <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
                          ${this.isSaving ? "Guardando..." : "Guardar cambios"}
@@ -262,7 +264,6 @@ export default class ProfileView {
     try {
       const updatedProfile = await updateProfile({
         description: this.profileForm.description,
-        clan: this.profileForm.clan,
       });
 
       this.profileDetails = {
@@ -270,13 +271,10 @@ export default class ProfileView {
         ...updatedProfile,
       };
 
-      const clanValue = updatedProfile.clan ?? this.profileForm.clan;
       this.profileForm = {
         description: updatedProfile.description ?? this.profileForm.description,
-        clan: clanValue,
+        clan: this.profileForm.clan,
       };
-
-      this.user = updateUser({ clan: clanValue }) || this.user;
       this.successMessage = "Perfil actualizado correctamente.";
     } catch (error) {
       console.error("Error updating profile", error);
