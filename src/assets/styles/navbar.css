@@ -1,11 +1,11 @@
 /* ── Sidebar shell ── */
 .sidebar {
-  width: 224px;
+  width: 240px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background-color: #1c2333;
-  min-height: 100vh;
+  height: 100vh;
   position: sticky;
   top: 0;
 }
@@ -29,19 +29,21 @@
   .sidebar {
     width: 200px;
   }
+  .sidebar-user-info .sidebar-user-name{
+    white-space: initial;
+  }
+  
 }
 
 /* =========================
    MOBILE
 ========================= */
 @media (max-width: 768px) {
-
   .sidebar {
     position: relative;
     width: 100%;
     min-height: auto;
   }
-
 }
 
 /* ── Logo area ── */
@@ -79,7 +81,7 @@
   padding: 20px 12px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -89,7 +91,7 @@
   background: transparent;
 }
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 99px;
 }
 
@@ -113,12 +115,14 @@
   border: none;
   background: transparent;
   color: #8892a4;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: "Ubuntu", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
@@ -207,12 +211,14 @@
   border: none;
   background: transparent;
   color: #6b7a99;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: "Ubuntu", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .sidebar-logout svg {
@@ -226,3 +232,34 @@
   color: #f87171;
 }
 
+
+/* Mobile top navbar */
+.mobile-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--sidebar-bg);  /* match your sidebar color */
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.mobile-nav-links {
+  scrollbar-width: none; /* hide scrollbar on Firefox */
+}
+.mobile-nav-links::-webkit-scrollbar { display: none; } /* hide scrollbar on Chrome */
+
+.mobile-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mobile-nav-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}

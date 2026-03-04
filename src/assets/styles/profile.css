@@ -61,6 +61,11 @@
 }
 
 @media (max-width: 768px) {
+  main{
+    display: flex;
+    flex-direction: column;
+  }
+
   .profile-content {
     flex-direction: column;
   }
@@ -193,6 +198,10 @@
   gap: 0.4rem;
 }
 
+.profile-form-field textarea{
+ height: 10rem;
+}
+
 .profile-input {
   width: 100%;
   border: 1px solid var(--border);
@@ -300,3 +309,12 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(107, 92, 255, 0.25);
 }
+
+
+/* @media (max-width: 1024px) {
+  .coder-home-main{
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+} */

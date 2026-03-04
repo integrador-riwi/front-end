@@ -133,9 +133,9 @@ export default class ProfileView {
 
     const statusLabel = githubConnected
       ? githubExpired
-        ? "Conexión expirada"
-        : "Conectado"
-      : "No conectado";
+        ? "Expired connection"
+        : "Connected"
+      : "Not connected";
 
     // showLink: connected AND we have a username or url
     const showGithubLink =
@@ -147,7 +147,7 @@ export default class ProfileView {
       <main class="coder-home-main profile-viewport">
         <div class="container-xl px-3 px-md-4 py-5">
             <div class="row g-4 justify-content-center">
-                <div class="col-12 col-md-5 col-lg-4">
+                <div class="col-12 col-lg-5">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
                      <div class="profile-card-topbar"></div>
                      <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
@@ -185,20 +185,20 @@ export default class ProfileView {
                    </div>
                 </div>
 
-                <div class="col-12 col-md-7 col-lg-8">
+                <div class="col-12 col-lg-7">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
-                     <h2 class="profile-section-title mb-3">Editar perfil</h2>
+                     <h2 class="profile-section-title mb-3">Edit yout profile</h2>
                       <form id="profileForm" class="profile-form">
                         <div class="profile-form-field">
-                          <label class="profile-label" for="description">Descripción</label>
-                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Háblanos de tu experiencia">${escapeHtml(this.profileForm.description)}</textarea>
+                          <label class="profile-label" for="description">Description</label>
+                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Tell us about you...">${escapeHtml(this.profileForm.description)}</textarea>
                         </div>
                         <div class="profile-form-field">
                           <label class="profile-label" for="clan">Clan</label>
                           <input id="clan" name="clan" type="text" class="profile-input" placeholder="Nombre del clan" value="${escapeHtml(this.profileForm.clan)}" />
                         </div>
                        <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
-                         ${this.isSaving ? "Guardando..." : "Guardar cambios"}
+                         ${this.isSaving ? "Saving..." : "Save changes"}
                        </button>
                      </form>
                    </div>

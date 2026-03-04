@@ -18,7 +18,34 @@ export default class Navbar {
     const links = getNavLinks(this.user?.role);
 
     return `
-      <!-- ── Sidebar ── -->
+    <!-- ── Sidebar (desktop) / Top Navbar (mobile) ── -->
+
+<!-- MOBILE TOP NAVBAR -->
+    <button class="hamburger" id="hamburgerBtn">
+      ${icons.burger()}
+    </button>
+<nav class="mobile-nav d-flex align-items-center justify-content-between px-3 py-2 d-md-none">
+  
+  <!-- Brand -->
+  <div class="sidebar-brand d-flex align-items-center gap-2">
+    <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
+      ${icons.teamUp()}
+    </div>
+    <span class="sidebar-brand-name">TeamUp</span>
+  </div>
+
+
+  <!-- Avatar -->
+  <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0" id="profileBtn" style="cursor:pointer;">
+    ${
+      this.user?.github_avatar_url
+        ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+        : getInitials(this.user?.name)
+    }
+  </div>
+
+</nav>
+      <!-- ── Desktop Sidebar ── -->
       <aside class="sidebar d-flex flex-column">
 
         <!-- Brand -->
@@ -52,7 +79,7 @@ export default class Navbar {
 
         <!-- User + logout -->
         <div class="sidebar-footer p-3">
-          <div class="sidebar-user d-flex align-items-center gap-2 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
+          <div class="sidebar-user d-flex align-items-center gap-3 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
             <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
               ${
                 this.user?.github_avatar_url
