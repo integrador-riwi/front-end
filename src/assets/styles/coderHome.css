@@ -52,7 +52,7 @@
   }
 
   .create-team-card {
-    position: static!;
+    position: static !important;
   }
 }
 
@@ -95,7 +95,7 @@
   }
 
   .create-team-card {
-    position: static!;
+    position: static !important;
   }
 }
 
