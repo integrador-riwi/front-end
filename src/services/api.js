@@ -158,6 +158,12 @@ export async function rejectJoinRequest(requestId) {
   });
 }
 
+export async function cancelJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/cancel`, {
+    method: "DELETE",
+  });
+}
+
 // AI - Similar Projects Search
 export async function updateTeam(teamId, data) {
   return apiFetch(`/teams/${teamId}`, {
