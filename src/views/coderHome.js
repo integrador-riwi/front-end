@@ -2,7 +2,11 @@ import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
 import { renderCoderTeam, loadProjectBrief } from "./coderTeam.js";
-import { renderCoderNoTeam, setupAIAnalysis } from "./coderNoTeam.js";
+import {
+  renderCoderNoTeam,
+  setupAIAnalysis,
+  renderTeamCard,
+} from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
 import {
   createTeam as createTeamRequest,
@@ -12,6 +16,11 @@ import {
   acceptInvitation,
   rejectInvitation,
   leaveTeam,
+  requestToJoinTeam,
+  getMyJoinRequests,
+  getTeamJoinRequests,
+  acceptJoinRequest,
+  rejectJoinRequest,
 } from "../services/api.js";
 
 export default class CoderHome {
@@ -29,7 +38,7 @@ export default class CoderHome {
     this.createTeamError = "";
     this.createTeamSuccess = "";
     this.pendingInvitations = [];
-    this._pollingInterval = null;
+    this.pendingJoinRequests = [];
     this._pollingInterval = null;
 
     // Store form values to prevent clearing on re-render
@@ -89,6 +98,18 @@ export default class CoderHome {
       const data = response?.data ?? response;
       const teams = data?.teams ?? [];
       this.pendingInvitations = data?.pendingInvitations ?? [];
+      this.pendingJoinRequests = data?.pendingJoinRequests ?? [];
+
+      // Also fetch join requests if not in my-teams response
+      if (this.pendingJoinRequests.length === 0 && !this.team) {
+        try {
+          const joinRequestsRes = await getMyJoinRequests();
+          this.pendingJoinRequests =
+            joinRequestsRes?.data ?? joinRequestsRes ?? [];
+        } catch (e) {
+          console.error("Error fetching join requests:", e);
+        }
+      }
 
       if (teams.length > 0) {
         const t = teams[0];
@@ -118,6 +139,9 @@ export default class CoderHome {
                 ? "full"
                 : this.pendingInvitations.some(
                       (inv) => inv.id_team === t.id_team,
+                    ) ||
+                    this.pendingJoinRequests.some(
+                      (req) => req.id_team === t.id_team,
                     )
                   ? "pending"
                   : "open",
@@ -177,8 +201,11 @@ export default class CoderHome {
         });
 
     const pendingBanner =
-      !this.team && this.pendingInvitations.length > 0
-        ? this._renderPendingInvitationsBanner()
+      !this.team &&
+      (this.pendingInvitations.length > 0 ||
+        this.pendingJoinRequests.length > 0)
+        ? this._renderPendingInvitationsBanner() +
+          this._renderPendingJoinRequestsBanner()
         : "";
 
     app.innerHTML = `
@@ -215,78 +242,27 @@ export default class CoderHome {
     return this.teams.filter((t) => t.status === "open").length;
   }
 
-  // ─────────────────────────────────────────
-  // Polling de invitaciones
-  // ─────────────────────────────────────────
-  _startPolling() {
-    this._stopPolling(); // evitar duplicados
-    this._pollingInterval = setInterval(
-      () => this._checkNewInvitations(),
-      10000,
-    );
-  }
-
-  _stopPolling() {
-    if (this._pollingInterval) {
-      clearInterval(this._pollingInterval);
-      this._pollingInterval = null;
-    }
-  }
-
-  async _checkNewInvitations() {
-    // Si el usuario ya tiene equipo, dejar de pollear
-    if (this.team) {
-      this._stopPolling();
-      return;
-    }
-    try {
-      const response = await apiFetch("/teams/my-teams", { method: "GET" });
-      const data = response?.data ?? response;
-      const newInvitations = data?.pendingInvitations ?? [];
-
-      // Comparar por IDs — si hay alguna nueva, actualizar el banner
-      const currentIds = this.pendingInvitations
-        .map((i) => i.id_invitation)
-        .sort()
-        .join(",");
-      const newIds = newInvitations
-        .map((i) => i.id_invitation)
-        .sort()
-        .join(",");
-
-      if (currentIds !== newIds) {
-        this.pendingInvitations = newInvitations;
-        this._updateInvitationsBanner();
-      }
-    } catch (_) {
-      // silencioso — no interrumpir al usuario si falla el poll
-    }
-  }
-
-  _updateInvitationsBanner() {
-    const main = document.querySelector(".coder-home-main");
-    if (!main) return;
-
-    // Remover banner anterior si existe
-    const existing = main.querySelector(".pending-invitations-banner");
-    if (existing) existing.remove();
-
-    // Insertar nuevo banner al inicio si hay invitaciones
-    if (this.pendingInvitations.length > 0) {
-      const bannerHtml = this._renderPendingInvitationsBanner();
-      main.insertAdjacentHTML("afterbegin", bannerHtml);
-
-      // Re-attach handlers solo del banner nuevo
-      main.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
+  // Updates only the team list and counter without re-rendering the whole page (preserves input focus)
+  _updateTeamList() {
+    const listEl = document.querySelector(".team-list");
+    const countEl = document.querySelector(".available-count");
+    if (listEl) {
+      const filtered = this.getFilteredTeams();
+      const noTeamsMsg = this.searchQuery.trim()
+        ? `No teams found matching "${this.searchQuery}"`
+        : "No teams available.";
+      listEl.innerHTML =
+        filtered.length === 0
+          ? `<p style="text-align:center;color:#9ca3b8;padding:2rem;">${noTeamsMsg}</p>`
+          : filtered.map((team) => renderTeamCard(team)).join("");
+      listEl.querySelectorAll(".btn-join").forEach((btn) => {
         btn.addEventListener("click", () =>
-          this.handleAcceptInvitation(btn.dataset.invitationId, btn),
+          this.handleJoinTeam(btn.dataset.teamId),
         );
       });
-      main.querySelectorAll(".btn-reject-invitation").forEach((btn) => {
-        btn.addEventListener("click", () =>
-          this.handleRejectInvitation(btn.dataset.invitationId),
-        );
-      });
+    }
+    if (countEl) {
+      countEl.textContent = `${this.getAvailableCount()} Available`;
     }
   }
 
@@ -368,7 +344,7 @@ export default class CoderHome {
 
     document.getElementById("teamSearch")?.addEventListener("input", (e) => {
       this.searchQuery = e.target.value;
-      this.render();
+      this._updateTeamList();
     });
 
     document.querySelectorAll(".btn-join").forEach((btn) => {
@@ -505,7 +481,25 @@ export default class CoderHome {
   }
 
   handleJoinTeam(teamId) {
-    console.log("Join team:", teamId);
+    const btn = document.querySelector(`.btn-join[data-team-id="${teamId}"]`);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+    }
+
+    requestToJoinTeam(teamId)
+      .then(() => {
+        alert("Request sent successfully! The team leader will review it.");
+        this.render();
+        this.attachEventHandlers();
+      })
+      .catch((err) => {
+        alert("Error: " + (err?.message ?? "Try again"));
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Request to Join";
+        }
+      });
   }
 
   // ─────────────────────────────────────────
@@ -576,6 +570,27 @@ export default class CoderHome {
     `;
   }
 
+  _renderPendingJoinRequestsBanner() {
+    if (this.pendingJoinRequests.length === 0) return "";
+    return `
+      <div class="pending-invitations-banner" style="background: #fef3c7; border-color: #f59e0b;">
+        <p class="pib-title">📤 Tienes ${this.pendingJoinRequests.length} solicitud(es) de unión pendiente(s)</p>
+        <div class="pib-list">
+          ${this.pendingJoinRequests
+            .map(
+              (req) => `
+            <div class="pib-item">
+              <span>Equipo: <strong>${req.team_name ?? req.id_team}</strong></span>
+              <span class="pib-status" style="color: #f59e0b;">Pendiente</span>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   _renderInviteModal() {
     return `
       <div id="inviteModalBackdrop" class="invite-modal-backdrop" style="display:none;">
@@ -585,6 +600,11 @@ export default class CoderHome {
             <button id="inviteModalClose" class="invite-modal-close" aria-label="Cerrar">✕</button>
           </div>
           <div class="invite-modal-body">
+            <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
+              <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #6366f1;">📥 Solicitudes de unión pendientes</h4>
+              <div id="joinRequestsList" class="join-requests-list"></div>
+              <hr style="margin: 1rem 0;" />
+            </div>
             <input id="inviteSearchInput" type="text" class="invite-search-input"
                    placeholder="Buscar coder por nombre o email…" />
             <div id="inviteCodersList" class="invite-coders-list">
@@ -600,6 +620,80 @@ export default class CoderHome {
     const backdrop = document.getElementById("inviteModalBackdrop");
     if (backdrop) backdrop.style.display = "flex";
     document.getElementById("inviteSearchInput")?.focus();
+    this._loadJoinRequests();
+  }
+
+  async _loadJoinRequests() {
+    if (!this.team) return;
+
+    try {
+      const res = await getTeamJoinRequests(this.team.id_team);
+      const requests = res?.data ?? res ?? [];
+
+      const section = document.getElementById("joinRequestsSection");
+      const list = document.getElementById("joinRequestsList");
+
+      if (requests.length > 0 && section && list) {
+        section.style.display = "block";
+        list.innerHTML = requests
+          .map(
+            (req) => `
+            <div class="join-request-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f3f4f6; border-radius: 8px; margin-bottom: 0.5rem;">
+              <div>
+                <strong>${req.user_name}</strong>
+                <span style="font-size: 0.8rem; color: #6b7280;">(${req.user_email})</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn-accept-join-request" data-request-id="${req.id_request}" 
+                        style="padding: 0.25rem 0.75rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Aceptar</button>
+                <button class="btn-reject-join-request" data-request-id="${req.id_request}"
+                        style="padding: 0.25rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">Rechazar</button>
+              </div>
+            </div>
+          `,
+          )
+          .join("");
+
+        // Add event listeners
+        list.querySelectorAll(".btn-accept-join-request").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            this._handleAcceptJoinRequest(btn.dataset.requestId),
+          );
+        });
+        list.querySelectorAll(".btn-reject-join-request").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            this._handleRejectJoinRequest(btn.dataset.requestId),
+          );
+        });
+      } else if (section) {
+        section.style.display = "none";
+      }
+    } catch (err) {
+      console.error("Error loading join requests:", err);
+    }
+  }
+
+  async _handleAcceptJoinRequest(requestId) {
+    try {
+      await acceptJoinRequest(requestId);
+      alert("Solicitud aceptada correctamente");
+      this._loadJoinRequests();
+      await this.init();
+      this.render();
+      this.attachEventHandlers();
+    } catch (err) {
+      alert("Error: " + (err?.message ?? "No se pudo aceptar la solicitud"));
+    }
+  }
+
+  async _handleRejectJoinRequest(requestId) {
+    try {
+      await rejectJoinRequest(requestId);
+      alert("Solicitud rechazada");
+      this._loadJoinRequests();
+    } catch (err) {
+      alert("Error: " + (err?.message ?? "No se pudo rechazar la solicitud"));
+    }
   }
 
   _closeInviteModal() {

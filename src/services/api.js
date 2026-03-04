@@ -131,6 +131,33 @@ export async function leaveTeam(teamId) {
   return apiFetch(`/teams/${teamId}/leave`, { method: "DELETE" });
 }
 
+// Join Requests
+export async function requestToJoinTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/request-join`, {
+    method: "POST",
+  });
+}
+
+export async function getTeamJoinRequests(teamId) {
+  return apiFetch(`/teams/${teamId}/join-requests`, { method: "GET" });
+}
+
+export async function getMyJoinRequests() {
+  return apiFetch("/teams/join-requests/my", { method: "GET" });
+}
+
+export async function acceptJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function rejectJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/reject`, {
+    method: "POST",
+  });
+}
+
 // AI - Similar Projects Search
 export async function searchSimilarProjects(
   query,
