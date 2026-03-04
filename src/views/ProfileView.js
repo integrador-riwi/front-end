@@ -113,12 +113,24 @@ export default class ProfileView {
       return;
     }
 
-    const githubLink = this.profileDetails?.github_url;
-    const statusLabel = this.githubStatus?.connected
-      ? this.githubStatus.expired
+    const githubUsername = this.githubStatus?.github?.username ?? null;
+    const githubConnected = this.githubStatus?.connected === true;
+    const githubExpired = this.githubStatus?.expired === true;
+    const githubProfileUrl = githubUsername
+      ? `https://github.com/${githubUsername}`
+      : this.profileDetails?.github_url || null;
+
+    const statusLabel = githubConnected
+      ? githubExpired
         ? "Conexión expirada"
         : "Conectado"
       : "No conectado";
+
+    // showLink: connected AND we have a username or url
+    const showGithubLink =
+      githubConnected && (githubUsername || githubProfileUrl);
+    // showBtn: not connected at all, OR connected but token expired
+    const showConnectBtn = !githubConnected || githubExpired;
     app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main profile-viewport">
@@ -139,13 +151,19 @@ export default class ProfileView {
                        <p class="profile-label mb-1">Email</p>
                        <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                         <div class="mt-3">
-                          <p class="profile-label mb-1">GitHub actual</p>
-                          ${githubLink
-                            ? `<a class="profile-link" href="${escapeHtml(githubLink)}" target="_blank">${this.githubStatus?.github?.username ? `@${escapeHtml(this.githubStatus.github.username)}` : escapeHtml(githubLink)}</a>`
-                            : `<p class="profile-value">Sin conexión</p>`}
+                          <p class="profile-label mb-1">GitHub</p>
+                          ${
+                            showGithubLink
+                              ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
+                              : `<p class="profile-value">Sin conexión</p>`
+                          }
                           <div class="profile-github-status">
-                            <span class="status-pill ${this.githubStatus?.connected ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                            <button type="button" class="profile-github-btn" id="connectGithubBtn" ${this.githubStatus?.connected ? "disabled" : ""}>Conectar GitHub</button>
+                            <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                            ${
+                              showConnectBtn
+                                ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconectar GitHub" : "Conectar GitHub"}</button>`
+                                : ``
+                            }
                           </div>
                         </div>
                       </div>
