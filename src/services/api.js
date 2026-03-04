@@ -159,6 +159,24 @@ export async function rejectJoinRequest(requestId) {
 }
 
 // AI - Similar Projects Search
+export async function updateTeam(teamId, data) {
+  return apiFetch(`/teams/${teamId}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+export async function updateProject(projectId, data) {
+  return apiFetch(`/projects/${projectId}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+export async function removeMember(teamId, userId) {
+  return apiFetch(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
+}
+
 export async function searchSimilarProjects(
   query,
   limit = 3,
