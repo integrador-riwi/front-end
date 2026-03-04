@@ -1,6 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/projectSettings.css";
+import InviteModal from "../components/inviteModal/InviteModal.js";
 import {
   apiFetch,
   updateTeam,
@@ -19,6 +20,10 @@ export default class ProjectSettings {
     this.isLeader = params.isLeader ?? false;
     this.project = null;
     this.isSaving = false;
+    this.inviteModal = new InviteModal({
+      team: this.team,
+      onMemberAdded: () => this._loadData().then(() => this._renderFull()),
+    });
   }
 
   async render() {
@@ -201,14 +206,18 @@ export default class ProjectSettings {
                 </h2>
                 <p class="cs-card-sub mb-4">Manage members and roles.</p>
 
-                <!-- Invite by search -->
-                <p class="cs-label">INVITE NEW MEMBER</p>
-                <div class="position-relative mb-2">
-                  <input type="text" class="cs-input" id="inviteSearchInput"
-                         placeholder="Search coder by name or email…" autocomplete="off" />
-                  <div id="inviteDropdown" class="cs-invite-dropdown" style="display:none;"></div>
-                </div>
-                <div class="mb-4" id="inviteFeedback"></div>
+                <!-- Invite button -->
+                <button class="cs-btn-primary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
+                        id="openInviteModalBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                       style="width:15px;height:15px">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
+                  Invitar miembro
+                </button>
 
                 <!-- Members -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -239,6 +248,12 @@ export default class ProjectSettings {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+
+    // Mount shared invite modal
+    this.inviteModal.setTeam(this.team);
+    if (!document.getElementById("inviteModalBackdrop")) {
+      document.getElementById("app")?.appendChild(this.inviteModal.element());
+    }
   }
 
   renderMember(m, i) {
@@ -290,22 +305,12 @@ export default class ProjectSettings {
       );
     });
 
-    // Invite search with debounce
-    const searchInput = document.getElementById("inviteSearchInput");
-    let debounceTimer;
-    searchInput?.addEventListener("input", (e) => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(
-        () => this._fetchInviteSuggestions(e.target.value),
-        400,
-      );
-    });
-    searchInput?.addEventListener("blur", () => {
-      setTimeout(() => {
-        const dropdown = document.getElementById("inviteDropdown");
-        if (dropdown) dropdown.style.display = "none";
-      }, 200);
-    });
+    // Open invite modal
+    document
+      .getElementById("openInviteModalBtn")
+      ?.addEventListener("click", () => {
+        this.inviteModal.open();
+      });
   }
 
   // ─────────────────────────────────────────
@@ -390,83 +395,6 @@ export default class ProjectSettings {
         err?.message ?? "No se pudo remover el miembro.",
         "error",
       );
-    }
-  }
-
-  async _fetchInviteSuggestions(query) {
-    const dropdown = document.getElementById("inviteDropdown");
-    if (!dropdown) return;
-
-    if (!query || query.length < 2) {
-      dropdown.style.display = "none";
-      return;
-    }
-
-    dropdown.style.display = "block";
-    dropdown.innerHTML = `<div class="cs-invite-hint">Buscando…</div>`;
-
-    try {
-      const res = await getAvailableCoders(this.team.id_team, query);
-      const data = res?.data ?? res;
-      const coders = data?.coders ?? [];
-
-      if (coders.length === 0) {
-        dropdown.innerHTML = `<div class="cs-invite-hint">No se encontraron coders disponibles.</div>`;
-        return;
-      }
-
-      dropdown.innerHTML = coders
-        .map(
-          (c) => `
-        <div class="cs-invite-option" data-user-id="${c.id_user}">
-          <div class="cs-invite-avatar">${c.name?.charAt(0) ?? "?"}</div>
-          <div>
-            <div class="cs-invite-name">${escHtml(c.name)}</div>
-            <div class="cs-invite-email">${escHtml(c.email)}</div>
-          </div>
-          ${
-            c.hasPendingInvitation
-              ? `<span class="cs-invite-sent">Invitado</span>`
-              : `<button class="cs-invite-btn" data-user-id="${c.id_user}">Invitar</button>`
-          }
-        </div>
-      `,
-        )
-        .join("");
-
-      dropdown.querySelectorAll(".cs-invite-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._sendInvite(btn);
-        });
-      });
-    } catch (err) {
-      dropdown.innerHTML = `<div class="cs-invite-hint cs-invite-error">${err?.message ?? "Error al buscar."}</div>`;
-    }
-  }
-
-  async _sendInvite(btn) {
-    const userId = btn.dataset.userId;
-    btn.disabled = true;
-    btn.textContent = "Enviando…";
-    try {
-      await inviteMember(this.team.id_team, Number(userId));
-      btn.textContent = "✓ Invitado";
-      btn.classList.add("cs-invite-sent");
-      const feedback = document.getElementById("inviteFeedback");
-      if (feedback) {
-        feedback.innerHTML = `<span style="color:#16a34a;font-size:0.85rem;">✓ Invitación enviada.</span>`;
-        setTimeout(() => {
-          feedback.innerHTML = "";
-        }, 3000);
-      }
-    } catch (err) {
-      btn.disabled = false;
-      btn.textContent = "Invitar";
-      const feedback = document.getElementById("inviteFeedback");
-      if (feedback) {
-        feedback.innerHTML = `<span style="color:#dc2626;font-size:0.85rem;">${err?.message ?? "No se pudo enviar."}</span>`;
-      }
     }
   }
 
