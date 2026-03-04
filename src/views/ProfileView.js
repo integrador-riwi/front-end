@@ -119,6 +119,7 @@ export default class ProfileView {
     const githubUsername = this.githubStatus?.github?.username ?? null;
     const githubConnected = this.githubStatus?.connected === true;
     const githubExpired = this.githubStatus?.expired === true;
+    const githubAvatarUrl = this.githubStatus?.github?.avatarUrl ?? null;
     const githubProfileUrl = githubUsername
       ? `https://github.com/${githubUsername}`
       : this.profileDetails?.github_url || null;
@@ -143,7 +144,11 @@ export default class ProfileView {
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
                      <div class="profile-card-topbar"></div>
                      <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
-                       <span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>
+                       ${
+                         githubAvatarUrl
+                           ? `<img src="${escapeHtml(githubAvatarUrl)}" alt="GitHub avatar" class="profile-avatar-img" />`
+                           : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
+                       }
                      </div>
                      <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
                      <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
