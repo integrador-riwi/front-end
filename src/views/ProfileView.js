@@ -46,7 +46,11 @@ export default class ProfileView {
         this.user = getCurrentUser();
       }
 
-      const data = await getMyProfile();
+      const [data] = await Promise.all([
+        getMyProfile(),
+        this.loadGithubStatus(),
+      ]);
+
       const profile = data?.profile ?? {};
       const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
 
@@ -82,7 +86,6 @@ export default class ProfileView {
         clan: this.profileForm.clan,
       };
     } finally {
-      await this.loadGithubStatus();
       this.isLoading = false;
       this.render();
     }
@@ -173,8 +176,6 @@ export default class ProfileView {
                 <div class="col-12 col-md-7 col-lg-8">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
                      <h2 class="profile-section-title mb-3">Editar perfil</h2>
-                     ${this.errorMessage ? `<div class="profile-alert profile-alert-error mb-3">${escapeHtml(this.errorMessage)}</div>` : ""}
-                     ${this.successMessage ? `<div class="profile-alert profile-alert-success mb-3">${escapeHtml(this.successMessage)}</div>` : ""}
                       <form id="profileForm" class="profile-form">
                         <div class="profile-form-field">
                           <label class="profile-label" for="description">Descripción</label>
@@ -197,6 +198,9 @@ export default class ProfileView {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+
+    // Show OAuth redirect messages (github success/error params)
+    if (this.errorMessage || this.successMessage) this._showBanner();
   }
 
   attachEventHandlers() {
@@ -241,7 +245,7 @@ export default class ProfileView {
     this.isSaving = true;
     this.errorMessage = "";
     this.successMessage = "";
-    this.render();
+    this._setSaveBtn(true);
 
     try {
       const updatedProfile = await updateProfile({
@@ -270,8 +274,37 @@ export default class ProfileView {
         "No se pudo guardar el perfil.";
     } finally {
       this.isSaving = false;
-      this.render();
+      this._setSaveBtn(false);
+      this._showBanner();
     }
+  }
+
+  _setSaveBtn(loading) {
+    const btn = document.querySelector(".profile-btn[type='submit']");
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? "Guardando..." : "Guardar cambios";
+  }
+
+  _showBanner() {
+    const errorEl = document.querySelector(".profile-alert-error");
+    const successEl = document.querySelector(".profile-alert-success");
+
+    // Remove existing banners
+    errorEl?.remove();
+    successEl?.remove();
+
+    if (!this.errorMessage && !this.successMessage) return;
+
+    const banner = document.createElement("div");
+    banner.className = `profile-alert ${this.errorMessage ? "profile-alert-error" : "profile-alert-success"} mb-3`;
+    banner.textContent = this.errorMessage || this.successMessage;
+
+    const form = document.getElementById("profileForm");
+    form?.parentElement?.insertBefore(banner, form);
+
+    // Auto-dismiss after 4s
+    setTimeout(() => banner.remove(), 4000);
   }
 }
 
