@@ -98,7 +98,7 @@ class App {
         this.currentView.init();
         return;
       case "projectSettings":
-        this.currentView = new ProjectSettings(this);
+        this.currentView = new ProjectSettings(this, params);
         break;
       case "profile":
         this.currentView = new ProfileView(this);

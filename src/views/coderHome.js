@@ -8,6 +8,7 @@ import {
   renderTeamCard,
 } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
+import InviteModal from "../components/inviteModal/InviteModal.js";
 import {
   createTeam as createTeamRequest,
   apiFetch,
@@ -21,6 +22,7 @@ import {
   getTeamJoinRequests,
   acceptJoinRequest,
   rejectJoinRequest,
+  cancelJoinRequest,
 } from "../services/api.js";
 
 export default class CoderHome {
@@ -29,6 +31,7 @@ export default class CoderHome {
     this.navbar = new Navbar(router);
     this.user = getUser();
     this.team = team || null;
+    this.isLeader = false;
 
     this.searchQuery = "";
 
@@ -40,6 +43,11 @@ export default class CoderHome {
     this.pendingInvitations = [];
     this.pendingJoinRequests = [];
     this._pollingInterval = null;
+
+    this.inviteModal = new InviteModal({
+      team: this.team,
+      onMemberAdded: () => this.init().then(() => this.render()),
+    });
 
     // Store form values to prevent clearing on re-render
     this.formData = {
@@ -122,6 +130,11 @@ export default class CoderHome {
           members: full.members ?? [],
           project: full.project ?? null,
         };
+        const currentUserId = this.user?.id_user;
+        this.isLeader = (full.members ?? []).some(
+          (m) => m.id_user === currentUserId && m.team_role === "LEADER",
+        );
+        this.inviteModal.setTeam(this.team);
       }
 
       // Load real available teams for the no-team view
@@ -180,7 +193,11 @@ export default class CoderHome {
 
     const content = this.team
       ? (() => {
-          const html = renderCoderTeam({ user: this.user, team: this.team });
+          const html = renderCoderTeam({
+            user: this.user,
+            team: this.team,
+            isLeader: this.isLeader,
+          });
           setTimeout(() => loadProjectBrief(), 0);
           return html;
         })()
@@ -219,6 +236,11 @@ export default class CoderHome {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+
+    // Mount shared invite modal into the DOM (once per render cycle)
+    if (!document.getElementById("inviteModalBackdrop")) {
+      document.getElementById("app")?.appendChild(this.inviteModal.element());
+    }
 
     if (!this.team) {
       setupAIAnalysis(this);
@@ -365,18 +387,29 @@ export default class CoderHome {
       );
     });
 
+    // ── Cancel join request handlers ──
+    document.querySelectorAll(".btn-cancel-join-request").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleCancelJoinRequest(btn.dataset.requestId, btn),
+      );
+    });
+
     // ── Team view handlers ──
     const btnProjectSettings = document.querySelector(".btn-project-settings");
     if (btnProjectSettings) {
       btnProjectSettings.addEventListener("click", (e) => {
+        if (!this.isLeader) return;
         const route = e.currentTarget.dataset.route;
         if (route) {
-          this.router.navigate(route);
+          this.router.navigate(route, {
+            team: this.team,
+            isLeader: this.isLeader,
+          });
         }
       });
     }
 
-    // ── Add member button → open modal ──
+    // ── Add member button → open modal (leader only) ──
     document.getElementById("addMemberBtn")?.addEventListener("click", () => {
       this._openInviteModal();
     });
@@ -401,25 +434,6 @@ export default class CoderHome {
               (err?.message ?? "Intenta de nuevo"),
           );
         }
-      });
-
-    // ── Modal: close ──
-    document
-      .getElementById("inviteModalClose")
-      ?.addEventListener("click", () => {
-        this._closeInviteModal();
-      });
-    document
-      .getElementById("inviteModalBackdrop")
-      ?.addEventListener("click", () => {
-        this._closeInviteModal();
-      });
-
-    // ── Modal: search input ──
-    document
-      .getElementById("inviteSearchInput")
-      ?.addEventListener("input", (e) => {
-        this._searchCoders(e.target.value);
       });
   }
 
@@ -488,18 +502,54 @@ export default class CoderHome {
     }
 
     requestToJoinTeam(teamId)
-      .then(() => {
-        alert("Request sent successfully! The team leader will review it.");
-        this.render();
-        this.attachEventHandlers();
+      .then((res) => {
+        // Update local state so the card shows pending immediately
+        this.pendingJoinRequests = [
+          ...this.pendingJoinRequests,
+          {
+            id_request: res?.data?.id_request ?? res?.id_request,
+            id_team: Number(teamId),
+            team_name:
+              this.teams.find((t) => t.id === Number(teamId))?.name ?? "",
+          },
+        ];
+        this._updateTeamList();
+        this._showJoinFeedback(
+          "✓ Solicitud enviada. El líder del equipo la revisará.",
+          "success",
+        );
       })
       .catch((err) => {
-        alert("Error: " + (err?.message ?? "Try again"));
         if (btn) {
           btn.disabled = false;
           btn.textContent = "Request to Join";
         }
+        this._showJoinFeedback(
+          err?.message ?? "No se pudo enviar la solicitud.",
+          "error",
+        );
       });
+  }
+
+  _showJoinFeedback(message, type) {
+    const existing = document.getElementById("join-feedback-banner");
+    if (existing) existing.remove();
+
+    const banner = document.createElement("div");
+    banner.id = "join-feedback-banner";
+    banner.style.cssText = `
+      padding: 0.85rem 1.25rem; border-radius: 10px; margin-bottom: 1rem;
+      font-size: 0.9rem; font-weight: 500;
+      background: ${type === "success" ? "#f0fdf4" : "#fef2f2"};
+      border: 1px solid ${type === "success" ? "#86efac" : "#fca5a5"};
+      color: ${type === "success" ? "#16a34a" : "#dc2626"};
+    `;
+    banner.textContent = message;
+
+    const container = document.querySelector(".team-selection-container");
+    if (container) container.insertBefore(banner, container.firstChild);
+
+    setTimeout(() => banner.remove(), 4000);
   }
 
   // ─────────────────────────────────────────
@@ -542,6 +592,29 @@ export default class CoderHome {
     }
   }
 
+  async handleCancelJoinRequest(requestId, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cancelando…";
+    }
+    try {
+      await cancelJoinRequest(requestId);
+      this.pendingJoinRequests = this.pendingJoinRequests.filter(
+        (r) => String(r.id_request) !== String(requestId),
+      );
+      this.render();
+    } catch (err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Cancelar";
+      }
+      this._showJoinFeedback(
+        err?.message ?? "No se pudo cancelar la solicitud.",
+        "error",
+      );
+    }
+  }
+
   // ─────────────────────────────────────────
   // Invite-member modal
   // ─────────────────────────────────────────
@@ -581,7 +654,10 @@ export default class CoderHome {
               (req) => `
             <div class="pib-item">
               <span>Equipo: <strong>${req.team_name ?? req.id_team}</strong></span>
-              <span class="pib-status" style="color: #f59e0b;">Pendiente</span>
+              <div class="pib-actions">
+                <button class="btn-cancel-join-request pib-btn pib-reject"
+                        data-request-id="${req.id_request}">Cancelar</button>
+              </div>
             </div>
           `,
             )
@@ -592,183 +668,15 @@ export default class CoderHome {
   }
 
   _renderInviteModal() {
-    return `
-      <div id="inviteModalBackdrop" class="invite-modal-backdrop" style="display:none;">
-        <div class="invite-modal" role="dialog" aria-modal="true">
-          <div class="invite-modal-header">
-            <h3 class="invite-modal-title">Invitar miembro</h3>
-            <button id="inviteModalClose" class="invite-modal-close" aria-label="Cerrar">✕</button>
-          </div>
-          <div class="invite-modal-body">
-            <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
-              <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #6366f1;">📥 Solicitudes de unión pendientes</h4>
-              <div id="joinRequestsList" class="join-requests-list"></div>
-              <hr style="margin: 1rem 0;" />
-            </div>
-            <input id="inviteSearchInput" type="text" class="invite-search-input"
-                   placeholder="Buscar coder por nombre o email…" />
-            <div id="inviteCodersList" class="invite-coders-list">
-              <p class="invite-hint">Escribe para buscar coders disponibles.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+    return "";
+  } // modal is now mounted separately via InviteModal component
 
   _openInviteModal() {
-    const backdrop = document.getElementById("inviteModalBackdrop");
-    if (backdrop) backdrop.style.display = "flex";
-    document.getElementById("inviteSearchInput")?.focus();
-    this._loadJoinRequests();
-  }
-
-  async _loadJoinRequests() {
-    if (!this.team) return;
-
-    try {
-      const res = await getTeamJoinRequests(this.team.id_team);
-      const requests = res?.data ?? res ?? [];
-
-      const section = document.getElementById("joinRequestsSection");
-      const list = document.getElementById("joinRequestsList");
-
-      if (requests.length > 0 && section && list) {
-        section.style.display = "block";
-        list.innerHTML = requests
-          .map(
-            (req) => `
-            <div class="join-request-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f3f4f6; border-radius: 8px; margin-bottom: 0.5rem;">
-              <div>
-                <strong>${req.user_name}</strong>
-                <span style="font-size: 0.8rem; color: #6b7280;">(${req.user_email})</span>
-              </div>
-              <div style="display: flex; gap: 0.5rem;">
-                <button class="btn-accept-join-request" data-request-id="${req.id_request}" 
-                        style="padding: 0.25rem 0.75rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Aceptar</button>
-                <button class="btn-reject-join-request" data-request-id="${req.id_request}"
-                        style="padding: 0.25rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">Rechazar</button>
-              </div>
-            </div>
-          `,
-          )
-          .join("");
-
-        // Add event listeners
-        list.querySelectorAll(".btn-accept-join-request").forEach((btn) => {
-          btn.addEventListener("click", () =>
-            this._handleAcceptJoinRequest(btn.dataset.requestId),
-          );
-        });
-        list.querySelectorAll(".btn-reject-join-request").forEach((btn) => {
-          btn.addEventListener("click", () =>
-            this._handleRejectJoinRequest(btn.dataset.requestId),
-          );
-        });
-      } else if (section) {
-        section.style.display = "none";
-      }
-    } catch (err) {
-      console.error("Error loading join requests:", err);
-    }
-  }
-
-  async _handleAcceptJoinRequest(requestId) {
-    try {
-      await acceptJoinRequest(requestId);
-      alert("Solicitud aceptada correctamente");
-      this._loadJoinRequests();
-      await this.init();
-      this.render();
-      this.attachEventHandlers();
-    } catch (err) {
-      alert("Error: " + (err?.message ?? "No se pudo aceptar la solicitud"));
-    }
-  }
-
-  async _handleRejectJoinRequest(requestId) {
-    try {
-      await rejectJoinRequest(requestId);
-      alert("Solicitud rechazada");
-      this._loadJoinRequests();
-    } catch (err) {
-      alert("Error: " + (err?.message ?? "No se pudo rechazar la solicitud"));
-    }
+    this.inviteModal.setTeam(this.team);
+    this.inviteModal.open();
   }
 
   _closeInviteModal() {
-    const backdrop = document.getElementById("inviteModalBackdrop");
-    if (backdrop) backdrop.style.display = "none";
-  }
-
-  _searchDebounceTimer = null;
-  _searchCoders(query) {
-    clearTimeout(this._searchDebounceTimer);
-    this._searchDebounceTimer = setTimeout(() => this._fetchCoders(query), 400);
-  }
-
-  async _fetchCoders(query) {
-    const listEl = document.getElementById("inviteCodersList");
-    if (!listEl) return;
-
-    listEl.innerHTML = `<p class="invite-hint">Buscando…</p>`;
-
-    try {
-      const teamId = this.team?.id_team;
-      if (!teamId) return;
-
-      const res = await getAvailableCoders(teamId, query);
-      const data = res?.data ?? res;
-      const coders = data?.coders ?? [];
-
-      if (coders.length === 0) {
-        listEl.innerHTML = `<p class="invite-hint">No se encontraron coders disponibles.</p>`;
-        return;
-      }
-
-      listEl.innerHTML = coders
-        .map(
-          (c) => `
-        <div class="invite-coder-item">
-          <div class="invite-coder-avatar">${c.name?.charAt(0) ?? "?"}</div>
-          <div class="invite-coder-info">
-            <span class="invite-coder-name">${c.name}</span>
-            <span class="invite-coder-email">${c.email}</span>
-          </div>
-          ${
-            c.hasPendingInvitation
-              ? `<span class="invite-status-pending">Invitado</span>`
-              : `<button class="invite-btn-send" data-user-id="${c.id_user}">Invitar</button>`
-          }
-        </div>
-      `,
-        )
-        .join("");
-
-      listEl.querySelectorAll(".invite-btn-send").forEach((btn) => {
-        btn.addEventListener("click", () => this._sendInvite(btn));
-      });
-    } catch (err) {
-      listEl.innerHTML = `<p class="invite-hint invite-error">${err?.message ?? "Error al buscar."}</p>`;
-    }
-  }
-
-  async _sendInvite(btn) {
-    const userId = btn.dataset.userId;
-    const teamId = this.team?.id_team;
-    if (!teamId || !userId) return;
-
-    btn.disabled = true;
-    btn.textContent = "Enviando…";
-
-    try {
-      await inviteMember(teamId, Number(userId));
-      btn.textContent = "✓ Invitado";
-      btn.classList.add("invite-status-pending");
-    } catch (err) {
-      btn.disabled = false;
-      btn.textContent = "Invitar";
-      alert(err?.message ?? "No se pudo enviar la invitación.");
-    }
+    this.inviteModal.close();
   }
 }

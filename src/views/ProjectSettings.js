@@ -1,60 +1,129 @@
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/projectSettings.css";
+import InviteModal from "../components/inviteModal/InviteModal.js";
+import {
+  apiFetch,
+  updateTeam,
+  updateProject,
+  inviteMember,
+  removeMember,
+  getAvailableCoders,
+} from "../services/api.js";
 
 export default class ProjectSettings {
-  constructor(router) {
+  constructor(router, params = {}) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
-    this.team = null;
+    this.team = params.team || null;
+    this.isLeader = params.isLeader ?? false;
     this.project = null;
+    this.isSaving = false;
+    this.inviteModal = new InviteModal({
+      team: this.team,
+      onMemberAdded: () => this._loadData().then(() => this._renderFull()),
+    });
   }
 
   async render() {
     const app = document.getElementById("app");
 
-    // TODO: replace with real API calls
-    this.team = {
-      name: "Alpha Squad",
-      members: [{ name: "Alice", team_role: "LEADER" }, { name: "Bob", team_role: "MEMBER" }],
-      project: {
-        name: "Campus Navigator",
-        description: "React Native app for campus navigation.",
-        grade: 87.5,
-        final_delivery_date: "2026-03-15",
-        deliverables: {
-          video_url: "https://youtube.com/watch?v=xxx",
-          presentation_url: "https://slides.google.com/xxx",
-          repo_url: "https://github.com/team/repo",
-          preview_photo_url: null,
-        }
-      }
+    // Guard: only leaders can access this page
+    if (!this.isLeader) {
+      this.router.navigate("coderHome");
+      return;
     }
-
-    const { team } = this;
-    const projectName = team?.name ?? "Untitled Project";
-    const projectDesc = team?.description ?? "";
-    const repoUrl = team?.repo_url ?? "";
-    const members = team?.members ?? [];
 
     app.innerHTML = `
       ${this.navbar.render()}
-
       <main class="cs-main">
         <div class="container-xl px-3 px-md-4 py-4">
-
-          <!-- Breadcrumb -->
           <nav class="cs-breadcrumb d-flex align-items-center gap-2 mb-3">
             <span class="cs-bc-link" data-route="coderHome">Home</span>
             <span class="cs-bc-sep">›</span>
-            <span class="cs-bc-link">${escHtml(projectName)}</span>
+            <span class="cs-bc-current">Settings</span>
+          </nav>
+          <div class="d-flex align-items-center justify-content-center" style="min-height: 300px;">
+            <span class="cs-loading">Loading…</span>
+          </div>
+        </div>
+      </main>
+    `;
+
+    this.navbar.attachEventHandlers();
+    document
+      .querySelector(".cs-bc-link[data-route]")
+      ?.addEventListener("click", (e) => {
+        this.router.navigate(e.target.dataset.route);
+      });
+
+    await this._loadData();
+    this._renderFull();
+  }
+
+  async _loadData() {
+    try {
+      if (!this.team) {
+        const res = await apiFetch("/teams/my-teams", { method: "GET" });
+        const data = res?.data ?? res;
+        const teams = data?.teams ?? [];
+        if (teams.length === 0) {
+          this.router.navigate("coderHome");
+          return;
+        }
+        const detail = await apiFetch(`/teams/${teams[0].id_team}`, {
+          method: "GET",
+        });
+        this.team = detail?.data ?? detail;
+      } else {
+        const detail = await apiFetch(`/teams/${this.team.id_team}`, {
+          method: "GET",
+        });
+        this.team = detail?.data ?? detail;
+      }
+
+      if (this.team?.project?.id_project) {
+        const proj = await apiFetch(
+          `/projects/${this.team.project.id_project}`,
+          { method: "GET" },
+        );
+        this.project = proj?.data ?? proj;
+      } else {
+        this.project = this.team?.project ?? null;
+      }
+    } catch (e) {
+      console.error("Error loading settings data:", e);
+    }
+  }
+
+  _renderFull() {
+    const app = document.getElementById("app");
+    const teamName = this.team?.name ?? "";
+    const projectName = this.project?.name ?? this.team?.project?.name ?? "";
+    const projectDesc =
+      this.project?.description ?? this.team?.project?.description ?? "";
+    const repoUrl =
+      this.project?.repo_url ?? this.team?.project?.repo_url ?? "";
+    const members = this.team?.members ?? [];
+
+    app.innerHTML = `
+      ${this.navbar.render()}
+      <main class="cs-main">
+        <div class="container-xl px-3 px-md-4 py-4">
+
+          <nav class="cs-breadcrumb d-flex align-items-center gap-2 mb-3">
+            <span class="cs-bc-link" data-route="coderHome">Home</span>
+            <span class="cs-bc-sep">›</span>
+            <span class="cs-bc-link">${escHtml(projectName || teamName)}</span>
             <span class="cs-bc-sep">›</span>
             <span class="cs-bc-current">Settings</span>
           </nav>
 
           <h1 class="cs-page-title mb-1">Project Settings</h1>
           <p class="cs-page-sub mb-4">Manage project details, external links, and team member permissions.</p>
+
+          <div id="cs-feedback" class="mb-3" style="display:none;"></div>
 
           <div class="row g-4 align-items-start">
 
@@ -73,20 +142,17 @@ export default class ProjectSettings {
                   </svg>
                   General Information
                 </h2>
-
                 <div class="d-flex flex-column gap-3">
                   <div>
                     <label class="cs-label">Project Name</label>
                     <input type="text" class="cs-input" id="settingProjectName"
                            value="${escHtml(projectName)}" placeholder="Enter project name" />
                   </div>
-
                   <div>
                     <label class="cs-label">Description</label>
                     <textarea class="cs-input cs-textarea" id="settingProjectDesc"
                               placeholder="Describe your project...">${escHtml(projectDesc)}</textarea>
                   </div>
-
                   <div>
                     <label class="cs-label">Repository URL</label>
                     <div class="cs-input-icon-wrap">
@@ -95,10 +161,11 @@ export default class ProjectSettings {
                         <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
                       </svg>
                       <input type="url" class="cs-input cs-input-with-icon" id="settingRepoUrl"
-                             value="${escHtml(repoUrl)}" placeholder="https://github.com/team/repo" />
+                             value="${escHtml(repoUrl)}" placeholder="https://github.com/team/repo"
+                             ${repoUrl ? "readonly title='El repo se asigna automáticamente al crear el proyecto'" : ""} />
                     </div>
+                    ${repoUrl ? `<p class="cs-hint mt-1">El repositorio fue creado automáticamente y no puede editarse aquí.</p>` : ""}
                   </div>
-
                   <div class="d-flex justify-content-end">
                     <button class="cs-btn-primary" id="saveSettingsBtn">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -117,8 +184,8 @@ export default class ProjectSettings {
               <div class="cs-danger-card rounded-4 p-4">
                 <h2 class="cs-danger-title mb-1">Danger Zone</h2>
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                  <p class="cs-danger-sub mb-0">Permanently delete this project and all its data.</p>
-                  <button class="cs-btn-danger" id="deleteProjectBtn">Delete Project</button>
+                  <p class="cs-danger-sub mb-0">Permanently delete this team and all its data.</p>
+                  <button class="cs-btn-danger" id="deleteProjectBtn">Delete Team</button>
                 </div>
               </div>
 
@@ -127,7 +194,6 @@ export default class ProjectSettings {
             <!-- ══ RIGHT ══ -->
             <div class="col-12 col-lg-4">
               <div class="bg-white rounded-4 p-4 cs-card">
-
                 <h2 class="cs-card-title d-flex align-items-center gap-2 mb-1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                        style="width:18px;height:18px;color:var(--accent)">
@@ -140,26 +206,24 @@ export default class ProjectSettings {
                 </h2>
                 <p class="cs-card-sub mb-4">Manage members and roles.</p>
 
-                <!-- Invite -->
-                <p class="cs-label">INVITE NEW MEMBER</p>
-                <div class="d-flex gap-2 mb-4">
-                  <input type="email" class="cs-input flex-grow-1" id="inviteEmail"
-                         placeholder="student@uni.edu" />
-                  <button class="cs-btn-invite" id="inviteMemberBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                         style="width:14px;height:14px">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </button>
-                </div>
+                <!-- Invite button -->
+                <button class="cs-btn-primary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
+                        id="openInviteModalBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                       style="width:15px;height:15px">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
+                  Invitar miembro
+                </button>
 
                 <!-- Members -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <span class="cs-label mb-0">Current Members</span>
                   <span class="cs-count-badge">${members.length}</span>
                 </div>
-
                 <ul class="list-unstyled d-flex flex-column gap-3 mb-4" id="membersList">
                   ${members.map((m, i) => this.renderMember(m, i)).join("")}
                 </ul>
@@ -184,10 +248,16 @@ export default class ProjectSettings {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+
+    // Mount shared invite modal
+    this.inviteModal.setTeam(this.team);
+    if (!document.getElementById("inviteModalBackdrop")) {
+      document.getElementById("app")?.appendChild(this.inviteModal.element());
+    }
   }
 
   renderMember(m, i) {
-    const isLead = m.team_role === "LEADER" || i === 0;
+    const isLead = m.team_role === "LEADER";
     const isMe = m.id_user === this.user?.id_user;
     return `
       <li class="d-flex align-items-center gap-3" data-member-id="${m.id_user}">
@@ -199,69 +269,133 @@ export default class ProjectSettings {
           </p>
           <p class="cs-member-role mb-0">${isLead ? "Lead" : "Member"}</p>
         </div>
-        ${isLead
-        ? `<span class="cs-lead-badge">LEAD</span>`
-        : `<button class="cs-btn-remove" data-member-id="${m.id_user}" title="Remove">
+        ${
+          isLead
+            ? `<span class="cs-lead-badge">LEAD</span>`
+            : `<button class="cs-btn-remove" data-member-id="${m.id_user}" data-member-name="${escHtml(m.name)}" title="Remove">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                </svg>
              </button>`
-      }
+        }
       </li>
     `;
   }
 
   attachEventHandlers() {
-    document.getElementById("saveSettingsBtn")?.addEventListener("click", () => this.handleSave());
+    document
+      .querySelector(".cs-bc-link[data-route]")
+      ?.addEventListener("click", (e) => {
+        this.router.navigate(e.target.dataset.route);
+      });
 
-    document.getElementById("deleteProjectBtn")?.addEventListener("click", () => this.handleDelete());
+    document
+      .getElementById("saveSettingsBtn")
+      ?.addEventListener("click", () => this.handleSave());
+    document
+      .getElementById("deleteProjectBtn")
+      ?.addEventListener("click", () => this.handleDelete());
+    document
+      .getElementById("copyInviteLinkBtn")
+      ?.addEventListener("click", () => this.handleCopyLink());
 
-    document.getElementById("inviteMemberBtn")?.addEventListener("click", () => this.handleInvite());
-
-    document.getElementById("inviteEmail")?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") this.handleInvite();
+    document.querySelectorAll(".cs-btn-remove").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        this.handleRemoveMember(btn.dataset.memberId, btn.dataset.memberName),
+      );
     });
 
-    document.getElementById("copyInviteLinkBtn")?.addEventListener("click", () => this.handleCopyLink());
-
-    document.querySelectorAll(".cs-btn-remove").forEach(btn => {
-      btn.addEventListener("click", () => this.handleRemoveMember(btn.dataset.memberId));
-    });
-
-    document.querySelector(".cs-bc-link[data-route]")?.addEventListener("click", (e) => {
-      this.router.navigate(e.target.dataset.route);
-    });
+    // Open invite modal
+    document
+      .getElementById("openInviteModalBtn")
+      ?.addEventListener("click", () => {
+        this.inviteModal.open();
+      });
   }
 
-  handleSave() {
+  // ─────────────────────────────────────────
+  // Actions
+  // ─────────────────────────────────────────
+  async handleSave() {
+    const btn = document.getElementById("saveSettingsBtn");
     const name = document.getElementById("settingProjectName")?.value.trim();
-    const desc = document.getElementById("settingProjectDesc")?.value.trim();
-    const repo = document.getElementById("settingRepoUrl")?.value.trim();
-    // TODO: await updateProject({ id: this.project.id_project, name, desc, repo_url: repo });
-    console.log("Save settings:", { name, desc, repo });
+    const description = document
+      .getElementById("settingProjectDesc")
+      ?.value.trim();
+
+    if (!name) {
+      this._showFeedback(
+        "El nombre del proyecto no puede estar vacío.",
+        "error",
+      );
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Saving…";
+    }
+
+    try {
+      const projectId =
+        this.project?.id_project ?? this.team?.project?.id_project;
+      if (projectId) {
+        await updateProject(projectId, { name, description });
+      } else {
+        // No project yet — update team name as fallback
+        await updateTeam(this.team.id_team, { name });
+      }
+      this._showFeedback("Changes saved successfully.", "success");
+    } catch (err) {
+      this._showFeedback(err?.message ?? "Could not save changes.", "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg> Save Changes`;
+      }
+    }
   }
 
-  handleDelete() {
-    const confirmed = confirm("Are you sure? This will permanently delete the project and all its data.");
+  async handleDelete() {
+    const confirmed = confirm(
+      "¿Seguro que quieres eliminar el equipo? Esta acción es permanente y no se puede deshacer.",
+    );
     if (!confirmed) return;
-    // TODO: await deleteProject(this.project.id_project);
-    console.log("Delete project");
+
+    try {
+      // Backend only allows ADMIN to delete via DELETE /teams/:id
+      // Leader leaves team which triggers auto-delete when alone, or use leave endpoint
+      const { leaveTeam } = await import("../services/api.js");
+      await leaveTeam(this.team.id_team);
+      this.router.navigate("coderHome");
+    } catch (err) {
+      this._showFeedback(
+        err?.message ?? "No se pudo eliminar el equipo.",
+        "error",
+      );
+    }
   }
 
-  handleInvite() {
-    const email = document.getElementById("inviteEmail")?.value.trim();
-    if (!email) return;
-    // TODO: await inviteMember({ teamId: this.team.id_team, email });
-    console.log("Invite:", email);
-    document.getElementById("inviteEmail").value = "";
-  }
-
-  handleRemoveMember(memberId) {
-    const confirmed = confirm("Remove this member from the team?");
+  async handleRemoveMember(memberId, memberName) {
+    const confirmed = confirm(`¿Remover a ${memberName} del equipo?`);
     if (!confirmed) return;
-    // TODO: await removeMember({ teamId: this.team.id_team, userId: memberId });
-    document.querySelector(`li[data-member-id="${memberId}"]`)?.remove();
-    console.log("Remove member:", memberId);
+
+    try {
+      await removeMember(this.team.id_team, memberId);
+      document.querySelector(`li[data-member-id="${memberId}"]`)?.remove();
+      // Update counter
+      const list = document.getElementById("membersList");
+      const badge = document.querySelector(".cs-count-badge");
+      if (badge && list) badge.textContent = list.querySelectorAll("li").length;
+    } catch (err) {
+      this._showFeedback(
+        err?.message ?? "No se pudo remover el miembro.",
+        "error",
+      );
+    }
   }
 
   handleCopyLink() {
@@ -280,10 +414,29 @@ export default class ProjectSettings {
       }, 2000);
     });
   }
+
+  // ─────────────────────────────────────────
+  // UI helpers
+  // ─────────────────────────────────────────
+  _showFeedback(message, type = "success") {
+    const el = document.getElementById("cs-feedback");
+    if (!el) return;
+    el.style.display = "block";
+    el.className = `mb-3 alert ${type === "success" ? "alert-success" : "alert-danger"} rounded-4`;
+    el.textContent = message;
+    setTimeout(() => {
+      el.style.display = "none";
+    }, 4000);
+  }
 }
 
 function escHtml(str) {
   return String(str ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
+
+// Re-export for convenience
+export { updateTeam, updateProject };

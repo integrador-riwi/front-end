@@ -46,7 +46,11 @@ export default class ProfileView {
         this.user = getCurrentUser();
       }
 
-      const data = await getMyProfile();
+      const [data] = await Promise.all([
+        getMyProfile(),
+        this.loadGithubStatus(),
+      ]);
+
       const profile = data?.profile ?? {};
       const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
 
@@ -82,7 +86,6 @@ export default class ProfileView {
         clan: this.profileForm.clan,
       };
     } finally {
-      await this.loadGithubStatus();
       this.isLoading = false;
       this.render();
     }
@@ -113,12 +116,25 @@ export default class ProfileView {
       return;
     }
 
-    const githubLink = this.profileDetails?.github_url;
-    const statusLabel = this.githubStatus?.connected
-      ? this.githubStatus.expired
+    const githubUsername = this.githubStatus?.github?.username ?? null;
+    const githubConnected = this.githubStatus?.connected === true;
+    const githubExpired = this.githubStatus?.expired === true;
+    const githubAvatarUrl = this.githubStatus?.github?.avatarUrl ?? null;
+    const githubProfileUrl = githubUsername
+      ? `https://github.com/${githubUsername}`
+      : this.profileDetails?.github_url || null;
+
+    const statusLabel = githubConnected
+      ? githubExpired
         ? "Conexión expirada"
         : "Conectado"
       : "No conectado";
+
+    // showLink: connected AND we have a username or url
+    const showGithubLink =
+      githubConnected && (githubUsername || githubProfileUrl);
+    // showBtn: not connected at all, OR connected but token expired
+    const showConnectBtn = !githubConnected || githubExpired;
     app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main profile-viewport">
@@ -128,7 +144,11 @@ export default class ProfileView {
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
                      <div class="profile-card-topbar"></div>
                      <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
-                       <span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>
+                       ${
+                         githubAvatarUrl
+                           ? `<img src="${escapeHtml(githubAvatarUrl)}" alt="GitHub avatar" class="profile-avatar-img" />`
+                           : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
+                       }
                      </div>
                      <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
                      <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
@@ -139,13 +159,19 @@ export default class ProfileView {
                        <p class="profile-label mb-1">Email</p>
                        <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                         <div class="mt-3">
-                          <p class="profile-label mb-1">GitHub actual</p>
-                          ${githubLink
-                            ? `<a class="profile-link" href="${escapeHtml(githubLink)}" target="_blank">${this.githubStatus?.github?.username ? `@${escapeHtml(this.githubStatus.github.username)}` : escapeHtml(githubLink)}</a>`
-                            : `<p class="profile-value">Sin conexión</p>`}
+                          <p class="profile-label mb-1">GitHub</p>
+                          ${
+                            showGithubLink
+                              ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
+                              : `<p class="profile-value">Sin conexión</p>`
+                          }
                           <div class="profile-github-status">
-                            <span class="status-pill ${this.githubStatus?.connected ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                            <button type="button" class="profile-github-btn" id="connectGithubBtn" ${this.githubStatus?.connected ? "disabled" : ""}>Conectar GitHub</button>
+                            <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                            ${
+                              showConnectBtn
+                                ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconectar GitHub" : "Conectar GitHub"}</button>`
+                                : ``
+                            }
                           </div>
                         </div>
                       </div>
@@ -155,8 +181,6 @@ export default class ProfileView {
                 <div class="col-12 col-md-7 col-lg-8">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
                      <h2 class="profile-section-title mb-3">Editar perfil</h2>
-                     ${this.errorMessage ? `<div class="profile-alert profile-alert-error mb-3">${escapeHtml(this.errorMessage)}</div>` : ""}
-                     ${this.successMessage ? `<div class="profile-alert profile-alert-success mb-3">${escapeHtml(this.successMessage)}</div>` : ""}
                       <form id="profileForm" class="profile-form">
                         <div class="profile-form-field">
                           <label class="profile-label" for="description">Descripción</label>
@@ -179,6 +203,9 @@ export default class ProfileView {
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
+
+    // Show OAuth redirect messages (github success/error params)
+    if (this.errorMessage || this.successMessage) this._showBanner();
   }
 
   attachEventHandlers() {
@@ -223,7 +250,7 @@ export default class ProfileView {
     this.isSaving = true;
     this.errorMessage = "";
     this.successMessage = "";
-    this.render();
+    this._setSaveBtn(true);
 
     try {
       const updatedProfile = await updateProfile({
@@ -252,8 +279,37 @@ export default class ProfileView {
         "No se pudo guardar el perfil.";
     } finally {
       this.isSaving = false;
-      this.render();
+      this._setSaveBtn(false);
+      this._showBanner();
     }
+  }
+
+  _setSaveBtn(loading) {
+    const btn = document.querySelector(".profile-btn[type='submit']");
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? "Guardando..." : "Guardar cambios";
+  }
+
+  _showBanner() {
+    const errorEl = document.querySelector(".profile-alert-error");
+    const successEl = document.querySelector(".profile-alert-success");
+
+    // Remove existing banners
+    errorEl?.remove();
+    successEl?.remove();
+
+    if (!this.errorMessage && !this.successMessage) return;
+
+    const banner = document.createElement("div");
+    banner.className = `profile-alert ${this.errorMessage ? "profile-alert-error" : "profile-alert-success"} mb-3`;
+    banner.textContent = this.errorMessage || this.successMessage;
+
+    const form = document.getElementById("profileForm");
+    form?.parentElement?.insertBefore(banner, form);
+
+    // Auto-dismiss after 4s
+    setTimeout(() => banner.remove(), 4000);
   }
 }
 

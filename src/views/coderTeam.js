@@ -1,4 +1,4 @@
-export function renderCoderTeam({ user, team }) {
+export function renderCoderTeam({ user, team, isLeader = false }) {
   const { name: teamName, members = [], project = null } = team;
 
   const grade = project?.grade ?? null;
@@ -149,7 +149,9 @@ export function renderCoderTeam({ user, team }) {
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
-                <!--
+                ${
+                  isLeader
+                    ? `
                 <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -157,7 +159,9 @@ export function renderCoderTeam({ user, team }) {
                     </svg>
                     Settings
                 </button>
-                -->
+                `
+                    : ""
+                }
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
@@ -177,6 +181,9 @@ export function renderCoderTeam({ user, team }) {
                 .join("")}
             </ul>
 
+            ${
+              isLeader
+                ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -188,6 +195,9 @@ export function renderCoderTeam({ user, team }) {
               </svg>
               Add Member
             </button>
+            `
+                : ""
+            }
 
             <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
                     id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
