@@ -752,6 +752,24 @@
   font-size: 0.78rem;
   color: #6b7280;
 }
+
+/* ── Join request items inside invite modal ── */
+.join-request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: var(--color-bg, #f3f4f8);
+  margin-bottom: 0.5rem;
+}
+.join-request-email {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--color-text-header, #a0aec0);
+  margin-left: 0.25rem;
+}
 .invite-btn-send {
   padding: 0.3rem 0.85rem;
   background: var(--color-primary, #6c63ff);
