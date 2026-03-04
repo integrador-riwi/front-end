@@ -232,7 +232,7 @@ export function setupAIAnalysis(instance) {
         instance.aiResult = {
           class: "unique",
           icon: "✓",
-          message: "Tu proyecto es <strong>único</strong>",
+          message: "Your project is <strong>unique</strong>",
         };
       } else {
         const maxSimilarity = Math.max(...data.map((p) => p.similarity));
@@ -243,13 +243,13 @@ export function setupAIAnalysis(instance) {
           instance.aiResult = {
             class: "very-similar",
             icon: "🚨",
-            message: `Tu proyecto es <strong>muy similar</strong> a: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
+            message: `Your project is <strong>very similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
           };
         } else {
           instance.aiResult = {
             class: "similar",
             icon: "⚠️",
-            message: `Tu proyecto <strong>se parece</strong> a: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
+            message: `Your project <strong>is similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
           };
         }
       }

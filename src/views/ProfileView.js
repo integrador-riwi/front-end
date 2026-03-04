@@ -133,7 +133,7 @@ export default class ProfileView {
 
     const statusLabel = githubConnected
       ? githubExpired
-        ? "Conexión expirada"
+        ? "Connection expired"
         : "Conectado"
       : "No conectado";
 
@@ -170,7 +170,7 @@ export default class ProfileView {
                           ${
                             showGithubLink
                               ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
-                              : `<p class="profile-value">Sin conexión</p>`
+                              : `<p class="profile-value">Not connected</p>`
                           }
                           <div class="profile-github-status">
                             <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
@@ -190,17 +190,17 @@ export default class ProfileView {
                      <h2 class="profile-section-title mb-3">Editar perfil</h2>
                       <form id="profileForm" class="profile-form">
                         <div class="profile-form-field">
-                          <label class="profile-label" for="description">Descripción</label>
-                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Háblanos de tu experiencia">${escapeHtml(this.profileForm.description)}</textarea>
+                          <label class="profile-label" for="description">Description</label>
+                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Tell us about your experience">${escapeHtml(this.profileForm.description)}</textarea>
                         </div>
                         <div class="profile-form-field">
                           <label class="profile-label" for="clan">Clan</label>
                           <input id="clan" name="clan" type="text" class="profile-input" value="${escapeHtml(this.profileForm.clan || "N/A")}"
                                  readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
-                          <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">El clan es asignado por un administrador.</p>
+                          <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">The clan is assigned by an administrator.</p>
                         </div>
                        <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
-                         ${this.isSaving ? "Guardando..." : "Guardar cambios"}
+                         ${this.isSaving ? "Saving..." : "Save changes"}
                        </button>
                      </form>
                    </div>
@@ -244,8 +244,7 @@ export default class ProfileView {
         window.location.href = url;
       } catch (error) {
         console.error("Error al obtener URL de GitHub", error);
-        this.errorMessage =
-          error?.message || "No se pudo iniciar la conexión con GitHub.";
+        this.errorMessage = error?.message || "Could not connect to GitHub.";
         this.render();
       }
     });
@@ -293,7 +292,7 @@ export default class ProfileView {
     const btn = document.querySelector(".profile-btn[type='submit']");
     if (!btn) return;
     btn.disabled = loading;
-    btn.textContent = loading ? "Guardando..." : "Guardar cambios";
+    btn.textContent = loading ? "Saving..." : "Save changes";
   }
 
   _showBanner() {

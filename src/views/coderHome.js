@@ -437,9 +437,7 @@ export default class CoderHome {
     document
       .getElementById("leaveTeamBtn")
       ?.addEventListener("click", async () => {
-        const confirmed = confirm(
-          "¿Estás seguro de que quieres salir del equipo?",
-        );
+        const confirmed = confirm("Are you sure you want to leave the team?");
         if (!confirmed) return;
 
         try {
@@ -449,8 +447,7 @@ export default class CoderHome {
           this.attachEventHandlers();
         } catch (err) {
           alert(
-            "Error al salir del equipo: " +
-              (err?.message ?? "Intenta de nuevo"),
+            "Error leaving the team: " + (err?.message ?? "Intenta de nuevo"),
           );
         }
       });
@@ -473,7 +470,7 @@ export default class CoderHome {
     };
 
     if (!teamName) {
-      this.createTeamError = "El nombre del equipo es obligatorio.";
+      this.createTeamError = "Team name is required.";
       this.createTeamSuccess = "";
       this.render();
       return;
@@ -490,7 +487,7 @@ export default class CoderHome {
         description: projectTopic,
       });
       const payload = response?.data ?? response;
-      this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" creado correctamente.`;
+      this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" created successfully.`;
       this.formData = { teamName: "", projectTopic: "" };
 
       if (payload) {
@@ -505,7 +502,7 @@ export default class CoderHome {
         error?.response?.data?.error ||
         error?.response?.data?.message ||
         error?.message ||
-        "No se pudo crear el equipo.";
+        "Could not create the team.";
       this.createTeamSuccess = "";
     } finally {
       this.isCreatingTeam = false;
@@ -534,7 +531,7 @@ export default class CoderHome {
         ];
         this._updateTeamList();
         this._showJoinFeedback(
-          "✓ Solicitud enviada. El líder del equipo la revisará.",
+          "✓ Request sent. The team leader will review it.",
           "success",
         );
       })
@@ -544,7 +541,7 @@ export default class CoderHome {
           btn.textContent = "Request to Join";
         }
         this._showJoinFeedback(
-          err?.message ?? "No se pudo enviar la solicitud.",
+          err?.message ?? "Could not send the request.",
           "error",
         );
       });
@@ -592,10 +589,10 @@ export default class CoderHome {
       // Restaurar botón si falla
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Aceptar";
+        btn.textContent = "Accept";
       }
       if (rejectBtn) rejectBtn.disabled = false;
-      alert(err?.message ?? "No se pudo aceptar la invitación.");
+      alert(err?.message ?? "Could not accept the invitation.");
     }
   }
 
@@ -607,7 +604,7 @@ export default class CoderHome {
       );
       this.render();
     } catch (err) {
-      alert(err?.message ?? "No se pudo rechazar la invitación.");
+      alert(err?.message ?? "Could not reject the invitation.");
     }
   }
 
@@ -625,10 +622,10 @@ export default class CoderHome {
     } catch (err) {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Cancelar";
+        btn.textContent = "Cancel";
       }
       this._showJoinFeedback(
-        err?.message ?? "No se pudo cancelar la solicitud.",
+        err?.message ?? "Could not cancel the request.",
         "error",
       );
     }
@@ -640,18 +637,18 @@ export default class CoderHome {
   _renderPendingInvitationsBanner() {
     return `
       <div class="pending-invitations-banner">
-        <p class="pib-title">📬 Tienes ${this.pendingInvitations.length} invitación(es) pendiente(s)</p>
+        <p class="pib-title">📬 You have ${this.pendingInvitations.length} pending invitation(s)</p>
         <div class="pib-list">
           ${this.pendingInvitations
             .map(
               (inv) => `
             <div class="pib-item">
-              <span>Equipo: <strong>${inv.team_name ?? inv.id_team}</strong></span>
+              <span>Team: <strong>${inv.team_name ?? inv.id_team}</strong></span>
               <div class="pib-actions">
                 <button class="btn-accept-invitation pib-btn pib-accept"
-                        data-invitation-id="${inv.id_invitation}">Aceptar</button>
+                        data-invitation-id="${inv.id_invitation}">Accept</button>
                 <button class="btn-reject-invitation pib-btn pib-reject"
-                        data-invitation-id="${inv.id_invitation}">Rechazar</button>
+                        data-invitation-id="${inv.id_invitation}">Reject</button>
               </div>
             </div>
           `,
@@ -666,16 +663,16 @@ export default class CoderHome {
     if (this.pendingJoinRequests.length === 0) return "";
     return `
       <div class="pending-invitations-banner" style="background: #fef3c7; border-color: #f59e0b;">
-        <p class="pib-title">📤 Tienes ${this.pendingJoinRequests.length} solicitud(es) de unión pendiente(s)</p>
+        <p class="pib-title">📤 You have ${this.pendingJoinRequests.length} pending join request(s)</p>
         <div class="pib-list">
           ${this.pendingJoinRequests
             .map(
               (req) => `
             <div class="pib-item">
-              <span>Equipo: <strong>${req.team_name ?? req.id_team}</strong></span>
+              <span>Team: <strong>${req.team_name ?? req.id_team}</strong></span>
               <div class="pib-actions">
                 <button class="btn-cancel-join-request pib-btn pib-reject"
-                        data-request-id="${req.id_request}">Cancelar</button>
+                        data-request-id="${req.id_request}">Cancel</button>
               </div>
             </div>
           `,
