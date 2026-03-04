@@ -762,3 +762,96 @@
   font-style: italic;
   flex-shrink: 0;
 }
+
+/* ── Project Brief ─────────────────────────────── */
+.ct-brief-container {
+  font-size: 0.92rem;
+}
+.ct-brief-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+.ct-btn-download {
+  padding: 0.4rem 1rem;
+  background: var(--color-primary, #6c63ff);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.ct-btn-download:hover {
+  opacity: 0.85;
+  color: #fff;
+}
+.ct-brief-preview {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  max-height: 420px;
+  overflow-y: auto;
+  line-height: 1.7;
+  color: #374151;
+}
+.ct-brief-preview h1,
+.ct-brief-preview h2,
+.ct-brief-preview h3 {
+  color: #111827;
+  margin-top: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+.ct-brief-preview h1 {
+  font-size: 1.2rem;
+}
+.ct-brief-preview h2 {
+  font-size: 1.05rem;
+}
+.ct-brief-preview h3 {
+  font-size: 0.95rem;
+}
+.ct-brief-preview p {
+  margin-bottom: 0.6rem;
+}
+.ct-brief-preview ul,
+.ct-brief-preview ol {
+  padding-left: 1.4rem;
+  margin-bottom: 0.6rem;
+}
+.ct-brief-preview code {
+  background: #e5e7eb;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.ct-brief-preview pre {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.82rem;
+}
+.ct-brief-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+.ct-brief-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d1d5db;
+  border-top-color: var(--color-primary, #6c63ff);
+  border-radius: 50%;
+  animation: brief-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes brief-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

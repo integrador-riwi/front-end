@@ -74,7 +74,24 @@ export function renderCoderTeam({ user, team }) {
             </div>
           </div>
 
+          <!-- Project Brief -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
+                   style="width:16px;height:16px;flex-shrink:0">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <h2 class="ct-section-title mb-0">Project Brief</h2>
+            </div>
+            ${renderProjectBrief()}
+          </div>
+
           <!-- Deliverables -->
+          <!-- TODO: uncomment when deliverables flow is ready
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="ct-section-title mb-0">Project Deliverables</h2>
@@ -82,6 +99,7 @@ export function renderCoderTeam({ user, team }) {
             </div>
             ${renderDeliverables(deliverables, repoUrl)}
           </div>
+          -->
 
           <!-- Comments -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
@@ -170,6 +188,44 @@ export function renderCoderTeam({ user, team }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Project Brief
+// ─────────────────────────────────────────────────────────────
+function renderProjectBrief() {
+  // URL del archivo markdown del enunciado
+  // Cambia esta URL por la ruta real del archivo cuando esté disponible
+  const briefUrl = "/crudactivity-supcrud.md";
+  const briefDownloadUrl = "/crudactivity-supcrud.md";
+
+  return `
+    <div class="ct-brief-container">
+
+      <!-- Download button -->
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <p class="ct-brief-hint mb-0">Lee el enunciado completo del proyecto antes de comenzar.</p>
+        <a href="${briefDownloadUrl}" download="crudactivity-supcrud.md"
+           class="ct-btn-download d-flex align-items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               style="width:14px;height:14px">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Descargar enunciado
+        </a>
+      </div>
+
+      <!-- Markdown preview inline -->
+      <div id="project-brief-content" class="ct-brief-preview">
+        <div class="ct-brief-loading">
+          <span class="ct-brief-spinner"></span>
+          Cargando enunciado…
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
 // Deliverables
 // ─────────────────────────────────────────────────────────────
 function renderDeliverables(d, repoUrl) {
@@ -336,4 +392,60 @@ function formatDate(dateStr) {
         day: "numeric",
         year: "numeric",
       });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Project Brief markdown loader
+// Llamar después de renderizar: loadProjectBrief()
+// ─────────────────────────────────────────────────────────────
+export async function loadProjectBrief(briefUrl = "/crudactivity-supcrud.md") {
+  const container = document.getElementById("project-brief-content");
+  if (!container) return;
+
+  try {
+    const res = await fetch(briefUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const md = await res.text();
+    container.innerHTML = renderMarkdown(md);
+  } catch (err) {
+    container.innerHTML = `
+      <p style="color:#ef4444;font-size:0.85rem;">
+        No se pudo cargar el enunciado.
+        <a href="${briefUrl}" download style="color:var(--color-primary)">Descárgalo aquí</a>.
+      </p>`;
+  }
+}
+
+// Markdown renderer minimalista (sin dependencias externas)
+function renderMarkdown(md) {
+  return (
+    md
+      // Escapar HTML primero
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      // Bloques de código
+      .replace(/```[\s\S]*?```/g, (m) => {
+        const code = m.replace(/^```[^\n]*\n?/, "").replace(/```$/, "");
+        return `<pre><code>${code}</code></pre>`;
+      })
+      // Código inline
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      // Headings
+      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+      // Bold / italic
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      // Listas
+      .replace(/^- (.+)$/gm, "<li>$1</li>")
+      .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
+      // Párrafos (líneas que no son tags)
+      .replace(/^(?!<[a-z]).+$/gm, (line) =>
+        line.trim() ? `<p>${line}</p>` : "",
+      )
+      // Limpiar líneas vacías extra
+      .replace(/\n{3,}/g, "\n\n")
+  );
 }
