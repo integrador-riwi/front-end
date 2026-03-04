@@ -29,6 +29,7 @@ export default class CoderHome {
     this.createTeamError = "";
     this.createTeamSuccess = "";
     this.pendingInvitations = [];
+    this._pollingInterval = null;
 
     // Store form values to prevent clearing on re-render
     this.formData = {
@@ -137,6 +138,13 @@ export default class CoderHome {
       this.team = null;
     }
     this.render();
+
+    // Polling: solo si el usuario NO tiene equipo todavía
+    if (!this.team) {
+      this._startPolling();
+    } else {
+      this._stopPolling();
+    }
   }
 
   // ─────────────────────────────────────────
@@ -203,6 +211,81 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
+  // Polling de invitaciones
+  // ─────────────────────────────────────────
+  _startPolling() {
+    this._stopPolling(); // evitar duplicados
+    this._pollingInterval = setInterval(
+      () => this._checkNewInvitations(),
+      15000,
+    );
+  }
+
+  _stopPolling() {
+    if (this._pollingInterval) {
+      clearInterval(this._pollingInterval);
+      this._pollingInterval = null;
+    }
+  }
+
+  async _checkNewInvitations() {
+    // Si el usuario ya tiene equipo, dejar de pollear
+    if (this.team) {
+      this._stopPolling();
+      return;
+    }
+    try {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      const newInvitations = data?.pendingInvitations ?? [];
+
+      // Comparar por IDs — si hay alguna nueva, actualizar el banner
+      const currentIds = this.pendingInvitations
+        .map((i) => i.id_invitation)
+        .sort()
+        .join(",");
+      const newIds = newInvitations
+        .map((i) => i.id_invitation)
+        .sort()
+        .join(",");
+
+      if (currentIds !== newIds) {
+        this.pendingInvitations = newInvitations;
+        this._updateInvitationsBanner();
+      }
+    } catch (_) {
+      // silencioso — no interrumpir al usuario si falla el poll
+    }
+  }
+
+  _updateInvitationsBanner() {
+    const main = document.querySelector(".coder-home-main");
+    if (!main) return;
+
+    // Remover banner anterior si existe
+    const existing = main.querySelector(".pending-invitations-banner");
+    if (existing) existing.remove();
+
+    // Insertar nuevo banner al inicio si hay invitaciones
+    if (this.pendingInvitations.length > 0) {
+      const bannerHtml = this._renderPendingInvitationsBanner();
+      main.insertAdjacentHTML("afterbegin", bannerHtml);
+
+      // Re-attach handlers solo del banner nuevo
+      main.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          this.handleAcceptInvitation(btn.dataset.invitationId, btn),
+        );
+      });
+      main.querySelectorAll(".btn-reject-invitation").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          this.handleRejectInvitation(btn.dataset.invitationId),
+        );
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────
   // Event handlers
   // ─────────────────────────────────────────
   attachEventHandlers() {
@@ -225,7 +308,7 @@ export default class CoderHome {
     // ── Pending invitations handlers ──
     document.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
       btn.addEventListener("click", () =>
-        this.handleAcceptInvitation(btn.dataset.invitationId),
+        this.handleAcceptInvitation(btn.dataset.invitationId, btn),
       );
     });
     document.querySelectorAll(".btn-reject-invitation").forEach((btn) => {
@@ -356,11 +439,27 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   // Pending invitations
   // ─────────────────────────────────────────
-  async handleAcceptInvitation(invitationId) {
+  async handleAcceptInvitation(invitationId, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Aceptando…";
+    }
+    // Deshabilitar también el botón de rechazar de la misma invitación
+    const rejectBtn = btn
+      ?.closest(".pib-item")
+      ?.querySelector(".btn-reject-invitation");
+    if (rejectBtn) rejectBtn.disabled = true;
+
     try {
       await acceptInvitation(invitationId);
       await this.init(); // reload — user now has a team
     } catch (err) {
+      // Restaurar botón si falla
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Aceptar";
+      }
+      if (rejectBtn) rejectBtn.disabled = false;
       alert(err?.message ?? "No se pudo aceptar la invitación.");
     }
   }
