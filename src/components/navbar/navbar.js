@@ -1,5 +1,10 @@
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
-import { getInitials, getCurrentUser, logout } from "../../utils/helpers.js";
+import {
+  getInitials,
+  getCurrentUser,
+  logout,
+  renderAvatar,
+} from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
 import "../../assets/styles/navbar.css";
 export default class Navbar {
@@ -49,7 +54,11 @@ export default class Navbar {
         <div class="sidebar-footer p-3">
           <div class="sidebar-user d-flex align-items-center gap-2 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
             <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
-              ${getInitials(this.user?.name)}
+              ${
+                this.user?.github_avatar_url
+                  ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                  : getInitials(this.user?.name)
+              }
             </div>
             <div class="sidebar-user-info flex-grow-1 overflow-hidden">
               <p class="sidebar-user-name text-truncate mb-0">${this.user?.name ?? "User"}</p>

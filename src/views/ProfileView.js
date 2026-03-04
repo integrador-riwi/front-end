@@ -71,6 +71,8 @@ export default class ProfileView {
           email: data?.email ?? this.user?.email,
           role: data?.role ?? this.user?.role,
           clan: data?.clan ?? clanValue,
+          github_avatar_url:
+            data?.github_avatar_url ?? this.user?.github_avatar_url ?? null,
         }) || this.user;
 
       this.errorMessage = "";
@@ -94,6 +96,11 @@ export default class ProfileView {
   async loadGithubStatus() {
     try {
       this.githubStatus = await getGithubStatus();
+      // Persist avatar to localStorage so navbar and other views can use it
+      if (this.githubStatus?.github?.avatarUrl) {
+        updateUser({ github_avatar_url: this.githubStatus.github.avatarUrl });
+        this.user = getCurrentUser();
+      }
     } catch (error) {
       console.warn("No se pudo obtener el estado de GitHub", error);
       this.githubStatus = null;
