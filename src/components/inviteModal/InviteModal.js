@@ -64,17 +64,17 @@ export default class InviteModal {
       <div id="inviteModalBackdrop" class="invite-modal-backdrop" style="display:none;">
         <div class="invite-modal" role="dialog" aria-modal="true">
           <div class="invite-modal-header">
-            <h3 class="invite-modal-title">Invitar miembro</h3>
+            <h3 class="invite-modal-title">Invite member</h3>
             <button id="inviteModalClose" class="invite-modal-close" aria-label="Cerrar">✕</button>
           </div>
           <div class="invite-modal-body">
             <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
-              <h4 style="font-size:0.9rem;margin-bottom:0.5rem;color:#6366f1;">📥 Solicitudes de unión pendientes</h4>
+              <h4 style="font-size:0.9rem;margin-bottom:0.5rem;color:#6366f1;">📥 Pending join requests</h4>
               <div id="joinRequestsList" class="join-requests-list"></div>
               <hr style="margin:1rem 0;" />
             </div>
             <input id="inviteSearchInput" type="text" class="invite-search-input"
-                   placeholder="Buscar coder por nombre o email…" />
+                   placeholder="Search coder by name or email…" />
             <div id="inviteCodersList" class="invite-coders-list">
               <p class="invite-hint">Escribe para buscar coders disponibles.</p>
             </div>
@@ -136,17 +136,15 @@ export default class InviteModal {
         <div class="join-request-item">
           <div>
             <strong>${_esc(req.user_name)}</strong>
-            <span style="font-size:0.8rem;color:#6b7280;">(${_esc(req.user_email)})</span>
+            <span class="join-request-email">(${_esc(req.user_email)})</span>
           </div>
-          <div style="display:flex;gap:0.5rem;">
-            <button class="btn-accept-join-request"
-                    data-request-id="${req.id_request}"
-                    style="padding:0.25rem 0.75rem;background:#10b981;color:white;border:none;border-radius:4px;cursor:pointer;">
+          <div class="pib-actions">
+            <button class="btn-accept-join-request pib-btn pib-accept"
+                    data-request-id="${req.id_request}">
               Aceptar
             </button>
-            <button class="btn-reject-join-request"
-                    data-request-id="${req.id_request}"
-                    style="padding:0.25rem 0.75rem;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">
+            <button class="btn-reject-join-request pib-btn pib-reject"
+                    data-request-id="${req.id_request}">
               Rechazar
             </button>
           </div>
@@ -176,8 +174,8 @@ export default class InviteModal {
       this._checkEmptyRequests();
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Aceptar";
-      this._showError(err?.message ?? "No se pudo aceptar la solicitud.");
+      btn.textContent = "Accept";
+      this._showError(err?.message ?? "Could not accept the request.");
     }
   }
 
@@ -190,8 +188,8 @@ export default class InviteModal {
       this._checkEmptyRequests();
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Rechazar";
-      this._showError(err?.message ?? "No se pudo rechazar la solicitud.");
+      btn.textContent = "Reject";
+      this._showError(err?.message ?? "Could not reject the request.");
     }
   }
 
@@ -236,7 +234,7 @@ export default class InviteModal {
           ${
             c.hasPendingInvitation
               ? `<span class="invite-status-pending">Invitado</span>`
-              : `<button class="invite-btn-send" data-user-id="${c.id_user}">Invitar</button>`
+              : `<button class="invite-btn-send" data-user-id="${c.id_user}">Invite</button>`
           }
         </div>
       `,
@@ -256,7 +254,7 @@ export default class InviteModal {
     if (!this.team?.id_team || !userId) return;
 
     btn.disabled = true;
-    btn.textContent = "Enviando…";
+    btn.textContent = "Sending…";
 
     try {
       await inviteMember(this.team.id_team, Number(userId));
@@ -264,8 +262,8 @@ export default class InviteModal {
       btn.classList.add("invite-status-pending");
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Invitar";
-      this._showError(err?.message ?? "No se pudo enviar la invitación.");
+      btn.textContent = "Invite";
+      this._showError(err?.message ?? "Could not send the invitation.");
     }
   }
 
