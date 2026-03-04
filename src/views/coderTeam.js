@@ -103,26 +103,7 @@ export function renderCoderTeam({ user, team }) {
 
 
           <!-- Comments -->
-          <div class="bg-white rounded-4 p-4 ct-card-shadow">
-            <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
-                   style="width:16px;height:16px;flex-shrink:0">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-              Comments
-            </h2>
-
-            <div class="d-flex gap-3 align-items-start mb-2">
-              <div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>
-              <textarea id="commentInput" class="ct-comment-input flex-grow-1"
-                        placeholder="Share your thoughts..."></textarea>
-            </div>
-            <div class="d-flex justify-content-end mb-4 ps-5">
-              <button class="ct-btn-post" id="postCommentBtn">Post Comment</button>
-            </div>
-
-            <div class="d-flex flex-column gap-3" id="commentsList"></div>
-          </div>
+          <!-- Code deleted -->
 
         </div>
 
@@ -132,13 +113,7 @@ export function renderCoderTeam({ user, team }) {
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Settings
-                </button>
+                <!-- ══ Code deleted ══ -->
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
