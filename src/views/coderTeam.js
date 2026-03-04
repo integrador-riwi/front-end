@@ -191,10 +191,8 @@ export function renderCoderTeam({ user, team }) {
 // Project Brief
 // ─────────────────────────────────────────────────────────────
 function renderProjectBrief() {
-  // URL del archivo markdown del enunciado
-  // Cambia esta URL por la ruta real del archivo cuando esté disponible
-  const briefUrl = "/crudactivity-supcrud.md";
-  const briefDownloadUrl = "/crudactivity-supcrud.md";
+  const briefUrl = "../../public/crudactivity-supcrud.md";
+  const briefDownloadUrl = "../../public/crudactivity-supcrud.md";
 
   return `
     <div class="ct-brief-container">
