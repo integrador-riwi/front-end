@@ -166,7 +166,7 @@ export default class InviteModal {
 
   async _acceptRequest(btn) {
     btn.disabled = true;
-    btn.textContent = "Aceptando…";
+    btn.innerHTML = `<span class="invite-btn-spinner"></span>`;
     try {
       await acceptJoinRequest(btn.dataset.requestId);
       btn.closest(".join-request-item")?.remove();
@@ -181,7 +181,7 @@ export default class InviteModal {
 
   async _rejectRequest(btn) {
     btn.disabled = true;
-    btn.textContent = "Rechazando…";
+    btn.innerHTML = `<span class="invite-btn-spinner"></span>`;
     try {
       await rejectJoinRequest(btn.dataset.requestId);
       btn.closest(".join-request-item")?.remove();
@@ -210,7 +210,7 @@ export default class InviteModal {
       return;
     }
 
-    listEl.innerHTML = `<p class="invite-hint">Buscando…</p>`;
+    listEl.innerHTML = `<div class="invite-searching"><span class="invite-spinner"></span></div>`;
 
     try {
       const res = await getAvailableCoders(this.team.id_team, query);
@@ -254,7 +254,7 @@ export default class InviteModal {
     if (!this.team?.id_team || !userId) return;
 
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.innerHTML = `<span class="invite-btn-spinner"></span>`;
 
     try {
       await inviteMember(this.team.id_team, Number(userId));

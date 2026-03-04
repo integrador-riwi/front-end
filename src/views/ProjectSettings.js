@@ -45,7 +45,7 @@ export default class ProjectSettings {
             <span class="cs-bc-current">Settings</span>
           </nav>
           <div class="d-flex align-items-center justify-content-center" style="min-height: 300px;">
-            <span class="cs-loading">Loading…</span>
+            <div class="cs-spinner"></div>
           </div>
         </div>
       </main>
