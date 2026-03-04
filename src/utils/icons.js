@@ -76,12 +76,13 @@ export const icons = {
     <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
   </svg>`,
 
-  teamUp: () => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
-    <rect x="3" y="3" width="7" height="7" rx="1"/>
-    <rect x="14" y="3" width="7" height="7" rx="1"/>
-    <rect x="3" y="14" width="7" height="7" rx="1"/>
-    <rect x="14" y="14" width="7" height="7" rx="1"/>
-  </svg>`,
+  teamUp: () => `<svg width="600" height="600" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" rx="40" fill="white"/>
+  <rect x="90" y="230" width="60" height="80" rx="4" fill="#6b5cff"/>
+  <rect x="170" y="180" width="60" height="130" rx="4" fill="#eaa2fc"/>
+  <rect x="250" y="130" width="60" height="180" rx="4" fill="#5acca4"/>
+  <circle cx="280" cy="75" r="30" fill="#fe654f"/>
+</svg>`,
 
   save: () => `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com 
     License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path fill="rgb(255, 255, 255)" d="M160 96C124.7 96 96 124.7 96 

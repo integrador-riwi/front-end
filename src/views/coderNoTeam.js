@@ -131,6 +131,7 @@ export function renderCoderNoTeam({
 
       </div>
     </div>
+    <div id="overlay"></div>
   `;
 }
 

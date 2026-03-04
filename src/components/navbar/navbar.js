@@ -1,7 +1,7 @@
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
 import { getInitials, getCurrentUser, logout } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
-import "../../assets/styles/navbar.css"
+import "../../assets/styles/navbar.css";
 export default class Navbar {
   constructor(router) {
     this.router = router;
@@ -27,7 +27,9 @@ export default class Navbar {
         <!-- Nav links -->
         <nav class="sidebar-nav flex-grow-1 overflow-auto py-3 px-2">
           <ul class="d-flex flex-column gap-1 list-unstyled m-0 p-0">
-            ${links.map(link => `
+            ${links
+              .map(
+                (link) => `
               <li>
                 <button
                   class="nav-link d-flex align-items-center gap-3 w-100 ${this.currentRoute === link.route ? "active" : ""}"
@@ -37,7 +39,9 @@ export default class Navbar {
                   ${link.label}
                 </button>
               </li>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </ul>
         </nav>
 
@@ -61,22 +65,28 @@ export default class Navbar {
 
       </aside>
 
-      <!-- Main content offset -->
-      <div class="sidebar-offset"></div>
+
     `;
   }
 
+  closeSidebarMobile() {
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("overlay");
+
+    sidebar?.classList.remove("active");
+    overlay?.classList.remove("active");
+  }
 
   setActiveRoute(route) {
     this.currentRoute = route;
 
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.route === route);
     });
   }
 
   attachEventHandlers() {
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.addEventListener("click", () => {
         this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
@@ -91,6 +101,21 @@ export default class Navbar {
     document.getElementById("profileBtn")?.addEventListener("click", () => {
       this.setActiveRoute("profile");
       this.router.navigate("profile");
+
+      this.closeSidebarMobile();
+    });
+
+    const hamburger = document.getElementById("hamburgerBtn");
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("overlay");
+
+    hamburger?.addEventListener("click", () => {
+      sidebar?.classList.toggle("active");
+      overlay?.classList.toggle("active");
+    });
+
+    overlay?.addEventListener("click", () => {
+      this.closeSidebarMobile();
     });
   }
 }

@@ -1,14 +1,47 @@
 /* ── Sidebar shell ── */
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 224px; /* w-56 */
+  width: 224px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  z-index: 50;
   background-color: #1c2333;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 768px) {
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    min-height: auto;
+  }
+
 }
 
 /* ── Logo area ── */
@@ -193,7 +226,3 @@
   color: #f87171;
 }
 
-/* ── Main content offset ── */
-.sidebar-offset {
-  margin-left: 224px;
-}
