@@ -103,6 +103,7 @@ export function renderCoderTeam({ user, team }) {
 
 
           <!-- Comments -->
+          <!--
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
@@ -123,6 +124,7 @@ export function renderCoderTeam({ user, team }) {
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
           </div>
+          -->
 
         </div>
 
@@ -132,6 +134,7 @@ export function renderCoderTeam({ user, team }) {
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
+                <!--
                 <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -139,6 +142,7 @@ export function renderCoderTeam({ user, team }) {
                     </svg>
                     Settings
                 </button>
+                -->
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
