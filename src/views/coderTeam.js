@@ -76,30 +76,31 @@ export function renderCoderTeam({ user, team }) {
 
           <!-- Project Brief -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
-            <div class="d-flex align-items-center gap-2 mb-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
-                   style="width:16px;height:16px;flex-shrink:0">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              <h2 class="ct-section-title mb-0">Project Brief</h2>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
+                     style="width:16px;height:16px;flex-shrink:0">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <h2 class="ct-section-title mb-0">Project Brief</h2>
+              </div>
+              <a id="downloadBriefBtn" href="#" download="project-brief.md"
+                 class="ct-btn-download d-flex align-items-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     style="width:13px;height:13px">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar
+              </a>
             </div>
-            ${renderProjectBrief()}
+            <div id="project-brief-content" class="ct-brief-preview"></div>
           </div>
 
-          <!-- Deliverables -->
-          <!-- TODO: uncomment when deliverables flow is ready
-          <div class="bg-white rounded-4 p-4 ct-card-shadow">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h2 class="ct-section-title mb-0">Project Deliverables</h2>
-              <span class="ct-pill-badge">${deliverableCount(deliverables, repoUrl)} / 3 submitted</span>
-            </div>
-            ${renderDeliverables(deliverables, repoUrl)}
-          </div>
-          -->
 
           <!-- Comments -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
@@ -188,42 +189,6 @@ export function renderCoderTeam({ user, team }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Project Brief
-// ─────────────────────────────────────────────────────────────
-function renderProjectBrief() {
-  const briefUrl = "../../public/crudactivity-supcrud.md";
-  const briefDownloadUrl = "../../public/crudactivity-supcrud.md";
-
-  return `
-    <div class="ct-brief-container">
-
-      <!-- Download button -->
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <p class="ct-brief-hint mb-0">Lee el enunciado completo del proyecto antes de comenzar.</p>
-        <a href="${briefDownloadUrl}" download="crudactivity-supcrud.md"
-           class="ct-btn-download d-flex align-items-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               style="width:14px;height:14px">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Descargar enunciado
-        </a>
-      </div>
-
-      <!-- Markdown preview inline -->
-      <div id="project-brief-content" class="ct-brief-preview">
-        <div class="ct-brief-loading">
-          <span class="ct-brief-spinner"></span>
-          Cargando enunciado…
-        </div>
-      </div>
-
-    </div>
-  `;
-}
-
 // Deliverables
 // ─────────────────────────────────────────────────────────────
 function renderDeliverables(d, repoUrl) {
@@ -393,59 +358,473 @@ function formatDate(dateStr) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Project Brief markdown loader
-// Llamar después de renderizar: loadProjectBrief()
+// Project Brief — enunciado embebido y renderizador de markdown
 // ─────────────────────────────────────────────────────────────
-export async function loadProjectBrief(
-  briefUrl = "../../public/crudactivity-supcrud.md",
-) {
+
+const PROJECT_BRIEF_MD = `# **SupCrud by Crudzaso**
+
+---
+
+# 1. Descripción General del Proyecto
+
+SupCrud by Crudzaso es una plataforma SaaS de gestión de PQRS (Peticiones, Quejas, Reclamos y Sugerencias) que permite a negocios integrar un sistema de soporte en sus sitios web mediante un widget embebible.
+
+El sistema debe permitir:
+
+- Creación y administración de múltiples workspaces.
+- Gestión de tickets por workspace.
+- Gestión de agentes por workspace.
+- Activación de funcionalidades adicionales (add-ons).
+- Consulta pública de tickets mediante código único.
+- Validación de identidad mediante OTP.
+- Integración de IA para clasificación y auto-asignación.
+- Gestión de adjuntos mediante Cloudinary.
+- Publicación de documentación técnica en Docusaurus.
+
+El nombre del producto es fijo:
+
+**SupCrud by Crudzaso**
+
+---
+
+# 2. Arquitectura del Sistema
+
+La solución debe componerse de:
+
+- Frontend Web
+- Backend API
+- Base de datos SQL remota
+- Base de datos MongoDB Atlas
+- Cloudinary
+- Integración con OpenAI API
+- Docusaurus desplegado
+
+Todas las partes deben estar desplegadas públicamente usando herramientas gratuitas.
+
+---
+
+# 3. Niveles del Sistema
+
+---
+
+## 3.1 Owner Global (Administrador de SupCrud)
+
+Es el administrador principal de la plataforma completa.
+
+### Autenticación
+
+- Email y contraseña.
+- El correo debe tener formato:
+
+  [nombredelteam@crudzaso.com](mailto:nombredelteam@crudzaso.com)
+
+No debe permitir Google OAuth para este rol.
+
+### Funcionalidades obligatorias
+
+Debe poder:
+
+- Ver listado completo de workspaces.
+- Ver estado de cada workspace (ACTIVE / SUSPENDED).
+- Suspender o reactivar un workspace.
+- Ver métricas globales:
+  - Número total de tickets por workspace.
+  - Tickets abiertos por workspace.
+  - Add-ons activos por workspace.
+
+- Gestionar catálogo de add-ons disponibles en la plataforma.
+
+Este panel no pertenece a ningún workspace.
+
+---
+
+## 3.2 Workspace
+
+Cada workspace representa un negocio independiente.
+
+Cada workspace debe tener:
+
+- Identificador único \`workspaceKey\`.
+- Configuración propia.
+- Add-ons activables individualmente.
+- Usuarios asociados (ADMIN y AGENT).
+- Tickets asociados.
+- Configuración de IA.
+
+---
+
+## 3.3 Autenticación Workspace
+
+ADMIN y AGENT deben poder autenticarse mediante:
+
+- Email + contraseña.
+- Google OAuth.
+
+Un usuario puede pertenecer a múltiples workspaces.
+
+Si pertenece a más de uno:
+
+- Debe existir un selector de workspace tras autenticarse.
+- El sistema debe operar únicamente bajo el workspace seleccionado.
+
+---
+
+# 4. Flujo del Usuario Final
+
+El usuario final no tiene cuenta ni autenticación tradicional.
+
+---
+
+## 4.1 Creación del Ticket
+
+Desde el widget embebible el usuario debe poder:
+
+- Ingresar email válido.
+- Ingresar asunto.
+- Ingresar descripción.
+- Seleccionar tipo:
+  - P
+  - Q
+  - R
+  - S
+
+- Adjuntar archivos (si add-on activo).
+
+### Al crear el ticket:
+
+El sistema debe:
+
+- Generar un \`referenceCode\` único global.
+- El código debe:
+  - Ser único en toda la plataforma.
+  - Permitir identificar el workspace automáticamente.
+  - No requerir que el usuario indique workspace.
+
+- Guardar el ticket.
+- Registrar evento de creación.
+- Enviar correo al usuario con el código.
+
+---
+
+# 5. Consulta Pública de Ticket
+
+Debe existir una página pública accesible sin autenticación.
+
+El usuario debe ingresar únicamente:
+
+referenceCode
+
+El sistema debe:
+
+- Identificar el workspace.
+- Buscar el ticket correspondiente.
+
+---
+
+## 5.1 Vista Básica
+
+Debe mostrar:
+
+- Estado actual.
+- Fecha de creación.
+- Última actualización.
+
+No debe mostrar:
+
+- Conversación.
+- Adjuntos.
+- Historial completo.
+- Asignación.
+
+---
+
+## 5.2 Vista Completa (Requiere OTP)
+
+Para acceder al detalle completo:
+
+1. Usuario solicita OTP.
+2. Sistema genera código temporal.
+3. Se envía al correo asociado al ticket.
+4. Usuario ingresa OTP.
+5. Si es válido:
+   - Se habilita acceso temporal.
+   - Se muestra:
+     - Conversación completa.
+     - Historial completo.
+     - Adjuntos.
+     - Información de asignación.
+     - Datos adicionales del ticket.
+
+### Reglas de OTP
+
+- Expiración obligatoria.
+- Límite de intentos.
+- Registro de evento de validación.
+- Debe invalidarse tras uso o expiración.
+
+---
+
+# 6. Panel Workspace
+
+---
+
+## 6.1 Gestión de Agentes
+
+ADMIN debe poder:
+
+- Invitar agente por correo.
+- Generar token con expiración.
+- Asociar usuarios existentes.
+- Crear usuario nuevo si no existe.
+
+Debe existir control de roles por workspace.
+
+---
+
+## 6.2 Gestión de Tickets
+
+La bandeja debe incluir:
+
+- Filtro por estado.
+- Filtro por tipo.
+- Filtro por prioridad.
+- Filtro por agente.
+- Filtro por fecha.
+- Paginación obligatoria.
+
+### Detalle del Ticket
+
+Debe permitir:
+
+- Ver información general.
+- Ver historial de eventos.
+- Ver conversación.
+- Responder.
+- Cambiar estado.
+- Asignar o reasignar agente.
+- Visualizar adjuntos.
+
+Estados obligatorios:
+
+- OPEN
+- IN_PROGRESS
+- RESOLVED
+- CLOSED
+- REOPENED
+
+---
+
+# 7. Add-ons por Workspace
+
+Cada workspace puede activar funcionalidades individuales.
+
+El backend debe validar que el add-on esté activo antes de ejecutar la funcionalidad.
+
+---
+
+## 7.1 Attachments
+
+- Permite subir archivos.
+- Debe integrarse con Cloudinary.
+- Guardar metadata en base de datos.
+- Si no está activo:
+  - No permitir subida.
+  - Backend debe rechazar solicitudes.
+
+---
+
+## 7.2 AI Assist
+
+Debe integrarse con la API de OpenAI.
+
+Debe permitir:
+
+- Sugerir etiquetas.
+- Sugerir categoría.
+- Sugerir prioridad.
+- Sugerir agente.
+
+### Configuración por Workspace
+
+- mode: APPROVAL | AUTO
+- autoAssignEnabled
+- confidenceThreshold
+
+### Auto-asignación
+
+Cada agente debe poder definir:
+
+- Tipos de tickets que atiende.
+- Categorías que atiende.
+
+La IA debe:
+
+- Analizar el ticket.
+- Sugerir o asignar automáticamente a un agente que cumpla con esos criterios.
+
+En modo AUTO:
+
+- Si confidence >= threshold → asignar automáticamente.
+- Si no → dejar como sugerencia.
+
+Debe registrarse evento cuando IA aplica cambios.
+
+---
+
+## 7.3 Knowledge Base (Opcional)
+
+Debe permitir:
+
+- Crear artículo.
+- Editar artículo.
+- Publicar o despublicar.
+- Buscar por palabra clave.
+- Paginación obligatoria.
+
+Los artículos deben ser visibles en el widget.
+
+---
+
+# 8. Persistencia
+
+La estructura de base de datos es sugerida, no impuesta.
+
+La implementación debe cumplir:
+
+- Separación estricta por workspace.
+- Unicidad del referenceCode.
+- Control de roles.
+- Control de add-ons.
+- Soporte para paginación.
+- Soporte para historial de eventos.
+- Soporte para OTP.
+- Soporte para adjuntos.
+
+Se sugiere:
+
+- SQL para identidad y control.
+- MongoDB para tickets y operaciones dinámicas.
+
+La estructura final es decisión del equipo.
+
+---
+
+# 9. Requisitos Técnicos Obligatorios
+
+## Backend
+
+Debe:
+
+- Exponer API REST.
+- Tener Swagger documentado.
+- Validar autenticación y roles.
+- Validar workspace activo.
+- Validar add-ons antes de ejecutar funciones.
+- Validar OTP.
+- Generar códigos únicos seguros.
+- Integrar OpenAI desde backend.
+- Integrar Cloudinary.
+
+---
+
+## Frontend
+
+Debe incluir:
+
+- Landing.
+- Panel Owner.
+- Panel Workspace.
+- Widget embebible.
+- Página pública de consulta.
+
+Debe:
+
+- Implementar paginación real.
+- Manejar estados de carga y error.
+- Soportar Google OAuth.
+- Mostrar nombre del equipo visible.
+- El diseño visual es decisión del equipo.
+
+---
+
+# 10. Despliegue
+
+Debe estar desplegado:
+
+- Frontend.
+- Backend.
+- Swagger.
+- Docusaurus.
+
+Las herramientas de despliegue son libres siempre que:
+
+- No requieran pago.
+- Sean públicas.
+- Funcionen correctamente.
+
+---
+
+# 11. Documentación
+
+Debe publicarse en Docusaurus e incluir:
+
+- Descripción general.
+- Arquitectura.
+- Modelo de datos.
+- Flujos completos.
+- Gestión de add-ons.
+- Configuración de entorno.
+- Links de despliegue.
+- Nombre del equipo visible.
+
+---
+`;
+
+export function loadProjectBrief() {
   const container = document.getElementById("project-brief-content");
   if (!container) return;
+  container.innerHTML = _renderMarkdown(PROJECT_BRIEF_MD);
 
-  try {
-    const res = await fetch(briefUrl);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const md = await res.text();
-    container.innerHTML = renderMarkdown(md);
-  } catch (err) {
-    container.innerHTML = `
-      <p style="color:#ef4444;font-size:0.85rem;">
-        No se pudo cargar el enunciado.
-        <a href="${briefUrl}" download style="color:var(--color-primary)">Descárgalo aquí</a>.
-      </p>`;
+  // Botón descarga: genera blob del md original
+  const btn = document.getElementById("downloadBriefBtn");
+  if (btn) {
+    const blob = new Blob([PROJECT_BRIEF_MD], { type: "text/markdown" });
+    btn.href = URL.createObjectURL(blob);
   }
 }
 
-// Markdown renderer minimalista (sin dependencias externas)
-function renderMarkdown(md) {
-  return (
-    md
-      // Escapar HTML primero
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      // Bloques de código
-      .replace(/```[\s\S]*?```/g, (m) => {
-        const code = m.replace(/^```[^\n]*\n?/, "").replace(/```$/, "");
-        return `<pre><code>${code}</code></pre>`;
-      })
-      // Código inline
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      // Headings
-      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-      // Bold / italic
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      // Listas
-      .replace(/^- (.+)$/gm, "<li>$1</li>")
-      .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
-      // Párrafos (líneas que no son tags)
-      .replace(/^(?!<[a-z]).+$/gm, (line) =>
-        line.trim() ? `<p>${line}</p>` : "",
-      )
-      // Limpiar líneas vacías extra
-      .replace(/\n{3,}/g, "\n\n")
+function _renderMarkdown(md) {
+  let h = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // Code blocks
+  h = h.replace(/```[\s\S]*?```/g, (m) => {
+    const code = m.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
+    return "<pre><code>" + code + "</code></pre>";
+  });
+
+  // Inline code
+  h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // Headings
+  h = h.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  h = h.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  h = h.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+  // HR
+  h = h.replace(/^---$/gm, "<hr>");
+
+  // Bold / italic
+  h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/\*([^\n]+?)\*/g, "<em>$1</em>");
+
+  // Lists — group consecutive <li> into <ul>
+  h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
+  h = h.replace(/(<li>.*?<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>");
+
+  // Paragraphs
+  h = h.replace(/^(?!<[a-zA-Z\/])(.+)$/gm, (line) =>
+    line.trim() ? "<p>" + line + "</p>" : "",
   );
+
+  return h;
 }

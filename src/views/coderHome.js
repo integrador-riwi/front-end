@@ -1,7 +1,7 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
-import { renderCoderTeam } from "./coderTeam.js";
+import { renderCoderTeam, loadProjectBrief } from "./coderTeam.js";
 import { renderCoderNoTeam, setupAIAnalysis } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
 import {
@@ -29,6 +29,7 @@ export default class CoderHome {
     this.createTeamError = "";
     this.createTeamSuccess = "";
     this.pendingInvitations = [];
+    this._pollingInterval = null;
     this._pollingInterval = null;
 
     // Store form values to prevent clearing on re-render
@@ -154,7 +155,11 @@ export default class CoderHome {
     const app = document.getElementById("app");
 
     const content = this.team
-      ? renderCoderTeam({ user: this.user, team: this.team })
+      ? (() => {
+          const html = renderCoderTeam({ user: this.user, team: this.team });
+          setTimeout(() => loadProjectBrief(), 0);
+          return html;
+        })()
       : renderCoderNoTeam({
           user: this.user,
           teams: this.getFilteredTeams(),
@@ -272,6 +277,73 @@ export default class CoderHome {
       main.insertAdjacentHTML("afterbegin", bannerHtml);
 
       // Re-attach handlers solo del banner nuevo
+      main.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          this.handleAcceptInvitation(btn.dataset.invitationId, btn),
+        );
+      });
+      main.querySelectorAll(".btn-reject-invitation").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          this.handleRejectInvitation(btn.dataset.invitationId),
+        );
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Polling de invitaciones (solo sin equipo)
+  // ─────────────────────────────────────────
+  _startPolling() {
+    this._stopPolling();
+    this._pollingInterval = setInterval(
+      () => this._checkNewInvitations(),
+      15000,
+    );
+  }
+
+  _stopPolling() {
+    if (this._pollingInterval) {
+      clearInterval(this._pollingInterval);
+      this._pollingInterval = null;
+    }
+  }
+
+  async _checkNewInvitations() {
+    if (this.team) {
+      this._stopPolling();
+      return;
+    }
+    try {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      const newInvitations = data?.pendingInvitations ?? [];
+      const currentIds = this.pendingInvitations
+        .map((i) => i.id_invitation)
+        .sort()
+        .join(",");
+      const newIds = newInvitations
+        .map((i) => i.id_invitation)
+        .sort()
+        .join(",");
+      if (currentIds !== newIds) {
+        this.pendingInvitations = newInvitations;
+        this._updateInvitationsBanner();
+      }
+    } catch (_) {
+      /* silencioso */
+    }
+  }
+
+  _updateInvitationsBanner() {
+    const main = document.querySelector(".coder-home-main");
+    if (!main) return;
+    const existing = main.querySelector(".pending-invitations-banner");
+    if (existing) existing.remove();
+    if (this.pendingInvitations.length > 0) {
+      main.insertAdjacentHTML(
+        "afterbegin",
+        this._renderPendingInvitationsBanner(),
+      );
       main.querySelectorAll(".btn-accept-invitation").forEach((btn) => {
         btn.addEventListener("click", () =>
           this.handleAcceptInvitation(btn.dataset.invitationId, btn),
