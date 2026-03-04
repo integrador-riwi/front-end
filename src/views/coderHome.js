@@ -217,7 +217,7 @@ export default class CoderHome {
     this._stopPolling(); // evitar duplicados
     this._pollingInterval = setInterval(
       () => this._checkNewInvitations(),
-      15000,
+      10000,
     );
   }
 
