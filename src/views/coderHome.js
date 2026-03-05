@@ -67,6 +67,8 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   async init() {
     try {
+      this.team = null;
+      this.isLeader = false;
       const response = await apiFetch("/teams/my-teams", { method: "GET" });
       const data = response?.data ?? response;
       const teams = data?.teams ?? [];
