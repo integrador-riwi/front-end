@@ -164,6 +164,30 @@ export async function cancelJoinRequest(requestId) {
   });
 }
 
+// Comments
+export async function getComments(projectId) {
+  const response = await apiFetch(`/comments/project/${projectId}`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function postComment({
+  projectId,
+  comment,
+  parentCommentId = null,
+}) {
+  const response = await apiFetch("/comments", {
+    method: "POST",
+    body: { projectId, comment, parentCommentId },
+  });
+  return response?.data ?? response;
+}
+
+export async function deleteComment(commentId) {
+  return apiFetch(`/comments/${commentId}`, { method: "DELETE" });
+}
+
 // AI - Similar Projects Search
 export async function updateTeam(teamId, data) {
   return apiFetch(`/teams/${teamId}`, {
