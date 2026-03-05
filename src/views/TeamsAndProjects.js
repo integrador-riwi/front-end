@@ -53,11 +53,9 @@ export default class Teams {
       </div>
     `;
 
-
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    //dashboard.attachEventHandlers?.();
-    await this.renderTeams()
+    await this.renderTeams();
   }
 
   async renderTeams() {
@@ -65,7 +63,7 @@ export default class Teams {
 
     // ✅ Verificar que el elemento existe
     if (!teamsContainer) {
-      console.error("No se encontró el elemento #teamsContainer");
+      console.error("Element #teamsContainer not found");
       return;
     }
 
@@ -107,5 +105,4 @@ export default class Teams {
         })
     );
   }
-
 }

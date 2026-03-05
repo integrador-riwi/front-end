@@ -125,8 +125,8 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
         </div>
 
         <!-- ══ RIGHT COLUMN ══ -->
-        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4">
-          <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column">
+        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4 team-details">
+          <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
