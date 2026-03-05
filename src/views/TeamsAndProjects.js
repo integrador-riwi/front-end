@@ -52,12 +52,9 @@ export default class Teams {
       </div>
     `;
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      await this.renderTeams()
-    });
-
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
+    await this.renderTeams();
     //dashboard.attachEventHandlers?.();
   }
 
@@ -65,7 +62,7 @@ export default class Teams {
     const teamsContainer = document.getElementById("teamsContainer")
     const fetchTeams = await apiFetch('/teams?limit=50', { method: 'GET' })
     const totalTeams = fetchTeams.data.teams
-
+  
     totalTeams.map(async (team) => {
       const members = await apiFetch(`/teams/${team.id_team}/members`, { method: 'GET' })
       console.log(members)
@@ -98,9 +95,7 @@ export default class Teams {
           </div>
         </div>
       `
-
       teamsContainer.insertAdjacentHTML('beforeend', card);
     })
   }
-
 }
