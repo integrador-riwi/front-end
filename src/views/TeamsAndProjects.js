@@ -52,22 +52,6 @@ export default class Teams {
       </div>
     `;
 
-
-    // const users = [
-    //   { name: "Ana", avatar: "https://i.pravatar.cc/40?img=1" },
-    //   { name: "Carlos", avatar: "https://i.pravatar.cc/40?img=2" },
-    //   { name: "Luisa", avatar: "https://i.pravatar.cc/40?img=3" },
-    //   { name: "Mateo", avatar: "https://i.pravatar.cc/40?img=4" },
-    //   { name: "Sofía", avatar: "https://i.pravatar.cc/40?img=5" },
-    // ];
-    //
-    // const container = document.querySelector(".app-avatar-group");
-    //
-    // if (!container) return;
-    //
-    //
-    // const teams = await apiFetch('/teams?limit=50', { method: 'GET' })
-    // container.innerHTML = this.renderAvatars(teams.data.teams);
     await this.renderTeams()
 
     this.header.mountBreadcrumb();
@@ -112,6 +96,7 @@ export default class Teams {
           </div>
         </div>
       `
+
       teamsContainer.insertAdjacentHTML('beforeend', card);
     })
   }
