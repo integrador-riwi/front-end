@@ -30,6 +30,9 @@ export default class Navbar {
   <div class="sidebar-brand d-flex align-items-center gap-2">
     <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
       ${icons.teamUp()}
+    <!-- <button>
+        ${icons.teamUp()}
+      </button> -->
     </div>
     <span class="sidebar-brand-name">TeamUp</span>
   </div>
@@ -37,7 +40,7 @@ export default class Navbar {
 
   <!-- Avatar -->
   <div class="d-flex align-items-center">
-  <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0" id="profileBtn" style="cursor:pointer;">
+  <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0 profileBtn" style="cursor:pointer;">
     ${
       this.user?.github_avatar_url
         ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
@@ -84,7 +87,7 @@ export default class Navbar {
 
         <!-- User + logout -->
         <div class="sidebar-footer p-3">
-          <div class="sidebar-user d-flex align-items-center gap-3 rounded mb-1 px-2 py-2" id="profileBtn" style="cursor: pointer;">
+          <div class="sidebar-user d-flex align-items-center gap-3 rounded mb-1 px-2 py-2 profileBtn" style="cursor: pointer;">
             <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
               ${
                 this.user?.github_avatar_url
@@ -139,12 +142,14 @@ export default class Navbar {
       this.router.navigate("login");
     });
 
-    document.getElementById("profileBtn")?.addEventListener("click", () => {
+    document.querySelectorAll(".profileBtn")?.forEach(el => {
+    el.addEventListener("click", () => {
       this.setActiveRoute("profile");
       this.router.navigate("profile");
 
       this.closeSidebarMobile();
     });
+  });
 
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.querySelector(".sidebar");
