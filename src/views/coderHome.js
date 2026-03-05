@@ -1,7 +1,11 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
-import { renderCoderTeam, loadProjectBrief } from "./coderTeam.js";
+import {
+  renderCoderTeam,
+  loadProjectBrief,
+  loadComments,
+} from "./coderTeam.js";
 import {
   renderCoderNoTeam,
   setupAIAnalysis,
@@ -55,46 +59,7 @@ export default class CoderHome {
       projectTopic: "",
     };
 
-    this.teams = [
-      {
-        id: 1,
-        name: "Quantum Leap",
-        description:
-          "Exploring quantum computing algorithms for financial models.",
-        status: "full",
-        members: [
-          { id: 1, name: "Alice", avatar: "A" },
-          { id: 2, name: "Bob", avatar: "B" },
-          { id: 3, name: "Carol", avatar: "C" },
-          { id: 4, name: "Dave", avatar: "D" },
-        ],
-        maxMembers: 6,
-      },
-      {
-        id: 2,
-        name: "Alpha Squad",
-        description: "Building a React Native app for campus navigation.",
-        status: "open",
-        members: [
-          { id: 5, name: "Emma", avatar: "E" },
-          { id: 6, name: "Frank", avatar: "F" },
-        ],
-        maxMembers: 6,
-      },
-      {
-        id: 3,
-        name: "Data Miners",
-        description:
-          "Machine Learning project focusing on social media sentiment analysis.",
-        status: "pending",
-        members: [
-          { id: 7, name: "Grace", avatar: "G" },
-          { id: 8, name: "Henry", avatar: "H" },
-          { id: 9, name: "Ivy", avatar: "I" },
-        ],
-        maxMembers: 6,
-      },
-    ];
+    this.teams = [];
   }
 
   // ─────────────────────────────────────────
@@ -198,7 +163,11 @@ export default class CoderHome {
             team: this.team,
             isLeader: this.isLeader,
           });
-          setTimeout(() => loadProjectBrief(), 0);
+          const projectId = this.team?.project?.id_project;
+          setTimeout(() => {
+            loadProjectBrief();
+            if (projectId) loadComments(projectId, this.user);
+          }, 0);
           return html;
         })()
       : renderCoderNoTeam({
@@ -305,10 +274,19 @@ export default class CoderHome {
 
   async _checkUpdates() {
     try {
-      // Coder sin equipo: chequear invitaciones nuevas
+      // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
       if (!this.team) {
         const response = await apiFetch("/teams/my-teams", { method: "GET" });
         const data = response?.data ?? response;
+
+        // Si ahora tiene equipo → fue aceptada su join request o invitación
+        const teams = data?.teams ?? [];
+        if (teams.length > 0) {
+          this._stopPolling();
+          await this.init();
+          return;
+        }
+
         const newInvitations = data?.pendingInvitations ?? [];
         const currentIds = this.pendingInvitations
           .map((i) => i.id_invitation)
@@ -443,8 +421,8 @@ export default class CoderHome {
         try {
           await leaveTeam(this.team.id_team);
           this.team = null;
-          this.render();
-          this.attachEventHandlers();
+          this.isLeader = false;
+          await this.init();
         } catch (err) {
           alert(
             "Error leaving the team: " + (err?.message ?? "Intenta de nuevo"),
@@ -489,14 +467,10 @@ export default class CoderHome {
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" created successfully.`;
       this.formData = { teamName: "", projectTopic: "" };
+      this.isCreatingTeam = false;
 
-      if (payload) {
-        this.team = {
-          ...payload,
-          members: payload.members ?? [],
-          project: payload.project ?? null,
-        };
-      }
+      // Hacer init completo para obtener miembros, avatar, isLeader, etc.
+      await this.init();
     } catch (error) {
       this.createTeamError =
         error?.response?.data?.error ||
@@ -504,7 +478,6 @@ export default class CoderHome {
         error?.message ||
         "Could not create the team.";
       this.createTeamSuccess = "";
-    } finally {
       this.isCreatingTeam = false;
       this.render();
     }
