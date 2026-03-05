@@ -506,14 +506,10 @@ export default class CoderHome {
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" created successfully.`;
       this.formData = { teamName: "", projectTopic: "" };
+      this.isCreatingTeam = false;
 
-      if (payload) {
-        this.team = {
-          ...payload,
-          members: payload.members ?? [],
-          project: payload.project ?? null,
-        };
-      }
+      // Hacer init completo para obtener miembros, avatar, isLeader, etc.
+      await this.init();
     } catch (error) {
       this.createTeamError =
         error?.response?.data?.error ||
@@ -521,7 +517,6 @@ export default class CoderHome {
         error?.message ||
         "Could not create the team.";
       this.createTeamSuccess = "";
-    } finally {
       this.isCreatingTeam = false;
       this.render();
     }
