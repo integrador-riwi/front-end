@@ -10,6 +10,7 @@ import {
   renderCoderNoTeam,
   setupAIAnalysis,
   renderTeamCard,
+  renderSkeletonCards,
 } from "./coderNoTeam.js";
 import { getUser } from "../utils/auth";
 import InviteModal from "../components/inviteModal/InviteModal.js";
@@ -40,6 +41,10 @@ export default class CoderHome {
     this.searchQuery = "";
     this.activeFilter = "all";
     this.isLoadingTeams = false;
+    this._teamsPage = 1;
+    this._teamsTotalPages = 1;
+    this._isFetchingMore = false;
+    this._scrollObserver = null;
 
     this.aiResult = null;
     this.isAnalyzing = false;
@@ -109,47 +114,31 @@ export default class CoderHome {
       // Load real available teams for the no-team view
       if (!this.team) {
         this.isLoadingTeams = true;
+        this._teamsPage = 1;
+        this._teamsTotalPages = 1;
+        this.teams = [];
         this.render(); // show skeletons immediately
         try {
-          const teamsRes = await apiFetch("/teams?limit=50", { method: "GET" });
+          const teamsRes = await apiFetch("/teams?limit=10&page=1", {
+            method: "GET",
+          });
           const teamsData = teamsRes?.data ?? teamsRes;
           const rawTeams = teamsData?.teams ?? [];
-          this.teams = rawTeams.map((t) => {
-            const memberCount = parseInt(t.member_count) || 0;
-            const isFull = memberCount >= 5;
-            const isPending =
-              !isFull &&
-              (this.pendingInvitations.some(
-                (inv) => inv.id_team === t.id_team,
-              ) ||
-                this.pendingJoinRequests.some(
-                  (req) => req.id_team === t.id_team,
-                ));
-            return {
-              id: t.id_team,
-              name: t.name,
-              description: t.description ?? null,
-              leaderName: t.leader_name ?? null,
-              leaderEmail: t.leader_email ?? null,
-              leaderId: t.leader_id ?? null,
-              leaderAvatarUrl: t.leader_avatar_url ?? null,
-              members: t.members ?? [],
-              memberCount,
-              maxMembers: 5,
-              slotsLeft: Math.max(0, 5 - memberCount),
-              status: isFull ? "full" : isPending ? "pending" : "open",
-              createdAt: t.created_at ?? null,
-            };
-          });
-        } catch (_) {
-          // keep mock teams as fallback
-        }
+          this._teamsTotalPages = teamsData?.pagination?.totalPages ?? 1;
+          this.teams = this._mapTeams(rawTeams);
+        } catch (_) {}
         this.isLoadingTeams = false;
       }
     } catch (e) {
       this.team = null;
     }
     this.render();
+
+    // Attach infinite scroll sentinel for no-team view
+    if (!this.team && this._teamsPage < this._teamsTotalPages) {
+      const listEl = document.querySelector(".team-list");
+      if (listEl) this._attachScrollSentinel(listEl);
+    }
 
     // Polling: sin equipo (espera invitaciones) o líder (espera join requests)
     if (!this.team || this.isLeader) {
@@ -230,6 +219,134 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   // Helpers
   // ─────────────────────────────────────────
+  _mapTeams(rawTeams) {
+    return rawTeams.map((t) => {
+      const memberCount = parseInt(t.member_count) || 0;
+      const isFull = memberCount >= 5;
+      const isPending =
+        !isFull &&
+        (this.pendingInvitations.some((inv) => inv.id_team === t.id_team) ||
+          this.pendingJoinRequests.some((req) => req.id_team === t.id_team));
+      return {
+        id: t.id_team,
+        name: t.name,
+        description: t.description ?? null,
+        leaderName: t.leader_name ?? null,
+        leaderEmail: t.leader_email ?? null,
+        leaderId: t.leader_id ?? null,
+        leaderAvatarUrl: t.leader_avatar_url ?? null,
+        members: t.members ?? [],
+        memberCount,
+        maxMembers: 5,
+        slotsLeft: Math.max(0, 5 - memberCount),
+        status: isFull ? "full" : isPending ? "pending" : "open",
+        createdAt: t.created_at ?? null,
+      };
+    });
+  }
+
+  async _loadMoreTeams() {
+    if (this._isFetchingMore) return;
+    if (this._teamsPage >= this._teamsTotalPages) return;
+
+    this._isFetchingMore = true;
+    this._showLoadMoreSpinner(true);
+
+    try {
+      const nextPage = this._teamsPage + 1;
+      const teamsRes = await apiFetch(`/teams?limit=10&page=${nextPage}`, {
+        method: "GET",
+      });
+      const teamsData = teamsRes?.data ?? teamsRes;
+      const rawTeams = teamsData?.teams ?? [];
+      this._teamsTotalPages =
+        teamsData?.pagination?.totalPages ?? this._teamsTotalPages;
+      this._teamsPage = nextPage;
+      const newTeams = this._mapTeams(rawTeams);
+      this.teams = [...this.teams, ...newTeams];
+      this._appendTeamCards(newTeams);
+    } catch (_) {}
+
+    this._isFetchingMore = false;
+    this._showLoadMoreSpinner(false);
+
+    // Re-attach if still more pages
+    if (this._teamsPage >= this._teamsTotalPages) {
+      this._destroyScrollObserver();
+      this._showEndOfList();
+    }
+  }
+
+  _appendTeamCards(newTeams) {
+    const listEl = document.querySelector(".team-list");
+    if (!listEl) return;
+    // Remove sentinel temporarily
+    const sentinel = listEl.querySelector(".scroll-sentinel");
+    if (sentinel) sentinel.remove();
+
+    newTeams.forEach((team) => {
+      const div = document.createElement("div");
+      div.innerHTML = renderTeamCard(team);
+      const card = div.firstElementChild;
+      listEl.appendChild(card);
+      card
+        .querySelector(".btn-join")
+        ?.addEventListener("click", () =>
+          this.handleJoinTeam(card.querySelector(".btn-join").dataset.teamId),
+        );
+    });
+
+    // Re-add sentinel if still more pages
+    if (this._teamsPage < this._teamsTotalPages) {
+      this._attachScrollSentinel(listEl);
+    }
+  }
+
+  _attachScrollSentinel(listEl) {
+    const sentinel = document.createElement("div");
+    sentinel.className = "scroll-sentinel";
+    listEl.appendChild(sentinel);
+
+    this._destroyScrollObserver();
+    this._scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) this._loadMoreTeams();
+      },
+      { root: listEl.closest(".join-team-section"), threshold: 0.1 },
+    );
+    this._scrollObserver.observe(sentinel);
+  }
+
+  _destroyScrollObserver() {
+    if (this._scrollObserver) {
+      this._scrollObserver.disconnect();
+      this._scrollObserver = null;
+    }
+  }
+
+  _showLoadMoreSpinner(show) {
+    const listEl = document.querySelector(".team-list");
+    if (!listEl) return;
+    let spinner = listEl.querySelector(".load-more-spinner");
+    if (show && !spinner) {
+      spinner = document.createElement("div");
+      spinner.className = "load-more-spinner";
+      spinner.innerHTML = `<span class="ai-spinner"></span> Loading more...`;
+      listEl.appendChild(spinner);
+    } else if (!show && spinner) {
+      spinner.remove();
+    }
+  }
+
+  _showEndOfList() {
+    const listEl = document.querySelector(".team-list");
+    if (!listEl || listEl.querySelector(".end-of-list")) return;
+    const el = document.createElement("div");
+    el.className = "end-of-list";
+    el.textContent = "You've seen all teams";
+    listEl.appendChild(el);
+  }
+
   getFilteredTeams() {
     let results = this.teams;
 
@@ -260,20 +377,43 @@ export default class CoderHome {
   _updateTeamList() {
     const listEl = document.querySelector(".team-list");
     const countEl = document.querySelector(".available-count");
+    this._destroyScrollObserver();
+
     if (listEl) {
       const filtered = this.getFilteredTeams();
-      const noTeamsMsg = this.searchQuery.trim()
-        ? `No teams found matching "${this.searchQuery}"`
-        : "No teams available.";
-      listEl.innerHTML =
-        filtered.length === 0
-          ? `<p style="text-align:center;color:#9ca3b8;padding:2rem;">${noTeamsMsg}</p>`
+      listEl.innerHTML = this.isLoadingTeams
+        ? renderSkeletonCards(4)
+        : filtered.length === 0
+          ? `<div class="teams-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <p>${this.searchQuery || this.activeFilter !== "all" ? "No teams match your filters." : "No teams available right now."}</p>
+            </div>`
           : filtered.map((team) => renderTeamCard(team)).join("");
+
       listEl.querySelectorAll(".btn-join").forEach((btn) => {
         btn.addEventListener("click", () =>
           this.handleJoinTeam(btn.dataset.teamId),
         );
       });
+
+      // Only attach sentinel when showing unfiltered list and there are more pages
+      const isFiltering =
+        this.searchQuery.trim() || this.activeFilter !== "all";
+      if (
+        !isFiltering &&
+        this._teamsPage < this._teamsTotalPages &&
+        filtered.length > 0
+      ) {
+        this._attachScrollSentinel(listEl);
+      } else if (
+        !isFiltering &&
+        this._teamsPage >= this._teamsTotalPages &&
+        filtered.length > 0
+      ) {
+        this._showEndOfList();
+      }
     }
     if (countEl) {
       countEl.textContent = `${this.getAvailableCount()} Available`;
@@ -293,6 +433,7 @@ export default class CoderHome {
       clearInterval(this._pollingInterval);
       this._pollingInterval = null;
     }
+    this._destroyScrollObserver();
   }
 
   async _checkUpdates() {

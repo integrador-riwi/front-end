@@ -935,3 +935,26 @@
   width: 110px;
   border-radius: 8px;
 }
+
+/* ── Infinite scroll ── */
+.scroll-sentinel {
+  height: 1px;
+}
+
+.load-more-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  color: #9ca3b8;
+  font-size: 0.85rem;
+}
+
+.end-of-list {
+  text-align: center;
+  padding: 1.25rem;
+  font-size: 0.8rem;
+  color: #c4c9d8;
+  letter-spacing: 0.03em;
+}
