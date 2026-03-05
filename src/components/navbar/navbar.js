@@ -36,6 +36,7 @@ export default class Navbar {
 
 
   <!-- Avatar -->
+  <div class="d-flex align-items-center">
   <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0" id="profileBtn" style="cursor:pointer;">
     ${
       this.user?.github_avatar_url
@@ -43,6 +44,10 @@ export default class Navbar {
         : getInitials(this.user?.name)
     }
   </div>
+
+  <button class="sidebar-logout d-flex align-items-center gap-3 w-100" id="logoutBtn">
+    ${icons.logout()}
+    </div>
 
 </nav>
       <!-- ── Desktop Sidebar ── -->

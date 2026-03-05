@@ -29,10 +29,9 @@
   .sidebar {
     width: 200px;
   }
-  .sidebar-user-info .sidebar-user-name{
+  .sidebar-user-info .sidebar-user-name {
     white-space: initial;
   }
-  
 }
 
 /* =========================
@@ -43,6 +42,12 @@
     position: relative;
     width: 100%;
     min-height: auto;
+  }
+
+  .sidebar-brand {
+
+    padding: 10px !important;
+    border-bottom: none !important;
   }
 }
 
@@ -232,13 +237,12 @@
   color: #f87171;
 }
 
-
 /* Mobile top navbar */
 .mobile-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: var(--sidebar-bg);  /* match your sidebar color */
+  background-color: var(--sidebar-bg); /* match your sidebar color */
   border-bottom: 1px solid var(--border-color);
   width: 100%;
 }
@@ -246,7 +250,9 @@
 .mobile-nav-links {
   scrollbar-width: none; /* hide scrollbar on Firefox */
 }
-.mobile-nav-links::-webkit-scrollbar { display: none; } /* hide scrollbar on Chrome */
+.mobile-nav-links::-webkit-scrollbar {
+  display: none;
+} /* hide scrollbar on Chrome */
 
 .mobile-nav-btn {
   width: 36px;
@@ -262,4 +268,11 @@
 .mobile-nav-btn.active {
   background-color: var(--primary-color);
   color: white;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-logout svg {
+    width: 30px;
+    height: 30px;
+  }
 }
