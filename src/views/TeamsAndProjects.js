@@ -5,6 +5,7 @@ import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
 import {apiFetch} from "../services/api.js";
+import mainContent from '/pages/teams_dashboard.html?raw';
 
 export default class Teams {
   constructor(router) {
@@ -40,7 +41,7 @@ export default class Teams {
   async render() {
     const app = document.getElementById("app");
 
-    const mainContent = await fetch (`../../pages/teams_dashboard.html`).then(r => r.text())
+    // const mainContent = await fetch (`/pages/teams_dashboard.html`).then(r => r.text())
 
     app.innerHTML = `
       ${this.navbar.render()}
