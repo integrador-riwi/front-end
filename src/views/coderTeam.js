@@ -324,7 +324,118 @@ function renderDeliverables(d, repoUrl) {
   `;
 }
 
-// comment helper
+// ─────────────────────────────────────────────────────────────
+// Comment renderers
+// ─────────────────────────────────────────────────────────────
+
+function _formatCommentTime(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}h ago`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `${diffD}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function _renderReply(reply, currentUserId) {
+  const isOwner = reply.author_user_id === currentUserId;
+  const initial = reply.author_name?.charAt(0)?.toUpperCase() ?? "?";
+  const time = _formatCommentTime(reply.creationdate);
+  return `
+    <div class="d-flex gap-2 ct-comment ct-reply" data-comment-id="${reply.id_comment}">
+      <div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+          <div class="d-flex align-items-center gap-2">
+            <span class="ct-comment-author">${reply.author_name ?? "Unknown"}</span>
+            <span class="ct-comment-time">${time}</span>
+          </div>
+          ${
+            isOwner
+              ? `
+            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="Delete reply"
+              style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
+          `
+              : ""
+          }
+        </div>
+        <p class="ct-comment-text mb-0">${reply.comment}</p>
+      </div>
+    </div>
+  `;
+}
+
+function _renderComment(comment, currentUserId) {
+  const isOwner = comment.author_user_id === currentUserId;
+  const initial = comment.author_name?.charAt(0)?.toUpperCase() ?? "?";
+  const time = _formatCommentTime(comment.creationdate);
+  const replies = comment.replies ?? [];
+
+  return `
+    <div class="ct-comment-thread" data-comment-id="${comment.id_comment}">
+      <div class="d-flex gap-3 ct-comment">
+        <div class="ct-avatar-sm flex-shrink-0">${initial}</div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2">
+              <span class="ct-comment-author">${comment.author_name ?? "Unknown"}</span>
+              <span class="ct-comment-time">${time}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="ct-btn-reply" data-comment-id="${comment.id_comment}"
+                style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;font-weight:600;padding:2px 6px;border-radius:6px;transition:background 0.15s;">
+                Reply
+              </button>
+              ${
+                isOwner
+                  ? `
+                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="Delete comment"
+                  style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+          <p class="ct-comment-text mb-0">${comment.comment}</p>
+
+          <!-- Reply input (hidden by default) -->
+          <div class="ct-reply-box d-none mt-2" id="reply-box-${comment.id_comment}">
+            <div class="d-flex gap-2 align-items-start">
+              <textarea class="ct-comment-input flex-grow-1" style="min-height:54px;font-size:0.82rem;"
+                        placeholder="Write a reply..." id="reply-input-${comment.id_comment}"></textarea>
+              <div class="d-flex flex-column gap-1">
+                <button class="ct-btn-post ct-btn-post-reply" style="padding:7px 14px;font-size:0.8rem;"
+                        data-parent-id="${comment.id_comment}">Send</button>
+                <button class="ct-btn-cancel-reply" data-comment-id="${comment.id_comment}"
+                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Replies -->
+          ${
+            replies.length > 0
+              ? `
+            <div class="d-flex flex-column gap-2 mt-3 ps-2" style="border-left:2px solid var(--border);">
+              ${replies.map((r) => _renderReply(r, currentUserId)).join("")}
+            </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Keep export for backward compat (not used internally anymore)
 export function renderComment({ name, initial, time, text }) {
   return `
     <div class="d-flex gap-3 ct-comment">
@@ -372,11 +483,155 @@ function formatDate(dateStr) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Comments — placeholder (sección comentada en el HTML)
+// Comments — carga, renderiza y gestiona interacciones
 // ─────────────────────────────────────────────────────────────
 export async function loadComments(projectId, user) {
-  // La sección de comments está pendiente de implementar.
-  // Esta función es un stub para evitar errores de importación.
+  const list = document.getElementById("commentsList");
+  const postBtn = document.getElementById("postCommentBtn");
+  const input = document.getElementById("commentInput");
+  if (!list || !postBtn || !input) return;
+
+  const currentUserId = user?.id_user ?? null;
+
+  // Lazy-import to avoid circular deps
+  const { getComments, postComment, deleteComment } =
+    await import("../services/api.js");
+
+  // ── Render helpers ──────────────────────────────────────────
+  function renderAll(comments) {
+    if (comments.length === 0) {
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">No comments yet. Be the first!</p>`;
+      return;
+    }
+    list.innerHTML = comments
+      .map((c) => _renderComment(c, currentUserId))
+      .join("");
+    attachListHandlers();
+  }
+
+  function setLoading(on) {
+    if (on) {
+      list.innerHTML = `<div class="ct-brief-loading"><span class="ct-spinner"></span></div>`;
+    }
+  }
+
+  // ── Load comments ───────────────────────────────────────────
+  async function refresh() {
+    try {
+      const comments = await getComments(projectId);
+      renderAll(Array.isArray(comments) ? comments : []);
+    } catch {
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">Could not load comments.</p>`;
+    }
+  }
+
+  setLoading(true);
+  await refresh();
+
+  // ── Post top-level comment ──────────────────────────────────
+  postBtn.addEventListener("click", async () => {
+    const text = input.value.trim();
+    if (!text) return;
+
+    postBtn.disabled = true;
+    postBtn.textContent = "Posting...";
+
+    try {
+      await postComment({ projectId, comment: text });
+      input.value = "";
+      await refresh();
+    } catch (err) {
+      alert(err?.message ?? "Could not post comment.");
+    } finally {
+      postBtn.disabled = false;
+      postBtn.textContent = "Post Comment";
+    }
+  });
+
+  // Allow Ctrl+Enter to submit
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      postBtn.click();
+    }
+  });
+
+  // ── Handlers inside the list (reply, delete) ─────────────────
+  function attachListHandlers() {
+    // Reply toggle
+    list.querySelectorAll(".ct-btn-reply").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const commentId = btn.dataset.commentId;
+        const box = document.getElementById(`reply-box-${commentId}`);
+        if (!box) return;
+        box.classList.toggle("d-none");
+        if (!box.classList.contains("d-none")) {
+          document.getElementById(`reply-input-${commentId}`)?.focus();
+        }
+      });
+    });
+
+    // Cancel reply
+    list.querySelectorAll(".ct-btn-cancel-reply").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const commentId = btn.dataset.commentId;
+        const box = document.getElementById(`reply-box-${commentId}`);
+        if (box) box.classList.add("d-none");
+        const replyInput = document.getElementById(`reply-input-${commentId}`);
+        if (replyInput) replyInput.value = "";
+      });
+    });
+
+    // Send reply
+    list.querySelectorAll(".ct-btn-post-reply").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const parentId = parseInt(btn.dataset.parentId);
+        const replyInput = document.getElementById(`reply-input-${parentId}`);
+        const text = replyInput?.value?.trim();
+        if (!text) return;
+
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+
+        try {
+          await postComment({
+            projectId,
+            comment: text,
+            parentCommentId: parentId,
+          });
+          await refresh();
+        } catch (err) {
+          alert(err?.message ?? "Could not post reply.");
+          btn.disabled = false;
+          btn.textContent = "Send";
+        }
+      });
+    });
+
+    // Delete comment or reply
+    list.querySelectorAll(".ct-btn-delete-comment").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const commentId = btn.dataset.commentId;
+        if (!confirm("Delete this comment?")) return;
+
+        btn.disabled = true;
+        try {
+          await deleteComment(commentId);
+          await refresh();
+        } catch (err) {
+          alert(err?.message ?? "Could not delete comment.");
+          btn.disabled = false;
+        }
+      });
+
+      // Hover style
+      btn.addEventListener("mouseenter", () => {
+        btn.style.color = "#ef4444";
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.color = "#ccc";
+      });
+    });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
