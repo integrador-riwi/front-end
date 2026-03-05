@@ -101,7 +101,6 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
 
 
           <!-- Comments -->
-          <!--
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
@@ -122,7 +121,6 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
           </div>
-          -->
 
         </div>
 
