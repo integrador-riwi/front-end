@@ -31,10 +31,10 @@ export default class ProfileView {
     // Leer params del router
     const params = router.currentParams ?? {};
     if (params.githubSuccess) {
-      this.successMessage = `GitHub conectado correctamente${params.githubUsername ? ` como @${params.githubUsername}` : ""}.`;
+      this.successMessage = `Github connected correctly${params.githubUsername ? ` as @${params.githubUsername}` : ""}.`;
     }
     if (params.githubError) {
-      this.errorMessage = `Error al conectar GitHub: ${params.githubError}`;
+      this.errorMessage = `Github connection error: ${params.githubError}`;
     }
 
     this.loadProfile();
@@ -81,7 +81,7 @@ export default class ProfileView {
       this.errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        "No se pudo cargar tu perfil.";
+        "Profile could not be loaded.";
       this.profileDetails = this.profileDetails || {
         github_url: "",
         description: "",
@@ -102,7 +102,7 @@ export default class ProfileView {
         this.user = getCurrentUser();
       }
     } catch (error) {
-      console.warn("No se pudo obtener el estado de GitHub", error);
+      console.warn("Github status is not available", error);
       this.githubStatus = null;
     }
   }
@@ -167,18 +167,20 @@ export default class ProfileView {
                        <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                         <div class="mt-3">
                           <p class="profile-label mb-1">GitHub</p>
-                          ${
-                            showGithubLink
-                              ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
-                              : `<p class="profile-value">Not connected</p>`
-                          }
-                          <div class="profile-github-status">
-                            <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                          <div class="container align-items-center px-0 d-flex justify-content-between">
                             ${
-                              showConnectBtn
-                                ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconectar GitHub" : "Conectar GitHub"}</button>`
-                                : ``
+                              showGithubLink
+                                ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
+                                : `<p class="profile-value">Not connected</p>`
                             }
+                            <div class="profile-github-status">
+                              <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                              ${
+                                showConnectBtn
+                                  ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconectar GitHub" : "Conectar GitHub"}</button>`
+                                  : ``
+                              }
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -274,13 +276,13 @@ export default class ProfileView {
         description: updatedProfile.description ?? this.profileForm.description,
         clan: this.profileForm.clan,
       };
-      this.successMessage = "Perfil actualizado correctamente.";
+      this.successMessage = "Profile updated correctly.";
     } catch (error) {
       console.error("Error updating profile", error);
       this.errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        "No se pudo guardar el perfil.";
+        "Error updating profile.";
     } finally {
       this.isSaving = false;
       this._setSaveBtn(false);

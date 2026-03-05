@@ -61,7 +61,7 @@
 }
 
 @media (max-width: 768px) {
-  main{
+  main {
     display: flex;
     flex-direction: column;
   }
@@ -175,8 +175,15 @@
 
 .profile-link {
   color: var(--color-primary);
+  line-height: 1.6;
+  margin: 0;
   text-decoration: none;
   transition: all 0.2s ease;
+  background-color: var(--bg-input);
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
 }
 
 .profile-link:hover {
@@ -198,8 +205,8 @@
   gap: 0.4rem;
 }
 
-.profile-form-field textarea{
- height: 10rem;
+.profile-form-field textarea {
+  height: 10rem;
 }
 
 .profile-input {
@@ -268,7 +275,6 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin-top: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -309,7 +315,6 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(107, 92, 255, 0.25);
 }
-
 
 /* @media (max-width: 1024px) {
   .coder-home-main{
