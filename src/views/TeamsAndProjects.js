@@ -52,7 +52,9 @@ export default class Teams {
       </div>
     `;
 
-    await this.renderTeams()
+    document.addEventListener('DOMContentLoaded', async () => {
+      await this.renderTeams()
+    });
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
