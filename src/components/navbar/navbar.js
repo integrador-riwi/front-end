@@ -47,7 +47,7 @@ export default class Navbar {
     }
   </div>
 
-  <button class="sidebar-logout d-flex align-items-center gap-3 w-100" id="logoutBtn">
+  <button class="sidebar-logout d-flex align-items-center gap-3 w-100 logout-btn">
     ${icons.logout()}
     </div>
 
@@ -102,7 +102,7 @@ export default class Navbar {
             </div>
           </div>
 
-          <button class="sidebar-logout d-flex align-items-center gap-3 w-100" id="logoutBtn">
+          <button class="sidebar-logout d-flex align-items-center gap-3 w-100 logout-btn">
             ${icons.logout()}
             Sign out
           </button>
@@ -138,10 +138,12 @@ export default class Navbar {
       });
     });
 
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    document.querySelectorAll(".logout-btn")?.forEach((e) => {
+      e.addEventListener("click", () => {
       logout();
       this.router.navigate("login");
     });
+  });
 
     document.querySelectorAll(".profileBtn")?.forEach((e) => {
       e.addEventListener("click", () => {

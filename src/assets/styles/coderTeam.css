@@ -8,6 +8,18 @@
 .ct-card-shadow {
   border: 1px solid var(--border);
   box-shadow: 0 2px 12px rgba(107, 92, 255, 0.07);
+
+}
+
+.team-details{
+  position: sticky;
+  top: 1.5rem;
+}
+
+@media (max-width: 990px) {
+  .team-details {
+    position: static !important;
+  }
 }
 
 /* ══════════════════════════════
