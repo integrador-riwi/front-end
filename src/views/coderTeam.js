@@ -111,7 +111,11 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
             </h2>
 
             <div class="d-flex gap-3 align-items-start mb-2">
-              <div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>
+              ${
+                user?.github_avatar_url
+                  ? `<img src="${user.github_avatar_url}" alt="${user.name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+                  : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
+              }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
                         placeholder="Share your thoughts..."></textarea>
             </div>
@@ -348,9 +352,12 @@ function _renderReply(reply, currentUserId) {
   const isOwner = reply.author_user_id === currentUserId;
   const initial = reply.author_name?.charAt(0)?.toUpperCase() ?? "?";
   const time = _formatCommentTime(reply.creationdate);
+  const avatarHtml = reply.author_avatar
+    ? `<img src="${reply.author_avatar}" alt="${reply.author_name}" class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
+    : `<div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>`;
   return `
     <div class="d-flex gap-2 ct-comment ct-reply" data-comment-id="${reply.id_comment}">
-      <div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>
+      ${avatarHtml}
       <div class="flex-grow-1">
         <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
           <div class="d-flex align-items-center gap-2">
@@ -377,11 +384,14 @@ function _renderComment(comment, currentUserId) {
   const initial = comment.author_name?.charAt(0)?.toUpperCase() ?? "?";
   const time = _formatCommentTime(comment.creationdate);
   const replies = comment.replies ?? [];
+  const avatarHtml = comment.author_avatar
+    ? `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+    : `<div class="ct-avatar-sm flex-shrink-0">${initial}</div>`;
 
   return `
     <div class="ct-comment-thread" data-comment-id="${comment.id_comment}">
       <div class="d-flex gap-3 ct-comment">
-        <div class="ct-avatar-sm flex-shrink-0">${initial}</div>
+        ${avatarHtml}
         <div class="flex-grow-1">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
             <div class="d-flex align-items-center gap-2">
