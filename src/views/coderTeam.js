@@ -374,6 +374,14 @@ function formatDate(dateStr) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Comments — placeholder (sección comentada en el HTML)
+// ─────────────────────────────────────────────────────────────
+export async function loadComments(projectId, user) {
+  // La sección de comments está pendiente de implementar.
+  // Esta función es un stub para evitar errores de importación.
+}
+
+// ─────────────────────────────────────────────────────────────
 // Activity — carga y renderiza el brief del proyecto
 // ─────────────────────────────────────────────────────────────
 
