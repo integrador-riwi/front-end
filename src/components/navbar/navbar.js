@@ -122,7 +122,7 @@ export default class Navbar {
     this.currentRoute = route;
 
     document.getElementById("return-home")?.addEventListener("click", () => {
-      console.log()
+      console.log(route)
       //this.router.navigate("login");
     })
 
