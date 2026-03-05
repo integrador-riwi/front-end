@@ -1,7 +1,11 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
-import { renderCoderTeam, loadProjectBrief } from "./coderTeam.js";
+import {
+  renderCoderTeam,
+  loadProjectBrief,
+  loadComments,
+} from "./coderTeam.js";
 import {
   renderCoderNoTeam,
   setupAIAnalysis,
@@ -198,7 +202,11 @@ export default class CoderHome {
             team: this.team,
             isLeader: this.isLeader,
           });
-          setTimeout(() => loadProjectBrief(), 0);
+          const projectId = this.team?.project?.id_project;
+          setTimeout(() => {
+            loadProjectBrief();
+            if (projectId) loadComments(projectId, this.user);
+          }, 0);
           return html;
         })()
       : renderCoderNoTeam({
@@ -305,10 +313,19 @@ export default class CoderHome {
 
   async _checkUpdates() {
     try {
-      // Coder sin equipo: chequear invitaciones nuevas
+      // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
       if (!this.team) {
         const response = await apiFetch("/teams/my-teams", { method: "GET" });
         const data = response?.data ?? response;
+
+        // Si ahora tiene equipo → fue aceptada su join request o invitación
+        const teams = data?.teams ?? [];
+        if (teams.length > 0) {
+          this._stopPolling();
+          await this.init();
+          return;
+        }
+
         const newInvitations = data?.pendingInvitations ?? [];
         const currentIds = this.pendingInvitations
           .map((i) => i.id_invitation)
