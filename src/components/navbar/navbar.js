@@ -27,12 +27,9 @@ export default class Navbar {
 <nav class="mobile-nav d-flex align-items-center justify-content-between px-3 py-2 d-md-none">
   
   <!-- Brand -->
-  <div class="sidebar-brand d-flex align-items-center gap-2">
+  <div class="sidebar-brand d-flex align-items-center gap-2" id="return-home">
     <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
       ${icons.teamUp()}
-    <!-- <button>
-        ${icons.teamUp()}
-      </button> -->
     </div>
     <span class="sidebar-brand-name">TeamUp</span>
   </div>
@@ -123,6 +120,11 @@ export default class Navbar {
 
   setActiveRoute(route) {
     this.currentRoute = route;
+
+    document.getElementById("return-home")?.addEventListener("click", () => {
+      console.log()
+      //this.router.navigate("login");
+    })
 
     document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.route === route);
