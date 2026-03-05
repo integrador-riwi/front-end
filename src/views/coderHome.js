@@ -59,46 +59,7 @@ export default class CoderHome {
       projectTopic: "",
     };
 
-    this.teams = [
-      {
-        id: 1,
-        name: "Quantum Leap",
-        description:
-          "Exploring quantum computing algorithms for financial models.",
-        status: "full",
-        members: [
-          { id: 1, name: "Alice", avatar: "A" },
-          { id: 2, name: "Bob", avatar: "B" },
-          { id: 3, name: "Carol", avatar: "C" },
-          { id: 4, name: "Dave", avatar: "D" },
-        ],
-        maxMembers: 6,
-      },
-      {
-        id: 2,
-        name: "Alpha Squad",
-        description: "Building a React Native app for campus navigation.",
-        status: "open",
-        members: [
-          { id: 5, name: "Emma", avatar: "E" },
-          { id: 6, name: "Frank", avatar: "F" },
-        ],
-        maxMembers: 6,
-      },
-      {
-        id: 3,
-        name: "Data Miners",
-        description:
-          "Machine Learning project focusing on social media sentiment analysis.",
-        status: "pending",
-        members: [
-          { id: 7, name: "Grace", avatar: "G" },
-          { id: 8, name: "Henry", avatar: "H" },
-          { id: 9, name: "Ivy", avatar: "I" },
-        ],
-        maxMembers: 6,
-      },
-    ];
+    this.teams = [];
   }
 
   // ─────────────────────────────────────────
@@ -460,8 +421,8 @@ export default class CoderHome {
         try {
           await leaveTeam(this.team.id_team);
           this.team = null;
-          this.render();
-          this.attachEventHandlers();
+          this.isLeader = false;
+          await this.init();
         } catch (err) {
           alert(
             "Error leaving the team: " + (err?.message ?? "Intenta de nuevo"),
