@@ -38,6 +38,8 @@ export default class CoderHome {
     this.isLeader = false;
 
     this.searchQuery = "";
+    this.activeFilter = "all";
+    this.isLoadingTeams = false;
 
     this.aiResult = null;
     this.isAnalyzing = false;
@@ -106,6 +108,8 @@ export default class CoderHome {
 
       // Load real available teams for the no-team view
       if (!this.team) {
+        this.isLoadingTeams = true;
+        this.render(); // show skeletons immediately
         try {
           const teamsRes = await apiFetch("/teams?limit=50", { method: "GET" });
           const teamsData = teamsRes?.data ?? teamsRes;
@@ -140,6 +144,7 @@ export default class CoderHome {
         } catch (_) {
           // keep mock teams as fallback
         }
+        this.isLoadingTeams = false;
       }
     } catch (e) {
       this.team = null;
@@ -178,6 +183,7 @@ export default class CoderHome {
           user: this.user,
           teams: this.getFilteredTeams(),
           searchQuery: this.searchQuery,
+          activeFilter: this.activeFilter,
           availableCount: this.getAvailableCount(),
           formData: this.formData,
           analyzeSimilarity: this.aiResult !== null || this.isAnalyzing,
@@ -188,6 +194,7 @@ export default class CoderHome {
             error: this.createTeamError,
             success: this.createTeamSuccess,
           },
+          isLoading: this.isLoadingTeams,
         });
 
     const pendingBanner =
@@ -224,13 +231,25 @@ export default class CoderHome {
   // Helpers
   // ─────────────────────────────────────────
   getFilteredTeams() {
-    if (!this.searchQuery.trim()) return this.teams;
-    const q = this.searchQuery.toLowerCase();
-    return this.teams.filter(
-      (t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q),
-    );
+    let results = this.teams;
+
+    // Status filter
+    if (this.activeFilter && this.activeFilter !== "all") {
+      results = results.filter((t) => t.status === this.activeFilter);
+    }
+
+    // Text search (safe null check on description)
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      results = results.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          (t.description ?? "").toLowerCase().includes(q) ||
+          (t.leaderName ?? "").toLowerCase().includes(q),
+      );
+    }
+
+    return results;
   }
 
   getAvailableCount() {
@@ -368,6 +387,17 @@ export default class CoderHome {
     document.getElementById("teamSearch")?.addEventListener("input", (e) => {
       this.searchQuery = e.target.value;
       this._updateTeamList();
+    });
+
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.activeFilter = btn.dataset.filter;
+        document
+          .querySelectorAll(".filter-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        this._updateTeamList();
+      });
     });
 
     document.querySelectorAll(".btn-join").forEach((btn) => {

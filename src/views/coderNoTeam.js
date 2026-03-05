@@ -4,12 +4,14 @@ export function renderCoderNoTeam({
   user,
   teams,
   searchQuery,
+  activeFilter,
   availableCount,
   formData,
   analyzeSimilarity,
   aiResult,
   isAnalyzing,
   createTeamState,
+  isLoading,
 }) {
   const {
     isCreating = false,
@@ -118,13 +120,31 @@ export function renderCoderNoTeam({
                    value="${searchQuery}" />
           </div>
 
+          <div class="team-filters">
+            <button class="filter-btn ${!activeFilter || activeFilter === "all" ? "active" : ""}" data-filter="all">All</button>
+            <button class="filter-btn ${activeFilter === "open" ? "active" : ""}" data-filter="open">
+              <span class="filter-dot open"></span> Open
+            </button>
+            <button class="filter-btn ${activeFilter === "pending" ? "active" : ""}" data-filter="pending">
+              <span class="filter-dot pending"></span> Pending
+            </button>
+            <button class="filter-btn ${activeFilter === "full" ? "active" : ""}" data-filter="full">
+              <span class="filter-dot full"></span> Full
+            </button>
+          </div>
+
           <div class="team-list">
             ${
-              teams.length === 0
-                ? `<p style="text-align:center;color:#9ca3b8;padding:2rem;">
-                   No teams found matching "${searchQuery}"
-                 </p>`
-                : teams.map((team) => renderTeamCard(team)).join("")
+              isLoading
+                ? renderSkeletonCards(4)
+                : teams.length === 0
+                  ? `<div class="teams-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                      </svg>
+                      <p>${searchQuery || activeFilter !== "all" ? "No teams match your filters." : "No teams available right now."}</p>
+                    </div>`
+                  : teams.map((team) => renderTeamCard(team)).join("")
             }
           </div>
         </section>
@@ -133,6 +153,31 @@ export function renderCoderNoTeam({
     </div>
     <div id="overlay"></div>
   `;
+}
+
+export function renderSkeletonCards(count = 3) {
+  return Array.from(
+    { length: count },
+    () => `
+    <article class="team-card skeleton">
+      <div class="skeleton-line title"></div>
+      <div class="skeleton-line desc"></div>
+      <div class="skeleton-line desc short"></div>
+      <div class="skeleton-leader">
+        <div class="skeleton-circle"></div>
+        <div class="skeleton-line name"></div>
+      </div>
+      <div class="skeleton-footer">
+        <div class="skeleton-avatars">
+          <div class="skeleton-circle sm"></div>
+          <div class="skeleton-circle sm"></div>
+          <div class="skeleton-circle sm"></div>
+        </div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </article>
+  `,
+  ).join("");
 }
 
 export function renderTeamCard(team) {
