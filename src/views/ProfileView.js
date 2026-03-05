@@ -187,11 +187,11 @@ export default class ProfileView {
 
                 <div class="col-12 col-lg-7">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
-                     <h2 class="profile-section-title mb-3">Edit yout profile</h2>
+                     <h2 class="profile-section-title mb-3">Edit your profile</h2>
                       <form id="profileForm" class="profile-form">
                         <div class="profile-form-field">
                           <label class="profile-label" for="description">Description</label>
-                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Tell us about your experience">${escapeHtml(this.profileForm.description)}</textarea>
+                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Tell us about your experience...">${escapeHtml(this.profileForm.description)}</textarea>
                         </div>
                         <div class="profile-form-field">
                           <label class="profile-label" for="clan">Clan</label>

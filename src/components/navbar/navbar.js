@@ -27,11 +27,13 @@ export default class Navbar {
 <nav class="mobile-nav d-flex align-items-center justify-content-between px-3 py-2 d-md-none">
   
   <!-- Brand -->
-  <div class="sidebar-brand d-flex align-items-center gap-2" id="return-home">
+  <div class="sidebar-brand" >
+  <div class="container d-flex align-items-center gap-2 p-2 return-home" style="cursor: pointer;">
     <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
       ${icons.teamUp()}
     </div>
     <span class="sidebar-brand-name">TeamUp</span>
+    </div>
   </div>
 
 
@@ -55,10 +57,12 @@ export default class Navbar {
 
         <!-- Brand -->
         <div class="sidebar-brand d-flex align-items-center gap-3">
-          <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
-            ${icons.teamUp()}
+          <div class="container d-flex align-items-center p-2 gap-2 return-home" style="cursor: pointer;">
+            <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
+              ${icons.teamUp()}
+            </div>
+            <span class="sidebar-brand-name">TeamUp</span>
           </div>
-          <span class="sidebar-brand-name">TeamUp</span>
         </div>
 
         <!-- Nav links -->
@@ -121,11 +125,6 @@ export default class Navbar {
   setActiveRoute(route) {
     this.currentRoute = route;
 
-    document.getElementById("return-home")?.addEventListener("click", () => {
-      console.log(route)
-      //this.router.navigate("login");
-    })
-
     document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.route === route);
     });
@@ -144,14 +143,23 @@ export default class Navbar {
       this.router.navigate("login");
     });
 
-    document.querySelectorAll(".profileBtn")?.forEach(el => {
-    el.addEventListener("click", () => {
-      this.setActiveRoute("profile");
-      this.router.navigate("profile");
+    document.querySelectorAll(".profileBtn")?.forEach((e) => {
+      e.addEventListener("click", () => {
+        this.setActiveRoute("profile");
+        this.router.navigate("profile");
 
-      this.closeSidebarMobile();
+        this.closeSidebarMobile();
+      });
     });
-  });
+
+    document.querySelectorAll(".return-home")?.forEach((e) => {
+      e.addEventListener("click", () => {
+        this.setActiveRoute("coderHome");
+        this.router.navigate("coderHome");
+        coderHome;
+        console.log(this.router);
+      });
+    });
 
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.querySelector(".sidebar");

@@ -80,6 +80,14 @@
   white-space: nowrap;
 }
 
+.return-home{
+  border-radius: 10px;
+}
+
+.return-home:hover{
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* ── Nav area ── */
 .sidebar-nav {
   flex: 1;
