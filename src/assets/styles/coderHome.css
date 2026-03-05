@@ -642,3 +642,136 @@
     width: 100%;
   }
 }
+
+/* ── Leader row ── */
+.team-card-leader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.leader-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #e8ebf2;
+  flex-shrink: 0;
+}
+
+.leader-avatar-initials {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2e3a80;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.leader-label {
+  font-size: 0.8rem;
+  color: #6b7a99;
+}
+
+.leader-label strong {
+  color: #3d4466;
+}
+
+/* ── Member avatars row ── */
+.member-avatars-row {
+  display: flex;
+  align-items: center;
+}
+
+.member-avatar-img,
+.member-avatar-initials,
+.member-avatar-extra {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  margin-left: -7px;
+  flex-shrink: 0;
+}
+
+.member-avatar-img:first-child,
+.member-avatar-initials:first-child {
+  margin-left: 0;
+}
+
+.member-avatar-img {
+  object-fit: cover;
+}
+
+.member-avatar-initials {
+  background: #6b5cff;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-avatar-extra {
+  background: #e8ebf2;
+  color: #6b7a99;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Slot dots ── */
+.slot-dots {
+  display: flex;
+  gap: 3px;
+  margin-left: 0.5rem;
+}
+
+.slot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e8ebf2;
+  transition: background 0.2s;
+}
+
+.slot-dot.filled {
+  background: #6b5cff;
+}
+
+.slots-left {
+  color: #28a876;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-left: 2px;
+}
+
+.member-count {
+  font-size: 0.82rem;
+  color: #6b7a99;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.no-description {
+  color: #b8bbd6;
+  font-style: italic;
+}
+
+/* ── Pending badge ── */
+.team-badge.pending {
+  background: #fff7e6;
+  color: #d68a2e;
+}

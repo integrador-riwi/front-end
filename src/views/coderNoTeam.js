@@ -139,40 +139,97 @@ export function renderTeamCard(team) {
   const isFull = team.status === "full";
   const isPending = team.status === "pending";
 
+  // Leader initials fallback if no avatar
+  const leaderInitials = team.leaderName
+    ? team.leaderName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
+
+  const leaderAvatar = team.leaderAvatarUrl
+    ? `<img src="${team.leaderAvatarUrl}" alt="${team.leaderName}" class="leader-avatar-img" />`
+    : `<div class="leader-avatar-initials">${leaderInitials}</div>`;
+
+  // Member avatars (real GitHub photos, max 4 shown)
+  const memberAvatars = (team.members ?? [])
+    .slice(0, 4)
+    .map((m) => {
+      if (m.github_avatar_url) {
+        return `<img src="${m.github_avatar_url}" alt="${m.name}" class="member-avatar-img" title="${m.name}" />`;
+      }
+      const initials = m.name
+        ? m.name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()
+        : "?";
+      return `<div class="member-avatar-initials" title="${m.name}">${initials}</div>`;
+    })
+    .join("");
+
+  const extraCount = (team.memberCount ?? 0) - 4;
+  const extraBubble =
+    extraCount > 0
+      ? `<div class="member-avatar-extra">+${extraCount}</div>`
+      : "";
+
+  // Slot dots
+  const slotDots = Array.from(
+    { length: team.maxMembers },
+    (_, i) =>
+      `<span class="slot-dot ${i < team.memberCount ? "filled" : ""}"></span>`,
+  ).join("");
+
+  const description = team.description
+    ? escapeHtml(team.description)
+    : `<span class="no-description">No project description yet.</span>`;
+
   return `
-    <article class="team-card">
+    <article class="team-card ${team.status}">
       <div class="team-card-header">
         <div class="team-card-title-row">
-          <h3 class="team-card-title">${team.name}</h3>
-          <span class="team-badge ${team.status}">${isFull ? "FULL" : "OPEN"}</span>
+          <h3 class="team-card-title">${escapeHtml(team.name)}</h3>
+          <span class="team-badge ${team.status}">
+            ${isFull ? "FULL" : isPending ? "PENDING" : "OPEN"}
+          </span>
         </div>
       </div>
-      <p class="team-card-description">${escapeHtml(team.description)}</p>
+
+      <p class="team-card-description">${description}</p>
+
+      <div class="team-card-leader">
+        ${leaderAvatar}
+        <span class="leader-label">Led by <strong>${escapeHtml(team.leaderName ?? "Unknown")}</strong></span>
+      </div>
+
       <div class="team-card-footer">
         <div class="team-members">
-          <div class="member-avatars">
-            ${team.members
-              .slice(0, 6)
-              .map(
-                (m) => `
-              <div class="member-avatar">${m.avatar}</div>
-            `,
-              )
-              .join("")}
+          <div class="member-avatars-row">
+            ${memberAvatars}${extraBubble}
           </div>
-          <span class="member-count">${team.members.length}/${team.maxMembers} Members</span>
+          <div class="slot-dots">${slotDots}</div>
+          <span class="member-count">
+            ${team.memberCount}/${team.maxMembers}
+            ${!isFull ? `<span class="slots-left">· ${team.slotsLeft} left</span>` : ""}
+          </span>
         </div>
+
         ${
           isFull
             ? `<button class="btn-full" disabled>Full Team</button>`
             : isPending
               ? `<button class="btn-pending" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                Pending
-               </button>`
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Request Sent
+                </button>`
               : `<button class="btn-join" data-team-id="${team.id}">Request to Join</button>`
         }
       </div>

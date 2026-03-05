@@ -110,31 +110,33 @@ export default class CoderHome {
           const teamsRes = await apiFetch("/teams?limit=50", { method: "GET" });
           const teamsData = teamsRes?.data ?? teamsRes;
           const rawTeams = teamsData?.teams ?? [];
-          this.teams = rawTeams.map((t) => ({
-            id: t.id_team,
-            name: t.name,
-            description: t.description ?? "No description.",
-            status:
-              parseInt(t.member_count) >= 5
-                ? "full"
-                : this.pendingInvitations.some(
-                      (inv) => inv.id_team === t.id_team,
-                    ) ||
-                    this.pendingJoinRequests.some(
-                      (req) => req.id_team === t.id_team,
-                    )
-                  ? "pending"
-                  : "open",
-            members: Array.from(
-              { length: parseInt(t.member_count) || 0 },
-              (_, i) => ({
-                id: i,
-                name: "?",
-                avatar: "?",
-              }),
-            ),
-            maxMembers: 5,
-          }));
+          this.teams = rawTeams.map((t) => {
+            const memberCount = parseInt(t.member_count) || 0;
+            const isFull = memberCount >= 5;
+            const isPending =
+              !isFull &&
+              (this.pendingInvitations.some(
+                (inv) => inv.id_team === t.id_team,
+              ) ||
+                this.pendingJoinRequests.some(
+                  (req) => req.id_team === t.id_team,
+                ));
+            return {
+              id: t.id_team,
+              name: t.name,
+              description: t.description ?? null,
+              leaderName: t.leader_name ?? null,
+              leaderEmail: t.leader_email ?? null,
+              leaderId: t.leader_id ?? null,
+              leaderAvatarUrl: t.leader_avatar_url ?? null,
+              members: t.members ?? [],
+              memberCount,
+              maxMembers: 5,
+              slotsLeft: Math.max(0, 5 - memberCount),
+              status: isFull ? "full" : isPending ? "pending" : "open",
+              createdAt: t.created_at ?? null,
+            };
+          });
         } catch (_) {
           // keep mock teams as fallback
         }
