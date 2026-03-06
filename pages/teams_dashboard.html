@@ -1,4 +1,4 @@
-<div class="container py-3">
+<div class="container-fluid py-1">
   <div
     class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
   >
@@ -18,10 +18,10 @@
     </div>
 
     <div class="d-none d-md-flex app-view-toggle">
-      <button class="app-toggle-btn active">
+      <button class="app-toggle-btn active" id="grid-view-btn">
         <span class="material-icons-round">grid_view</span>
       </button>
-      <button class="app-toggle-btn">
+      <button class="app-toggle-btn" id="list-view-btn">
         <span class="material-icons-round">view_list</span>
       </button>
     </div>
@@ -32,7 +32,7 @@
     <div></div>
   </div>
 
-  <div class="d-flex flex-wrap gap-2 mb-5 overflow-auto pb-2">
+  <div class="d-flex flex-wrap gap-2 mb-3 overflow-auto pb-2">
     <button class="app-filter-btn active">All Projects</button>
 
     <button class="app-filter-btn">

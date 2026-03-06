@@ -4,8 +4,8 @@ import { getUser, clearSession } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
-import {apiFetch} from "../services/api.js";
-import mainContent from '/pages/teams_dashboard.html?raw';
+import { apiFetch } from "../services/api.js";
+import mainContent from "/pages/teams_dashboard.html?raw";
 
 export default class Teams {
   constructor(router) {
@@ -19,7 +19,6 @@ export default class Teams {
     const maxVisible = 5;
     const container = document.createElement("div");
     container.className = "app-avatar-group";
-    console.log("sorner", users)
     users.slice(0, maxVisible).forEach((user) => {
       const img = document.createElement("img");
       img.src = user.github_avatar_url;
@@ -55,29 +54,32 @@ export default class Teams {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    await this.renderTeams();
+    await this.renderTeamsGrid();
+    this.attachEventHandlers();
   }
 
-  async renderTeams() {
+  async renderTeamsGrid() {
     const teamsContainer = document.getElementById("teamsContainer");
-
+    teamsContainer.innerHTML = "";
     // ✅ Verificar que el elemento existe
     if (!teamsContainer) {
       console.error("Element #teamsContainer not found");
       return;
     }
 
-    const fetchTeams = await apiFetch('/teams?limit=50', { method: 'GET' });
+    const fetchTeams = await apiFetch("/teams?limit=50", { method: "GET" });
     const totalTeams = fetchTeams.data.teams;
 
     // ✅ Usar Promise.all + for...of en lugar de .map() con async
     await Promise.all(
-        totalTeams.map(async (team) => {
-          const members = await apiFetch(`/teams/${team.id_team}/members`, { method: 'GET' });
-          console.log(members);
-          const membersIcons = this.renderAvatars(members.data.members);
+      totalTeams.map(async (team) => {
+        const members = await apiFetch(`/teams/${team.id_team}/members`, {
+          method: "GET",
+        });
+        console.log(members);
+        const membersIcons = this.renderAvatars(members.data.members);
 
-          const card = `
+        const card = `
           <div class="col-12 col-md-6 col-lg-4">
             <div class="app-project-card">
               <div class="app-project-image">
@@ -90,7 +92,7 @@ export default class Teams {
               </div>
               <div class="p-4">
                 <h5 class="app-card-title">${team.name}</h5>
-                <p class="app-card-text">${team.description}</p>
+                <p class="app-card-text text-break">${team.description}</p>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div class="app-avatar-group">
                     ${membersIcons}
@@ -101,8 +103,89 @@ export default class Teams {
           </div>
         `;
 
-          teamsContainer.insertAdjacentHTML('beforeend', card);
-        })
+        teamsContainer.insertAdjacentHTML("beforeend", card);
+      }),
     );
+  }
+
+  async renderTeamsList() {
+    const teamsContainer = document.getElementById("teamsContainer");
+
+    // ✅ Verificar que el elemento existe
+    if (!teamsContainer) {
+      console.error("Element #teamsContainer not found");
+      return;
+    }
+    teamsContainer.innerHTML = "";
+    teamsContainer.innerHTML = `
+    <div class="col-12 px-0">
+      <div class="app-project-card-list p-3">
+        <table class="table table-striped table-hover" style="width:100%;">
+          <thead>
+            <tr>
+              <th style="width:20%;">Clan</th>
+              <th style="width:20%;">Project</th>
+              <th style="width:45%;">Description</th>
+              <th style="width:15%;">Team</th>
+            </tr>
+          </thead>
+          <tbody id="teamsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+    const tbody = document.getElementById("teamsTableBody");
+
+    const fetchTeams = await apiFetch("/teams?limit=100", { method: "GET" });
+    const totalTeams = fetchTeams.data.teams;
+
+    for (const team of totalTeams) {
+      const members = await apiFetch(`/teams/${team.id_team}/members`, {
+        method: "GET",
+      });
+
+      const membersIcons = this.renderAvatars(members.data.members);
+
+      const clan = members.data.members?.[0]?.clan || "N/A";
+
+      const row = `
+      <tr>
+        <td>
+          <span class="app-project-badge engineering">${clan}</span>
+        </td>
+        <td>
+          <h5 class="app-card-title fs-6">${team.name}</h5>
+        </td>
+        <td>
+          <p class="app-card-text text-break">${team.description}</p>
+        </td>
+        <td>
+          <div class="app-avatar-group">
+            ${membersIcons}
+          </div>
+        </td>
+      </tr>
+    `;
+
+      tbody.insertAdjacentHTML("beforeend", row);
+    }
+  }
+
+  attachEventHandlers() {
+    const gridViewBtn = document.getElementById("grid-view-btn");
+    const listViewBtn = document.getElementById("list-view-btn");
+
+    gridViewBtn?.addEventListener("click", async () => {
+      gridViewBtn.classList.add("active")
+      listViewBtn.classList.remove("active")
+      await this.renderTeamsGrid();
+    });
+
+    listViewBtn?.addEventListener("click", async () => {
+      listViewBtn.classList.add("active")
+      gridViewBtn.classList.remove("active")
+      await this.renderTeamsList();
+    });
   }
 }

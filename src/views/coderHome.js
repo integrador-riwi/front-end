@@ -427,7 +427,7 @@ export default class CoderHome {
           await this.init();
         } catch (err) {
           alert(
-            "Error leaving the team: " + (err?.message ?? "Intenta de nuevo"),
+            "Error leaving the team: " + (err?.message ?? "Try again"),
           );
         }
       });
@@ -467,7 +467,7 @@ export default class CoderHome {
         description: projectTopic,
       });
       const payload = response?.data ?? response;
-      this.createTeamSuccess = `Equipo "${payload?.name ?? teamName}" created successfully.`;
+      this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
       this.formData = { teamName: "", projectTopic: "" };
       this.isCreatingTeam = false;
 
@@ -549,7 +549,7 @@ export default class CoderHome {
   async handleAcceptInvitation(invitationId, btn) {
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Aceptando…";
+      btn.textContent = "Accepting…";
     }
     // Deshabilitar también el botón de rechazar de la misma invitación
     const rejectBtn = btn
@@ -586,7 +586,7 @@ export default class CoderHome {
   async handleCancelJoinRequest(requestId, btn) {
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Cancelando…";
+      btn.textContent = "Canceling…";
     }
     try {
       await cancelJoinRequest(requestId);
