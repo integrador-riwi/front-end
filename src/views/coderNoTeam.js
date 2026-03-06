@@ -4,12 +4,14 @@ export function renderCoderNoTeam({
   user,
   teams,
   searchQuery,
+  activeFilter,
   availableCount,
   formData,
   analyzeSimilarity,
   aiResult,
   isAnalyzing,
   createTeamState,
+  isLoading,
 }) {
   const {
     isCreating = false,
@@ -118,13 +120,31 @@ export function renderCoderNoTeam({
                    value="${searchQuery}" />
           </div>
 
+          <div class="team-filters">
+            <button class="filter-btn ${!activeFilter || activeFilter === "all" ? "active" : ""}" data-filter="all">All</button>
+            <button class="filter-btn ${activeFilter === "open" ? "active" : ""}" data-filter="open">
+              <span class="filter-dot open"></span> Open
+            </button>
+            <button class="filter-btn ${activeFilter === "pending" ? "active" : ""}" data-filter="pending">
+              <span class="filter-dot pending"></span> Pending
+            </button>
+            <button class="filter-btn ${activeFilter === "full" ? "active" : ""}" data-filter="full">
+              <span class="filter-dot full"></span> Full
+            </button>
+          </div>
+
           <div class="team-list">
             ${
-              teams.length === 0
-                ? `<p style="text-align:center;color:#9ca3b8;padding:2rem;">
-                   No teams found matching "${searchQuery}"
-                 </p>`
-                : teams.map((team) => renderTeamCard(team)).join("")
+              isLoading
+                ? renderSkeletonCards(4)
+                : teams.length === 0
+                  ? `<div class="teams-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                      </svg>
+                      <p>${searchQuery || activeFilter !== "all" ? "No teams match your filters." : "No teams available right now."}</p>
+                    </div>`
+                  : teams.map((team) => renderTeamCard(team)).join("")
             }
           </div>
         </section>
@@ -135,44 +155,126 @@ export function renderCoderNoTeam({
   `;
 }
 
+export function renderSkeletonCards(count = 3) {
+  return Array.from(
+    { length: count },
+    () => `
+    <article class="team-card skeleton">
+      <div class="skeleton-line title"></div>
+      <div class="skeleton-line desc"></div>
+      <div class="skeleton-line desc short"></div>
+      <div class="skeleton-leader">
+        <div class="skeleton-circle"></div>
+        <div class="skeleton-line name"></div>
+      </div>
+      <div class="skeleton-footer">
+        <div class="skeleton-avatars">
+          <div class="skeleton-circle sm"></div>
+          <div class="skeleton-circle sm"></div>
+          <div class="skeleton-circle sm"></div>
+        </div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </article>
+  `,
+  ).join("");
+}
+
 export function renderTeamCard(team) {
   const isFull = team.status === "full";
   const isPending = team.status === "pending";
 
+  // Leader initials fallback if no avatar
+  const leaderInitials = team.leaderName
+    ? team.leaderName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
+
+  const leaderAvatar = team.leaderAvatarUrl
+    ? `<img src="${team.leaderAvatarUrl}" alt="${team.leaderName}" class="leader-avatar-img" />`
+    : `<div class="leader-avatar-initials">${leaderInitials}</div>`;
+
+  // Member avatars (real GitHub photos, max 4 shown)
+  const memberAvatars = (team.members ?? [])
+    .slice(0, 4)
+    .map((m) => {
+      if (m.github_avatar_url) {
+        return `<img src="${m.github_avatar_url}" alt="${m.name}" class="member-avatar-img" title="${m.name}" />`;
+      }
+      const initials = m.name
+        ? m.name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()
+        : "?";
+      return `<div class="member-avatar-initials" title="${m.name}">${initials}</div>`;
+    })
+    .join("");
+
+  const extraCount = (team.memberCount ?? 0) - 4;
+  const extraBubble =
+    extraCount > 0
+      ? `<div class="member-avatar-extra">+${extraCount}</div>`
+      : "";
+
+  // Slot dots
+  const slotDots = Array.from(
+    { length: team.maxMembers },
+    (_, i) =>
+      `<span class="slot-dot ${i < team.memberCount ? "filled" : ""}"></span>`,
+  ).join("");
+
+  const description = team.description
+    ? escapeHtml(team.description)
+    : `<span class="no-description">No project description yet.</span>`;
+
   return `
-    <article class="team-card">
+    <article class="team-card ${team.status}">
       <div class="team-card-header">
         <div class="team-card-title-row">
-          <h3 class="team-card-title">${team.name}</h3>
-          <span class="team-badge ${team.status}">${isFull ? "FULL" : "OPEN"}</span>
+          <h3 class="team-card-title">${escapeHtml(team.name)}</h3>
+          <span class="team-badge ${team.status}">
+            ${isFull ? "FULL" : isPending ? "PENDING" : "OPEN"}
+          </span>
         </div>
       </div>
-      <p class="team-card-description">${escapeHtml(team.description)}</p>
+
+      <p class="team-card-description">${description}</p>
+
+      <div class="team-card-leader">
+        ${leaderAvatar}
+        <span class="leader-label">Led by <strong>${escapeHtml(team.leaderName ?? "Unknown")}</strong></span>
+      </div>
+
       <div class="team-card-footer">
         <div class="team-members">
-          <div class="member-avatars">
-            ${team.members
-              .slice(0, 6)
-              .map(
-                (m) => `
-              <div class="member-avatar">${m.avatar}</div>
-            `,
-              )
-              .join("")}
+          <div class="member-avatars-row">
+            ${memberAvatars}${extraBubble}
           </div>
-          <span class="member-count">${team.members.length}/${team.maxMembers} Members</span>
+          <div class="slot-dots">${slotDots}</div>
+          <span class="member-count">
+            ${team.memberCount}/${team.maxMembers}
+            ${!isFull ? `<span class="slots-left">· ${team.slotsLeft} left</span>` : ""}
+          </span>
         </div>
+
         ${
           isFull
             ? `<button class="btn-full" disabled>Full Team</button>`
             : isPending
               ? `<button class="btn-pending" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                Pending
-               </button>`
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Request Sent
+                </button>`
               : `<button class="btn-join" data-team-id="${team.id}">Request to Join</button>`
         }
       </div>

@@ -17,6 +17,11 @@ export async function apiFetch(endpoint, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
+  // 204 No Content — no hay body que parsear
+  if (response.status === 204) {
+    return null;
+  }
+
   const data = await response.json();
 
   if (!response.ok) {
