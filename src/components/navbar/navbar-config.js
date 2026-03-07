@@ -15,7 +15,7 @@ const ADMIN_BASE_LINKS = [
 
 const ADMIN_EVENT_LINKS = [
   { label: "Back to Events", route: "events", icon: "calendar" },
-  { label: "Metrics", route: "events/metrics", icon: "calendar" },
+  { label: "Metrics", route: "events/metrics", icon: "metrics" },
   { label: "Projects", route: "events/projects", icon: "globe" },
   { label: "Ranking", route: "events/ranking", icon: "ranking" },
   { label: "Voting", route: "events/voting", icon: "qr" },
@@ -73,7 +73,7 @@ export const getNavLinks = (role) => {
         route:
           link.route === "events"
             ? "events"
-            : `events/${eventId}/${link.route.split("/")[1]}`,
+            : `events/${eventId}/${link.route}`,
       }));
     }
 

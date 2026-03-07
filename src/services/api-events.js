@@ -27,3 +27,12 @@ export async function updateEvent(id, data) {
 export async function deleteEvent(id) {
   return apiFetch(`/events/${id}`, { method: 'DELETE' });
 }
+
+// events
+// events/create
+
+// events/:id
+// events/:id/projects
+// events/:id/ranking
+// events/:id/voting
+// events/:id/finalists

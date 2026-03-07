@@ -45,3 +45,13 @@ export const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 };
+
+export const getEventIdFromUrl = () => {
+  const match = window.location.pathname.match(/events\/(\d+)/);
+  return match ? match[1] : null;
+};
+
+export const getEventSectionFromUrl = () => {
+  const match = window.location.pathname.match(/events\/\d+\/([^/]+)/);
+  return match ? match[1] : null;
+};

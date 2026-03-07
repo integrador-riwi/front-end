@@ -145,10 +145,12 @@ export default class CreateEvent {
 
     app.innerHTML = `
       ${this.navbar.render()}
-      ${this.header.render()}
-      <main class="dashboard-main">
-        ${mainContent}
-      </main>
+      <div class="container p-0">
+        ${this.header.render()}
+          <main class="dashboard-main">
+          ${mainContent}
+        </main>
+      </div>
     `;
 
     this.header.mountBreadcrumb();

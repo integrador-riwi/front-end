@@ -13,6 +13,7 @@ export default class EventDetails {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.eventId = params.eventId || null;
+    this.eventName = params?.name;
     this.event = null;
     this.loading = true;
     this.error = null;
@@ -130,10 +131,12 @@ export default class EventDetails {
 
     app.innerHTML = `
       ${this.navbar.render()}
-      ${this.header.render()}
-        <main class="dashboard-main">
-        ${mainContent}
-      </main>
+      <div class="container p-0">
+        ${this.header.render()}
+          <main class="dashboard-main">
+          ${mainContent}
+        </main>
+      </div>
     `;
 
     this.header.mountBreadcrumb();

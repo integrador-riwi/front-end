@@ -55,7 +55,7 @@ class App {
     console.log("Authenticated:", isAuthenticated());
     switch (this.user?.role) {
       case "ADMIN":
-        this.navigate("dashboard");
+        this.navigate("events");
         break;
       case "CODER":
         console.log("hello");
@@ -76,7 +76,8 @@ class App {
         this.currentView = new LoginView(this);
         break;
       case "dashboard":
-        this.currentView = new DashboardView(this);
+        console.log("NAVIGATE PARAMS:", params);
+        this.currentView = new DashboardView(this, params);
         break;
       case "events":
         this.currentView = new EventsView(this);
@@ -86,6 +87,7 @@ class App {
         break;
       case "details":
         this.currentView = new EventDetails(this, params);
+        console.log(params)
         break;
       case "projects":
         this.currentView = new Teams(this);
