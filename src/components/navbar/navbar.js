@@ -1,7 +1,7 @@
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
 import { getInitials, getCurrentUser, logout } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
-import "../../assets/styles/navbar.css"
+import "../../assets/styles/navbar.css";
 export default class Navbar {
   constructor(router) {
     this.router = router;
@@ -27,7 +27,9 @@ export default class Navbar {
         <!-- Nav links -->
         <nav class="sidebar-nav flex-grow-1 overflow-auto py-3 px-2">
           <ul class="d-flex flex-column gap-1 list-unstyled m-0 p-0">
-            ${links.map(link => `
+            ${links
+              .map(
+                (link) => `
               <li>
                 <button
                   class="nav-link d-flex align-items-center gap-3 w-100 ${this.currentRoute === link.route ? "active" : ""}"
@@ -37,7 +39,9 @@ export default class Navbar {
                   ${link.label}
                 </button>
               </li>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </ul>
         </nav>
 
@@ -66,18 +70,21 @@ export default class Navbar {
     `;
   }
 
-
   setActiveRoute(route) {
     this.currentRoute = route;
 
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.route === route);
     });
   }
 
   attachEventHandlers() {
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (btn.dataset.route === "events") {
+          localStorage.removeItem("currentEventId");
+        }
+
         this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
       });

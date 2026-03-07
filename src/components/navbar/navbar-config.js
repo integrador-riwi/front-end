@@ -1,6 +1,5 @@
 import { icons } from "../../utils/icons.js";
 
-
 const TL_BASE_LINKS = [
   { label: "Dashboard", route: "dashboard", icon: "calendar" },
   { label: "Projects to Grade", route: "evaluations", icon: "edit" },
@@ -9,18 +8,34 @@ const TL_BASE_LINKS = [
   { label: "Events", route: "events", icon: "calendar" },
 ];
 
+const ADMIN_BASE_LINKS = [
+  { label: "Events", route: "events", icon: "calendar" },
+  { label: "New Event", route: "events/create", icon: "plus" },
+];
+
+const ADMIN_EVENT_LINKS = [
+  { label: "Back to Events", route: "events", icon: "calendar" },
+  { label: "Metrics", route: "events/metrics", icon: "calendar" },
+  { label: "Projects", route: "events/projects", icon: "globe" },
+  { label: "Ranking", route: "events/ranking", icon: "ranking" },
+  { label: "Voting", route: "events/voting", icon: "qr" },
+  { label: "Finalists", route: "events/finalists", icon: "trophy" },
+];
+
 export const NAV_LINKS_BY_ROLE = {
-  ADMIN: [
-    { label: "Events", route: "events", icon: "calendar" },
-    { label: "New Event", route: "events/create", icon: "plus" },
-    // { label: "Event Details", route: "details", icon: "details" },
-    // { label: "Teams & Projects", route: "projects", icon: "globe" },
-    // { label: "Rubrics", route: "rubrics", icon: "bulb" },
-    // { label: "Evaluation Rules", route: "rules", icon: "settings" },
-    // { label: "Ranking", route: "ranking", icon: "ranking" },
-    // { label: "QR Voting", route: "qr", icon: "qr" },
-    // { label: "Finalists & Votes", route: "finalists", icon: "trophy" },
-  ],
+  
+  // ADMIN: [
+  //   { label: "Events", route: "events", icon: "calendar" },
+  //   { label: "New Event", route: "events/create", icon: "plus" },
+  //   { label: "Event Details", route: "details", icon: "details" },
+  //   { label: "Teams & Projects", route: "projects", icon: "globe" },
+  //   { label: "Rubrics", route: "rubrics", icon: "bulb" },
+  //   { label: "Evaluation Rules", route: "rules", icon: "settings" },
+  //   { label: "Ranking", route: "ranking", icon: "ranking" },
+  //   { label: "QR Voting", route: "qr", icon: "qr" },
+  //   { label: "Finalists & Votes", route: "finalists", icon: "trophy" },
+  // ],
+  ADMIN: ADMIN_BASE_LINKS,
   TL_DEVELOPMENT: TL_BASE_LINKS,
   TL_SOFT_SKILLS: TL_BASE_LINKS,
   TL_ENGLISH: TL_BASE_LINKS,
@@ -49,6 +64,22 @@ export const ROLE_LABELS = {
 };
 
 export const getNavLinks = (role) => {
+  if (role === "ADMIN") {
+    const eventId = localStorage.getItem("currentEventId");
+
+    if (eventId) {
+      return ADMIN_EVENT_LINKS.map((link) => ({
+        ...link,
+        route:
+          link.route === "events"
+            ? "events"
+            : `events/${eventId}/${link.route.split("/")[1]}`,
+      }));
+    }
+
+    return ADMIN_BASE_LINKS;
+  }
+
   return NAV_LINKS_BY_ROLE[role] ?? [];
 };
 
