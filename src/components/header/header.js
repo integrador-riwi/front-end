@@ -13,7 +13,7 @@ export default class Header {
     this.router = router;
     this.user = getCurrentUser();
     this.eventName =
-      params.eventName || localStorage.getItem("currentEventName");
+      params.eventName || localStorage.getItem("currentEventName") || "Event";
   }
 
   mountBreadcrumb() {
