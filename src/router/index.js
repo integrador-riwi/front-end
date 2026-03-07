@@ -8,8 +8,9 @@ import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import { getCurrentUser } from "../utils/helpers.js";
-import ProjectSettings from "../views/projectSettings.js";
+import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
+import ProfileView from "../views/ProfileView.js";
 
 class App {
   constructor() {
@@ -23,6 +24,25 @@ class App {
   init() {
     const user = getCurrentUser();
     this.user = user;
+
+    const params = new URLSearchParams(window.location.search);
+    const githubSuccess = params.get("github");
+    const githubError = params.get("error");
+
+    if (githubSuccess === "success" || githubError) {
+      window.history.replaceState({}, "", "/");
+      if (!isAuthenticated()) {
+        this.navigate("login");
+        return;
+      }
+      this.navigate("profile", {
+        githubSuccess: githubSuccess === "success",
+        githubUsername: params.get("username"),
+        githubError: githubError,
+      });
+      return;
+    }
+
     if (!isAuthenticated()) {
       this.navigate("login");
       return;
@@ -38,14 +58,13 @@ class App {
         this.navigate("dashboard");
         break;
       case "CODER":
-        console.log("hello")
+        console.log("hello");
         this.navigate("coderHome");
         break;
       default:
         this.navigate("login");
     }
   }
-
 
   navigate(route, params = {}) {
     this.app.innerHTML = "";
@@ -75,10 +94,14 @@ class App {
         this.currentView = new Ranking(this);
         break;
       case "coderHome":
-        this.currentView = new coderHome(this)
-        break;
+        this.currentView = new coderHome(this);
+        this.currentView.init();
+        return;
       case "projectSettings":
-        this.currentView = new ProjectSettings(this)
+        this.currentView = new ProjectSettings(this, params);
+        break;
+      case "profile":
+        this.currentView = new ProfileView(this);
         break;
       default:
         return this.navigate("login");
@@ -89,7 +112,6 @@ class App {
       return;
     }
     this.currentView.render();
-
   }
 }
 
