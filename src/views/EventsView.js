@@ -64,38 +64,40 @@ export default class EventsView {
     const eventId = event.id;
 
     return `
-        <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column flex-md-row gap-4 align-items-md-center mb-4" style="border-left: 5px solid var(--color-primary);">
-          
-          <div class="d-flex flex-column align-items-center justify-content-center bg-light rounded-4 p-3 flex-shrink-0" style="min-width: 100px; border: 1px solid var(--border);">
-            <span class="fs-5 fw-bold" style="color: var(--color-primary);">
-              ${date ? new Date(date).getDate() : "-"}
-            </span>
-            <span class="text-uppercase fw-semibold" style="font-size: 0.85rem; color: var(--text-sidebar);">
-              ${date ? new Date(date).toLocaleString("en-US", { month: "short" }) : "TBD"}
-            </span>
-          </div>
+        <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column flex-lg-row gap-4 align-items-md-center mb-4" style="border-left: 5px solid var(--color-primary);">
+          <div class="container d-flex gap-4 flex-column flex-md-row">
+            <div class="d-flex flex-column align-items-center justify-content-center bg-light rounded-4 p-3 flex-shrink-0" style="min-width: 100px; border: 1px solid var(--border);">
+              <span class="fs-5 fw-bold" style="color: var(--color-primary);">
+                ${date ? new Date(date).getDate() : "-"}
+              </span>
+              <span class="text-uppercase fw-semibold" style="font-size: 0.85rem; color: var(--text-sidebar);">
+                ${date ? new Date(date).toLocaleString("en-US", { month: "short" }) : "TBD"}
+              </span>
+            </div>
 
-          <div class="flex-grow-1">
-            <h3 class="mb-2 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); word-break: break-word;">${title}</h3>
-            <p class="mb-2" style="font-size: 0.95rem; color: var(--text-sidebar);">${desc}</p>
-            <div class="d-flex flex-wrap gap-3 mt-3">
-              <div class="d-flex align-items-center gap-1" style="font-size: 0.85rem; color: var(--text-sidebar);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                Ends: ${this.formatDate(date)}
+            <div class="flex-grow-1">
+              <h3 class="mb-2 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); word-break: break-word;">${title}</h3>
+              <p class="mb-2" style="font-size: 0.95rem; color: var(--text-sidebar);">${desc}</p>
+              <div class="d-flex flex-wrap gap-3 mt-3">
+                <div class="d-flex align-items-center gap-1" style="font-size: 0.85rem; color: var(--text-sidebar);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Ends: ${this.formatDate(date)}
+                </div>
               </div>
             </div>
+
           </div>
           
-          <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column gap-2" style="min-width: 150px;">
+          <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column flex-md-row flex-lg-column gap-2" style="min-width: 150px;">
           
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-name="${title}" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
               Details
             </button>
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
-              View Finalists
+              Finalists
             </button>
           </div>
         </div>
@@ -203,7 +205,7 @@ export default class EventsView {
       ${this.navbar.render()}
       ${this.header.render()}
       <main class="dashboard-main min-vh-100" style="background-color: var(--color-bg); padding-top: 2rem;">
-        <div class="container-xl px-3 px-md-4 py-4 mt-3">
+        <div class="container-xl px-3 px-md-4 py-4 mt-1">
           
           <!-- Page Header -->
           <div class="d-flex flex-column gap-2 mb-5 pb-3 border-bottom" style="border-color: var(--border) !important;">
@@ -219,12 +221,8 @@ export default class EventsView {
                 </div>
                 <h1 class="mb-0 fw-bold" style="color: var(--color-primary); font-size: 2.25rem; letter-spacing: -0.5px;">Upcoming Events</h1>
               </div>
-              <button id="new-event-button" class="app-btn-primary d-flex align-items-center gap-2">
-              ${icons.add()}
-              New Event
-            </button>
             </div>
-            <p class="mb-0 ms-5 ps-3" style="color: var(--text-sidebar); font-size: 1.05rem;">Discover and track ongoing and past project capstones and events.</p>
+            <p class="mb-0 ps-3" style="color: var(--text-sidebar); font-size: 1.05rem;">Discover and track ongoing and past project capstones and events.</p>
             
           </div>
 
@@ -254,7 +252,7 @@ export default class EventsView {
         const route = e.currentTarget.dataset.route;
         const eventId = e.currentTarget.dataset.eventId;
         const eventName = e.currentTarget.dataset.eventName;
-        console.log("CLICK EVENT NAME:", eventName);
+
         if (route && eventId) {
           localStorage.setItem("currentEventId", eventId);
           localStorage.setItem("currentEventName", eventName);

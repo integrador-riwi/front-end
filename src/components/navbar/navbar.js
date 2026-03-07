@@ -135,6 +135,7 @@ export default class Navbar {
       btn.addEventListener("click", () => {
         if (btn.dataset.route === "events") {
           localStorage.removeItem("currentEventId");
+          localStorage.removeItem("currentEventName");
         }
 
         this.setActiveRoute(btn.dataset.route);

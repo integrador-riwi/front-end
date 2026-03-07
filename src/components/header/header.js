@@ -149,20 +149,15 @@ export default class Header {
   }
 
   attachEventHandlers() {
-    document.querySelectorAll(".nav-link").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document
-          .querySelectorAll(".nav-link")
-          .forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        this.router.navigate(btn.dataset.route);
-      });
-    });
-
     document.querySelectorAll(".breadcrumb-link").forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const route = link.dataset.route;
+
+        if (link.dataset.route === "events") {
+          localStorage.removeItem("currentEventId");
+          localStorage.removeItem("currentEventName");
+        }
         this.router.navigate(route);
       });
     });
