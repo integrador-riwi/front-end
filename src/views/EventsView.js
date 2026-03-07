@@ -237,6 +237,7 @@ export default class EventsView {
               const route = e.currentTarget.dataset.route;
               const eventId = e.currentTarget.dataset.eventId;
               if (route && eventId) {
+                localStorage.setItem("currentEventId", eventId);
                   this.router.navigate(route, { eventId });
               }
           });
