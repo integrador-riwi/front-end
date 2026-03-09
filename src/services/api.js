@@ -197,7 +197,28 @@ export async function deleteComment(commentId) {
   return apiFetch(`/comments/${commentId}`, { method: "DELETE" });
 }
 
-// AI - Similar Projects Search
+// Evaluations (TL only)
+export async function getRubricsByEvent(eventId) {
+  const response = await apiFetch(`/evaluations/rubrics/${eventId}`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function submitEvaluations(projectId, evaluations) {
+  const response = await apiFetch(`/evaluations/project/${projectId}`, {
+    method: "POST",
+    body: { evaluations },
+  });
+  return response?.data ?? response;
+}
+
+export async function getMyEvaluationsForProject(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
 export async function updateTeam(teamId, data) {
   return apiFetch(`/teams/${teamId}`, {
     method: "PUT",
