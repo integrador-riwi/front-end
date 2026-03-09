@@ -1,5 +1,4 @@
 import "../assets/styles/main.css";
-import "../assets/styles/coderEventSelect.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
@@ -88,7 +87,7 @@ class App {
         break;
       case "details":
         this.currentView = new EventDetails(this, params);
-        console.log(params)
+        console.log(params);
         break;
       case "projects":
         this.currentView = new Teams(this);
