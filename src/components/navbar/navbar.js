@@ -142,7 +142,7 @@ export default class Navbar {
           localStorage.removeItem("currentEventId");
           localStorage.removeItem("currentEventName");
         }
-        
+
         this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
       });
@@ -166,10 +166,25 @@ export default class Navbar {
 
     document.querySelectorAll(".return-home")?.forEach((e) => {
       e.addEventListener("click", () => {
-        this.setActiveRoute("coderHome");
-        this.router.navigate("coderHome");
-        coderHome;
-        console.log(this.router);
+        let homeRoute;
+
+        switch (this.user?.role) {
+          case "admin":
+            homeRoute = "adminHome";
+            break;
+          case "coder":
+            homeRoute = "coderHome";
+            break;
+          case "organizer":
+            homeRoute = "organizerHome";
+            break;
+          default:
+            homeRoute = "dashboard";
+        }
+        this.setActiveRoute(homeRoute);
+        this.router.navigate(homeRoute);
+
+        this.closeSidebarMobile();
       });
     });
 
