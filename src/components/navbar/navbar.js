@@ -84,6 +84,7 @@ export default class Navbar {
             `,
               )
               .join("")}
+            
           </ul>
         </nav>
 
@@ -144,6 +145,10 @@ export default class Navbar {
         }
 
         this.setActiveRoute(btn.dataset.route);
+        // Clear selected event context when navigating away to event selection
+        if (btn.dataset.route === "coderEventSelect") {
+          sessionStorage.removeItem("selectedEvent");
+        }
         this.router.navigate(btn.dataset.route);
       });
     });

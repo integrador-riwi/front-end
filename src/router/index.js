@@ -7,6 +7,7 @@ import EventDetails from "../views/eventDetails.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
+import CoderEventSelect from "../views/codereventselect.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
@@ -59,7 +60,7 @@ class App {
         break;
       case "CODER":
         console.log("hello");
-        this.navigate("coderHome");
+        this.navigate("coderEventSelect");
         break;
       default:
         this.navigate("login");
@@ -86,7 +87,7 @@ class App {
         break;
       case "details":
         this.currentView = new EventDetails(this, params);
-        console.log(params)
+        console.log(params);
         break;
       case "projects":
         this.currentView = new Teams(this);
@@ -94,6 +95,10 @@ class App {
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+      case "coderEventSelect":
+        this.currentView = new CoderEventSelect(this);
+        this.currentView.init();
+        return;
       case "coderHome":
         this.currentView = new coderHome(this);
         this.currentView.init();
