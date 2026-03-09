@@ -5,6 +5,7 @@ import {
   renderCoderTeam,
   loadProjectBrief,
   loadComments,
+  loadEvaluationPanel,
 } from "./coderTeam.js";
 import {
   renderCoderNoTeam,
@@ -193,11 +194,34 @@ export default class CoderHome {
             user: this.user,
             team: this.team,
             isLeader: this.isLeader,
+            isTL: [
+              "TL_DEVELOPMENT",
+              "TL_SOFT_SKILLS",
+              "TL_ENGLISH",
+              "ADMIN",
+            ].includes(this.user?.role),
           });
           const projectId = this.team?.project?.id_project;
+          const eventId = this.team?.id_event ?? this.selectedEvent?.id ?? null;
           setTimeout(() => {
             loadProjectBrief();
             if (projectId) loadComments(projectId, this.user);
+            if (
+              projectId &&
+              eventId &&
+              [
+                "TL_DEVELOPMENT",
+                "TL_SOFT_SKILLS",
+                "TL_ENGLISH",
+                "ADMIN",
+              ].includes(this.user?.role)
+            ) {
+              loadEvaluationPanel({
+                projectId,
+                eventId,
+                members: this.team?.members ?? [],
+              });
+            }
           }, 0);
           return html;
         })()
@@ -647,9 +671,7 @@ export default class CoderHome {
           this.isLeader = false;
           await this.init();
         } catch (err) {
-          alert(
-            "Error leaving the team: " + (err?.message ?? "Try again"),
-          );
+          alert("Error leaving the team: " + (err?.message ?? "Try again"));
         }
       });
   }
