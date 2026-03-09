@@ -38,6 +38,15 @@ export default class CoderHome {
     this.team = team || null;
     this.isLeader = false;
 
+    // Selected event from event selection screen
+    this.selectedEvent = router?.currentParams?.selectedEvent ?? null;
+    if (!this.selectedEvent) {
+      try {
+        const stored = sessionStorage.getItem("selectedEvent");
+        if (stored) this.selectedEvent = JSON.parse(stored);
+      } catch (_) {}
+    }
+
     this.searchQuery = "";
     this.activeFilter = "all";
     this.isLoadingTeams = false;
@@ -94,21 +103,39 @@ export default class CoderHome {
       }
 
       if (teams.length > 0) {
-        const t = teams[0];
-        const teamDetail = await apiFetch(`/teams/${t.id_team}`, {
-          method: "GET",
-        });
-        const full = teamDetail?.data ?? teamDetail;
-        this.team = {
-          ...full,
-          members: full.members ?? [],
-          project: full.project ?? null,
-        };
-        const currentUserId = this.user?.id_user;
-        this.isLeader = (full.members ?? []).some(
-          (m) => m.id_user === currentUserId && m.team_role === "LEADER",
-        );
-        this.inviteModal.setTeam(this.team);
+        // Find team that belongs to selected event directly from the list
+        // (getMyTeams now returns id_event — no extra per-team requests needed)
+        let teamBasic = null;
+
+        if (this.selectedEvent?.id) {
+          teamBasic =
+            teams.find((t) => t.id_event === this.selectedEvent.id) ?? null;
+        }
+        // No fallback — if no team matches the selected event, show the no-team view
+
+        if (teamBasic) {
+          // Fetch full team details (members, project) in a single request
+          const detail = await apiFetch(`/teams/${teamBasic.id_team}`, {
+            method: "GET",
+          });
+          const full = detail?.data ?? detail;
+
+          this.team = {
+            ...full,
+            members: full.members ?? [],
+            project: full.project ?? null,
+          };
+
+          const currentUserId = this.user?.id_user;
+          this.isLeader = (full.members ?? []).some(
+            (m) => m.id_user === currentUserId && m.team_role === "LEADER",
+          );
+          this.inviteModal.setTeam(this.team);
+          // NOTE: Do NOT remove selectedEvent here — removing it causes init() to
+          // lose the event context on every re-render/poll cycle, making teamForEvent
+          // come back null and triggering an infinite no-team / team flicker.
+        }
+        // If no team found for selected event, leave this.team as null (no-team view)
       }
 
       // Load real available teams for the no-team view
@@ -119,9 +146,15 @@ export default class CoderHome {
         this.teams = [];
         this.render(); // show skeletons immediately
         try {
-          const teamsRes = await apiFetch("/teams?limit=10&page=1", {
-            method: "GET",
-          });
+          const eventIdParam = this.selectedEvent?.id
+            ? `&idEvent=${this.selectedEvent.id}`
+            : "";
+          const teamsRes = await apiFetch(
+            `/teams?limit=10&page=1${eventIdParam}`,
+            {
+              method: "GET",
+            },
+          );
           const teamsData = teamsRes?.data ?? teamsRes;
           const rawTeams = teamsData?.teams ?? [];
           this._teamsTotalPages = teamsData?.pagination?.totalPages ?? 1;
@@ -184,6 +217,7 @@ export default class CoderHome {
             success: this.createTeamSuccess,
           },
           isLoading: this.isLoadingTeams,
+          selectedEvent: this.selectedEvent ?? null,
         });
 
     const pendingBanner =
@@ -206,6 +240,14 @@ export default class CoderHome {
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
 
+    // Event badge back navigation
+    const eventBadge = document.getElementById("eventBadgeBack");
+    if (eventBadge) {
+      eventBadge.addEventListener("click", () => {
+        this.router.navigate("coderEventSelect");
+      });
+    }
+
     // Mount shared invite modal into the DOM (once per render cycle)
     if (!document.getElementById("inviteModalBackdrop")) {
       document.getElementById("app")?.appendChild(this.inviteModal.element());
@@ -222,7 +264,9 @@ export default class CoderHome {
   _mapTeams(rawTeams) {
     return rawTeams.map((t) => {
       const memberCount = parseInt(t.member_count) || 0;
-      const isFull = memberCount >= 5;
+      const maxMembers =
+        t.max_team_size ?? this.selectedEvent?.max_team_size ?? 5;
+      const isFull = memberCount >= maxMembers;
       const isPending =
         !isFull &&
         (this.pendingInvitations.some((inv) => inv.id_team === t.id_team) ||
@@ -237,8 +281,8 @@ export default class CoderHome {
         leaderAvatarUrl: t.leader_avatar_url ?? null,
         members: t.members ?? [],
         memberCount,
-        maxMembers: 5,
-        slotsLeft: Math.max(0, 5 - memberCount),
+        maxMembers,
+        slotsLeft: Math.max(0, maxMembers - memberCount),
         status: isFull ? "full" : isPending ? "pending" : "open",
         createdAt: t.created_at ?? null,
       };
@@ -445,7 +489,11 @@ export default class CoderHome {
 
         // Si ahora tiene equipo → fue aceptada su join request o invitación
         const teams = data?.teams ?? [];
-        if (teams.length > 0) {
+        // Only trigger reload if the new team belongs to the selected event
+        const relevantTeam = this.selectedEvent?.id
+          ? teams.find((t) => t.id_event === this.selectedEvent.id)
+          : teams[0];
+        if (relevantTeam) {
           this._stopPolling();
           await this.init();
           return;
@@ -635,10 +683,14 @@ export default class CoderHome {
     this.render();
 
     try {
+      const idEventValue = this.selectedEvent?.id ?? null;
+      console.log("[createTeam] Enviando idEvent:", idEventValue);
       const response = await createTeamRequest({
         name: teamName,
         description: projectTopic,
+        idEvent: idEventValue,
       });
+      console.log("[createTeam] Response:", response);
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
       this.formData = { teamName: "", projectTopic: "" };

@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
+const API_BASE_URL = "http://localhost:3010/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -105,6 +105,10 @@ export async function getGithubAuthUrl() {
 // Events
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
+}
+
+export async function getActiveEvents() {
+  return apiFetch("/events/active", { method: "GET" });
 }
 
 // Invitations
