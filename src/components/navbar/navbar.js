@@ -11,7 +11,7 @@ export default class Navbar {
   constructor(router) {
     this.router = router;
     this.user = getCurrentUser();
-    this.currentRoute = "dashboard";
+    this.currentRoute = router.currentRoute || "dashboard";
   }
 
   render() {
@@ -20,16 +20,17 @@ export default class Navbar {
     return `
     <!-- ── Sidebar (desktop) / Top Navbar (mobile) ── -->
 
-<!-- MOBILE TOP NAVBAR -->
-    <button class="hamburger" id="hamburgerBtn">
-      ${icons.burger()}
-    </button>
-<nav class="mobile-nav d-flex align-items-center justify-content-between px-3 py-2 d-md-none">
+    
+    <nav class="mobile-nav d-flex align-items-center justify-content-between px-3 py-2 d-md-none">
   
   <!-- Brand -->
   <div class="sidebar-brand" >
-  <div class="container d-flex align-items-center gap-2 p-2 return-home" style="cursor: pointer;">
-    <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
+  <div class="container d-flex align-items-center gap-2 p-2 " style="cursor: pointer;">
+  <!-- MOBILE TOP NAVBAR -->
+    <button class="hamburger" id="hamburgerBtn" style= "width:40px; height:40px;">
+      ${icons.burger()}
+    </button>
+    <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0 return-home">
       ${icons.teamUp()}
     </div>
     <span class="sidebar-brand-name">TeamUp</span>
@@ -123,11 +124,15 @@ export default class Navbar {
   }
 
   setActiveRoute(route) {
-    this.currentRoute = route;
-
     document.querySelectorAll(".nav-link").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.route === route);
+      btn.classList.remove("active");
     });
+
+    const activeBtn = document.querySelector(`[data-route="${route}"]`);
+
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
   }
 
   attachEventHandlers() {
@@ -145,10 +150,10 @@ export default class Navbar {
 
     document.querySelectorAll(".logout-btn")?.forEach((e) => {
       e.addEventListener("click", () => {
-      logout();
-      this.router.navigate("login");
+        logout();
+        this.router.navigate("login");
+      });
     });
-  });
 
     document.querySelectorAll(".profileBtn")?.forEach((e) => {
       e.addEventListener("click", () => {
@@ -161,10 +166,25 @@ export default class Navbar {
 
     document.querySelectorAll(".return-home")?.forEach((e) => {
       e.addEventListener("click", () => {
-        this.setActiveRoute("coderHome");
-        this.router.navigate("coderHome");
-        coderHome;
-        console.log(this.router);
+        let homeRoute;
+
+        switch (this.user?.role) {
+          case "admin":
+            homeRoute = "adminHome";
+            break;
+          case "coder":
+            homeRoute = "coderHome";
+            break;
+          case "organizer":
+            homeRoute = "organizerHome";
+            break;
+          default:
+            homeRoute = "dashboard";
+        }
+        this.setActiveRoute(homeRoute);
+        this.router.navigate(homeRoute);
+
+        this.closeSidebarMobile();
       });
     });
 
@@ -173,7 +193,7 @@ export default class Navbar {
     const overlay = document.getElementById("overlay");
 
     hamburger?.addEventListener("click", () => {
-      sidebar?.classList.toggle("active");
+      sidebar?.classList.toggle("open");
       overlay?.classList.toggle("active");
     });
 

@@ -76,7 +76,6 @@ class App {
         this.currentView = new LoginView(this);
         break;
       case "dashboard":
-        console.log("NAVIGATE PARAMS:", params);
         this.currentView = new DashboardView(this, params);
         break;
       case "events":
