@@ -1,4 +1,9 @@
-export function renderCoderTeam({ user, team, isLeader = false }) {
+export function renderCoderTeam({
+  user,
+  team,
+  isLeader = false,
+  isTL = false,
+}) {
   const { name: teamName, members = [], project = null } = team;
 
   const grade = project?.grade ?? null;
@@ -199,6 +204,32 @@ export function renderCoderTeam({ user, team, isLeader = false }) {
               Leave Team
             </button>
           </div>
+
+          ${
+            isTL
+              ? `
+          <!-- TL Evaluation Panel -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow" id="tl-evaluation-panel">
+            <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3" style="border-color: var(--border) !important;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
+            </div>
+            <div id="tl-rubrics-container">
+              <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
+            </div>
+            <button
+              id="submitEvaluationsBtn"
+              class="btn w-100 mt-3 d-none"
+              style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
+              Submit Evaluations
+            </button>
+            <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
+          </div>
+          `
+              : ""
+          }
         </div>
 
       </div>
@@ -704,4 +735,156 @@ function _renderMarkdown(md) {
   );
 
   return h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// TL Evaluation Panel
+// ─────────────────────────────────────────────────────────────
+
+export async function loadEvaluationPanel({ projectId, eventId, members }) {
+  const container = document.getElementById("tl-rubrics-container");
+  const submitBtn = document.getElementById("submitEvaluationsBtn");
+  const feedbackEl = document.getElementById("eval-feedback");
+  if (!container || !submitBtn) return;
+
+  const { getRubricsByEvent, submitEvaluations, getMyEvaluationsForProject } =
+    await import("../services/api.js");
+
+  let rubrics = [];
+  let existingEvals = [];
+
+  try {
+    [rubrics, existingEvals] = await Promise.all([
+      getRubricsByEvent(eventId),
+      getMyEvaluationsForProject(projectId),
+    ]);
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">Could not load rubrics.</p>`;
+    return;
+  }
+
+  if (!rubrics.length) {
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">No rubrics configured for this event.</p>`;
+    return;
+  }
+
+  const existingMap = {};
+  for (const ev of existingEvals) {
+    existingMap[`${ev.id_rubric}_${ev.evaluated_user_id}`] = {
+      gradeId: ev.id_grade,
+      score: ev.score,
+      feedback: ev.feedback,
+    };
+  }
+
+  const evaluableMembers = members.filter((m) => m.id_user);
+
+  const membersHtml = evaluableMembers
+    .map((member) => {
+      const initial = member.name?.charAt(0)?.toUpperCase() ?? "?";
+      const avatarHtml = member.github_avatar_url
+        ? `<img src="${member.github_avatar_url}" alt="${member.name}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+        : `<div class="ct-avatar-sm flex-shrink-0" style="width:32px;height:32px;font-size:0.8rem;">${initial}</div>`;
+
+      const rubricsHtml = rubrics
+        .map((rubric) => {
+          const key = `${rubric.id_rubric}_${member.id_user}`;
+          const existing = existingMap[key];
+          const optionsHtml = rubric.grades
+            .map(
+              (g) =>
+                `<option value="${g.id_grade}" data-score="${g.score}" ${existing?.gradeId === g.id_grade ? "selected" : ""}>${g.score} pts</option>`,
+            )
+            .join("");
+
+          return `
+            <div class="mb-2">
+              <label style="font-size:0.78rem;color:var(--text-muted);font-weight:500;display:block;margin-bottom:3px;">
+                ${rubric.name}
+                <span style="opacity:0.6;">(${rubric.area} · peso: ${rubric.weight})</span>
+              </label>
+              <select
+                class="form-select form-select-sm eval-select"
+                data-rubric-id="${rubric.id_rubric}"
+                data-member-id="${member.id_user}"
+                style="font-size:0.82rem;border-radius:8px;">
+                <option value="">-- Puntaje --</option>
+                ${optionsHtml}
+              </select>
+              <textarea
+                class="form-control mt-1 eval-feedback-input"
+                data-rubric-id="${rubric.id_rubric}"
+                data-member-id="${member.id_user}"
+                placeholder="Feedback (opcional)"
+                rows="2"
+                style="font-size:0.78rem;border-radius:8px;resize:none;">${existing?.feedback ?? ""}</textarea>
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <div class="mb-4 pb-3" style="border-bottom:1px solid var(--border);">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            ${avatarHtml}
+            <div>
+              <p class="mb-0" style="font-weight:600;font-size:0.875rem;">${member.name}</p>
+              <p class="mb-0" style="font-size:0.75rem;color:var(--text-muted);">${member.team_role ?? "Member"}</p>
+            </div>
+          </div>
+          ${rubricsHtml}
+        </div>
+      `;
+    })
+    .join("");
+
+  container.innerHTML =
+    membersHtml ||
+    `<p style="color:var(--text-muted);font-size:0.85rem;">No hay miembros para evaluar.</p>`;
+  submitBtn.classList.remove("d-none");
+
+  submitBtn.onclick = async () => {
+    const selects = container.querySelectorAll(".eval-select");
+    const evaluations = [];
+    let valid = true;
+
+    selects.forEach((sel) => {
+      const gradeId = parseInt(sel.value);
+      const memberId = parseInt(sel.dataset.memberId);
+      const rubricId = sel.dataset.rubricId;
+
+      if (!sel.value) {
+        sel.style.border = "1.5px solid #ef4444";
+        valid = false;
+        return;
+      }
+      sel.style.border = "";
+
+      const feedbackInput = container.querySelector(
+        `.eval-feedback-input[data-rubric-id="${rubricId}"][data-member-id="${memberId}"]`,
+      );
+      const feedback = feedbackInput?.value?.trim() || null;
+      evaluations.push({ evaluatedUserId: memberId, gradeId, feedback });
+    });
+
+    if (!valid) {
+      feedbackEl.innerHTML = `<span style="color:#ef4444;">Por favor puntúa todas las rúbricas para cada miembro.</span>`;
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+    feedbackEl.innerHTML = "";
+
+    try {
+      await submitEvaluations(projectId, evaluations);
+      feedbackEl.innerHTML = `<span style="color:var(--color-success);font-weight:600;">✓ Evaluaciones enviadas exitosamente.</span>`;
+      submitBtn.textContent = "Actualizar Evaluaciones";
+    } catch (err) {
+      feedbackEl.innerHTML = `<span style="color:#ef4444;">${err?.message ?? "Error al enviar evaluaciones."}</span>`;
+      submitBtn.textContent = "Enviar Evaluaciones";
+    } finally {
+      submitBtn.disabled = false;
+    }
+  };
 }
