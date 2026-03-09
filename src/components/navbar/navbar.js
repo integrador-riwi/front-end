@@ -174,10 +174,12 @@ export default class Navbar {
         let homeRoute;
 
         switch (this.user?.role) {
-          case "admin":
-            homeRoute = "adminHome";
+          case "ADMIN":
+            homeRoute = "events";
+            localStorage.removeItem("currentEventId");
+            localStorage.removeItem("currentEventName");
             break;
-          case "coder":
+          case "CODER":
             homeRoute = "coderHome";
             break;
           case "organizer":
