@@ -15,15 +15,14 @@ const ADMIN_BASE_LINKS = [
 
 const ADMIN_EVENT_LINKS = [
   { label: "Back to Events", route: "events", icon: "calendar" },
-  { label: "Metrics", route: "events/metrics", icon: "metrics" },
-  { label: "Projects", route: "events/projects", icon: "globe" },
-  { label: "Ranking", route: "events/ranking", icon: "ranking" },
-  { label: "Voting", route: "events/voting", icon: "qr" },
-  { label: "Finalists", route: "events/finalists", icon: "trophy" },
+  { label: "Metrics", route: "dashboard", icon: "metrics" },
+  { label: "Projects", route: "projects", icon: "globe" },
+  { label: "Ranking", route: "ranking", icon: "ranking" },
+  { label: "Voting", route: "qr", icon: "qr" },
+  { label: "Finalists", route: "finalists", icon: "trophy" },
 ];
 
 export const NAV_LINKS_BY_ROLE = {
-  
   // ADMIN: [
   //   { label: "Events", route: "events", icon: "calendar" },
   //   { label: "New Event", route: "events/create", icon: "plus" },
@@ -68,13 +67,7 @@ export const getNavLinks = (role) => {
     const eventId = localStorage.getItem("currentEventId");
 
     if (eventId) {
-      return ADMIN_EVENT_LINKS.map((link) => ({
-        ...link,
-        route:
-          link.route === "events"
-            ? "events"
-            : `events/${eventId}/${link.route}`,
-      }));
+      return ADMIN_EVENT_LINKS
     }
 
     return ADMIN_BASE_LINKS;

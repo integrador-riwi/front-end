@@ -12,7 +12,7 @@
 
 .hamburger {
   display: none;
-  position: fixed;
+  /* position: fixed; */
   top: 15px;
   left: 15px;
   font-size: 26px;
@@ -45,9 +45,16 @@
   }
 
   .sidebar-brand {
-
-    padding: 10px !important;
+    padding: 0px !important;
     border-bottom: none !important;
+  }
+
+    .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .burger {
+    display: block;
   }
 }
 
