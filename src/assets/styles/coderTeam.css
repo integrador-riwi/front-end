@@ -8,10 +8,9 @@
 .ct-card-shadow {
   border: 1px solid var(--border);
   box-shadow: 0 2px 12px rgba(107, 92, 255, 0.07);
-
 }
 
-.team-details{
+.team-details {
   position: sticky;
   top: 1.5rem;
 }
@@ -946,4 +945,15 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.event-context-badge--sm {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  margin-bottom: 0;
+}
+
+.event-context-badge--sm svg {
+  width: 12px;
+  height: 12px;
 }
