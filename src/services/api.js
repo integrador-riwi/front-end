@@ -233,6 +233,10 @@ export async function updateProject(projectId, data) {
   });
 }
 
+export async function submitProject(projectId) {
+  return apiFetch(`/projects/${projectId}/submit`, { method: "POST" });
+}
+
 export async function removeMember(teamId, userId) {
   return apiFetch(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
 }

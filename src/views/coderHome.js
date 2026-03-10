@@ -6,6 +6,7 @@ import {
   loadProjectBrief,
   loadComments,
   loadEvaluationPanel,
+  initDeliverables,
 } from "./coderTeam.js";
 import {
   renderCoderNoTeam,
@@ -194,6 +195,7 @@ export default class CoderHome {
             user: this.user,
             team: this.team,
             isLeader: this.isLeader,
+            selectedEvent: this.selectedEvent ?? null,
             isTL: [
               "TL_DEVELOPMENT",
               "TL_SOFT_SKILLS",
@@ -206,6 +208,7 @@ export default class CoderHome {
           setTimeout(() => {
             loadProjectBrief();
             if (projectId) loadComments(projectId, this.user);
+            if (projectId) initDeliverables(projectId);
             if (
               projectId &&
               eventId &&

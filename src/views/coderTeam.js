@@ -3,6 +3,7 @@ export function renderCoderTeam({
   team,
   isLeader = false,
   isTL = false,
+  selectedEvent = null,
 }) {
   const { name: teamName, members = [], project = null } = team;
 
@@ -11,8 +12,10 @@ export function renderCoderTeam({
   const projectName = project?.name ?? teamName;
   const projectDesc = project?.description ?? "No description yet.";
   const deliverables = project?.deliverables ?? null;
+  const isSubmitted = !!project?.submitted_at;
 
   const repoUrl = project?.repo_url ?? deliverables?.repo_url ?? null;
+  const canEdit = isLeader && !isSubmitted;
 
   return `
     <div class="container-xl px-3 px-md-4 py-4">
@@ -24,6 +27,24 @@ export function renderCoderTeam({
           <!-- Project hero -->
           <div class="ct-hero-card rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              ${
+                selectedEvent
+                  ? `
+              <div class="event-context-badge event-context-badge--sm" id="eventBadgeBack">
+                <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                <svg class="event-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>${selectedEvent.title ?? selectedEvent.event_name ?? "Event"}</span>
+              </div>
+              `
+                  : ""
+              }
             </div>
 
             <h1 class="ct-hero-title mb-1">${projectName}</h1>
@@ -77,8 +98,8 @@ export function renderCoderTeam({
             </div>
           </div>
 
-          <!-- Activity -->
-          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+          <!-- Activity (hidden) -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow d-none">
             <div class="d-flex align-items-center justify-content-between mb-3">
               <div class="d-flex align-items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
@@ -102,6 +123,44 @@ export function renderCoderTeam({
               </a>
             </div>
             <div id="project-brief-content" class="ct-brief-preview"></div>
+          </div>
+
+          <!-- Deliverables -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
+                   style="width:16px;height:16px;flex-shrink:0">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <h2 class="ct-section-title mb-0">Deliverables</h2>
+              <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
+                ${deliverableCount(deliverables, repoUrl)}/3 submitted
+              </span>
+            </div>
+            ${renderDeliverables(deliverables, repoUrl, canEdit)}
+
+            ${
+              isSubmitted
+                ? `
+              <div class="d-flex align-items-center gap-2 mt-3 pt-3" style="border-top:1px solid var(--border);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+              </div>
+            `
+                : canEdit
+                  ? `
+              <button id="submitProjectBtn"
+                class="btn w-100 mt-3"
+                style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
+                disabled>
+                Submit Project
+              </button>
+            `
+                  : ""
+            }
           </div>
 
 
@@ -176,7 +235,7 @@ export function renderCoderTeam({
             </ul>
 
             ${
-              isLeader
+              isLeader && !isSubmitted
                 ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
@@ -193,6 +252,9 @@ export function renderCoderTeam({
                 : ""
             }
 
+            ${
+              !isSubmitted
+                ? `
             <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
                     id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -203,6 +265,9 @@ export function renderCoderTeam({
               </svg>
               Leave Team
             </button>
+            `
+                : ""
+            }
           </div>
 
           ${
@@ -240,7 +305,7 @@ export function renderCoderTeam({
 // ─────────────────────────────────────────────────────────────
 // Deliverables
 // ─────────────────────────────────────────────────────────────
-function renderDeliverables(d, repoUrl) {
+function renderDeliverables(d, repoUrl, canEdit = false) {
   const items = [
     {
       key: "video_url",
@@ -301,13 +366,13 @@ function renderDeliverables(d, repoUrl) {
           </div>
 
           <!-- Right: actions -->
-          <div class="d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
+          <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
             ${
               item.url
                 ? `
               <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
               ${
-                item.key !== "repo_url"
+                canEdit && item.key !== "repo_url"
                   ? `
                 <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -319,7 +384,8 @@ function renderDeliverables(d, repoUrl) {
                   : ""
               }
             `
-                : `
+                : canEdit
+                  ? `
               <div class="d-flex align-items-center gap-2">
                 <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
                 <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
@@ -330,11 +396,12 @@ function renderDeliverables(d, repoUrl) {
                 </button>
               </div>
             `
+                  : ""
             }
 
-            <!-- Edit row hidden by default (not shown for repo) -->
+            <!-- Edit row hidden by default (leader only, not shown for repo) -->
             ${
-              item.key !== "repo_url"
+              canEdit && item.key !== "repo_url"
                 ? `
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
@@ -887,4 +954,235 @@ export async function loadEvaluationPanel({ projectId, eventId, members }) {
       submitBtn.disabled = false;
     }
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Deliverables — maneja submit y edición de video / preview photo
+// ─────────────────────────────────────────────────────────────
+
+export function initDeliverables(projectId) {
+  // Field → camelCase key for the API
+  const fieldMap = {
+    video_url: "videoUrl",
+    preview_photo_url: "previewPhotoUrl",
+  };
+
+  const editableFields = ["video_url", "preview_photo_url"];
+
+  async function saveField(field, url, btnEl) {
+    const apiKey = fieldMap[field];
+    if (!apiKey) return;
+
+    const original = btnEl.innerHTML;
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span class="ct-spinner" style="width:12px;height:12px;border-width:2px;"></span>`;
+
+    try {
+      const { apiFetch } = await import("../services/api.js");
+      await apiFetch(`/projects/${projectId}/deliverables`, {
+        method: "PUT",
+        body: { [apiKey]: url || null },
+      });
+
+      const row = document.querySelector(
+        `.ct-deliverable-item[data-field="${field}"]`,
+      );
+      if (row) {
+        if (url) {
+          row.classList.remove("ct-deliverable-pending");
+          row.classList.add("ct-deliverable-done");
+
+          const statusEl = row.querySelector(".ct-del-status");
+          if (statusEl) {
+            statusEl.className = "ct-del-status ct-status-done";
+            statusEl.textContent = "Submitted";
+          }
+
+          // Replace the entire actions div with the post-submit state
+          const actionsDiv = row.querySelector(".ct-deliverable-actions");
+          if (actionsDiv) {
+            actionsDiv.innerHTML = `
+              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${field}">
+                <input type="url" class="ct-url-input ct-edit-input" data-field="${field}"
+                       value="${url}" placeholder="New URL…" />
+                <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${field}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+                <button class="ct-btn-cancel ct-edit-cancel" data-field="${field}">✕</button>
+              </div>
+            `;
+            attachRowHandlers(actionsDiv);
+          }
+        } else {
+          row.classList.remove("ct-deliverable-done");
+          row.classList.add("ct-deliverable-pending");
+        }
+      }
+
+      _refreshDeliverableCount();
+    } catch (err) {
+      alert(err?.message ?? "Could not save deliverable.");
+      btnEl.innerHTML = original;
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
+
+  function _refreshDeliverableCount() {
+    const badge = document.querySelector(".ct-deliverables-count");
+    const done = document.querySelectorAll(".ct-deliverable-done").length;
+    if (badge) badge.textContent = `${done}/3 submitted`;
+    _updateSubmitBtn(done);
+  }
+
+  function _updateSubmitBtn(done) {
+    const btn = document.getElementById("submitProjectBtn");
+    if (!btn) return;
+    const allDone = done >= 3;
+    btn.disabled = !allDone;
+    btn.style.opacity = allDone ? "1" : "0.4";
+    btn.style.cursor = allDone ? "pointer" : "not-allowed";
+  }
+
+  function _attachSubmitHandler() {
+    const btn = document.getElementById("submitProjectBtn");
+    if (!btn) return;
+
+    // Enable if already 3 done on init
+    const done = document.querySelectorAll(".ct-deliverable-done").length;
+    _updateSubmitBtn(done);
+
+    btn.addEventListener("click", async () => {
+      if (
+        !confirm(
+          "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
+        )
+      )
+        return;
+
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+
+      try {
+        const { submitProject } = await import("../services/api.js");
+        await submitProject(projectId);
+
+        // Replace button with success badge
+        btn
+          .closest(".bg-white.rounded-4")
+          .querySelector("#submitProjectBtn")
+          ?.remove();
+        const card = btn.closest(".bg-white.rounded-4, .ct-card-shadow");
+        // Remove btn and show badge
+        btn.insertAdjacentHTML(
+          "afterend",
+          `
+          <div class="d-flex align-items-center gap-2 mt-3 pt-3" style="border-top:1px solid var(--border);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+          </div>
+        `,
+        );
+        btn.remove();
+
+        // Lock all deliverable edit controls
+        document
+          .querySelectorAll(
+            ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel",
+          )
+          .forEach((el) => {
+            el.style.display = "none";
+          });
+
+        // Hide Add Member and Leave Team buttons
+        document.getElementById("addMemberBtn")?.remove();
+        document.getElementById("leaveTeamBtn")?.remove();
+      } catch (err) {
+        alert(err?.message ?? "Could not submit project.");
+        btn.disabled = false;
+        btn.textContent = "Submit Project";
+      }
+    });
+  }
+
+  function attachRowHandlers(scope) {
+    // Submit new URL (pending state)
+    scope
+      .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
+      .forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const field = btn.dataset.field;
+          if (!editableFields.includes(field)) return;
+          const input = scope.querySelector(
+            `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
+          );
+          const url = input?.value?.trim();
+          if (!url) {
+            input?.focus();
+            return;
+          }
+          await saveField(field, url, btn);
+        });
+      });
+
+    // Edit button → show edit row
+    scope.querySelectorAll(".ct-btn-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.dataset.field;
+        const editRow = document.getElementById(`edit-${field}`);
+        if (!editRow) return;
+        editRow.classList.remove("d-none");
+        editRow.classList.add("d-flex");
+        editRow.querySelector(".ct-edit-input")?.focus();
+      });
+    });
+
+    // Cancel edit
+    scope.querySelectorAll(".ct-edit-cancel").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.dataset.field;
+        const editRow = document.getElementById(`edit-${field}`);
+        if (editRow) {
+          editRow.classList.add("d-none");
+          editRow.classList.remove("d-flex");
+        }
+      });
+    });
+
+    // Submit edit
+    scope.querySelectorAll(".ct-edit-submit").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const field = btn.dataset.field;
+        if (!editableFields.includes(field)) return;
+        const input = document.querySelector(
+          `.ct-edit-input[data-field="${field}"]`,
+        );
+        const url = input?.value?.trim();
+        if (!url) {
+          input?.focus();
+          return;
+        }
+        await saveField(field, url, btn);
+      });
+    });
+  }
+
+  // Attach handlers to each deliverable actions div independently
+  document.querySelectorAll(".ct-deliverable-item").forEach((row) => {
+    const actionsDiv = row.querySelector(".ct-deliverable-actions");
+    if (actionsDiv) attachRowHandlers(actionsDiv);
+  });
+
+  _attachSubmitHandler();
 }

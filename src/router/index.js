@@ -1,5 +1,4 @@
 import "../assets/styles/main.css";
-import "../assets/styles/coderEventSelect.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
