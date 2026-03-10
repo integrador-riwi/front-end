@@ -1,6 +1,6 @@
-import "../assets/styles/coderHome.css";
-import "../assets/styles/coderTeam.css";
-import "../assets/styles/TLDashboard.css";
+//import "../assets/styles/coderHome.css";
+//import "../assets/styles/coderTeam.css";
+import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
