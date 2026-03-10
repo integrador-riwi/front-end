@@ -195,6 +195,7 @@ export default class CoderHome {
             user: this.user,
             team: this.team,
             isLeader: this.isLeader,
+            selectedEvent: this.selectedEvent ?? null,
             isTL: [
               "TL_DEVELOPMENT",
               "TL_SOFT_SKILLS",
