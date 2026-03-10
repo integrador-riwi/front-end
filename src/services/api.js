@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://back-end-0vk7.onrender.com/api";
+const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
