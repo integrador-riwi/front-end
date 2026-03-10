@@ -77,8 +77,8 @@ export function renderCoderTeam({
             </div>
           </div>
 
-          <!-- Activity -->
-          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+          <!-- Activity (hidden) -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow d-none">
             <div class="d-flex align-items-center justify-content-between mb-3">
               <div class="d-flex align-items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
@@ -102,6 +102,22 @@ export function renderCoderTeam({
               </a>
             </div>
             <div id="project-brief-content" class="ct-brief-preview"></div>
+          </div>
+
+          <!-- Deliverables -->
+          <div class="bg-white rounded-4 p-4 ct-card-shadow">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
+                   style="width:16px;height:16px;flex-shrink:0">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <h2 class="ct-section-title mb-0">Deliverables</h2>
+              <span class="ms-auto" style="font-size:0.78rem;color:var(--text-muted);">
+                ${deliverableCount(deliverables, repoUrl)}/3 submitted
+              </span>
+            </div>
+            ${renderDeliverables(deliverables, repoUrl, isLeader)}
           </div>
 
 
@@ -240,7 +256,7 @@ export function renderCoderTeam({
 // ─────────────────────────────────────────────────────────────
 // Deliverables
 // ─────────────────────────────────────────────────────────────
-function renderDeliverables(d, repoUrl) {
+function renderDeliverables(d, repoUrl, canEdit = false) {
   const items = [
     {
       key: "video_url",
@@ -307,7 +323,7 @@ function renderDeliverables(d, repoUrl) {
                 ? `
               <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
               ${
-                item.key !== "repo_url"
+                canEdit && item.key !== "repo_url"
                   ? `
                 <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -319,7 +335,8 @@ function renderDeliverables(d, repoUrl) {
                   : ""
               }
             `
-                : `
+                : canEdit
+                  ? `
               <div class="d-flex align-items-center gap-2">
                 <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
                 <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
@@ -330,11 +347,12 @@ function renderDeliverables(d, repoUrl) {
                 </button>
               </div>
             `
+                  : ""
             }
 
-            <!-- Edit row hidden by default (not shown for repo) -->
+            <!-- Edit row hidden by default (leader only, not shown for repo) -->
             ${
-              item.key !== "repo_url"
+              canEdit && item.key !== "repo_url"
                 ? `
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
@@ -887,4 +905,172 @@ export async function loadEvaluationPanel({ projectId, eventId, members }) {
       submitBtn.disabled = false;
     }
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Deliverables — maneja submit y edición de video / preview photo
+// ─────────────────────────────────────────────────────────────
+
+export function initDeliverables(projectId) {
+  const container = document.querySelector(
+    ".ct-card-shadow:has(#deliverables-section), .bg-white.rounded-4",
+  );
+
+  // Field → camelCase key for the API
+  const fieldMap = {
+    video_url: "videoUrl",
+    preview_photo_url: "previewPhotoUrl",
+  };
+
+  // Editable fields (repo_url is managed via ProjectSettings, not here)
+  const editableFields = ["video_url", "preview_photo_url"];
+
+  async function saveField(field, url, btnEl) {
+    const apiKey = fieldMap[field];
+    if (!apiKey) return;
+
+    const original = btnEl.innerHTML;
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span class="ct-spinner" style="width:12px;height:12px;border-width:2px;"></span>`;
+
+    try {
+      const { apiFetch } = await import("../services/api.js");
+      await apiFetch(`/projects/${projectId}/deliverables`, {
+        method: "PUT",
+        body: { [apiKey]: url || null },
+      });
+
+      // Update the item row in-place
+      const row = document.querySelector(
+        `.ct-deliverable-item[data-field="${field}"]`,
+      );
+      if (row) {
+        // Toggle visual state
+        if (url) {
+          row.classList.remove("ct-deliverable-pending");
+          row.classList.add("ct-deliverable-done");
+          const statusEl = row.querySelector(".ct-del-status");
+          if (statusEl) {
+            statusEl.className = "ct-del-status ct-status-done";
+            statusEl.textContent = "Submitted";
+          }
+          // Update / show Open button
+          let openBtn = row.querySelector(".ct-btn-open");
+          if (openBtn) {
+            openBtn.href = url;
+          } else {
+            const actionsDiv = row.querySelector(
+              ".d-flex.align-items-center.gap-2.flex-shrink-0",
+            );
+            if (actionsDiv) {
+              actionsDiv.innerHTML = `
+                <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+                <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              `;
+              attachRowHandlers(row);
+            }
+          }
+          // Hide edit row if open
+          const editRow = document.getElementById(`edit-${field}`);
+          if (editRow) editRow.classList.add("d-none");
+        } else {
+          row.classList.remove("ct-deliverable-done");
+          row.classList.add("ct-deliverable-pending");
+        }
+      }
+
+      // Update counter badge
+      _refreshDeliverableCount();
+    } catch (err) {
+      alert(err?.message ?? "Could not save deliverable.");
+      btnEl.disabled = false;
+      btnEl.innerHTML = original;
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
+
+  function _refreshDeliverableCount() {
+    const badge = document.querySelector(
+      ".ct-section-title + span, .ms-auto[style*='text-muted']",
+    );
+    const done = document.querySelectorAll(".ct-deliverable-done").length;
+    if (badge) badge.textContent = `${done}/3 submitted`;
+  }
+
+  function attachRowHandlers(scope) {
+    // ── Submit new URL (from pending input) ──
+    scope.querySelectorAll(".ct-btn-submit").forEach((btn) => {
+      // Skip if already in an edit row
+      if (btn.closest(".ct-edit-row")) return;
+      btn.addEventListener("click", async () => {
+        const field = btn.dataset.field;
+        if (!editableFields.includes(field)) return;
+        const input = scope.querySelector(
+          `.ct-url-input[data-field="${field}"]:not(.ct-edit-input)`,
+        );
+        const url = input?.value?.trim();
+        if (!url) {
+          input?.focus();
+          return;
+        }
+        await saveField(field, url, btn);
+      });
+    });
+
+    // ── Edit button → show edit row ──
+    scope.querySelectorAll(".ct-btn-edit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.dataset.field;
+        if (!editableFields.includes(field)) return;
+        const editRow = document.getElementById(`edit-${field}`);
+        if (!editRow) return;
+        editRow.classList.remove("d-none");
+        editRow.classList.add("d-flex");
+        editRow.querySelector(".ct-edit-input")?.focus();
+      });
+    });
+
+    // ── Cancel edit ──
+    scope.querySelectorAll(".ct-edit-cancel").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.dataset.field;
+        const editRow = document.getElementById(`edit-${field}`);
+        if (editRow) {
+          editRow.classList.add("d-none");
+          editRow.classList.remove("d-flex");
+        }
+      });
+    });
+
+    // ── Submit edit ──
+    scope.querySelectorAll(".ct-edit-submit").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const field = btn.dataset.field;
+        if (!editableFields.includes(field)) return;
+        const input = document.querySelector(
+          `.ct-edit-input[data-field="${field}"]`,
+        );
+        const url = input?.value?.trim();
+        if (!url) {
+          input?.focus();
+          return;
+        }
+        await saveField(field, url, btn);
+      });
+    });
+  }
+
+  // Attach to all deliverable rows
+  const deliverableContainer = document
+    .querySelector(".ct-deliverable-item")
+    ?.closest(".d-flex.flex-column.gap-2");
+  if (deliverableContainer) {
+    attachRowHandlers(deliverableContainer);
+  }
 }
