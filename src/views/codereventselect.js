@@ -35,7 +35,7 @@ export default class CoderEventSelect {
   _html() {
     return `
       ${this.navbar.render()}
-      <div class="ces-page">
+      <div class="container p-4 d-flex flex-column align-items-center">
         <div class="ces-bg-grid"></div>
 
         <div class="ces-content">
@@ -52,7 +52,7 @@ export default class CoderEventSelect {
             </p>
           </header>
 
-          <div class="ces-events-grid">
+          <div class="row">
             ${this.isLoading ? this._renderSkeletons() : this._renderEvents()}
           </div>
 
@@ -129,6 +129,7 @@ export default class CoderEventSelect {
     };
 
     return `
+    <div class="col-12 col-md-6 col-lg-4">
       <article class="ces-event-card" data-event-id="${event.id}" style="--delay: ${index * 80}ms">
         <div class="ces-event-top">
           <span class="ces-event-type" style="background:${typeStyle.bg};color:${typeStyle.color}">
@@ -195,6 +196,7 @@ export default class CoderEventSelect {
           </svg>
         </button>
       </article>
+      </div>
     `;
   }
 

@@ -1,3 +1,4 @@
+@import url("./root.css");
 /* ============================================================
    CODER EVENT SELECTION VIEW
    ============================================================ */
@@ -44,7 +45,7 @@
 .ces-logo {
   width: 52px;
   height: 52px;
-  background: #2e3a80;
+  background: var(--accent);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -189,7 +190,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.8rem 1.25rem;
-  background: #2e3a80;
+  background: var(--accent);;
   color: #fff;
   border: none;
   border-radius: 10px;
