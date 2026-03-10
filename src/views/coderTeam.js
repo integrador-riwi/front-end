@@ -11,10 +11,18 @@ export function renderCoderTeam({
   const dueDate = project?.final_delivery_date ?? "TBD";
   const projectName = project?.name ?? teamName;
   const projectDesc = project?.description ?? "No description yet.";
-  const deliverables = project?.deliverables ?? null;
   const isSubmitted = !!project?.submitted_at;
 
-  const repoUrl = project?.repo_url ?? deliverables?.repo_url ?? null;
+  // deliverables come flat on the project object, not nested
+  const deliverables = project
+    ? {
+        video_url: project.video_url ?? null,
+        preview_photo_url: project.preview_photo_url ?? null,
+        presentation_url: project.presentation_url ?? null,
+      }
+    : null;
+
+  const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
 
   return `
@@ -1076,13 +1084,7 @@ export function initDeliverables(projectId) {
         const { submitProject } = await import("../services/api.js");
         await submitProject(projectId);
 
-        // Replace button with success badge
-        btn
-          .closest(".bg-white.rounded-4")
-          .querySelector("#submitProjectBtn")
-          ?.remove();
-        const card = btn.closest(".bg-white.rounded-4, .ct-card-shadow");
-        // Remove btn and show badge
+        // Insert success badge before removing the button
         btn.insertAdjacentHTML(
           "afterend",
           `
