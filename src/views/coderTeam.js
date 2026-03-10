@@ -816,11 +816,24 @@ function _renderMarkdown(md) {
 // TL Evaluation Panel
 // ─────────────────────────────────────────────────────────────
 
-export async function loadEvaluationPanel({ projectId, eventId, members }) {
+export async function loadEvaluationPanel({
+  projectId,
+  eventId,
+  members,
+  userRole = null,
+}) {
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
   const feedbackEl = document.getElementById("eval-feedback");
   if (!container || !submitBtn) return;
+
+  const ROLE_AREA_MAP = {
+    TL_DEVELOPMENT: "DEVELOPMENT",
+    TL_SOFT_SKILLS: "SOFT_SKILLS",
+    TL_ENGLISH: "ENGLISH",
+  };
+  // ADMIN sees all areas; TLs only see their assigned area
+  const allowedArea = ROLE_AREA_MAP[userRole] ?? null;
 
   const { getRubricsByEvent, submitEvaluations, getMyEvaluationsForProject } =
     await import("../services/api.js");
@@ -836,6 +849,11 @@ export async function loadEvaluationPanel({ projectId, eventId, members }) {
   } catch (err) {
     container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">Could not load rubrics.</p>`;
     return;
+  }
+
+  // Filter to only the area this TL is responsible for
+  if (allowedArea) {
+    rubrics = rubrics.filter((r) => r.area === allowedArea);
   }
 
   if (!rubrics.length) {

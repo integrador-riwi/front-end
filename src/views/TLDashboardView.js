@@ -325,6 +325,7 @@ export default class TLDashboardView {
           projectId,
           eventId,
           members: team.members ?? [],
+          userRole: this.user?.role ?? null,
         });
       }
     }, 0);
