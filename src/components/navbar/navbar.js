@@ -1,4 +1,5 @@
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
+
 import {
   getInitials,
   getCurrentUser,
@@ -10,12 +11,18 @@ import "../../assets/styles/navbar.css";
 export default class Navbar {
   constructor(router) {
     this.router = router;
-    this.user = getCurrentUser();
-    this.currentRoute = router.currentRoute || "dashboard";
+    //this.user = getCurrentUser();
+    const { user, hasTeam } = this.router.getAppState();
+    this.user = user;
+    this.hasTeam = hasTeam;
+    this.currentRoute = this.router.currentRoute;
   }
 
   render() {
-    const links = getNavLinks(this.user?.role);
+    const links = getNavLinks(this.user?.role, this.hasTeam);
+
+    console.log("HAS TEAM:", this.hasTeam);
+    console.log("LINKS:", links);
 
     return `
     <!-- ── Sidebar (desktop) / Top Navbar (mobile) ── -->
@@ -111,8 +118,6 @@ export default class Navbar {
         </div>
 
       </aside>
-
-
     `;
   }
 
@@ -180,7 +185,7 @@ export default class Navbar {
             localStorage.removeItem("currentEventName");
             break;
           case "CODER":
-            homeRoute = "coderHome";
+            homeRoute = this.hasTeam ? "coderHome" : "coderEventSelect";
             break;
           case "organizer":
             homeRoute = "organizerHome";

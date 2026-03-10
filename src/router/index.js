@@ -9,25 +9,23 @@ import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import CoderEventSelect from "../views/codereventselect.js";
-import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
+import { getMyProfile } from "../services/api.js";
 
 class App {
   constructor() {
     this.app = document.getElementById("app");
     this.currentView = null;
-    this.user = getCurrentUser();
+    this.user = null;
+    this.hasTeam = false;
     this.currentParams = {};
     this.init();
   }
 
-  init() {
-    const user = getCurrentUser();
-    this.user = user;
-
+  async init() {
     const params = new URLSearchParams(window.location.search);
     const githubSuccess = params.get("github");
     const githubError = params.get("error");
@@ -50,30 +48,49 @@ class App {
       this.navigate("login");
       return;
     }
-    console.log("USER FROM STORAGE:", this.user);
-    console.log("ROLE:", this.user?.role);
+    try {
+      const user = await getMyProfile();
 
-    console.log("User:", this.user);
-    console.log("Role:", this.user?.role);
-    console.log("Authenticated:", isAuthenticated());
-    switch (this.user?.role) {
-      case "ADMIN":
-        this.navigate("events");
-        break;
-      case "CODER":
-        console.log("hello");
-        this.navigate("coderEventSelect");
-        break;
-      case "TL_DEVELOPMENT":
-        this.navigate("coderEventSelect");
-        break;
-      case "TL_SOFT_SKILLS":
-      case "TL_ENGLISH":
-        this.navigate("coderEventSelect");
-        break;
-      default:
-        this.navigate("login");
+      this.user = user;
+
+      this.hasTeam = !!user?.teamId || !!user?.team;
+
+      console.log("USER:", this.user);
+      console.log("HAS TEAM:", this.hasTeam);
+
+      switch (this.user?.role) {
+        case "ADMIN":
+          this.navigate("events");
+          break;
+
+        case "CODER":
+          if (this.hasTeam) {
+            this.navigate("coderHome");
+          } else {
+            this.navigate("coderEventSelect");
+          }
+          break;
+
+        case "TL_DEVELOPMENT":
+        case "TL_SOFT_SKILLS":
+        case "TL_ENGLISH":
+          this.navigate("coderEventSelect");
+          break;
+
+        default:
+          this.navigate("login");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      this.navigate("login");
     }
+  }
+
+  getAppState() {
+    return {
+      user: this.user,
+      hasTeam: this.hasTeam,
+    };
   }
 
   navigate(route, params = {}) {

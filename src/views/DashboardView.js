@@ -11,7 +11,6 @@ export default class DashboardView {
     this.eventName = params?.name;
     this.navbar = new Navbar(router);
     this.header = new Header(router, {eventName : this.eventName});
-console.log("DASHBOARD PARAMS:", params);
   }
 
   async render() {
@@ -19,7 +18,6 @@ console.log("DASHBOARD PARAMS:", params);
     const app = document.getElementById("app");
 
     const mainContent = await fetch (`../../pages/admin_dashboard.html`).then(r => r.text())
-    console.log(this.router.currentRoute)
 
     app.innerHTML = `
       ${this.navbar.render()}
