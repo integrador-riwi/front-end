@@ -41,7 +41,7 @@ export default class LoginView {
           <div class="form-card w-100">
 
             <!-- Mobile-only app name -->
-            <div class="d-flex d-md-none justify-content-center mb-4">
+            <div class="d-flex d-md-none justify-content-center mb-2">
               <span class="mobile-app-name">TeamUp</span>
             </div>
 
