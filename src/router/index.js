@@ -1,4 +1,5 @@
 import "../assets/styles/main.css";
+import "../assets/styles/coderEventSelect.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
@@ -12,6 +13,7 @@ import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
+import TLDashboardView from "../views/TLDashboardView.js";
 
 class App {
   constructor() {
@@ -62,6 +64,13 @@ class App {
         console.log("hello");
         this.navigate("coderEventSelect");
         break;
+      case "TL_DEVELOPMENT":
+        this.navigate("coderEventSelect");
+        break;
+      case "TL_SOFT_SKILLS":
+      case "TL_ENGLISH":
+        this.navigate("coderEventSelect");
+        break;
       default:
         this.navigate("login");
     }
@@ -109,6 +118,10 @@ class App {
       case "profile":
         this.currentView = new ProfileView(this);
         break;
+      case "tlDashboard":
+        this.currentView = new TLDashboardView(this);
+        this.currentView.init();
+        return;
       default:
         return this.navigate("login");
     }

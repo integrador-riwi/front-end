@@ -47,8 +47,17 @@ export default class CoderEventSelect {
             </div>
             <h1 class="ces-title">Choose your event.</h1>
             <p class="ces-subtitle">
-              Welcome, <strong>${this.user?.name?.split(" ")[0] ?? "Coder"}</strong>. 
-              Select the event you're participating in to get started.
+              Welcome, <strong>${this.user?.name?.split(" ")[0] ?? "there"}</strong>.
+              ${
+                [
+                  "TL_DEVELOPMENT",
+                  "TL_SOFT_SKILLS",
+                  "TL_ENGLISH",
+                  "ADMIN",
+                ].includes(this.user?.role)
+                  ? "Select the event you want to review and evaluate."
+                  : "Select the event you're participating in to get started."
+              }
             </p>
           </header>
 
@@ -189,7 +198,7 @@ export default class CoderEventSelect {
         </div>
 
         <button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
-          Join this event
+          ${["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"].includes(this.user?.role) ? "Review this event" : "Join this event"}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>
@@ -201,14 +210,21 @@ export default class CoderEventSelect {
   }
 
   _attachHandlers() {
+    const TL_ROLES = [
+      "TL_DEVELOPMENT",
+      "TL_SOFT_SKILLS",
+      "TL_ENGLISH",
+      "ADMIN",
+    ];
     document.querySelectorAll(".ces-btn-join").forEach((btn) => {
       btn.addEventListener("click", () => {
         const eventId = parseInt(btn.dataset.eventId);
-        const eventTitle = btn.dataset.eventTitle;
         const event = this.events.find((e) => e.id === eventId);
-        // Store selected event in session and navigate to coderHome
         sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-        this.app.navigate("coderHome", { selectedEvent: event });
+        const destination = TL_ROLES.includes(this.user?.role)
+          ? "tlDashboard"
+          : "coderHome";
+        this.app.navigate(destination, { selectedEvent: event });
       });
     });
   }

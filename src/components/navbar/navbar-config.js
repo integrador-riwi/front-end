@@ -1,11 +1,8 @@
 import { icons } from "../../utils/icons.js";
 
 const TL_BASE_LINKS = [
-  { label: "Dashboard", route: "dashboard", icon: "calendar" },
-  { label: "Projects to Grade", route: "evaluations", icon: "edit" },
-  { label: "My Evaluations", route: "my-evaluations", icon: "check" },
-  { label: "Teams & Projects", route: "projects", icon: "globe" },
-  { label: "Events", route: "events", icon: "calendar" },
+  { label: "Teams & Projects", route: "tlDashboard", icon: "edit" },
+  { label: "Events", route: "coderEventSelect", icon: "calendar" },
 ];
 
 const ADMIN_BASE_LINKS = [
@@ -67,7 +64,7 @@ export const getNavLinks = (role) => {
     const eventId = localStorage.getItem("currentEventId");
 
     if (eventId) {
-      return ADMIN_EVENT_LINKS
+      return ADMIN_EVENT_LINKS;
     }
 
     return ADMIN_BASE_LINKS;
