@@ -65,6 +65,8 @@ class App {
         this.navigate("coderEventSelect");
         break;
       case "TL_DEVELOPMENT":
+        this.navigate("coderEventSelect");
+        break;
       case "TL_SOFT_SKILLS":
       case "TL_ENGLISH":
         this.navigate("coderEventSelect");
