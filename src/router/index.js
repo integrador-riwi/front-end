@@ -1,4 +1,5 @@
 import "../assets/styles/main.css";
+import "../assets/styles/coderEventSelect.css";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
@@ -60,6 +61,11 @@ class App {
         break;
       case "CODER":
         console.log("hello");
+        this.navigate("coderEventSelect");
+        break;
+      case "TL_DEVELOPMENT":
+      case "TL_SOFT_SKILLS":
+      case "TL_ENGLISH":
         this.navigate("coderEventSelect");
         break;
       default:
