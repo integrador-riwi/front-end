@@ -204,11 +204,12 @@ export default class TLDashboardView {
     const project = team.project;
     const members = team.members ?? [];
     const hasProject = !!project;
+    const isSubmitted = !!project?.submitted_at;
 
     const deliverables = [
       project?.repo_url,
       project?.video_url,
-      project?.presentation_url,
+      project?.preview_photo_url,
     ].filter(Boolean).length;
 
     const totalDeliverables = 3;
@@ -230,18 +231,37 @@ export default class TLDashboardView {
         ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
         : "";
 
-    const statusDot = hasProject
-      ? deliverables === totalDeliverables
-        ? `<span class="tld-status-dot tld-dot-complete" title="All deliverables submitted"></span>`
-        : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-      : `<span class="tld-status-dot tld-dot-none" title="No project yet"></span>`;
+    const statusDot = isSubmitted
+      ? `<span class="tld-status-dot tld-dot-submitted" title="Submitted — ready for review"></span>`
+      : hasProject
+        ? deliverables === totalDeliverables
+          ? `<span class="tld-status-dot tld-dot-complete" title="All deliverables submitted"></span>`
+          : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
+        : `<span class="tld-status-dot tld-dot-none" title="No project yet"></span>`;
+
+    // Button state
+    let evalBtnContent, evalBtnDisabled, evalBtnClass;
+    if (isSubmitted) {
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Evaluate`;
+      evalBtnDisabled = "";
+      evalBtnClass = "tld-eval-btn tld-eval-btn--ready";
+    } else if (hasProject) {
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Not submitted yet`;
+      evalBtnDisabled = "disabled";
+      evalBtnClass = "tld-eval-btn";
+    } else {
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No project`;
+      evalBtnDisabled = "disabled";
+      evalBtnClass = "tld-eval-btn";
+    }
 
     return `
-      <article class="tld-card" data-team-id="${team.id_team}" style="animation-delay:${index * 40}ms">
+      <article class="tld-card${isSubmitted ? " tld-card--submitted" : ""}" data-team-id="${team.id_team}" style="animation-delay:${index * 40}ms">
         <div class="tld-card-top">
           <div class="tld-card-name-row">
             ${statusDot}
             <h3 class="tld-card-team-name">${team.name}</h3>
+            ${isSubmitted ? `<span class="tld-submitted-badge">Ready</span>` : ""}
           </div>
           <div class="tld-card-project-name">
             ${hasProject ? project.name : '<span style="opacity:.45;font-style:italic;">No project yet</span>'}
@@ -253,9 +273,9 @@ export default class TLDashboardView {
             ? `
           <div class="tld-progress-wrap">
             <div class="tld-progress-bar">
-              <div class="tld-progress-fill" style="width:${progress}%"></div>
+              <div class="tld-progress-fill${isSubmitted ? " tld-progress-fill--submitted" : ""}" style="width:${progress}%"></div>
             </div>
-            <span class="tld-progress-label">${deliverables}/${totalDeliverables} deliverables</span>
+            <span class="tld-progress-label">${isSubmitted ? "Submitted for review" : `${deliverables}/${totalDeliverables} deliverables`}</span>
           </div>
         `
             : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">No deliverables</span></div>`
@@ -269,14 +289,10 @@ export default class TLDashboardView {
         </div>
 
         <button
-          class="tld-eval-btn"
+          class="${evalBtnClass}"
           data-team-id="${team.id_team}"
-          ${!hasProject ? "disabled title='Team has no project yet'" : ""}>
-          ${
-            hasProject
-              ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Evaluate`
-              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No project`
-          }
+          ${evalBtnDisabled}>
+          ${evalBtnContent}
         </button>
       </article>
     `;

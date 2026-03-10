@@ -400,3 +400,40 @@
     justify-content: flex-start;
   }
 }
+
+/* ── Submitted state ─────────────────────────────── */
+.tld-dot-submitted {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 2px #6b5cff33;
+}
+
+.tld-card--submitted {
+  border-color: #6b5cff44;
+  background: linear-gradient(135deg, #fff 80%, #f5f3ff);
+}
+
+.tld-submitted-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: #ede9ff;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.tld-progress-fill--submitted {
+  background: linear-gradient(90deg, var(--color-primary), #a78bfa);
+}
+
+.tld-eval-btn--ready {
+  background: var(--color-primary);
+  box-shadow: 0 2px 8px #6b5cff33;
+}
+
+.tld-eval-btn--ready:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
