@@ -11,10 +11,18 @@ export function renderCoderTeam({
   const dueDate = project?.final_delivery_date ?? "TBD";
   const projectName = project?.name ?? teamName;
   const projectDesc = project?.description ?? "No description yet.";
-  const deliverables = project?.deliverables ?? null;
   const isSubmitted = !!project?.submitted_at;
 
-  const repoUrl = project?.repo_url ?? deliverables?.repo_url ?? null;
+  // deliverables come flat on the project object, not nested
+  const deliverables = project
+    ? {
+        video_url: project.video_url ?? null,
+        preview_photo_url: project.preview_photo_url ?? null,
+        presentation_url: project.presentation_url ?? null,
+      }
+    : null;
+
+  const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
 
   return `
@@ -808,11 +816,24 @@ function _renderMarkdown(md) {
 // TL Evaluation Panel
 // ─────────────────────────────────────────────────────────────
 
-export async function loadEvaluationPanel({ projectId, eventId, members }) {
+export async function loadEvaluationPanel({
+  projectId,
+  eventId,
+  members,
+  userRole = null,
+}) {
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
   const feedbackEl = document.getElementById("eval-feedback");
   if (!container || !submitBtn) return;
+
+  const ROLE_AREA_MAP = {
+    TL_DEVELOPMENT: "DEVELOPMENT",
+    TL_SOFT_SKILLS: "SOFT_SKILLS",
+    TL_ENGLISH: "ENGLISH",
+  };
+  // ADMIN sees all areas; TLs only see their assigned area
+  const allowedArea = ROLE_AREA_MAP[userRole] ?? null;
 
   const { getRubricsByEvent, submitEvaluations, getMyEvaluationsForProject } =
     await import("../services/api.js");
@@ -828,6 +849,11 @@ export async function loadEvaluationPanel({ projectId, eventId, members }) {
   } catch (err) {
     container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">Could not load rubrics.</p>`;
     return;
+  }
+
+  // Filter to only the area this TL is responsible for
+  if (allowedArea) {
+    rubrics = rubrics.filter((r) => r.area === allowedArea);
   }
 
   if (!rubrics.length) {
@@ -1076,13 +1102,7 @@ export function initDeliverables(projectId) {
         const { submitProject } = await import("../services/api.js");
         await submitProject(projectId);
 
-        // Replace button with success badge
-        btn
-          .closest(".bg-white.rounded-4")
-          .querySelector("#submitProjectBtn")
-          ?.remove();
-        const card = btn.closest(".bg-white.rounded-4, .ct-card-shadow");
-        // Remove btn and show badge
+        // Insert success badge before removing the button
         btn.insertAdjacentHTML(
           "afterend",
           `
