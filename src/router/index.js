@@ -13,7 +13,7 @@ import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
-import TlDashboardView from "../views/TlDashboardView.js";
+import TLDashboardView from "../views/TLDashboardView.js";
 
 class App {
   constructor() {
