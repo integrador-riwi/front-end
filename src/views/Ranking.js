@@ -23,6 +23,7 @@ export default class Ranking {
     this.loadingRanking = false;
     this.publishing = false;
     this.confirmPublish = false;
+    this.publishWarnings = [];
     this.error = null;
   }
 
@@ -50,11 +51,12 @@ export default class Ranking {
       return;
     }
 
-    await this._selectEvent(this.eventId);
+    await this._loadRanking(this.eventId);
   }
 
-  async _selectEvent(eventId) {
-    this.selectedEventId = eventId;
+  // ── Data fetching ──────────────────────────────────────────────────────────
+
+  async _loadRanking(eventId) {
     this.rankingData = null;
     this.rankingStatus = null;
     this.error = null;
@@ -64,26 +66,28 @@ export default class Ranking {
 
     try {
       if (isAdmin(this.user)) {
-        // Admin sees status + existing ranking if any
         const [statusRes, rankingRes] = await Promise.allSettled([
           apiFetch(`/events/${eventId}/ranking-status`, { method: "GET" }),
           apiFetch(`/events/${eventId}/ranking`, { method: "GET" }),
         ]);
         if (statusRes.status === "fulfilled") {
           this.rankingStatus = statusRes.value?.data ?? null;
+        } else {
+          this.error =
+            statusRes.reason?.message ??
+            "Error al cargar el estado del ranking.";
         }
         if (rankingRes.status === "fulfilled") {
           this.rankingData = rankingRes.value?.data ?? null;
         }
+        // 404 on ranking just means not published yet — not an error
       } else {
-        // TL / other roles: just try to read published ranking
         const res = await apiFetch(`/events/${eventId}/ranking`, {
           method: "GET",
         });
         this.rankingData = res?.data ?? null;
       }
     } catch (e) {
-      // 404 just means ranking not published yet — not a hard error, show empty state
       const is404 = e.response?.status === 404 || e.message?.includes("404");
       if (!is404) {
         this.error = e.message ?? "Error al cargar el ranking.";
@@ -94,9 +98,10 @@ export default class Ranking {
     this._paint();
   }
 
+  // ── Publish flow ───────────────────────────────────────────────────────────
+
   _requestPublish() {
     const s = this.rankingStatus;
-    // If there are incomplete evaluations, show confirm panel first
     if (s?.hasIncompleteEvaluations && !this.confirmPublish) {
       this.confirmPublish = true;
       this._paint();
@@ -123,9 +128,9 @@ export default class Ranking {
         { method: "POST" },
       );
       this.rankingData = res?.data ?? null;
-      // Store warnings returned by the backend (partial evaluations, etc.)
-      this._publishWarnings = this.rankingData?.warnings ?? [];
-      // Refresh status
+      this.publishWarnings = this.rankingData?.warnings ?? [];
+
+      // Refresh status after publish
       const statusRes = await apiFetch(
         `/events/${this.selectedEventId}/ranking-status`,
         { method: "GET" },
@@ -172,13 +177,17 @@ export default class Ranking {
 
   _renderStatusPanel() {
     const s = this.rankingStatus;
-
     const incompleteProjects =
       s.projects?.filter((p) => !p.fullyEvaluated) ?? [];
+
+    const warnIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0;color:#f59e0b"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
     const items = [
       {
         ok: s.isDeadlinePassed,
+        warn: false,
         label: s.isDeadlinePassed
           ? "Fecha de entrega vencida"
           : `Entrega cierra el ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString("es-CO") : "—"}`,
@@ -192,10 +201,6 @@ export default class Ranking {
       },
     ];
 
-    const warnIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0;color:#f59e0b"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
-    const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`;
-    const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-
     return `
       <div class="rk-status-panel app-section">
         <div class="rk-status-header">
@@ -203,8 +208,8 @@ export default class Ranking {
           ${
             s.requiredAreas?.length
               ? `<div class="rk-areas-badges">
-                ${s.requiredAreas.map((a) => `<span class="rk-area-badge">${a}</span>`).join("")}
-               </div>`
+                  ${s.requiredAreas.map((a) => `<span class="rk-area-badge">${a}</span>`).join("")}
+                </div>`
               : ""
           }
         </div>
@@ -224,32 +229,36 @@ export default class Ranking {
 
         ${
           incompleteProjects.length > 0
-            ? `<details class="rk-pending-details" ${this.confirmPublish ? "open" : ""}>
-              <summary>Ver proyectos con evaluación incompleta (${incompleteProjects.length})</summary>
-              <ul class="rk-pending-list">
-                ${incompleteProjects
-                  .map(
-                    (p) => `
-                  <li>
-                    <strong>${p.team}</strong>
-                    <span class="rk-areas-progress rk-areas-progress--warn">${p.evaluatedAreaCount}/${p.requiredAreaCount} áreas</span>
-                  </li>
-                `,
-                  )
-                  .join("")}
-              </ul>
-            </details>`
+            ? `
+          <details class="rk-pending-details" ${this.confirmPublish ? "open" : ""}>
+            <summary>Ver proyectos con evaluación incompleta (${incompleteProjects.length})</summary>
+            <ul class="rk-pending-list">
+              ${incompleteProjects
+                .map(
+                  (p) => `
+                <li>
+                  <strong>${p.team}</strong>
+                  <span class="rk-areas-progress rk-areas-progress--warn">${p.evaluatedAreaCount}/${p.requiredAreaCount} áreas</span>
+                </li>
+              `,
+                )
+                .join("")}
+            </ul>
+          </details>
+        `
             : ""
         }
 
         ${
-          this._publishWarnings?.length > 0
-            ? `<div class="rk-alert rk-alert--warn">
-                <strong>Ranking publicado con advertencias:</strong>
-                <ul style="margin:6px 0 0 0;padding-left:18px">
-                  ${this._publishWarnings.map((w) => `<li>${w.message}</li>`).join("")}
-                </ul>
-              </div>`
+          this.publishWarnings.length > 0
+            ? `
+          <div class="rk-alert rk-alert--warn">
+            <strong>Ranking publicado con advertencias:</strong>
+            <ul style="margin:6px 0 0 0;padding-left:18px">
+              ${this.publishWarnings.map((w) => `<li>${w.message}</li>`).join("")}
+            </ul>
+          </div>
+        `
             : ""
         }
 
@@ -258,30 +267,36 @@ export default class Ranking {
             ? `<p class="rk-cannot-publish">El evento aún no ha cerrado. No es posible publicar el ranking.</p>`
             : this.confirmPublish
               ? `<div class="rk-confirm-panel">
-                  <div class="rk-confirm-icon">${warnIcon}</div>
-                  <div class="rk-confirm-body">
-                    <p class="rk-confirm-title">¿Publicar con evaluaciones incompletas?</p>
-                    <p class="rk-confirm-desc">
-                      ${incompleteProjects.length} proyecto${incompleteProjects.length !== 1 ? "s" : ""} no ha${incompleteProjects.length !== 1 ? "n" : ""} sido evaluado${incompleteProjects.length !== 1 ? "s" : ""} en todas las áreas.
-                      Los scores se calcularán solo con las áreas que sí tienen evaluación.
-                    </p>
-                    <div class="rk-confirm-actions">
-                      <button class="rk-btn rk-btn--ghost" id="rk-cancel-confirm-btn" type="button">Cancelar</button>
-                      <button class="rk-btn rk-btn--danger" id="rk-publish-btn" type="button">
-                        Sí, publicar de todos modos
-                      </button>
-                    </div>
+                <div class="rk-confirm-icon">${warnIcon}</div>
+                <div class="rk-confirm-body">
+                  <p class="rk-confirm-title">¿Publicar con evaluaciones incompletas?</p>
+                  <p class="rk-confirm-desc">
+                    ${incompleteProjects.length} proyecto${incompleteProjects.length !== 1 ? "s" : ""}
+                    no ha${incompleteProjects.length !== 1 ? "n" : ""} sido evaluado${incompleteProjects.length !== 1 ? "s" : ""} en todas las áreas.
+                    Los scores se calcularán solo con las áreas que sí tienen evaluación.
+                  </p>
+                  <div class="rk-confirm-actions">
+                    <button class="rk-btn rk-btn--ghost" id="rk-cancel-confirm-btn" type="button">Cancelar</button>
+                    <button class="rk-btn rk-btn--danger" id="rk-publish-btn" type="button">
+                      Sí, publicar de todos modos
+                    </button>
                   </div>
-                </div>`
-              : `<button class="rk-publish-btn ${this.publishing ? "rk-publish-btn--loading" : ""} ${s.hasIncompleteEvaluations ? "rk-publish-btn--warn" : ""}" id="rk-publish-btn" type="button" ${this.publishing ? "disabled" : ""}>
-                  ${
-                    this.publishing
-                      ? `<span class="rk-spinner"></span> Calculando...`
-                      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                      ${this.rankingData ? "Recalcular ranking" : "Publicar ranking"}
-                      ${s.hasIncompleteEvaluations ? warnIcon : ""}`
-                  }
-                </button>`
+                </div>
+              </div>`
+              : `<button
+                class="rk-publish-btn ${this.publishing ? "rk-publish-btn--loading" : ""} ${s.hasIncompleteEvaluations ? "rk-publish-btn--warn" : ""}"
+                id="rk-publish-btn"
+                type="button"
+                ${this.publishing ? "disabled" : ""}
+              >
+                ${
+                  this.publishing
+                    ? `<span class="rk-spinner"></span> Calculando...`
+                    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    ${this.rankingData ? "Recalcular ranking" : "Publicar ranking"}
+                    ${s.hasIncompleteEvaluations ? warnIcon : ""}`
+                }
+              </button>`
         }
       </div>
     `;
@@ -301,20 +316,26 @@ export default class Ranking {
     if (!ranking.length) return this._renderNoRanking();
 
     const top3 = ranking.slice(0, 3);
-    const rest = ranking.slice(3);
-
     const medals = ["🥇", "🥈", "🥉"];
     const medalColors = ["#e6ca52", "#a8b2c0", "#cd7c54"];
+
+    // Scale bar relative to the top score in this ranking
+    const maxScore = Math.max(
+      ...ranking.map((t) => parseFloat(t.team_score) || 0),
+      1,
+    );
+
+    const calcDate = this.rankingData.calculatedAt
+      ? new Date(this.rankingData.calculatedAt).toLocaleDateString("es-CO", {
+          dateStyle: "medium",
+        })
+      : null;
 
     return `
       <div class="rk-content">
         <div class="rk-content-header">
           <h5 class="app-section-header mb-0">Ranking Final</h5>
-          ${
-            this.rankingData.calculatedAt
-              ? `<span class="rk-calc-date">Calculado: ${new Date(this.rankingData.calculatedAt).toLocaleDateString("es-CO", { dateStyle: "medium" })}</span>`
-              : ""
-          }
+          ${calcDate ? `<span class="rk-calc-date">Calculado: ${calcDate}</span>` : ""}
         </div>
 
         <!-- Podium top 3 -->
@@ -375,7 +396,7 @@ export default class Ranking {
                   </td>
                   <td class="rk-score-cell">
                     <div class="rk-score-bar-wrap">
-                      <div class="rk-score-bar" style="width:${Math.min(100, (team.team_score / 5) * 100)}%"></div>
+                      <div class="rk-score-bar" style="width:${Math.round((parseFloat(team.team_score) / maxScore) * 100)}%"></div>
                     </div>
                     <span class="rk-score-val">${team.team_score}</span>
                   </td>
@@ -416,7 +437,6 @@ export default class Ranking {
   // ── Event handlers ─────────────────────────────────────────────────────────
 
   _attachHandlers() {
-    // Publish button — routes through _requestPublish which handles confirm flow
     document.getElementById("rk-publish-btn")?.addEventListener("click", () => {
       if (this.confirmPublish) {
         this._publishRanking();
@@ -425,14 +445,12 @@ export default class Ranking {
       }
     });
 
-    // Cancel confirm button
     document
       .getElementById("rk-cancel-confirm-btn")
       ?.addEventListener("click", () => {
         this._cancelConfirm();
       });
 
-    // Row click → expand members
     document.querySelectorAll(".rk-row[data-team]").forEach((row) => {
       row.addEventListener("click", () => {
         const teamId = row.dataset.team;
