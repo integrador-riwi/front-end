@@ -13,7 +13,8 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
-
+import QRVoting from "../views/EventVoting.js"
+import NotFoundView from "../views/NotFoundView.js";
 class App {
   constructor() {
     this.app = document.getElementById("app");
@@ -110,6 +111,9 @@ class App {
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+      case "qr":
+        this.currentView = new QRVoting(this);
+        break;
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
@@ -129,7 +133,8 @@ class App {
         this.currentView.init();
         return;
       default:
-        return this.navigate("login");
+        this.currentView = new NotFoundView(this);
+        break;
     }
 
     if (!this.currentView) {

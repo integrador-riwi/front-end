@@ -231,12 +231,18 @@ attachTeamSelection() {
       const id = e.currentTarget.dataset.id;
       const team = this.event.finalists.find((t) => t.id == id);
 
-    if (this.ranking.some(t => t?.id === team.id)) return;
       if (!team) return;
 
+      // Toggle logic: if already ranked, remove it
+      const rankedIndex = this.ranking.findIndex(t => t?.id === team.id);
+      if (rankedIndex !== -1) {
+        this.ranking[rankedIndex] = null;
+        this.renderVotingView();
+        return;
+      }
 
+      // Add logic: fill first available slot in 2-1-3 order
       const fillOrder = [1, 0, 2];
-
       const emptyIndex = fillOrder.find(
         (index) => this.ranking[index] === null
       );
@@ -244,9 +250,33 @@ attachTeamSelection() {
       if (emptyIndex !== undefined) {
         this.ranking[emptyIndex] = team;
         this.renderVotingView();
+      } else {
+        // Show subtle alert if all slots filled
+        alert("You have already selected 3 finalists. Remove one to add another.");
       }
     });
   });
+
+  const launchBtn = document.querySelector(".btn-primary-custom.shadow");
+  if (launchBtn) {
+    launchBtn.addEventListener("click", () => {
+      const selectedTeams = this.ranking.filter(Boolean);
+      if (selectedTeams.length < 3) {
+        alert("Please select 1st, 2nd, and 3rd place before launching.");
+        return;
+      }
+      
+      launchBtn.disabled = true;
+      launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Launching Session...`;
+      
+      setTimeout(() => {
+        alert(`Voting session launched successfully for: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`);
+        launchBtn.innerHTML = "Voting Session Active";
+        launchBtn.classList.remove("btn-primary-custom");
+        launchBtn.classList.add("btn-success");
+      }, 1500);
+    });
+  }
 }
 
   async render() {
@@ -280,9 +310,18 @@ attachTeamSelection() {
 
     this.renderVotingView();
 
-    finalistsContainer.innerHTML = this.renderFinalistsSection(
+    const availableTeamsContainer = document.getElementById("available-teams"); 
+
+    if (!availableTeamsContainer) {
+      console.error("Available teams container not found");
+      return;
+    }
+
+    availableTeamsContainer.innerHTML = this.renderAvailableTeams(
       this.event?.finalists || [],
     );
+    
+    this.attachTeamSelection(); // Re-attach handlers after full render
   }
 
   attachEventHandlers() {
