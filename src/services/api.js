@@ -213,6 +213,14 @@ export async function submitEvaluations(projectId, evaluations) {
   return response?.data ?? response;
 }
 
+export async function calculateProjectGrades(projectId) {
+  const response = await apiFetch(
+    `/evaluations/project/${projectId}/calculate`,
+    { method: "POST" },
+  );
+  return response?.data ?? response;
+}
+
 export async function getMyEvaluationsForProject(projectId) {
   const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
     method: "GET",
