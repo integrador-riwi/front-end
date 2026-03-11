@@ -198,7 +198,26 @@ export function renderCoderTeam({
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
           </div>
-
+            
+            <div class="bg-white rounded-4 p-4 ct-card-shadow" id="tl-evaluation-panel">
+            <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3" style="border-color: var(--border) !important;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
+            </div>
+            <div id="tl-rubrics-container">
+              <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
+            </div>
+            <button
+              id="submitEvaluationsBtn"
+              class="btn w-100 mt-3 d-none"
+              style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
+              Submit Evaluations
+            </button>
+            <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
+          </div>
+            
         </div>
 
         <!-- ══ RIGHT COLUMN ══ -->
@@ -283,24 +302,7 @@ export function renderCoderTeam({
             isTL
               ? `
           <!-- TL Evaluation Panel -->
-          <div class="bg-white rounded-4 p-4 ct-card-shadow" id="tl-evaluation-panel">
-            <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3" style="border-color: var(--border) !important;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
-                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
-            </div>
-            <div id="tl-rubrics-container">
-              <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
-            </div>
-            <button
-              id="submitEvaluationsBtn"
-              class="btn w-100 mt-3 d-none"
-              style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
-              Submit Evaluations
-            </button>
-            <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
-          </div>
+          
           `
               : ""
           }
