@@ -64,6 +64,11 @@ export async function refreshTokens() {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
 
+export async function getMyTeams() {
+  const response = await apiFetch("/teams/my-teams");
+  return response.data;
+}
+
 export async function createTeam(teamData) {
   const payload =
     typeof teamData === "string" ? { name: teamData } : { ...teamData };

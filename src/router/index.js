@@ -12,7 +12,7 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
-import { getMyProfile } from "../services/api.js";
+import { getMyProfile, getMyTeams } from "../services/api.js";
 
 class App {
   constructor() {
@@ -31,15 +31,18 @@ class App {
 
     if (githubSuccess === "success" || githubError) {
       window.history.replaceState({}, "", "/");
+
       if (!isAuthenticated()) {
         this.navigate("login");
         return;
       }
+
       this.navigate("profile", {
         githubSuccess: githubSuccess === "success",
         githubUsername: params.get("username"),
         githubError: githubError,
       });
+
       return;
     }
 
@@ -47,12 +50,13 @@ class App {
       this.navigate("login");
       return;
     }
+
     try {
       const user = await getMyProfile();
-
       this.user = user;
 
-      this.hasTeam = !!user?.teamId || !!user?.team;
+      this.hasTeam = await this.checkUserTeam();
+      console.log("HAS TEAM APP:", this.hasTeam);
 
       console.log("USER:", this.user);
       console.log("HAS TEAM:", this.hasTeam);
@@ -85,6 +89,24 @@ class App {
     }
   }
 
+async checkUserTeam() {
+  try {
+
+    const response = await getMyTeams();
+     console.log("MY TEAMS:", response);
+    const teams = response?.teams || [];
+
+    return teams.length > 0;
+
+  } catch (error) {
+
+    console.log("User has no team");
+
+    return false;
+
+  }
+}
+
   getAppState() {
     return {
       user: this.user,
@@ -101,43 +123,55 @@ class App {
       case "login":
         this.currentView = new LoginView(this);
         break;
+
       case "dashboard":
         this.currentView = new DashboardView(this, params);
         break;
+
       case "events":
         this.currentView = new EventsView(this);
         break;
+
       case "events/create":
         this.currentView = new CreateEvent(this);
         break;
+
       case "details":
         this.currentView = new EventDetails(this, params);
         console.log(params);
         break;
+
       case "projects":
         this.currentView = new Teams(this);
         break;
+
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
         return;
+
       case "coderHome":
         this.currentView = new coderHome(this);
         this.currentView.init();
         return;
+
       case "projectSettings":
         this.currentView = new ProjectSettings(this, params);
         break;
+
       case "profile":
         this.currentView = new ProfileView(this);
         break;
+
       case "tlDashboard":
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
+
       default:
         return this.navigate("login");
     }
@@ -146,6 +180,7 @@ class App {
       console.error("No view created for route:", route);
       return;
     }
+
     this.currentView.render();
   }
 }

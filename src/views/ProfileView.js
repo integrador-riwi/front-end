@@ -147,7 +147,7 @@ export default class ProfileView {
       <main class="coder-home-main profile-viewport">
         <div class="container-xl px-3 px-md-4 py-5">
             <div class="row g-4 justify-content-center">
-                <div class="col-12 col-lg-5">
+                <div class="col-12 col-md-6 col-lg-5">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
                      <div class="profile-card-topbar"></div>
                      <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
@@ -163,8 +163,8 @@ export default class ProfileView {
                        Clan: ${escapeHtml(this.profileForm.clan || "N/A")}
                      </div>
                      <div class="mt-4 profile-card-details text-start">
-                       <p class="profile-label mb-1">Email</p>
-                       <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
+                       <p class="profile-label mb-0">Email</p>
+                       <p class="profile-value w-100">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                         <div class="mt-3">
                           <p class="profile-label mb-1">GitHub</p>
                           <div class="container align-items-center px-0 d-flex justify-content-between">
@@ -187,7 +187,7 @@ export default class ProfileView {
                    </div>
                 </div>
 
-                <div class="col-12 col-lg-7">
+                <div class="col-12 col-md-6 col-lg-7">
                    <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
                      <h2 class="profile-section-title mb-3">Edit your profile</h2>
                       <form id="profileForm" class="profile-form">
@@ -201,7 +201,7 @@ export default class ProfileView {
                                  readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
                           <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">The clan is assigned by an administrator.</p>
                         </div>
-                       <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
+                       <button type="submit" class="profile-btn align-self-center" ${this.isSaving ? "disabled" : ""}>
                          ${this.isSaving ? "Saving..." : "Save changes"}
                        </button>
                      </form>
