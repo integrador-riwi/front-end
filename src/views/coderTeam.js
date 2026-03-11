@@ -19,6 +19,7 @@ export function renderCoderTeam({
         video_url: project.video_url ?? null,
         preview_photo_url: project.preview_photo_url ?? null,
         presentation_url: project.presentation_url ?? null,
+        deploy_url: project.deploy_url ?? null,
       }
     : null;
 
@@ -143,7 +144,7 @@ export function renderCoderTeam({
               </svg>
               <h2 class="ct-section-title mb-0">Deliverables</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
-                ${deliverableCount(deliverables, repoUrl)}/3 submitted
+                ${deliverableCount(deliverables, repoUrl)}/4 submitted
               </span>
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
@@ -330,6 +331,13 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       color: "var(--color-success)",
     },
     {
+      key: "deploy_url",
+      icon: "",
+      label: "Deploy Link",
+      url: d?.deploy_url ?? null,
+      color: "var(--color-primary)",
+    },
+    {
       key: "preview_photo_url",
       icon: "",
       label: "Preview Photo",
@@ -356,7 +364,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             <div class="overflow-hidden">
               <span class="ct-del-label d-block text-truncate">${item.label}</span>
               ${
-                item.url && item.key === "repo_url"
+                item.url &&
+                (item.key === "repo_url" || item.key === "deploy_url")
                   ? `
                 <a href="${item.url}" target="_blank" rel="noopener"
                    class="ct-del-status ct-status-done text-truncate d-block"
@@ -569,7 +578,9 @@ export function renderComment({ name, initial, time, text }) {
 
 function deliverableCount(d, repoUrl) {
   const repo = repoUrl ?? d?.repo_url ?? null;
-  return [d?.video_url, repo, d?.preview_photo_url].filter(Boolean).length;
+  return [d?.video_url, repo, d?.deploy_url, d?.preview_photo_url].filter(
+    Boolean,
+  ).length;
 }
 
 function gradeClass(g) {
@@ -998,9 +1009,10 @@ export function initDeliverables(projectId) {
   const fieldMap = {
     video_url: "videoUrl",
     preview_photo_url: "previewPhotoUrl",
+    deploy_url: "deployUrl",
   };
 
-  const editableFields = ["video_url", "preview_photo_url"];
+  const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
 
   async function saveField(field, url, btnEl) {
     const apiKey = fieldMap[field];
