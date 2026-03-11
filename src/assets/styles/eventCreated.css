@@ -338,3 +338,65 @@
     flex: 1;
   }
 }
+/* ── Clan picker ──────────────────────────────────────────────────────────── */
+.ce-clan-section {
+  padding: 16px 0 0;
+}
+
+.ce-clan-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ce-clan-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ce-clan-chip:hover {
+  border-color: #6b5cff;
+  color: #6b5cff;
+  background: #f0eeff;
+}
+
+.ce-clan-chip--active {
+  background: #6b5cff;
+  border-color: #6b5cff;
+  color: #fff;
+}
+
+.ce-clan-chip--active:hover {
+  background: #5848d9;
+  border-color: #5848d9;
+  color: #fff;
+}
+
+.ce-clan-footer {
+  font-size: 0.8rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ce-clan-summary {
+  font-weight: 600;
+}
+
+.ce-clan-summary--all {
+  color: #10b981;
+}
+
+.ce-clan-summary--partial {
+  color: #6b5cff;
+}

@@ -18,6 +18,23 @@ const AREA_COLOR = {
   ENGLISH: "#eaa2fc",
 };
 
+const ALL_CLANS = [
+  "GOSLING",
+  "LINUS",
+  "HOPPER",
+  "LOVELACE",
+  "RITCHIE",
+  "VANROSSUM",
+  "BERNERSLEE",
+  "TESLA",
+  "MACONDO",
+  "MANGLAR",
+  "TAYRONA",
+  "CIENAGA",
+  "CAIMAN",
+  "SIERRA",
+];
+
 export default class CreateEvent {
   constructor(router) {
     this.router = router;
@@ -25,6 +42,7 @@ export default class CreateEvent {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.loading = false;
+    this.targetClans = []; // [] = all clans (will send null to API)
 
     // State: which areas are enabled and their rubrics
     // rubrics[area] = [{ id, name, description, weight, grades: [score,...] }]
@@ -55,7 +73,85 @@ export default class CreateEvent {
         ? `${document.getElementById("ev-end-date").value}T18:00:00`
         : null,
       status: "UPCOMING",
+      // null = all clans; array = specific clans
+      targetClans: this.targetClans.length > 0 ? this.targetClans : null,
     };
+  }
+
+  _toggleClan(clan) {
+    if (this.targetClans.includes(clan)) {
+      this.targetClans = this.targetClans.filter((c) => c !== clan);
+    } else {
+      this.targetClans.push(clan);
+    }
+    this._rerenderClanPicker();
+  }
+
+  _selectAllClans() {
+    this.targetClans = [];
+    this._rerenderClanPicker();
+  }
+
+  _rerenderClanPicker() {
+    const container = document.getElementById("clan-picker-body");
+    if (container) container.innerHTML = this._renderClanPickerBody();
+    this._attachClanHandlers();
+    this._updateClanSummary();
+  }
+
+  _updateClanSummary() {
+    const summary = document.getElementById("clan-summary");
+    if (!summary) return;
+    if (this.targetClans.length === 0) {
+      summary.textContent = "Todos los clanes";
+      summary.className = "ce-clan-summary ce-clan-summary--all";
+    } else {
+      summary.textContent = this.targetClans.join(", ");
+      summary.className = "ce-clan-summary ce-clan-summary--partial";
+    }
+  }
+
+  _renderClanPickerBody() {
+    const allSelected = this.targetClans.length === 0;
+    return `
+      <button class="ce-clan-chip ${allSelected ? "ce-clan-chip--active" : ""}" data-clan="ALL" type="button">
+        Todos los clanes
+      </button>
+      ${ALL_CLANS.map((clan) => {
+        const active = this.targetClans.includes(clan);
+        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+      }).join("")}
+    `;
+  }
+
+  _renderClanSection() {
+    return `
+      <div class="ce-clan-section">
+        <label class="form-label fw-semibold">Clanes participantes</label>
+        <p class="ce-section-subtitle" style="margin-bottom: 10px;">
+          Selecciona los clanes que verán este evento, o déjalo en "Todos los clanes".
+        </p>
+        <div class="ce-clan-picker" id="clan-picker-body">
+          ${this._renderClanPickerBody()}
+        </div>
+        <div class="ce-clan-footer">
+          <span>Scope: </span>
+          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">Todos los clanes</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _attachClanHandlers() {
+    document.querySelectorAll(".ce-clan-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.clan === "ALL") {
+          this._selectAllClans();
+        } else {
+          this._toggleClan(btn.dataset.clan);
+        }
+      });
+    });
   }
 
   _buildRubricsPayload() {
@@ -372,6 +468,9 @@ export default class CreateEvent {
                   <label class="form-label fw-semibold">GitHub Org (opcional)</label>
                   <input id="ev-github-org" type="text" class="form-control app-input" placeholder="Ej: riwi-projects" />
                 </div>
+                <div class="col-12">
+                  ${this._renderClanSection()}
+                </div>
               </div>
             </section>
 
@@ -405,6 +504,7 @@ export default class CreateEvent {
     this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
     this._attachPageHandlers();
+    this._attachClanHandlers();
     AREAS.forEach((area) => this._attachAreaHandlers(area));
   }
 
