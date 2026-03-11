@@ -5,7 +5,6 @@ import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
-import "../assets/styles/createEvent.css";
 export default class EventDetails {
   constructor(router, params = {}) {
     this.router = router;
