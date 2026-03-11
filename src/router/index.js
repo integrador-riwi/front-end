@@ -77,6 +77,12 @@ class App {
   }
 
   navigate(route, params = {}) {
+    // Teardown current view before replacing it
+    if (this.currentView && typeof this.currentView.destroy === "function") {
+      this.currentView.destroy();
+    }
+    this.currentView = null;
+
     this.app.innerHTML = "";
     this.currentRoute = route;
     this.currentParams = params;

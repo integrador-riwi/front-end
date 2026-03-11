@@ -492,6 +492,11 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
+  // Called by the router when navigating away - cleans up all async resources
+  destroy() {
+    this._stopPolling();
+  }
+
   // Polling de invitaciones y join requests
   // ─────────────────────────────────────────
   _startPolling() {
