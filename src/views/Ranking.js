@@ -15,13 +15,14 @@ export default class Ranking {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
 
-    this.events = [];
-    this.selectedEventId = null;
-    this.rankingStatus = null; // status info for admin
-    this.rankingData = null; // published ranking
-    this.loadingEvents = true;
+    this.eventId = localStorage.getItem("currentEventId");
+    this.eventName = localStorage.getItem("currentEventName") ?? "Ranking";
+    this.selectedEventId = this.eventId;
+    this.rankingStatus = null;
+    this.rankingData = null;
     this.loadingRanking = false;
     this.publishing = false;
+    this.confirmPublish = false;
     this.error = null;
   }
 
@@ -41,22 +42,15 @@ export default class Ranking {
     this.header.mountBreadcrumb?.();
     this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
-    await this._loadEvents();
-  }
 
-  // ── Data fetching ──────────────────────────────────────────────────────────
-
-  async _loadEvents() {
-    this.loadingEvents = true;
-    this._paint();
-    try {
-      const res = await apiFetch("/events", { method: "GET" });
-      this.events = res?.data?.events ?? res?.data ?? [];
-    } catch (e) {
-      this.error = "No se pudieron cargar los eventos.";
+    if (!this.eventId) {
+      this.error =
+        "No hay un evento seleccionado. Vuelve a Events y selecciona uno.";
+      this._paint();
+      return;
     }
-    this.loadingEvents = false;
-    this._paint();
+
+    await this._selectEvent(this.eventId);
   }
 
   async _selectEvent(eventId) {
@@ -64,6 +58,7 @@ export default class Ranking {
     this.rankingData = null;
     this.rankingStatus = null;
     this.error = null;
+    this.confirmPublish = false;
     this.loadingRanking = true;
     this._paint();
 
@@ -88,8 +83,9 @@ export default class Ranking {
         this.rankingData = res?.data ?? null;
       }
     } catch (e) {
-      // 404 just means not published yet — not a hard error
-      if (!e.message?.includes("404") && !e.status === 404) {
+      // 404 just means ranking not published yet — not a hard error, show empty state
+      const is404 = e.response?.status === 404 || e.message?.includes("404");
+      if (!is404) {
         this.error = e.message ?? "Error al cargar el ranking.";
       }
     }
@@ -98,26 +94,41 @@ export default class Ranking {
     this._paint();
   }
 
+  _requestPublish() {
+    const s = this.rankingStatus;
+    // If there are incomplete evaluations, show confirm panel first
+    if (s?.hasIncompleteEvaluations && !this.confirmPublish) {
+      this.confirmPublish = true;
+      this._paint();
+      return;
+    }
+    this._publishRanking();
+  }
+
+  _cancelConfirm() {
+    this.confirmPublish = false;
+    this._paint();
+  }
+
   async _publishRanking() {
     if (!this.selectedEventId || this.publishing) return;
     this.publishing = true;
+    this.confirmPublish = false;
     this.error = null;
     this._paint();
 
     try {
       const res = await apiFetch(
         `/events/${this.selectedEventId}/publish-ranking`,
-        {
-          method: "POST",
-        },
+        { method: "POST" },
       );
       this.rankingData = res?.data ?? null;
+      // Store warnings returned by the backend (partial evaluations, etc.)
+      this._publishWarnings = this.rankingData?.warnings ?? [];
       // Refresh status
       const statusRes = await apiFetch(
         `/events/${this.selectedEventId}/ranking-status`,
-        {
-          method: "GET",
-        },
+        { method: "GET" },
       );
       this.rankingStatus = statusRes?.data ?? null;
     } catch (e) {
@@ -139,8 +150,7 @@ export default class Ranking {
 
   _html() {
     return `
-      <div class="rk-layout">
-        ${this._renderSidebar()}
+      <div class="rk-layout rk-layout--full">
         <div class="rk-main">
           ${this._renderMain()}
         </div>
@@ -148,47 +158,7 @@ export default class Ranking {
     `;
   }
 
-  _renderSidebar() {
-    return `
-      <aside class="rk-sidebar app-section">
-        <h6 class="rk-sidebar-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-          Eventos
-        </h6>
-
-        ${
-          this.loadingEvents
-            ? `<div class="rk-sidebar-loading"><span class="rk-spinner"></span></div>`
-            : this.events.length === 0
-              ? `<p class="rk-sidebar-empty">No hay eventos.</p>`
-              : this.events
-                  .map(
-                    (ev) => `
-                <button
-                  class="rk-event-btn ${this.selectedEventId == ev.id ? "rk-event-btn--active" : ""}"
-                  data-event-id="${ev.id}"
-                  type="button">
-                  <span class="rk-event-name">${ev.title}</span>
-                  <span class="rk-event-status rk-event-status--${(ev.status ?? "").toLowerCase()}">${ev.status ?? ""}</span>
-                </button>
-              `,
-                  )
-                  .join("")
-        }
-      </aside>
-    `;
-  }
-
   _renderMain() {
-    if (!this.selectedEventId) {
-      return `
-        <div class="rk-empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:.3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <p>Selecciona un evento para ver su ranking.</p>
-        </div>
-      `;
-    }
-
     if (this.loadingRanking) {
       return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>Cargando...</p></div>`;
     }
@@ -202,6 +172,10 @@ export default class Ranking {
 
   _renderStatusPanel() {
     const s = this.rankingStatus;
+
+    const incompleteProjects =
+      s.projects?.filter((p) => !p.fullyEvaluated) ?? [];
+
     const items = [
       {
         ok: s.isDeadlinePassed,
@@ -211,11 +185,16 @@ export default class Ranking {
       },
       {
         ok: s.allProjectsEvaluated,
+        warn: !s.allProjectsEvaluated,
         label: s.allProjectsEvaluated
           ? `Todos los proyectos evaluados (${s.totalProjects}/${s.totalProjects})`
-          : `Proyectos evaluados: ${s.fullyEvaluatedProjects} / ${s.totalProjects}`,
+          : `Evaluación parcial: ${s.fullyEvaluatedProjects} de ${s.totalProjects} proyectos completos`,
       },
     ];
+
+    const warnIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0;color:#f59e0b"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
     return `
       <div class="rk-status-panel app-section">
@@ -234,12 +213,8 @@ export default class Ranking {
           ${items
             .map(
               (it) => `
-            <div class="rk-check-item ${it.ok ? "rk-check-item--ok" : "rk-check-item--pending"}">
-              ${
-                it.ok
-                  ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`
-                  : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
-              }
+            <div class="rk-check-item ${it.ok ? "rk-check-item--ok" : it.warn ? "rk-check-item--warn" : "rk-check-item--pending"}">
+              ${it.ok ? checkIcon : it.warn ? warnIcon : errorIcon}
               <span>${it.label}</span>
             </div>
           `,
@@ -248,17 +223,16 @@ export default class Ranking {
         </div>
 
         ${
-          !s.allProjectsEvaluated && s.projects?.length
-            ? `<details class="rk-pending-details">
-              <summary>Ver proyectos pendientes</summary>
+          incompleteProjects.length > 0
+            ? `<details class="rk-pending-details" ${this.confirmPublish ? "open" : ""}>
+              <summary>Ver proyectos con evaluación incompleta (${incompleteProjects.length})</summary>
               <ul class="rk-pending-list">
-                ${s.projects
-                  .filter((p) => !p.fullyEvaluated)
+                ${incompleteProjects
                   .map(
                     (p) => `
                   <li>
                     <strong>${p.team}</strong>
-                    <span class="rk-areas-progress">${p.evaluatedAreaCount}/${p.requiredAreaCount} áreas</span>
+                    <span class="rk-areas-progress rk-areas-progress--warn">${p.evaluatedAreaCount}/${p.requiredAreaCount} áreas</span>
                   </li>
                 `,
                   )
@@ -269,16 +243,45 @@ export default class Ranking {
         }
 
         ${
-          s.canPublish
-            ? `<button class="rk-publish-btn ${this.publishing ? "rk-publish-btn--loading" : ""}" id="rk-publish-btn" type="button" ${this.publishing ? "disabled" : ""}>
-              ${
-                this.publishing
-                  ? `<span class="rk-spinner"></span> Calculando...`
-                  : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ${this.rankingData ? "Recalcular ranking" : "Publicar ranking"}`
-              }
-            </button>`
-            : `<p class="rk-cannot-publish">Completa las condiciones anteriores para publicar el ranking.</p>`
+          this._publishWarnings?.length > 0
+            ? `<div class="rk-alert rk-alert--warn">
+                <strong>Ranking publicado con advertencias:</strong>
+                <ul style="margin:6px 0 0 0;padding-left:18px">
+                  ${this._publishWarnings.map((w) => `<li>${w.message}</li>`).join("")}
+                </ul>
+              </div>`
+            : ""
+        }
+
+        ${
+          !s.canPublish
+            ? `<p class="rk-cannot-publish">El evento aún no ha cerrado. No es posible publicar el ranking.</p>`
+            : this.confirmPublish
+              ? `<div class="rk-confirm-panel">
+                  <div class="rk-confirm-icon">${warnIcon}</div>
+                  <div class="rk-confirm-body">
+                    <p class="rk-confirm-title">¿Publicar con evaluaciones incompletas?</p>
+                    <p class="rk-confirm-desc">
+                      ${incompleteProjects.length} proyecto${incompleteProjects.length !== 1 ? "s" : ""} no ha${incompleteProjects.length !== 1 ? "n" : ""} sido evaluado${incompleteProjects.length !== 1 ? "s" : ""} en todas las áreas.
+                      Los scores se calcularán solo con las áreas que sí tienen evaluación.
+                    </p>
+                    <div class="rk-confirm-actions">
+                      <button class="rk-btn rk-btn--ghost" id="rk-cancel-confirm-btn" type="button">Cancelar</button>
+                      <button class="rk-btn rk-btn--danger" id="rk-publish-btn" type="button">
+                        Sí, publicar de todos modos
+                      </button>
+                    </div>
+                  </div>
+                </div>`
+              : `<button class="rk-publish-btn ${this.publishing ? "rk-publish-btn--loading" : ""} ${s.hasIncompleteEvaluations ? "rk-publish-btn--warn" : ""}" id="rk-publish-btn" type="button" ${this.publishing ? "disabled" : ""}>
+                  ${
+                    this.publishing
+                      ? `<span class="rk-spinner"></span> Calculando...`
+                      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      ${this.rankingData ? "Recalcular ranking" : "Publicar ranking"}
+                      ${s.hasIncompleteEvaluations ? warnIcon : ""}`
+                  }
+                </button>`
         }
       </div>
     `;
@@ -413,17 +416,21 @@ export default class Ranking {
   // ── Event handlers ─────────────────────────────────────────────────────────
 
   _attachHandlers() {
-    // Event selector
-    document.querySelectorAll(".rk-event-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        this._selectEvent(btn.dataset.eventId);
-      });
+    // Publish button — routes through _requestPublish which handles confirm flow
+    document.getElementById("rk-publish-btn")?.addEventListener("click", () => {
+      if (this.confirmPublish) {
+        this._publishRanking();
+      } else {
+        this._requestPublish();
+      }
     });
 
-    // Publish button
-    document.getElementById("rk-publish-btn")?.addEventListener("click", () => {
-      this._publishRanking();
-    });
+    // Cancel confirm button
+    document
+      .getElementById("rk-cancel-confirm-btn")
+      ?.addEventListener("click", () => {
+        this._cancelConfirm();
+      });
 
     // Row click → expand members
     document.querySelectorAll(".rk-row[data-team]").forEach((row) => {
