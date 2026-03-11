@@ -645,29 +645,36 @@ export async function loadComments(projectId, user) {
   await refresh();
 
   // ── Post top-level comment ──────────────────────────────────
-  postBtn.addEventListener("click", async () => {
-    const text = input.value.trim();
+  // Clone button + input to strip any previously attached listeners
+  // Guards against loadComments being called more than once on the same DOM.
+  const activeBtn = postBtn.cloneNode(true);
+  postBtn.replaceWith(activeBtn);
+  const activeInput = input.cloneNode(true);
+  input.replaceWith(activeInput);
+
+  activeBtn.addEventListener("click", async () => {
+    const text = activeInput.value.trim();
     if (!text) return;
 
-    postBtn.disabled = true;
-    postBtn.textContent = "Posting...";
+    activeBtn.disabled = true;
+    activeBtn.textContent = "Posting...";
 
     try {
       await postComment({ projectId, comment: text });
-      input.value = "";
+      activeInput.value = "";
       await refresh();
     } catch (err) {
       alert(err?.message ?? "Could not post comment.");
     } finally {
-      postBtn.disabled = false;
-      postBtn.textContent = "Post Comment";
+      activeBtn.disabled = false;
+      activeBtn.textContent = "Post Comment";
     }
   });
 
   // Allow Ctrl+Enter to submit
-  input.addEventListener("keydown", (e) => {
+  activeInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      postBtn.click();
+      activeBtn.click();
     }
   });
 
