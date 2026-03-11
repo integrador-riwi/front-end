@@ -1,0 +1,350 @@
+@import url("./root.css");
+/* ============================================================
+   CODER EVENT SELECTION VIEW
+   ============================================================ */
+
+.ces-page {
+  min-height: 100vh;
+  background: #f4f6fb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  font-family: "Ubuntu", sans-serif;
+}
+
+/* Dot grid background */
+.ces-bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(107, 92, 255, 0.12) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ces-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 960px;
+}
+
+/* ── Header ── */
+.ces-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: cesFadeUp 0.5s ease both;
+}
+
+.ces-logo {
+  width: 52px;
+  height: 52px;
+  background: var(--accent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: #fff;
+}
+
+.ces-logo svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ces-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #1a1e35;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+}
+
+.ces-subtitle {
+  font-size: 1rem;
+  color: #6b7a99;
+  line-height: 1.6;
+}
+
+.ces-subtitle strong {
+  color: #1a1e35;
+}
+
+/* ── Events grid ── */
+.ces-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Event card ── */
+.ces-event-card {
+  background: #fff;
+  border: 1.5px solid #e8ebf2;
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+  animation: cesFadeUp 0.45s ease both;
+  animation-delay: var(--delay, 0ms);
+  cursor: default;
+}
+
+.ces-event-card:hover {
+  border-color: #6b5cff;
+  box-shadow: 0 8px 32px rgba(107, 92, 255, 0.1);
+  transform: translateY(-3px);
+}
+
+/* ── Card top row ── */
+.ces-event-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ces-event-type {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.7rem;
+  border-radius: 99px;
+}
+
+.ces-event-org {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #6b7a99;
+  background: #f4f6f9;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  margin-left: auto;
+}
+
+/* ── Card content ── */
+.ces-event-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1e35;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.ces-event-desc {
+  font-size: 0.875rem;
+  color: #6b7a99;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Meta items ── */
+.ces-event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.ces-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7a99;
+}
+
+.ces-meta-item svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: #9ca3b8;
+}
+
+/* ── Join button ── */
+.ces-btn-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  background: var(--accent);;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: "Ubuntu", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+  margin-top: auto;
+}
+
+.ces-btn-join svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 0.2s;
+}
+
+.ces-btn-join:hover {
+  background: #253167;
+  transform: translateY(-1px);
+}
+
+.ces-btn-join:hover svg {
+  transform: translateX(3px);
+}
+
+.ces-btn-join:active {
+  transform: scale(0.98);
+}
+
+/* ── Empty state ── */
+.ces-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  color: #9ca3b8;
+  text-align: center;
+}
+
+.ces-empty svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+}
+
+.ces-empty p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7a99;
+  margin: 0;
+}
+
+.ces-empty span {
+  font-size: 0.875rem;
+}
+
+/* ── Error ── */
+.ces-error {
+  text-align: center;
+  color: #d84545;
+  font-size: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+/* ── Skeleton ── */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.ces-skeleton {
+  pointer-events: none;
+  cursor: default !important;
+}
+
+.ces-sk-badge,
+.ces-sk-title,
+.ces-sk-line,
+.ces-sk-pill,
+.ces-sk-btn {
+  background: linear-gradient(90deg, #f0f2f5 25%, #e4e7ed 50%, #f0f2f5 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.ces-sk-badge {
+  height: 22px;
+  width: 80px;
+  border-radius: 99px;
+}
+.ces-sk-title {
+  height: 20px;
+  width: 70%;
+}
+.ces-sk-line {
+  height: 12px;
+  width: 90%;
+}
+.ces-sk-line.short {
+  width: 55%;
+}
+
+.ces-sk-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.ces-sk-pill {
+  height: 28px;
+  width: 90px;
+  border-radius: 99px;
+  margin: 0;
+}
+.ces-sk-btn {
+  height: 38px;
+  width: 120px;
+  border-radius: 10px;
+  margin: 0;
+}
+
+/* ── Animation ── */
+@keyframes cesFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .ces-page {
+    padding: 2rem 1rem;
+  }
+  .ces-events-grid {
+    grid-template-columns: 1fr;
+  }
+  .ces-title {
+    font-size: 1.8rem;
+  }
+}

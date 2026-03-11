@@ -6,12 +6,13 @@ import CreateEvent from "../views/createEvent.js";
 import EventDetails from "../views/eventDetails.js";
 import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
-import QRVoting from "../views/EventVoting.js";
 import coderHome from "../views/coderHome.js";
+import CoderEventSelect from "../views/codereventselect.js";
 import { getCurrentUser } from "../utils/helpers.js";
-import ProjectSettings from "../views/projectSettings.js";
+import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
+import TLDashboardView from "../views/TLDashboardView.js";
 
 class App {
   constructor() {
@@ -25,6 +26,25 @@ class App {
   init() {
     const user = getCurrentUser();
     this.user = user;
+
+    const params = new URLSearchParams(window.location.search);
+    const githubSuccess = params.get("github");
+    const githubError = params.get("error");
+
+    if (githubSuccess === "success" || githubError) {
+      window.history.replaceState({}, "", "/");
+      if (!isAuthenticated()) {
+        this.navigate("login");
+        return;
+      }
+      this.navigate("profile", {
+        githubSuccess: githubSuccess === "success",
+        githubUsername: params.get("username"),
+        githubError: githubError,
+      });
+      return;
+    }
+
     if (!isAuthenticated()) {
       this.navigate("login");
       return;
@@ -37,19 +57,32 @@ class App {
     console.log("Authenticated:", isAuthenticated());
     switch (this.user?.role) {
       case "ADMIN":
-        this.navigate("dashboard");
+        this.navigate("events");
         break;
       case "CODER":
-        console.log("hello")
-        this.navigate("coderHome");
+        this.navigate("coderEventSelect");
+        break;
+      case "TL_DEVELOPMENT":
+        this.navigate("coderEventSelect");
+        break;
+      case "TL_SOFT_SKILLS":
+        this.navigate("coderEventSelect");
+        break;
+      case "TL_ENGLISH":
+        this.navigate("coderEventSelect");
         break;
       default:
         this.navigate("login");
     }
   }
 
-
   navigate(route, params = {}) {
+    // Teardown current view before replacing it
+    if (this.currentView && typeof this.currentView.destroy === "function") {
+      this.currentView.destroy();
+    }
+    this.currentView = null;
+
     this.app.innerHTML = "";
     this.currentRoute = route;
     this.currentParams = params;
@@ -59,7 +92,7 @@ class App {
         this.currentView = new LoginView(this);
         break;
       case "dashboard":
-        this.currentView = new DashboardView(this);
+        this.currentView = new DashboardView(this, params);
         break;
       case "events":
         this.currentView = new EventsView(this);
@@ -69,6 +102,7 @@ class App {
         break;
       case "details":
         this.currentView = new EventDetails(this, params);
+        console.log(params);
         break;
       case "projects":
         this.currentView = new Teams(this);
@@ -76,18 +110,24 @@ class App {
       case "ranking":
         this.currentView = new Ranking(this);
         break;
-      case "qr-voting":
-        this.currentView = new QRVoting(this);
-        break;
+      case "coderEventSelect":
+        this.currentView = new CoderEventSelect(this);
+        this.currentView.init();
+        return;
       case "coderHome":
-        this.currentView = new coderHome(this)
-        break;
+        this.currentView = new coderHome(this);
+        this.currentView.init();
+        return;
       case "projectSettings":
-        this.currentView = new ProjectSettings(this)
+        this.currentView = new ProjectSettings(this, params);
         break;
       case "profile":
         this.currentView = new ProfileView(this);
         break;
+      case "tlDashboard":
+        this.currentView = new TLDashboardView(this);
+        this.currentView.init();
+        return;
       default:
         return this.navigate("login");
     }
@@ -97,7 +137,6 @@ class App {
       return;
     }
     this.currentView.render();
-
   }
 }
 

@@ -17,6 +17,11 @@ export async function apiFetch(endpoint, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
+  // 204 No Content — no hay body que parsear
+  if (response.status === 204) {
+    return null;
+  }
+
   const data = await response.json();
 
   if (!response.ok) {
@@ -59,6 +64,20 @@ export async function refreshTokens() {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
 
+export async function createTeam(teamData) {
+  const payload =
+    typeof teamData === "string" ? { name: teamData } : { ...teamData };
+
+  if (payload.name) {
+    payload.name = payload.name.trim();
+  }
+
+  return apiFetch("/teams", {
+    method: "POST",
+    body: payload,
+  });
+}
+
 export async function getMyProfile() {
   const response = await apiFetch("/auth/me", { method: "GET" });
   return response.data ?? response;
@@ -88,7 +107,140 @@ export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
 }
 
-// AI - Similar Projects Search
+export async function getActiveEvents() {
+  return apiFetch("/events/active", { method: "GET" });
+}
+
+// Invitations
+export async function getAvailableCoders(teamId, search = "") {
+  const url = `/teams/${teamId}/available?search=${encodeURIComponent(search)}&limit=20`;
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function inviteMember(teamId, userId) {
+  return apiFetch(`/teams/${teamId}/members`, {
+    method: "POST",
+    body: { userId, role: "DEVELOPER" },
+  });
+}
+
+export async function acceptInvitation(invitationId) {
+  return apiFetch(`/teams/invitations/${invitationId}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function rejectInvitation(invitationId) {
+  return apiFetch(`/teams/invitations/${invitationId}/reject`, {
+    method: "POST",
+  });
+}
+
+export async function leaveTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/leave`, { method: "DELETE" });
+}
+
+// Join Requests
+export async function requestToJoinTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/request-join`, {
+    method: "POST",
+  });
+}
+
+export async function getTeamJoinRequests(teamId) {
+  return apiFetch(`/teams/${teamId}/join-requests`, { method: "GET" });
+}
+
+export async function getMyJoinRequests() {
+  return apiFetch("/teams/join-requests/my", { method: "GET" });
+}
+
+export async function acceptJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function rejectJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/reject`, {
+    method: "POST",
+  });
+}
+
+export async function cancelJoinRequest(requestId) {
+  return apiFetch(`/teams/join-requests/${requestId}/cancel`, {
+    method: "DELETE",
+  });
+}
+
+// Comments
+export async function getComments(projectId) {
+  const response = await apiFetch(`/comments/project/${projectId}`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function postComment({
+  projectId,
+  comment,
+  parentCommentId = null,
+}) {
+  const response = await apiFetch("/comments", {
+    method: "POST",
+    body: { projectId, comment, parentCommentId },
+  });
+  return response?.data ?? response;
+}
+
+export async function deleteComment(commentId) {
+  return apiFetch(`/comments/${commentId}`, { method: "DELETE" });
+}
+
+// Evaluations (TL only)
+export async function getRubricsByEvent(eventId) {
+  const response = await apiFetch(`/evaluations/rubrics/${eventId}`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function submitEvaluations(projectId, evaluations) {
+  const response = await apiFetch(`/evaluations/project/${projectId}`, {
+    method: "POST",
+    body: { evaluations },
+  });
+  return response?.data ?? response;
+}
+
+export async function getMyEvaluationsForProject(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+export async function updateTeam(teamId, data) {
+  return apiFetch(`/teams/${teamId}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+export async function updateProject(projectId, data) {
+  return apiFetch(`/projects/${projectId}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+export async function submitProject(projectId) {
+  return apiFetch(`/projects/${projectId}/submit`, { method: "POST" });
+}
+
+export async function removeMember(teamId, userId) {
+  return apiFetch(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
+}
+
 export async function searchSimilarProjects(
   query,
   limit = 3,

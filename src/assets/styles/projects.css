@@ -75,11 +75,29 @@
   object-fit: cover;
 }
 
+.app-project-card-list {
+  display: flex;
+  background: var(--color-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: 0.3s ease;
+  overflow: hidden;
+}
+
 /* BADGE */
 .app-project-badge {
   position: absolute;
   top: 12px;
   left: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 50px;
+  background: var(--green-100);
+  color: var(--color-success);
+}
+
+.app-project-card-list .app-project-badge {
+  position: static;
   padding: 4px 10px;
   font-size: 12px;
   border-radius: 50px;

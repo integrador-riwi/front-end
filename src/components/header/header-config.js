@@ -1,4 +1,8 @@
 export const HEADER_LINKS_BY_VIEW = {
+    "dashboard": [
+    { label: "Events", route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+  ],
   "events/create": [
     { label: "Events",            route: "events"           },
     { label: "Management",        route: "settings"         },
@@ -14,11 +18,16 @@ export const HEADER_LINKS_BY_VIEW = {
   ],
   "details": [
     { label: "Events",         route: "events",      },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: "Details",       route: "details",       },
   ],
 };
 
 export const HEADER_LAYOUT_BY_ROUTE = {
+  "dashboard": {
+      variant: "details",
+      title: "Dashboard",
+    },
   "events/create": {
     variant: "create-event",
     title: "Create New Event",

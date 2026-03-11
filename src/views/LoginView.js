@@ -1,15 +1,15 @@
 import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
-import "../assets/styles/login.css"
+import "../assets/styles/login.css";
 
 export default class LoginView {
   constructor(router) {
     this.router = router;
-    this.email    = "";
+    this.email = "";
     this.password = "";
-    this.error    = "";
-    this.loading  = false;
+    this.error = "";
+    this.loading = false;
   }
 
   render() {
@@ -41,7 +41,7 @@ export default class LoginView {
           <div class="form-card w-100">
 
             <!-- Mobile-only app name -->
-            <div class="d-flex d-md-none justify-content-center mb-4">
+            <div class="d-flex d-md-none justify-content-center mb-2">
               <span class="mobile-app-name">TeamUp</span>
             </div>
 
@@ -88,7 +88,11 @@ export default class LoginView {
 
               <button type="submit" class="btn btn-submit w-100 mt-1" id="submitBtn"
                       ${this.loading ? "disabled" : ""}>
-                ${this.loading ? "Signing in..." : "Sign in"}
+                ${
+                  this.loading
+                    ? `<span class="login-spinner"></span>`
+                    : "Sign in"
+                }
               </button>
 
             </form>
@@ -111,27 +115,34 @@ export default class LoginView {
   }
 
   attachEventHandlers() {
-    const form          = document.getElementById("loginForm");
-    const emailInput    = document.getElementById("email");
+    const form = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
 
-    emailInput.addEventListener("input",    (e) => { this.email    = e.target.value; });
-    passwordInput.addEventListener("input", (e) => { this.password = e.target.value; });
-    form.addEventListener("submit",         (e) => this.handleLogin(e));
+    emailInput.addEventListener("input", (e) => {
+      this.email = e.target.value;
+    });
+    passwordInput.addEventListener("input", (e) => {
+      this.password = e.target.value;
+    });
+    form.addEventListener("submit", (e) => this.handleLogin(e));
   }
 
   async handleLogin(e) {
     e.preventDefault();
     this.loading = true;
-    this.error   = "";
+    this.error = "";
     this.render();
 
     try {
       const response = await loginUser(this.email, this.password);
       saveSession(response.data.token, response.data.user);
-      this.router.init()
+      this.router.init();
     } catch (err) {
-      this.error = err.response?.data?.message || err.message || "Login failed. Try again.";
+      this.error =
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed. Try again.";
       this.loading = false;
       this.render();
     }
