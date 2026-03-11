@@ -550,8 +550,6 @@ export default class CreateEvent {
     if (!picker) return;
 
     try {
-      const { getGithubOrgs, getGithubAuthUrl } =
-        await import("../services/api.js");
       const data = await getGithubOrgs();
       this.githubConnected = true;
       this.githubUsername = data.username;
@@ -591,7 +589,6 @@ export default class CreateEvent {
       this.githubOrgs = [];
       let authUrl = "#";
       try {
-        const { getGithubAuthUrl } = await import("../services/api.js");
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
       } catch (_) {}
