@@ -197,8 +197,8 @@ export function renderCoderTeam({
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
           </div>
-            
-            <div class="bg-white rounded-4 p-4 ct-card-shadow" id="tl-evaluation-panel">
+            <!-- TL Evaluation Panel -->
+            <div class="bg-white rounded-4 p-4 ct-card-shadow d-none" id="tl-evaluation-panel">
             <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3" style="border-color: var(--border) !important;">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -300,7 +300,6 @@ export function renderCoderTeam({
           ${
             isTL
               ? `
-          <!-- TL Evaluation Panel -->
           
           `
               : ""
@@ -831,10 +830,12 @@ export async function loadEvaluationPanel({
   members,
   userRole = null,
 }) {
+  const display = document.getElementById("tl-evaluation-panel")
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
   const feedbackEl = document.getElementById("eval-feedback");
   if (!container || !submitBtn) return;
+  if (userRole !== "CODER") display.classList.remove("d-none")
 
   const ROLE_AREA_MAP = {
     TL_DEVELOPMENT: "DEVELOPMENT",
