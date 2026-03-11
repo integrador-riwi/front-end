@@ -13,6 +13,9 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
+import { i18nReady } from "../utils/i18n.js";
+
+await i18nReady;
 import QRVoting from "../views/EventVoting.js"
 import NotFoundView from "../views/NotFoundView.js";
 class App {
@@ -78,7 +81,6 @@ class App {
   }
 
   navigate(route, params = {}) {
-    // Teardown current view before replacing it
     if (this.currentView && typeof this.currentView.destroy === "function") {
       this.currentView.destroy();
     }

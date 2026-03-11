@@ -102,6 +102,11 @@ export async function getGithubAuthUrl() {
   return response.data?.url ?? response.url ?? null;
 }
 
+export async function getGithubOrgs() {
+  const response = await apiFetch("/auth/github/orgs", { method: "GET" });
+  return response.data ?? response;
+}
+
 // Events
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
@@ -210,6 +215,14 @@ export async function submitEvaluations(projectId, evaluations) {
     method: "POST",
     body: { evaluations },
   });
+  return response?.data ?? response;
+}
+
+export async function calculateProjectGrades(projectId) {
+  const response = await apiFetch(
+    `/evaluations/project/${projectId}/calculate`,
+    { method: "POST" },
+  );
   return response?.data ?? response;
 }
 
