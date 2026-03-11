@@ -102,6 +102,11 @@ export async function getGithubAuthUrl() {
   return response.data?.url ?? response.url ?? null;
 }
 
+export async function getGithubOrgs() {
+  const response = await apiFetch("/auth/github/orgs", { method: "GET" });
+  return response.data ?? response;
+}
+
 // Events
 export async function getEvents() {
   return apiFetch("/events", { method: "GET" });
