@@ -2,6 +2,7 @@ import { getActiveEvents } from "../services/api.js";
 import Navbar from "../components/navbar/navbar.js";
 import "../assets/styles/codereventselect.css";
 
+
 export default class CoderEventSelect {
   constructor(app) {
     this.app = app;
