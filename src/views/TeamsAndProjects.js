@@ -13,6 +13,7 @@ export default class Teams {
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
+    this.eventId = localStorage.getItem("currentEventId");
   }
 
   renderAvatars(users) {
@@ -67,7 +68,10 @@ export default class Teams {
       return;
     }
 
-    const fetchTeams = await apiFetch("/teams?limit=50", { method: "GET" });
+    const fetchTeams = await apiFetch(
+      `/teams?limit=50${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
+      { method: "GET" },
+    );
     const totalTeams = fetchTeams.data.teams;
 
     // ✅ Usar Promise.all + for...of en lugar de .map() con async
@@ -137,7 +141,10 @@ export default class Teams {
 
     const tbody = document.getElementById("teamsTableBody");
 
-    const fetchTeams = await apiFetch("/teams?limit=100", { method: "GET" });
+    const fetchTeams = await apiFetch(
+      `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
+      { method: "GET" },
+    );
     const totalTeams = fetchTeams.data.teams;
 
     for (const team of totalTeams) {
@@ -177,14 +184,14 @@ export default class Teams {
     const listViewBtn = document.getElementById("list-view-btn");
 
     gridViewBtn?.addEventListener("click", async () => {
-      gridViewBtn.classList.add("active")
-      listViewBtn.classList.remove("active")
+      gridViewBtn.classList.add("active");
+      listViewBtn.classList.remove("active");
       await this.renderTeamsGrid();
     });
 
     listViewBtn?.addEventListener("click", async () => {
-      listViewBtn.classList.add("active")
-      gridViewBtn.classList.remove("active")
+      listViewBtn.classList.add("active");
+      gridViewBtn.classList.remove("active");
       await this.renderTeamsList();
     });
   }
