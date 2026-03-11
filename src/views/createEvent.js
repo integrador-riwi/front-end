@@ -1,4 +1,3 @@
-import "../assets/styles/createEvent.css";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import Navbar from "../components/navbar/navbar.js";
