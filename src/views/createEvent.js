@@ -1,6 +1,6 @@
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
-import "../assets/styles/createEvent.css";
+//import "../assets/styles/createEvent.css";
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
