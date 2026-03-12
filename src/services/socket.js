@@ -75,7 +75,8 @@ function setupEventListeners() {
   socket.on("join_request:new", (data) => {
     console.log("[Socket] New join request:", data);
 
-    toast.info(
+    let toastId = null;
+    toastId = toast.info(
       "New join request",
       `${data.coderName} wants to join your team`,
       {
@@ -92,11 +93,13 @@ function setupEventListeners() {
             },
           ],
           onAccept: async (item) => {
+            toast.remove(toastId);
             if (eventHandlers["join_request:new:accept"]) {
               await eventHandlers["join_request:new:accept"](item);
             }
           },
           onDeny: async (item) => {
+            toast.remove(toastId);
             if (eventHandlers["join_request:new:deny"]) {
               await eventHandlers["join_request:new:deny"](item);
             }
