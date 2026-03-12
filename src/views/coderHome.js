@@ -32,6 +32,7 @@ import {
   rejectJoinRequest,
   cancelJoinRequest,
 } from "../services/api.js";
+import { on as socketOn, off as socketOff } from "../services/socket.js";
 
 export default class CoderHome {
   constructor(router, { user, team } = {}) {
@@ -182,6 +183,26 @@ export default class CoderHome {
     } else {
       this._stopPolling();
     }
+
+    // Socket: cuando llega una invitación nueva, actualizar estado y banner al instante
+    socketOn("invitation:new", (data) => {
+      const alreadyExists = this.pendingInvitations.some(
+        (i) => i.id_invitation === data.id,
+      );
+      if (!alreadyExists) {
+        this.pendingInvitations = [
+          ...this.pendingInvitations,
+          {
+            id_invitation: data.id,
+            id_team: data.teamId,
+            team_name: data.teamName,
+            event_name: data.eventName,
+            invited_by_name: data.invitedByName,
+          },
+        ];
+        this._updateInvitationsBanner();
+      }
+    });
   }
 
   // ─────────────────────────────────────────
@@ -496,6 +517,7 @@ export default class CoderHome {
   // Called by the router when navigating away - cleans up all async resources
   destroy() {
     this._stopPolling();
+    socketOff("invitation:new");
   }
 
   // Polling de invitaciones y join requests
@@ -529,17 +551,17 @@ export default class CoderHome {
         if (relevantTeam) {
           this._stopPolling();
           toast.success(
-            'You have been accepted!',
+            "You have been accepted!",
             `Ahora eres parte del equipo ${relevantTeam.name}`,
             {
               action: {
-                label: 'Ver equipo',
+                label: "Ver equipo",
                 onClick: async () => {
                   await this.init();
                   this.render();
-                }
-              }
-            }
+                },
+              },
+            },
           );
           return;
         }
@@ -555,7 +577,7 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingInvitations = newInvitations;
-          const prevCount = currentIds.split(',').filter(Boolean).length;
+          const prevCount = currentIds.split(",").filter(Boolean).length;
           if (newInvitations.length > prevCount) {
             this._showInvitationsToast(newInvitations);
           }
@@ -580,9 +602,12 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingJoinRequests = newRequests;
-          const prevCount = currentIds.split(',').filter(Boolean).length;
+          const prevCount = currentIds.split(",").filter(Boolean).length;
           if (newRequests.length > prevCount) {
-            toast.info('New request', `You have ${newRequests.length} join request(s) pending`);
+            toast.info(
+              "New request",
+              `You have ${newRequests.length} join request(s) pending`,
+            );
           }
           this.inviteModal?.refreshJoinRequests?.();
         }
@@ -620,14 +645,14 @@ export default class CoderHome {
     const dropdownItems = invitations.map((inv) => ({
       id: inv.id_invitation,
       idTeam: inv.id_team,
-      title: inv.team_name || 'Equipo sin nombre',
-      subtitle: `${inv.event_name || 'Sin evento'} • Invitado por: ${inv.invited_by_name || 'Alguien'}`,
+      title: inv.team_name || "Equipo sin nombre",
+      subtitle: `${inv.event_name || "Sin evento"} • Invitado por: ${inv.invited_by_name || "Alguien"}`,
       accept: true,
-      deny: true
+      deny: true,
     }));
 
     toast.info(
-      'Invitaciones pendientes',
+      "Invitaciones pendientes",
       `Tienes ${count} invitación(es) sin responder`,
       {
         duration: 0,
@@ -636,37 +661,35 @@ export default class CoderHome {
           onAccept: async (item) => {
             try {
               await acceptInvitation(item.id);
-              toast.success('Accepted!', `You are now part of team "${item.title}"`, {
-                duration: 5000,
-                action: {
-                  label: 'Ver equipo',
-                  onClick: async () => {
-                    await this.init();
-                    this.render();
-                  },
-                  keepOpen: true
-                }
-              });
               this.pendingInvitations = this.pendingInvitations.filter(
-                i => i.id_invitation !== item.id
+                (i) => i.id_invitation !== item.id,
               );
+              this._updateInvitationsBanner();
+              await this.init();
             } catch (err) {
-              toast.error('Error', err?.message || 'No se pudo aceptar la invitación');
+              toast.error(
+                "Error",
+                err?.message || "No se pudo aceptar la invitación",
+              );
             }
           },
           onDeny: async (item) => {
             try {
               await rejectInvitation(item.id);
-              toast.info('Declined', `Invitation to "${item.title}" declined`);
+              toast.info("Declined", `Invitation to "${item.title}" declined`);
               this.pendingInvitations = this.pendingInvitations.filter(
-                i => i.id_invitation !== item.id
+                (i) => i.id_invitation !== item.id,
               );
+              this._updateInvitationsBanner();
             } catch (err) {
-              toast.error('Error', err?.message || 'No se pudo rechazar la invitación');
+              toast.error(
+                "Error",
+                err?.message || "No se pudo rechazar la invitación",
+              );
             }
-          }
-        }
-      }
+          },
+        },
+      },
     );
   }
 
@@ -753,7 +776,10 @@ export default class CoderHome {
           this.isLeader = false;
           await this.init();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Error leaving the team. Try again.");
+          toast.error(
+            "Error",
+            err?.message ?? "Error leaving the team. Try again.",
+          );
         }
       });
   }
@@ -797,7 +823,10 @@ export default class CoderHome {
       console.log("[createTeam] Response:", response);
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
-      toast.success('Team created!', `Team "${payload?.name ?? teamName}" created successfully.`);
+      toast.success(
+        "Team created!",
+        `Team "${payload?.name ?? teamName}" created successfully.`,
+      );
       this.formData = { teamName: "", projectTopic: "" };
       this.isCreatingTeam = false;
 
@@ -809,7 +838,7 @@ export default class CoderHome {
         error?.response?.data?.message ||
         error?.message ||
         "Could not create the team.";
-      toast.error('Error', this.createTeamError);
+      toast.error("Error", this.createTeamError);
       this.createTeamSuccess = "";
       this.isCreatingTeam = false;
       this.render();
@@ -855,9 +884,9 @@ export default class CoderHome {
 
   _showJoinFeedback(message, type) {
     if (type === "success") {
-      toast.success('Request sent', message);
+      toast.success("Request sent", message);
     } else {
-      toast.error('Error', message);
+      toast.error("Error", message);
     }
   }
 
@@ -885,7 +914,7 @@ export default class CoderHome {
         btn.textContent = "Accept";
       }
       if (rejectBtn) rejectBtn.disabled = false;
-      toast.error('Error', err?.message ?? "Could not accept the invitation.");
+      toast.error("Error", err?.message ?? "Could not accept the invitation.");
     }
   }
 
@@ -897,7 +926,7 @@ export default class CoderHome {
       );
       this.render();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not reject the invitation.");
+      toast.error("Error", err?.message ?? "Could not reject the invitation.");
     }
   }
 
