@@ -1104,7 +1104,7 @@ export function initDeliverables(projectId) {
   function _updateSubmitBtn(done) {
     const btn = document.getElementById("submitProjectBtn");
     if (!btn) return;
-    const allDone = done >= 3;
+    const allDone = done >= 4;
     btn.disabled = !allDone;
     btn.style.opacity = allDone ? "1" : "0.4";
     btn.style.cursor = allDone ? "pointer" : "not-allowed";
