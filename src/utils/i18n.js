@@ -446,7 +446,7 @@ const resources = {
 
 // ── Init i18next ───────────────────────────────────────────────
 export const i18nReady = i18next.init({
-  lng: localStorage.getItem(STORAGE_KEY) || "es",
+  lng: localStorage.getItem(STORAGE_KEY) || "en",
   fallbackLng: "en",
   resources,
   interpolation: { escapeValue: false },
@@ -463,7 +463,7 @@ export async function setLang(lang) {
 }
 
 export function toggleLang() {
-  return setLang(i18next.language === "es" ? "en" : "es");
+  return setLang(i18next.language === "en" ? "es" : "en");
 }
 
 export function onLangChange(fn) {

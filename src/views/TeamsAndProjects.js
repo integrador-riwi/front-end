@@ -43,9 +43,9 @@ export default class Teams {
     <div class="col-12">
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3">
         <div class="spinner-border" role="status" style="width:2.5rem;height:2.5rem;color:var(--color-primary);">
-          <span class="visually-hidden">Cargando...</span>
+          <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">Cargando equipos...</p>
+        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">Loading teams...</p>
       </div>
     </div>`;
   }
@@ -56,8 +56,8 @@ export default class Teams {
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3 text-center">
         <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span>
         <div>
-          <p class="app-page-title mb-1" style="font-size:1rem;">No hay equipos aún</p>
-          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">Cuando se creen equipos, aparecerán aquí.</p>
+          <p class="app-page-title mb-1" style="font-size:1rem;">No teams yet</p>
+          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">When teams are created, they will appear here.</p>
         </div>
       </div>
     </div>`;

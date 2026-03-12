@@ -115,15 +115,6 @@ export default class Header {
               ${layout.title}
             </h1>
           </div>
-
-          <div class="d-flex align-items-center gap-2">
-  
-            <button class="app-btn-primary d-flex align-items-center gap-2">
-              ${icons.save()}
-              Publish Event
-            </button>
-          </div>
-
         </div>
 
       </div>

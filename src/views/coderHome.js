@@ -530,10 +530,10 @@ export default class CoderHome {
           this._stopPolling();
           toast.success(
             'You have been accepted!',
-            `Ahora eres parte del equipo ${relevantTeam.name}`,
+            `You are now part of team ${relevantTeam.name}`,
             {
               action: {
-                label: 'Ver equipo',
+                label: 'View team',
                 onClick: async () => {
                   await this.init();
                   this.render();
@@ -620,15 +620,15 @@ export default class CoderHome {
     const dropdownItems = invitations.map((inv) => ({
       id: inv.id_invitation,
       idTeam: inv.id_team,
-      title: inv.team_name || 'Equipo sin nombre',
-      subtitle: `${inv.event_name || 'Sin evento'} • Invitado por: ${inv.invited_by_name || 'Alguien'}`,
+      title: inv.team_name || 'Unnamed Team',
+      subtitle: `${inv.event_name || 'No event'} • Invited by: ${inv.invited_by_name || 'Someone'}`,
       accept: true,
       deny: true
     }));
 
     toast.info(
-      'Invitaciones pendientes',
-      `Tienes ${count} invitación(es) sin responder`,
+      'Pending invitations',
+      `You have ${count} unanswered invitation(s)`,
       {
         duration: 0,
         dropdown: {
@@ -639,7 +639,7 @@ export default class CoderHome {
               toast.success('Accepted!', `You are now part of team "${item.title}"`, {
                 duration: 5000,
                 action: {
-                  label: 'Ver equipo',
+                  label: 'View team',
                   onClick: async () => {
                     await this.init();
                     this.render();
@@ -651,7 +651,7 @@ export default class CoderHome {
                 i => i.id_invitation !== item.id
               );
             } catch (err) {
-              toast.error('Error', err?.message || 'No se pudo aceptar la invitación');
+              toast.error('Error', err?.message || 'Could not accept the invitation');
             }
           },
           onDeny: async (item) => {
@@ -662,7 +662,7 @@ export default class CoderHome {
                 i => i.id_invitation !== item.id
               );
             } catch (err) {
-              toast.error('Error', err?.message || 'No se pudo rechazar la invitación');
+              toast.error('Error', err?.message || 'Could not reject the invitation');
             }
           }
         }
