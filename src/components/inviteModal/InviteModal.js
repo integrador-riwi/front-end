@@ -5,6 +5,7 @@ import {
   acceptJoinRequest,
   rejectJoinRequest,
 } from "../../services/api.js";
+import { toast } from "../Toast/index.js";
 
 /**
  * Reusable invite-member modal.
@@ -245,7 +246,7 @@ export default class InviteModal {
         btn.addEventListener("click", () => this._sendInvite(btn));
       });
     } catch (err) {
-      listEl.innerHTML = `<p class="invite-hint invite-error">${_esc(err?.message ?? "Error al buscar.")}</p>`;
+      toast.error('Error', err?.message ?? "Error searching.");
     }
   }
 

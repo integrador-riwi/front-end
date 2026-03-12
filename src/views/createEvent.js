@@ -646,20 +646,15 @@ export default class CreateEvent {
   // ── UI feedback ────────────────────────────────────────────────────────────
 
   _showError(msg) {
-    const el = document.getElementById("ce-feedback");
-    if (el) el.innerHTML = `<div class="ce-alert ce-alert--error">${msg}</div>`;
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    toast.error('Error', msg);
   }
 
   _showSuccess(msg) {
-    const el = document.getElementById("ce-feedback");
-    if (el)
-      el.innerHTML = `<div class="ce-alert ce-alert--success">${msg}</div>`;
+    toast.success('Success', msg);
   }
 
   _clearFeedback() {
-    const el = document.getElementById("ce-feedback");
-    if (el) el.innerHTML = "";
+    // No longer needed with toast
   }
 
   _setLoading(on) {
