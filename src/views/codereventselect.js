@@ -1,6 +1,7 @@
 import "../assets/styles/codereventselect.css";
 import { getActiveEvents } from "../services/api.js";
 import Navbar from "../components/navbar/navbar.js";
+import { toast } from "../components/Toast/index.js";
 export default class CoderEventSelect {
   constructor(app) {
     this.app = app;
@@ -18,6 +19,7 @@ export default class CoderEventSelect {
       this.events = res?.data ?? res ?? [];
     } catch (e) {
       this.error = "Could not load events. Please try again.";
+      toast.error('Error', this.error);
     }
     this.isLoading = false;
     this.render();

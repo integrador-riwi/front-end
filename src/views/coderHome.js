@@ -529,7 +529,7 @@ export default class CoderHome {
         if (relevantTeam) {
           this._stopPolling();
           toast.success(
-            '¡Has sido aceptado!',
+            'You have been accepted!',
             `Ahora eres parte del equipo ${relevantTeam.name}`,
             {
               action: {
@@ -582,7 +582,7 @@ export default class CoderHome {
           this.pendingJoinRequests = newRequests;
           const prevCount = currentIds.split(',').filter(Boolean).length;
           if (newRequests.length > prevCount) {
-            toast.info('Nueva solicitud', `Tienes ${newRequests.length} solicitud(es) de unión pendientes`);
+            toast.info('New request', `You have ${newRequests.length} join request(s) pending`);
           }
           this.inviteModal?.refreshJoinRequests?.();
         }
@@ -636,7 +636,7 @@ export default class CoderHome {
           onAccept: async (item) => {
             try {
               await acceptInvitation(item.id);
-              toast.success('¡Aceptado!', `Ahora eres parte del equipo "${item.title}"`, {
+              toast.success('Accepted!', `You are now part of team "${item.title}"`, {
                 duration: 5000,
                 action: {
                   label: 'Ver equipo',
@@ -657,7 +657,7 @@ export default class CoderHome {
           onDeny: async (item) => {
             try {
               await rejectInvitation(item.id);
-              toast.info('Rechazada', `Invitación a "${item.title}" rechazada`);
+              toast.info('Declined', `Invitation to "${item.title}" declined`);
               this.pendingInvitations = this.pendingInvitations.filter(
                 i => i.id_invitation !== item.id
               );
@@ -797,7 +797,7 @@ export default class CoderHome {
       console.log("[createTeam] Response:", response);
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
-      toast.success('¡Equipo creado!', `Team "${payload?.name ?? teamName}" created successfully.`);
+      toast.success('Team created!', `Team "${payload?.name ?? teamName}" created successfully.`);
       this.formData = { teamName: "", projectTopic: "" };
       this.isCreatingTeam = false;
 

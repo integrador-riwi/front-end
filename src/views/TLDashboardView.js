@@ -4,6 +4,7 @@ import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 import {
   renderCoderTeam,
   loadProjectBrief,
@@ -45,6 +46,7 @@ export default class TLDashboardView {
   async _loadTeams() {
     if (!this.selectedEvent?.id) {
       this.error = "No event selected.";
+      toast.error('Error', this.error);
       this.isLoading = false;
       this._renderList();
       return;
@@ -77,6 +79,7 @@ export default class TLDashboardView {
       );
     } catch (err) {
       this.error = "Could not load teams.";
+      toast.error('Error', this.error);
     }
 
     this.isLoading = false;

@@ -1004,11 +1004,11 @@ export async function loadEvaluationPanel({
         // Silently ignore — grades will recalculate on next submission
       }
       feedbackEl.innerHTML = `<span style="color:var(--color-success);font-weight:600;">✓ Evaluaciones enviadas exitosamente.</span>`;
-      toast.success('¡Evaluaciones enviadas!', 'Las evaluaciones se han guardado correctamente.');
+      toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
       submitBtn.textContent = "Actualizar Evaluaciones";
     } catch (err) {
       feedbackEl.innerHTML = `<span style="color:#ef4444;">${err?.message ?? "Error al enviar evaluaciones."}</span>`;
-      toast.error('Error', err?.message ?? "Error al enviar evaluaciones.");
+      toast.error('Error', err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";
     } finally {
       submitBtn.disabled = false;

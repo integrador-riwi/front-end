@@ -249,10 +249,10 @@ export default class CreateEvent {
         rubrics: this._buildRubricsPayload(),
       };
       await apiFetch("/events", { method: "POST", body });
-      toast.success('¡Evento creado!', 'El evento se ha creado exitosamente.');
+      toast.success('Event created!', 'The event has been created successfully.');
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      toast.error('Error', e.message ?? "Error al crear el evento.");
+      toast.error('Error', e.message ?? "Error creating the event.");
     } finally {
       this._setLoading(false);
     }
@@ -590,13 +590,7 @@ export default class CreateEvent {
         authUrl = urlData?.url ?? urlData ?? "#";
       } catch (_) {}
 
-      toast.warning('GitHub requerido', 'Debes conectar tu cuenta de GitHub para crear un evento.');
-
-      picker.innerHTML = `
-        <div class="alert alert-danger py-2 mb-0" style="font-size:0.88rem;">
-          <strong>Debes conectar tu cuenta de GitHub para crear un evento.</strong><br>
-          <a href="${authUrl}" class="alert-link">Conectar GitHub →</a>
-        </div>`;
+      toast.warning('GitHub required', 'You must connect your GitHub account to create an event.');
 
       if (submitBtn) {
         submitBtn.disabled = true;

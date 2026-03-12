@@ -1,6 +1,7 @@
 import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
+import { toast } from "../components/Toast/index.js";
 import "../assets/styles/login.css";
 
 export default class LoginView {
@@ -139,10 +140,8 @@ export default class LoginView {
       saveSession(response.data.token, response.data.user);
       this.router.init();
     } catch (err) {
-      this.error =
-        err.response?.data?.message ||
-        err.message ||
-        "Login failed. Try again.";
+      const errorMessage = err.response?.data?.message || err.message || "Login failed. Try again.";
+      toast.error('Login failed', errorMessage);
       this.loading = false;
       this.render();
     }
