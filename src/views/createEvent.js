@@ -19,20 +19,16 @@ const AREA_COLOR = {
 };
 
 const ALL_CLANS = [
-  "GOSLING",
-  "LINUS",
-  "HOPPER",
-  "LOVELACE",
-  "RITCHIE",
-  "VANROSSUM",
-  "BERNERSLEE",
-  "TESLA",
-  "MACONDO",
-  "MANGLAR",
-  "TAYRONA",
-  "CIENAGA",
-  "CAIMAN",
-  "SIERRA",
+  "Magdalena",
+  "Esthercita",
+  "Garabato",
+  "Micaela",
+  "Cayena",
+  "Malecón",
+  "Cortissoz",
+  "Turing",
+  "Tesla",
+  "McCarthy",
 ];
 
 export default class CreateEvent {

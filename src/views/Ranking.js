@@ -67,7 +67,7 @@ export default class Ranking {
     try {
       if (isAdmin(this.user)) {
         const [statusRes, rankingRes] = await Promise.allSettled([
-          apiFetch(`/events/${eventId}/ranking-status`, { method: "GET" }),
+          apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" }),
           apiFetch(`/events/${eventId}/ranking`, { method: "GET" }),
         ]);
         if (statusRes.status === "fulfilled") {
@@ -124,7 +124,7 @@ export default class Ranking {
 
     try {
       const res = await apiFetch(
-        `/events/${this.selectedEventId}/publish-ranking`,
+        `/events/${this.selectedEventId}/ranking/publish`,
         { method: "POST" },
       );
       this.rankingData = res?.data ?? null;
@@ -132,7 +132,7 @@ export default class Ranking {
 
       // Refresh status after publish
       const statusRes = await apiFetch(
-        `/events/${this.selectedEventId}/ranking-status`,
+        `/events/${this.selectedEventId}/ranking/status`,
         { method: "GET" },
       );
       this.rankingStatus = statusRes?.data ?? null;
