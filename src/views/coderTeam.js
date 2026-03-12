@@ -19,6 +19,7 @@ export function renderCoderTeam({
         video_url: project.video_url ?? null,
         preview_photo_url: project.preview_photo_url ?? null,
         presentation_url: project.presentation_url ?? null,
+        deploy_url: project.deploy_url ?? null,
       }
     : null;
 
@@ -830,12 +831,12 @@ export async function loadEvaluationPanel({
   members,
   userRole = null,
 }) {
-  const display = document.getElementById("tl-evaluation-panel")
+  const display = document.getElementById("tl-evaluation-panel");
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
   const feedbackEl = document.getElementById("eval-feedback");
   if (!container || !submitBtn) return;
-  if (userRole !== "CODER") display.classList.remove("d-none")
+  if (userRole !== "CODER") display.classList.remove("d-none");
 
   const ROLE_AREA_MAP = {
     TL_DEVELOPMENT: "DEVELOPMENT",
