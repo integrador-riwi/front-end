@@ -2,6 +2,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
+import { icons } from "../utils/icons.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -70,16 +71,16 @@ export default class DashboardView {
     const m = this.metrics;
 
     const cards = [
-      { label: "Teams", value: m.totalTeams, icon: "👥" },
-      { label: "Projects", value: m.totalProjects, icon: "📁" },
-      { label: "Coders", value: m.totalCoders, icon: "💻" },
-      { label: "Votes", value: m.totalVotes, icon: "🗳️" },
+      { label: "Teams", value: m.totalTeams, icon: icons.users() },
+      { label: "Projects", value: m.totalProjects, icon: icons.folder() },
+      { label: "Coders", value: m.totalCoders, icon: icons.code() },
+      { label: "Votes", value: m.totalVotes, icon: icons.vote() },
       {
         label: "Evaluated",
         value: `${m.evaluatedProjects}/${m.totalProjects}`,
-        icon: "✅",
+        icon: icons.check()
       },
-      { label: "Areas", value: m.activeAreas, icon: "📐" },
+      { label: "Areas", value: m.activeAreas, icon: icons.blocks() },
     ];
 
     return `
@@ -88,7 +89,7 @@ export default class DashboardView {
           .map(
             (c) => `
           <div class="app-section db-card" style="display:flex;flex-direction:column;gap:8px;padding:20px 24px">
-            <span style="font-size:28px">${c.icon}</span>
+            <span style="width:28px;height:28px;color:var(--accent,#6c63ff)">${c.icon}</span>
             <span class="db-card-value" style="font-size:2rem;font-weight:700;color:var(--primary,#6c63ff);line-height:1">${c.value}</span>
             <span style="font-size:.8rem;color:var(--text-muted,#888);font-weight:500;text-transform:uppercase;letter-spacing:.05em">${c.label}</span>
           </div>
