@@ -14,6 +14,7 @@ export default class Teams {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.eventId = localStorage.getItem("currentEventId");
+    this.isAdmin = this.user?.role === "ADMIN";
   }
 
   renderAvatars(users) {
@@ -62,6 +63,7 @@ export default class Teams {
       </div>
     </div>`;
   }
+
   async render() {
     const app = document.getElementById("app");
 
@@ -103,6 +105,11 @@ export default class Teams {
 
     teamsContainer.innerHTML = "";
 
+    // Tooltip solo para ADMIN
+    const adminHint = this.isAdmin
+        ? `title="Ver detalle del equipo"`
+        : "";
+
     await Promise.all(
         totalTeams.map(async (team) => {
           const members = await apiFetch(`/teams/${team.id_team}/members`, {
@@ -110,9 +117,19 @@ export default class Teams {
           });
           const membersIcons = this.renderAvatars(members.data.members);
 
+          // La card es clickeable solo para ADMIN
+          const clickableClass = this.isAdmin ? "td-clickable" : "";
+          const dataAttr = this.isAdmin
+              ? `data-team-id="${team.id_team}"`
+              : "";
+
           const card = `
           <div class="col-12 col-md-6 col-lg-4">
-            <div class="app-project-card">
+            <div class="app-project-card ${clickableClass}"
+                 ${dataAttr}
+                 ${adminHint}
+                 role="${this.isAdmin ? "button" : ""}"
+                 tabindex="${this.isAdmin ? "0" : ""}">
               <div class="app-project-image">
                 <img
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
@@ -128,6 +145,12 @@ export default class Teams {
                   <div class="app-avatar-group">
                     ${membersIcons}
                   </div>
+                  ${this.isAdmin
+              ? `<span class="td-view-detail-hint">
+                         <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
+                         Ver detalle
+                       </span>`
+              : ""}
                 </div>
               </div>
             </div>
@@ -137,6 +160,26 @@ export default class Teams {
           teamsContainer.insertAdjacentHTML("beforeend", card);
         }),
     );
+
+    // Delegación de eventos — solo si ADMIN
+    if (this.isAdmin) {
+      teamsContainer.addEventListener("click", (e) => {
+        const card = e.target.closest("[data-team-id]");
+        if (!card) return;
+        const teamId = card.dataset.teamId;
+        this.router.navigate("teamDetail", { teamId });
+      });
+
+      // Accesibilidad: también con teclado
+      teamsContainer.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest("[data-team-id]");
+        if (!card) return;
+        e.preventDefault();
+        const teamId = card.dataset.teamId;
+        this.router.navigate("teamDetail", { teamId });
+      });
+    }
   }
 
   async renderTeamsList() {
@@ -169,6 +212,7 @@ export default class Teams {
                 <th style="width:20%;">Project</th>
                 <th style="width:45%;">Description</th>
                 <th style="width:15%;">Team</th>
+                ${this.isAdmin ? `<th style="width:10%;"></th>` : ""}
               </tr>
             </thead>
             <tbody id="teamsTableBody"></tbody>
@@ -188,21 +232,44 @@ export default class Teams {
       const clan = members.data.members?.[0]?.clan || "N/A";
 
       const row = `
-        <tr>
+        <tr ${this.isAdmin ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="Ver detalle"` : ""}>
           <td><span class="app-project-badge engineering">${clan}</span></td>
           <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
           <td><p class="app-card-text text-break">${team.description}</p></td>
           <td><div class="app-avatar-group">${membersIcons}</div></td>
+          ${this.isAdmin
+          ? `<td>
+                 <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
+                         data-team-id="${team.id_team}">
+                   <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">visibility</span>
+                 </button>
+               </td>`
+          : ""}
         </tr>
       `;
 
       tbody.insertAdjacentHTML("beforeend", row);
+    }
+
+    // Delegación de eventos en tabla — solo ADMIN
+    if (this.isAdmin) {
+      tbody.addEventListener("click", (e) => {
+        const row = e.target.closest("[data-team-id]");
+        if (!row) return;
+        const teamId = row.dataset.teamId;
+        this.router.navigate("teamDetail", { teamId });
+      });
     }
   }
 
   attachEventHandlers() {
     const gridViewBtn = document.getElementById("grid-view-btn");
     const listViewBtn = document.getElementById("list-view-btn");
+
+    // Inyectar estilos de hint si es ADMIN
+    if (this.isAdmin) {
+      this._injectAdminHintStyle();
+    }
 
     gridViewBtn?.addEventListener("click", async () => {
       gridViewBtn.classList.add("active");
@@ -215,5 +282,33 @@ export default class Teams {
       gridViewBtn.classList.remove("active");
       await this.renderTeamsList();
     });
+  }
+
+  _injectAdminHintStyle() {
+    if (document.getElementById("td-admin-hint-style")) return;
+    const style = document.createElement("style");
+    style.id = "td-admin-hint-style";
+    style.textContent = `
+      .td-view-detail-hint {
+        font-size: 0.75rem;
+        color: var(--color-primary, #6366f1);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        opacity: 0;
+        transition: opacity .2s;
+      }
+      .td-clickable:hover .td-view-detail-hint { opacity: 1; }
+      .td-clickable {
+        cursor: pointer;
+        transition: transform .18s, box-shadow .18s;
+      }
+      .td-clickable:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.1);
+      }
+    `;
+    document.head.appendChild(style);
   }
 }

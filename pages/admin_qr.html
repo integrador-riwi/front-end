@@ -1,0 +1,90 @@
+<!-- <div  class="container py-3"> -->
+  <div class="d-flex">
+
+
+  <!-- MAIN -->
+  <div class="flex-fill p-3 p-lg-4">
+
+    <div class="container-fluid">
+
+      <h2 class="fw-bold mb-1">Voting Configuration</h2>
+      <p class="text-muted mb-3">Manage audience voting QR codes and finalist selection.</p>
+
+
+
+      <div class="row g-4">
+
+        <!-- LEFT COLUMN (4) -->
+        <div class="col-lg-4">
+                  <!-- Voting Status -->
+      <div class="card-custom p-3 mb-4 d-flex justify-content-between align-items-center">
+        <div>
+          <strong>Voting Status:</strong>
+          <span class="status-badge status-active ms-2">Active</span>
+        </div>
+      </div>
+
+          <div class="card-custom p-4 text-center">
+            <h5 class="fw-bold mb-1">Scan to Vote</h5>
+            <p class="text-muted small mb-3">Audience access link</p>
+
+            <div class="border border-4 rounded-4 p-3 mb-3" style="border-color: var(--primary);">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VoteNow"
+                   class="img-fluid">
+            </div>
+
+            <button class="btn btn-primary-custom w-100 mb-2">
+              Download QR
+            </button>
+
+            <button class="btn btn-outline-secondary w-100 rounded-3">
+              Copy Link
+            </button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN (8) -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+
+          <!-- FINALISTS -->
+          <div class="card-custom p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="fw-bold mb-0">Finalist Selection</h5>
+                <small class="text-muted">Select active teams</small>
+              </div>
+              <button class="btn btn-sm btn-light">Manage All Teams</button>
+            </div>
+
+            <div id="finalists-container" class="row g-3 mt-3"></div>
+          </div>
+
+          <!-- AUDIENCE PREVIEW -->
+          <div class="card-custom p-4">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">
+              Audience View Preview
+            </h6>
+
+            <div id="ranking-slots" class="row text-center g-3 align-items-end">
+
+              
+
+            </div>
+            <div id="available-teams" class="row g-3 mt-3"></div>
+          </div>
+
+          <!-- LAUNCH -->
+          <button class="btn btn-primary-custom w-100 py-3 fs-5 shadow">
+            Launch Voting Session
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<!-- </div> -->

@@ -15,6 +15,7 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
+import TeamDetailView from "../views/TeamDetailView.js";   // ← NUEVO
 import { i18nReady } from "../utils/i18n.js";
 
 await i18nReady;
@@ -23,6 +24,8 @@ if (isAuthenticated()) {
   initSocket();
 }
 
+import QRVoting from "../views/EventVoting.js"
+import NotFoundView from "../views/NotFoundView.js";
 class App {
   constructor() {
     this.app = document.getElementById("app");
@@ -115,8 +118,14 @@ class App {
       case "projects":
         this.currentView = new Teams(this);
         break;
+      case "teamDetail":                                    // ← NUEVO
+        this.currentView = new TeamDetailView(this, params);
+        break;
       case "ranking":
         this.currentView = new Ranking(this);
+        break;
+      case "qr":
+        this.currentView = new QRVoting(this);
         break;
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
@@ -137,7 +146,8 @@ class App {
         this.currentView.init();
         return;
       default:
-        return this.navigate("login");
+        this.currentView = new NotFoundView(this);
+        break;
     }
 
     if (!this.currentView) {
