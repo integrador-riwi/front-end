@@ -238,6 +238,16 @@ export default class CoderHome {
         toast.error("Error", err?.message ?? "Could not decline the request.");
       }
     });
+
+    // Socket: coder recibe confirmación de que su join request fue aceptada → recargar vista
+    socketOn("join_request:accepted", async () => {
+      await this.init();
+    });
+
+    // Socket: coder recibe confirmación de que su join request fue rechazada → limpiar estado
+    socketOn("join_request:rejected", () => {
+      this.pendingJoinRequests = [];
+    });
   }
 
   // ─────────────────────────────────────────
@@ -555,6 +565,8 @@ export default class CoderHome {
     socketOff("invitation:new");
     socketOff("join_request:new:accept");
     socketOff("join_request:new:deny");
+    socketOff("join_request:accepted");
+    socketOff("join_request:rejected");
   }
 
   // Polling de invitaciones y join requests
