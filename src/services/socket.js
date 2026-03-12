@@ -77,15 +77,30 @@ function setupEventListeners() {
 
     toast.info(
       "New join request",
-      `${data.coderName} wants to join your team "${data.teamName}"`,
+      `${data.coderName} wants to join your team`,
       {
         duration: 0,
-        action: {
-          label: "View",
-          onClick: () => {
-            window.location.hash = "#/coder";
+        dropdown: {
+          items: [
+            {
+              title: data.coderName,
+              subtitle: `Team: ${data.teamName}`,
+              accept: true,
+              deny: true,
+              id: data.id,
+              teamId: data.teamId,
+            },
+          ],
+          onAccept: async (item) => {
+            if (eventHandlers["join_request:new:accept"]) {
+              await eventHandlers["join_request:new:accept"](item);
+            }
           },
-          keepOpen: true,
+          onDeny: async (item) => {
+            if (eventHandlers["join_request:new:deny"]) {
+              await eventHandlers["join_request:new:deny"](item);
+            }
+          },
         },
       },
     );

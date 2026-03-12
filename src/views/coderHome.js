@@ -203,6 +203,32 @@ export default class CoderHome {
         this._updateInvitationsBanner();
       }
     });
+
+    // Socket: líder acepta/rechaza join request directo desde la notificación
+    socketOn("join_request:new:accept", async (item) => {
+      try {
+        await acceptJoinRequest(item.id);
+        toast.success("Accepted!", `${item.title} is now part of your team.`);
+        this.pendingJoinRequests = this.pendingJoinRequests.filter(
+          (r) => String(r.id_request) !== String(item.id),
+        );
+        await this.init();
+      } catch (err) {
+        toast.error("Error", err?.message ?? "Could not accept the request.");
+      }
+    });
+
+    socketOn("join_request:new:deny", async (item) => {
+      try {
+        await rejectJoinRequest(item.id);
+        toast.info("Declined", `Request from ${item.title} was declined.`);
+        this.pendingJoinRequests = this.pendingJoinRequests.filter(
+          (r) => String(r.id_request) !== String(item.id),
+        );
+      } catch (err) {
+        toast.error("Error", err?.message ?? "Could not decline the request.");
+      }
+    });
   }
 
   // ─────────────────────────────────────────
@@ -518,6 +544,8 @@ export default class CoderHome {
   destroy() {
     this._stopPolling();
     socketOff("invitation:new");
+    socketOff("join_request:new:accept");
+    socketOff("join_request:new:deny");
   }
 
   // Polling de invitaciones y join requests
