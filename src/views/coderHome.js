@@ -645,11 +645,19 @@ export default class CoderHome {
           .sort()
           .join(",");
         if (currentIds !== newIds) {
+          const currentIdSet = new Set(currentIds.split(",").filter(Boolean));
+          const trulyNew = newInvitations.filter(
+            (i) => !currentIdSet.has(String(i.id_invitation)),
+          );
           this.pendingInvitations = newInvitations;
-          const prevCount = currentIds.split(",").filter(Boolean).length;
-          if (newInvitations.length > prevCount) {
-            this._showInvitationsToast(newInvitations);
-          }
+          this._updateInvitationsBanner();
+          trulyNew.forEach((inv) => {
+            toast.info(
+              "New invitation",
+              `${inv.invited_by_name ?? "Someone"} invited you to join "${inv.team_name}"`,
+              { duration: 5000 },
+            );
+          });
         }
         return;
       }
@@ -701,59 +709,6 @@ export default class CoderHome {
         );
       });
     }
-  }
-
-  _showInvitationsToast(invitations) {
-    const count = invitations.length;
-    const dropdownItems = invitations.map((inv) => ({
-      id: inv.id_invitation,
-      idTeam: inv.id_team,
-      title: inv.team_name || "Equipo sin nombre",
-      subtitle: `${inv.event_name || "Sin evento"} • Invitado por: ${inv.invited_by_name || "Alguien"}`,
-      accept: true,
-      deny: true,
-    }));
-
-    toast.info(
-      "Invitaciones pendientes",
-      `Tienes ${count} invitación(es) sin responder`,
-      {
-        duration: 0,
-        dropdown: {
-          items: dropdownItems,
-          onAccept: async (item) => {
-            try {
-              await acceptInvitation(item.id);
-              this.pendingInvitations = this.pendingInvitations.filter(
-                (i) => i.id_invitation !== item.id,
-              );
-              this._updateInvitationsBanner();
-              await this.init();
-            } catch (err) {
-              toast.error(
-                "Error",
-                err?.message || "No se pudo aceptar la invitación",
-              );
-            }
-          },
-          onDeny: async (item) => {
-            try {
-              await rejectInvitation(item.id);
-              toast.info("Declined", `Invitation to "${item.title}" declined`);
-              this.pendingInvitations = this.pendingInvitations.filter(
-                (i) => i.id_invitation !== item.id,
-              );
-              this._updateInvitationsBanner();
-            } catch (err) {
-              toast.error(
-                "Error",
-                err?.message || "No se pudo rechazar la invitación",
-              );
-            }
-          },
-        },
-      },
-    );
   }
 
   // ─────────────────────────────────────────
