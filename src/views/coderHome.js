@@ -248,6 +248,19 @@ export default class CoderHome {
     socketOn("join_request:rejected", () => {
       this.pendingJoinRequests = [];
     });
+
+    // Socket: líder recibe confirmación de que su invitación fue aceptada → recargar equipo
+    socketOn("invitation:accepted", async () => {
+      await this.init();
+    });
+
+    // Socket: líder recibe confirmación de que su invitación fue rechazada → solo actualizar invitaciones pendientes
+    socketOn("invitation:rejected", async () => {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      this.pendingInvitations = data?.pendingInvitations ?? [];
+      this._updateInvitationsBanner();
+    });
   }
 
   // ─────────────────────────────────────────
@@ -563,6 +576,8 @@ export default class CoderHome {
   destroy() {
     this._stopPolling();
     socketOff("invitation:new");
+    socketOff("invitation:accepted");
+    socketOff("invitation:rejected");
     socketOff("join_request:new:accept");
     socketOff("join_request:new:deny");
     socketOff("join_request:accepted");
