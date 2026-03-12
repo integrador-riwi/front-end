@@ -677,7 +677,7 @@ export async function loadComments(projectId, user) {
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not post comment.");
+      toast.error("Error", err?.message ?? "Could not post comment.");
     } finally {
       activeBtn.disabled = false;
       activeBtn.textContent = "Post Comment";
@@ -736,7 +736,7 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not post reply.");
+          toast.error("Error", err?.message ?? "Could not post reply.");
           btn.disabled = false;
           btn.textContent = "Send";
         }
@@ -754,7 +754,7 @@ export async function loadComments(projectId, user) {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not delete comment.");
+          toast.error("Error", err?.message ?? "Could not delete comment.");
           btn.disabled = false;
         }
       });
@@ -898,6 +898,22 @@ export async function loadEvaluationPanel({
 
   const evaluableMembers = members.filter((m) => m.id_user);
 
+  // If this TL already has evaluations for every member+rubric, lock the form
+  const totalExpected = evaluableMembers.length * rubrics.length;
+  const alreadyEvaluated =
+    totalExpected > 0 && existingEvals.length >= totalExpected;
+
+  if (alreadyEvaluated) {
+    container.innerHTML = `
+      <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:0.75rem;color:#15803d;font-size:0.875rem;font-weight:500;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.
+      </div>
+    `;
+    submitBtn.classList.add("d-none");
+    return;
+  }
+
   const membersHtml = evaluableMembers
     .map((member) => {
       const initial = member.name?.charAt(0)?.toUpperCase() ?? "?";
@@ -987,7 +1003,7 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      toast.error('Error', 'Please rate all rubrics for each member.');
+      toast.error("Error", "Please rate all rubrics for each member.");
       return;
     }
 
@@ -1002,10 +1018,13 @@ export async function loadEvaluationPanel({
       } catch (_) {
         // Silently ignore — grades will recalculate on next submission
       }
-      toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
+      toast.success(
+        "Evaluations sent!",
+        "The evaluations have been saved successfully.",
+      );
       submitBtn.textContent = "Actualizar Evaluaciones";
     } catch (err) {
-      toast.error('Error', err?.message ?? "Error sending evaluations.");
+      toast.error("Error", err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";
     } finally {
       submitBtn.disabled = false;
@@ -1088,7 +1107,7 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not save deliverable.");
+      toast.error("Error", err?.message ?? "Could not save deliverable.");
       btnEl.innerHTML = original;
     } finally {
       btnEl.disabled = false;
@@ -1161,7 +1180,7 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error('Error', err?.message ?? "Could not submit project.");
+        toast.error("Error", err?.message ?? "Could not submit project.");
         btn.disabled = false;
         btn.textContent = "Submit Project";
       }
