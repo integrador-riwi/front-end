@@ -23,7 +23,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: #1a1a2e;
+  background: #181e4b;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   color: #fff;
@@ -40,10 +40,10 @@
   animation: sileo-exit 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.sileo-toast.success { border-left: 4px solid #10b981; }
-.sileo-toast.error { border-left: 4px solid #ef4444; }
-.sileo-toast.warning { border-left: 4px solid #f59e0b; }
-.sileo-toast.info { border-left: 4px solid #3b82f6; }
+.sileo-toast.success { border-left: 4px solid #5acca4; }
+.sileo-toast.error { border-left: 4px solid #fe654f; }
+.sileo-toast.warning { border-left: 4px solid #e6ca52; }
+.sileo-toast.info { border-left: 4px solid #6b5cff; }
 
 .sileo-icon {
   flex-shrink: 0;
@@ -59,10 +59,10 @@
   height: 20px;
 }
 
-.sileo-icon.success svg { color: #10b981; }
-.sileo-icon.error svg { color: #ef4444; }
-.sileo-icon.warning svg { color: #f59e0b; }
-.sileo-icon.info svg { color: #3b82f6; }
+.sileo-icon.success svg { color: #5acca4; }
+.sileo-icon.error svg { color: #fe654f; }
+.sileo-icon.warning svg { color: #e6ca52; }
+.sileo-icon.info svg { color: #6b5cff; }
 
 .sileo-content {
   flex: 1;
@@ -136,10 +136,10 @@
   animation: sileo-progress linear forwards;
 }
 
-.sileo-toast.success .sileo-progress { background: #10b981; }
-.sileo-toast.error .sileo-progress { background: #ef4444; }
-.sileo-toast.warning .sileo-progress { background: #f59e0b; }
-.sileo-toast.info .sileo-progress { background: #3b82f6; }
+.sileo-toast.success .sileo-progress { background: #5acca4; }
+.sileo-toast.error .sileo-progress { background: #fe654f; }
+.sileo-toast.warning .sileo-progress { background: #e6ca52; }
+.sileo-toast.info .sileo-progress { background: #6b5cff; }
 
 @keyframes sileo-enter {
   0% {
@@ -267,21 +267,21 @@
 }
 
 .sileo-btn-accept {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
+  background: rgba(90, 204, 164, 0.2);
+  color: #5acca4;
 }
 
 .sileo-btn-accept:hover {
-  background: #10b981;
+  background: #5acca4;
   color: #fff;
 }
 
 .sileo-btn-deny {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(254, 101, 79, 0.2);
+  color: #fe654f;
 }
 
 .sileo-btn-deny:hover {
-  background: #ef4444;
+  background: #fe654f;
   color: #fff;
 }

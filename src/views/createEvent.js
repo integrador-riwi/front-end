@@ -5,6 +5,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 
 const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 const AREA_LABELS = {
@@ -248,10 +249,10 @@ export default class CreateEvent {
         rubrics: this._buildRubricsPayload(),
       };
       await apiFetch("/events", { method: "POST", body });
-      this._showSuccess("¡Evento creado exitosamente!");
+      toast.success('¡Evento creado!', 'El evento se ha creado exitosamente.');
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      this._showError(e.message ?? "Error al crear el evento.");
+      toast.error('Error', e.message ?? "Error al crear el evento.");
     } finally {
       this._setLoading(false);
     }
@@ -588,6 +589,8 @@ export default class CreateEvent {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
       } catch (_) {}
+
+      toast.warning('GitHub requerido', 'Debes conectar tu cuenta de GitHub para crear un evento.');
 
       picker.innerHTML = `
         <div class="alert alert-danger py-2 mb-0" style="font-size:0.88rem;">

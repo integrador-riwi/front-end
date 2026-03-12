@@ -753,7 +753,7 @@ export default class CoderHome {
           this.isLeader = false;
           await this.init();
         } catch (err) {
-          alert("Error leaving the team: " + (err?.message ?? "Try again"));
+          toast.error('Error', err?.message ?? "Error leaving the team. Try again.");
         }
       });
   }
@@ -797,6 +797,7 @@ export default class CoderHome {
       console.log("[createTeam] Response:", response);
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
+      toast.success('¡Equipo creado!', `Team "${payload?.name ?? teamName}" created successfully.`);
       this.formData = { teamName: "", projectTopic: "" };
       this.isCreatingTeam = false;
 
@@ -808,6 +809,7 @@ export default class CoderHome {
         error?.response?.data?.message ||
         error?.message ||
         "Could not create the team.";
+      toast.error('Error', this.createTeamError);
       this.createTeamSuccess = "";
       this.isCreatingTeam = false;
       this.render();
@@ -896,7 +898,7 @@ export default class CoderHome {
         btn.textContent = "Accept";
       }
       if (rejectBtn) rejectBtn.disabled = false;
-      alert(err?.message ?? "Could not accept the invitation.");
+      toast.error('Error', err?.message ?? "Could not accept the invitation.");
     }
   }
 
@@ -908,7 +910,7 @@ export default class CoderHome {
       );
       this.render();
     } catch (err) {
-      alert(err?.message ?? "Could not reject the invitation.");
+      toast.error('Error', err?.message ?? "Could not reject the invitation.");
     }
   }
 
