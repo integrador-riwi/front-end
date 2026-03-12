@@ -176,6 +176,7 @@ export function renderCoderNoTeam({
 }
 
 export function renderSkeletonCards(count = 3) {
+  console.log('coder no team')
   return Array.from(
     { length: count },
     () => `

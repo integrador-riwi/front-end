@@ -13,6 +13,9 @@ import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
 import { getMyProfile, getMyTeams } from "../services/api.js";
+import { i18nReady } from "../utils/i18n.js";
+
+await i18nReady;
 
 class App {
   constructor() {
@@ -109,8 +112,13 @@ async checkUserTeam() {
       hasTeam: this.hasTeam,
     };
   }
+ 
+  navigate(route, params = {}) {
+    if (this.currentView && typeof this.currentView.destroy === "function") {
+      this.currentView.destroy();
+    }
+    this.currentView = null;
 
-  navigate(route, params = {}) {    
     this.app.innerHTML = "";
     this.currentRoute = route;
     this.currentParams = params;

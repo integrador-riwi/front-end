@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://back-end-0vk7.onrender.com/api";
+const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -105,6 +105,11 @@ export async function getGithubStatus() {
 export async function getGithubAuthUrl() {
   const response = await apiFetch("/auth/github/url", { method: "GET" });
   return response.data?.url ?? response.url ?? null;
+}
+
+export async function getGithubOrgs() {
+  const response = await apiFetch("/auth/github/orgs", { method: "GET" });
+  return response.data ?? response;
 }
 
 // Events
@@ -215,6 +220,14 @@ export async function submitEvaluations(projectId, evaluations) {
     method: "POST",
     body: { evaluations },
   });
+  return response?.data ?? response;
+}
+
+export async function calculateProjectGrades(projectId) {
+  const response = await apiFetch(
+    `/evaluations/project/${projectId}/calculate`,
+    { method: "POST" },
+  );
   return response?.data ?? response;
 }
 

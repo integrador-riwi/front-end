@@ -5,7 +5,6 @@ import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
-
 export default class EventDetails {
   constructor(router, params = {}) {
     this.router = router;
@@ -22,17 +21,17 @@ export default class EventDetails {
   async fetchCurrentEvent() {
     try {
       this.loading = true;
-      
+
       if (!this.eventId) {
-        throw new Error('Event ID not provided');
+        throw new Error("Event ID not provided");
       }
-      
+
       const response = await getEventById(this.eventId);
       this.event = response.data || response;
-      
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error = err.message || "Error loading event. Please try again later.";
+      this.error =
+        err.message || "Error loading event. Please try again later.";
     } finally {
       this.loading = false;
     }
@@ -53,14 +52,16 @@ export default class EventDetails {
   }
 
   getStatusBadge(status) {
-    if (status === 'COMPLETED') {
+    if (status === "COMPLETED") {
       return '<span class="badge-status mb-3 d-inline-block">● Completed</span>';
-    } else if (status === 'UPCOMING') {
+    } else if (status === "UPCOMING") {
       return '<span class="badge-status mb-3 d-inline-block">● Upcoming</span>';
-    } else if (status === 'IN_PROGRESS') {
+    } else if (status === "IN_PROGRESS") {
       return '<span class="badge-status mb-3 d-inline-block">● In Progress</span>';
     }
-    return '<span class="badge-status mb-3 d-inline-block">● ' + status + '</span>';
+    return (
+      '<span class="badge-status mb-3 d-inline-block">● ' + status + "</span>"
+    );
   }
 
   renderEvent(event) {
@@ -94,13 +95,13 @@ export default class EventDetails {
   renderEventInfo(event) {
     return `
         <small class="text-muted">Event Type</small>
-        <p class="fw-semibold mb-0">${event.event_type || 'N/A'}</p>
+        <p class="fw-semibold mb-0">${event.event_type || "N/A"}</p>
         
         <small class="text-muted mt-3 d-block">Cohort</small>
-        <p class="fw-semibold mb-0">${event.cohort || 'N/A'}</p>
+        <p class="fw-semibold mb-0">${event.cohort || "N/A"}</p>
         
         <small class="text-muted mt-3 d-block">Route</small>
-        <p class="fw-semibold mb-0">${event.route || 'N/A'}</p>
+        <p class="fw-semibold mb-0">${event.route || "N/A"}</p>
       `;
   }
 
@@ -152,7 +153,7 @@ export default class EventDetails {
     }
 
     eventContainer.innerHTML = this.renderLoading();
-    
+
     await this.fetchCurrentEvent();
 
     if (this.error) {
@@ -168,18 +169,17 @@ export default class EventDetails {
     eventContainer.innerHTML = this.renderEvent(this.event);
     dateContainer.innerHTML = this.renderEventDate(this.event);
     locationContainer.innerHTML = this.renderEventInfo(this.event);
-    
+
     this.attachEventHandlers();
   }
 
   attachEventHandlers() {
     const viewProjectsBtn = document.getElementById("view-projects-btn");
     viewProjectsBtn?.addEventListener("click", (e) => {
-        const route = e.currentTarget.dataset.route;
-        if (route) {
-          this.router.navigate(route);
-        }
-      });
-    
+      const route = e.currentTarget.dataset.route;
+      if (route) {
+        this.router.navigate(route);
+      }
+    });
   }
 }

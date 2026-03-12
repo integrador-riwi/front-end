@@ -187,6 +187,7 @@ export default class CoderHome {
   // Main render
   // ─────────────────────────────────────────
   render() {
+    console.log('esta es coder home')
     const app = document.getElementById("app");
 
     const content = this.team
@@ -492,6 +493,11 @@ export default class CoderHome {
   }
 
   // ─────────────────────────────────────────
+  // Called by the router when navigating away - cleans up all async resources
+  destroy() {
+    this._stopPolling();
+  }
+
   // Polling de invitaciones y join requests
   // ─────────────────────────────────────────
   _startPolling() {
