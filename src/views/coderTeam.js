@@ -1012,12 +1012,6 @@ export async function loadEvaluationPanel({
 
     try {
       await submitEvaluations(projectId, evaluations);
-      // Recalculate grades immediately so results reflect this TL's input
-      try {
-        await calculateProjectGrades(projectId);
-      } catch (_) {
-        // Silently ignore — grades will recalculate on next submission
-      }
       toast.success(
         "Evaluations sent!",
         "The evaluations have been saved successfully.",
