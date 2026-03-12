@@ -62,7 +62,7 @@ export default class DashboardView {
 
   _html() {
     if (this.loading) {
-      return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>Cargando métricas...</p></div>`;
+      return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>Loading metrics...</p></div>`;
     }
     if (this.error) {
       return `<div class="rk-alert rk-alert--error" style="margin:24px">${this.error}</div>`;
