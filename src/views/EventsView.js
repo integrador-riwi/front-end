@@ -2,6 +2,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getEvents } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
+import { toast } from "../components/Toast/index.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import { icons } from "./../utils/icons.js";
@@ -36,8 +37,8 @@ export default class EventsView {
       }
     } catch (err) {
       console.error("Failed to fetch events:", err);
-      this.error =
-        err.message || "Error loading events. Please try again later.";
+      this.error = err.message || "Error loading events. Please try again later.";
+      toast.error('Error', this.error);
     } finally {
       this.loading = false;
     }

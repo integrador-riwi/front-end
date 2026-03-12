@@ -1,4 +1,5 @@
 import "../assets/styles/main.css";
+import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
@@ -17,7 +18,8 @@ import TeamDetailView from "../views/TeamDetailView.js";   // ← NUEVO
 import { i18nReady } from "../utils/i18n.js";
 
 await i18nReady;
-
+import QRVoting from "../views/EventVoting.js"
+import NotFoundView from "../views/NotFoundView.js";
 class App {
   constructor() {
     this.app = document.getElementById("app");
@@ -116,6 +118,9 @@ class App {
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+      case "qr":
+        this.currentView = new QRVoting(this);
+        break;
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
@@ -135,7 +140,8 @@ class App {
         this.currentView.init();
         return;
       default:
-        return this.navigate("login");
+        this.currentView = new NotFoundView(this);
+        break;
     }
 
     if (!this.currentView) {
