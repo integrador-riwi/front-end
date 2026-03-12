@@ -510,6 +510,7 @@ export default class CoderHome {
   async _checkUpdates() {
     try {
       // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
+      console.log("POLLING CHECK RUNNING");
       if (!this.team) {
         const response = await apiFetch("/teams/my-teams", { method: "GET" });
         const data = response?.data ?? response;

@@ -56,10 +56,6 @@ class App {
       this.user = user;
 
       this.hasTeam = await this.checkUserTeam();
-      console.log("HAS TEAM APP:", this.hasTeam);
-
-      console.log("USER:", this.user);
-      console.log("HAS TEAM:", this.hasTeam);
 
       switch (this.user?.role) {
         case "ADMIN":
@@ -91,7 +87,7 @@ class App {
 
 async checkUserTeam() {
   try {
-
+    console.log("CHECK TEAM CALLED");
     const response = await getMyTeams();
      console.log("MY TEAMS:", response);
     const teams = response?.teams || [];
@@ -114,7 +110,7 @@ async checkUserTeam() {
     };
   }
 
-  navigate(route, params = {}) {
+  navigate(route, params = {}) {    
     this.app.innerHTML = "";
     this.currentRoute = route;
     this.currentParams = params;
