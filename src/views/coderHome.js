@@ -201,6 +201,11 @@ export default class CoderHome {
           },
         ];
         this._updateInvitationsBanner();
+        toast.info(
+          "New invitation",
+          `${data.invitedByName} invited you to join "${data.teamName}"`,
+          { duration: 5000 },
+        );
       }
     });
 
@@ -630,13 +635,7 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingJoinRequests = newRequests;
-          const prevCount = currentIds.split(",").filter(Boolean).length;
-          if (newRequests.length > prevCount) {
-            toast.info(
-              "New request",
-              `You have ${newRequests.length} join request(s) pending`,
-            );
-          }
+          // No toast here — socket already shows the accept/deny notification in real time
           this.inviteModal?.refreshJoinRequests?.();
         }
       }
