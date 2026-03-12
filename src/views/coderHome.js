@@ -1,6 +1,7 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
+import { toast } from "../components/Toast/index.js";
 import {
   renderCoderTeam,
   loadProjectBrief,
@@ -527,7 +528,19 @@ export default class CoderHome {
           : teams[0];
         if (relevantTeam) {
           this._stopPolling();
-          await this.init();
+          toast.success(
+            '¡Has sido aceptado!',
+            `Ahora eres parte del equipo ${relevantTeam.name}`,
+            {
+              action: {
+                label: 'Ver equipo',
+                onClick: async () => {
+                  await this.init();
+                  this.render();
+                }
+              }
+            }
+          );
           return;
         }
 
@@ -542,7 +555,9 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingInvitations = newInvitations;
-          this._updateInvitationsBanner();
+          if (newInvitations.length > currentIds.split(',').filter(Boolean).length) {
+            toast.info('Nueva invitación', `Has recibido ${newInvitations.length} nueva(s) invitación(es) a un equipo`);
+          }
         }
         return;
       }
@@ -564,7 +579,10 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingJoinRequests = newRequests;
-          // Refresh the invite modal's join requests list if it's open
+          const prevCount = currentIds.split(',').filter(Boolean).length;
+          if (newRequests.length > prevCount) {
+            toast.info('Nueva solicitud', `Tienes ${newRequests.length} solicitud(es) de unión pendientes`);
+          }
           this.inviteModal?.refreshJoinRequests?.();
         }
       }

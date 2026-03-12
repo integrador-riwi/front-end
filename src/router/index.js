@@ -1,4 +1,5 @@
 import "../assets/styles/main.css";
+import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
