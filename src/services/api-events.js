@@ -64,11 +64,11 @@ export async function deleteEventRubric(eventId, rubricId) {
 // events/:id/finalists
 // Ranking
 export async function getEventRankingStatus(eventId) {
-  return apiFetch(`/events/${eventId}/ranking-status`, { method: "GET" });
+  return apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" });
 }
 
 export async function publishEventRanking(eventId) {
-  return apiFetch(`/events/${eventId}/publish-ranking`, { method: "POST" });
+  return apiFetch(`/events/${eventId}/ranking/publish`, { method: "POST" });
 }
 
 export async function getEventRanking(eventId) {
