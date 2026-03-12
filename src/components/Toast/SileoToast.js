@@ -41,24 +41,57 @@ class SileoToast {
     document.body.appendChild(this.container);
   }
 
-  _createToastElement(id, type, title, message, action) {
+  _createToastElement(id, type, title, message, options = {}) {
+    const { action, action2, dropdown } = options;
     const toast = document.createElement('div');
     toast.className = `sileo-toast ${type}`;
     toast.dataset.id = id;
 
     const iconHtml = ICONS[type] || ICONS.info;
     
+    let buttonsHtml = '';
+    if (action) {
+      buttonsHtml += `<button class="sileo-action">${this._escapeHtml(action.label)}</button>`;
+    }
+    if (action2) {
+      buttonsHtml += `<button class="sileo-action sileo-action-secondary">${this._escapeHtml(action2.label)}</button>`;
+    }
+    
+    let dropdownHtml = '';
+    if (dropdown && dropdown.items && dropdown.items.length > 0) {
+      dropdownHtml = `
+        <div class="sileo-dropdown">
+          ${dropdown.items.map((item, idx) => `
+            <div class="sileo-dropdown-item" data-index="${idx}">
+              <div class="sileo-dropdown-item-content">
+                ${item.icon ? `<span class="sileo-dropdown-icon">${item.icon}</span>` : ''}
+                <div class="sileo-dropdown-item-text">
+                  ${item.title ? `<div class="sileo-dropdown-title">${this._escapeHtml(item.title)}</div>` : ''}
+                  ${item.subtitle ? `<div class="sileo-dropdown-subtitle">${this._escapeHtml(item.subtitle)}</div>` : ''}
+                </div>
+              </div>
+              <div class="sileo-dropdown-actions">
+                ${item.accept ? `<button class="sileo-btn-accept" data-action="accept" data-index="${idx}">✓</button>` : ''}
+                ${item.deny ? `<button class="sileo-btn-deny" data-action="deny" data-index="${idx}">✗</button>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
     let html = `
       <div class="sileo-icon">${iconHtml}</div>
       <div class="sileo-content">
         ${title ? `<div class="sileo-title">${this._escapeHtml(title)}</div>` : ''}
         ${message ? `<div class="sileo-message">${this._escapeHtml(message)}</div>` : ''}
-        ${action ? `<button class="sileo-action">${this._escapeHtml(action.label)}</button>` : ''}
+        ${buttonsHtml ? `<div class="sileo-actions">${buttonsHtml}</div>` : ''}
+        ${dropdownHtml}
       </div>
       <button class="sileo-close">${CLOSE_ICON}</button>
     `;
 
-    if (this.duration > 0) {
+    if (this.duration > 0 && !dropdown) {
       html += `<div class="sileo-progress" style="animation-duration: ${this.duration}ms;"></div>`;
     }
 
@@ -68,11 +101,54 @@ class SileoToast {
     closeBtn.addEventListener('click', () => this.remove(id));
 
     if (action?.onClick) {
-      const actionBtn = toast.querySelector('.sileo-action');
+      const actionBtn = toast.querySelector('.sileo-action:not(.sileo-action-secondary)');
       actionBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         action.onClick();
+        if (!action.keepOpen) {
+          this.remove(id);
+        }
+      });
+    }
+
+    if (action2?.onClick) {
+      const actionBtn = toast.querySelector('.sileo-action-secondary');
+      actionBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        action2.onClick();
         this.remove(id);
+      });
+    }
+
+    if (dropdown?.onItemClick) {
+      toast.querySelectorAll('.sileo-dropdown-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          if (e.target.classList.contains('sileo-btn-accept') || e.target.classList.contains('sileo-btn-deny')) return;
+          const idx = parseInt(item.dataset.index);
+          dropdown.onItemClick(dropdown.items[idx], idx);
+        });
+      });
+    }
+
+    if (dropdown?.onAccept || dropdown?.onDeny) {
+      toast.querySelectorAll('.sileo-btn-accept').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.index);
+          if (dropdown.onAccept) {
+            await dropdown.onAccept(dropdown.items[idx], idx);
+          }
+        });
+      });
+      
+      toast.querySelectorAll('.sileo-btn-deny').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.index);
+          if (dropdown.onDeny) {
+            await dropdown.onDeny(dropdown.items[idx], idx);
+          }
+        });
       });
     }
 
@@ -91,12 +167,12 @@ class SileoToast {
 
   add(type, title, message, options = {}) {
     const id = this._generateId();
-    const toastEl = this._createToastElement(id, type, title, message, options.action);
+    const toastEl = this._createToastElement(id, type, title, message, options);
     
     this.container.appendChild(toastEl);
     this.toasts.push({ id, type, title, message });
 
-    if (this.duration > 0) {
+    if (options.duration !== 0 && this.duration > 0) {
       setTimeout(() => this.remove(id), this.duration);
     }
 

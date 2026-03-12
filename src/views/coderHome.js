@@ -555,8 +555,9 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingInvitations = newInvitations;
-          if (newInvitations.length > currentIds.split(',').filter(Boolean).length) {
-            toast.info('Nueva invitación', `Has recibido ${newInvitations.length} nueva(s) invitación(es) a un equipo`);
+          const prevCount = currentIds.split(',').filter(Boolean).length;
+          if (newInvitations.length > prevCount) {
+            this._showInvitationsToast(newInvitations);
           }
         }
         return;
@@ -612,6 +613,61 @@ export default class CoderHome {
         );
       });
     }
+  }
+
+  _showInvitationsToast(invitations) {
+    const count = invitations.length;
+    const dropdownItems = invitations.map((inv) => ({
+      id: inv.id_invitation,
+      idTeam: inv.id_team,
+      title: inv.team_name || 'Equipo sin nombre',
+      subtitle: `${inv.event_name || 'Sin evento'} • Invitado por: ${inv.invited_by_name || 'Alguien'}`,
+      accept: true,
+      deny: true
+    }));
+
+    toast.info(
+      'Invitaciones pendientes',
+      `Tienes ${count} invitación(es) sin responder`,
+      {
+        duration: 0,
+        dropdown: {
+          items: dropdownItems,
+          onAccept: async (item) => {
+            try {
+              await acceptInvitation(item.id);
+              toast.success('¡Aceptado!', `Ahora eres parte del equipo "${item.title}"`, {
+                duration: 5000,
+                action: {
+                  label: 'Ver equipo',
+                  onClick: async () => {
+                    await this.init();
+                    this.render();
+                  },
+                  keepOpen: true
+                }
+              });
+              this.pendingInvitations = this.pendingInvitations.filter(
+                i => i.id_invitation !== item.id
+              );
+            } catch (err) {
+              toast.error('Error', err?.message || 'No se pudo aceptar la invitación');
+            }
+          },
+          onDeny: async (item) => {
+            try {
+              await rejectInvitation(item.id);
+              toast.info('Rechazada', `Invitación a "${item.title}" rechazada`);
+              this.pendingInvitations = this.pendingInvitations.filter(
+                i => i.id_invitation !== item.id
+              );
+            } catch (err) {
+              toast.error('Error', err?.message || 'No se pudo rechazar la invitación');
+            }
+          }
+        }
+      }
+    );
   }
 
   // ─────────────────────────────────────────
