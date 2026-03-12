@@ -987,13 +987,12 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">Por favor puntúa todas las rúbricas para cada miembro.</span>`;
+      toast.error('Error', 'Please rate all rubrics for each member.');
       return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
-    feedbackEl.innerHTML = "";
 
     try {
       await submitEvaluations(projectId, evaluations);
@@ -1003,11 +1002,9 @@ export async function loadEvaluationPanel({
       } catch (_) {
         // Silently ignore — grades will recalculate on next submission
       }
-      feedbackEl.innerHTML = `<span style="color:var(--color-success);font-weight:600;">✓ Evaluaciones enviadas exitosamente.</span>`;
       toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
       submitBtn.textContent = "Actualizar Evaluaciones";
     } catch (err) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">${err?.message ?? "Error al enviar evaluaciones."}</span>`;
       toast.error('Error', err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";
     } finally {

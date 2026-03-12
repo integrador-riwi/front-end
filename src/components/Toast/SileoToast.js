@@ -35,6 +35,7 @@ class SileoToast {
 
   _init() {
     if (this.container) return;
+    if (!document.body) return;
     
     this.container = document.createElement('div');
     this.container.className = `sileo-container ${this.position}`;
@@ -166,6 +167,12 @@ class SileoToast {
   }
 
   add(type, title, message, options = {}) {
+    this._init();
+    if (!this.container) {
+      console.warn('Toast: Cannot render, DOM not ready');
+      return null;
+    }
+    
     const id = this._generateId();
     const toastEl = this._createToastElement(id, type, title, message, options);
     
@@ -196,6 +203,8 @@ class SileoToast {
   }
 
   remove(id) {
+    if (!this.container) return;
+    
     const toast = this.container.querySelector(`[data-id="${id}"]`);
     if (!toast) return;
 
@@ -205,7 +214,7 @@ class SileoToast {
       toast.remove();
       this.toasts = this.toasts.filter(t => t.id !== id);
       
-      if (this.toasts.length === 0) {
+      if (this.toasts.length === 0 && this.container) {
         this.container.remove();
         this.container = null;
       }
