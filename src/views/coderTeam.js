@@ -144,7 +144,7 @@ export function renderCoderTeam({
               </svg>
               <h2 class="ct-section-title mb-0">Deliverables</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
-                ${deliverableCount(deliverables, repoUrl)}/3 submitted
+                ${deliverableCount(deliverables, repoUrl)}/4 submitted
               </span>
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
@@ -337,6 +337,13 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Preview Photo",
       url: d?.preview_photo_url ?? null,
       color: "var(--color-warning)",
+    },
+    {
+      key: "deploy_url",
+      icon: "",
+      label: "Deploy Link",
+      url: d?.deploy_url ?? null,
+      color: "var(--color-primary)",
     },
   ];
 
@@ -571,7 +578,9 @@ export function renderComment({ name, initial, time, text }) {
 
 function deliverableCount(d, repoUrl) {
   const repo = repoUrl ?? d?.repo_url ?? null;
-  return [d?.video_url, repo, d?.preview_photo_url].filter(Boolean).length;
+  return [d?.video_url, repo, d?.preview_photo_url, d?.deploy_url].filter(
+    Boolean,
+  ).length;
 }
 
 function gradeClass(g) {
@@ -1087,7 +1096,7 @@ export function initDeliverables(projectId) {
   function _refreshDeliverableCount() {
     const badge = document.querySelector(".ct-deliverables-count");
     const done = document.querySelectorAll(".ct-deliverable-done").length;
-    if (badge) badge.textContent = `${done}/3 submitted`;
+    if (badge) badge.textContent = `${done}/4 submitted`;
     _updateSubmitBtn(done);
   }
 
