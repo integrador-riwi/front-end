@@ -6,6 +6,8 @@ import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
 import { apiFetch } from "../services/api.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
+import { getTeamsByEvent } from "../services/api.js";
+import { getSelectedEvent } from "../utils/helpers.js";
 
 export default class Teams {
   constructor(router) {
@@ -13,7 +15,7 @@ export default class Teams {
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
-    this.eventId = localStorage.getItem("currentEventId");
+    this.eventId = getSelectedEvent() 
   }
 
   renderAvatars(users) {
@@ -80,6 +82,26 @@ export default class Teams {
     await this.renderTeamsGrid();
     this.attachEventHandlers();
   }
+
+  async loadTeams() {
+  try {
+
+    const event = getSelectedEvent();
+
+    if (!event) {
+      console.warn("No selected event found");
+      return;
+    }
+
+    const teams = await getTeamsByEvent(event.id);
+
+    this.teams = teams;
+    this.renderTeams();
+
+  } catch (error) {
+    console.error("Error loading teams:", error);
+  }
+}
 
   async renderTeamsGrid() {
     const teamsContainer = document.getElementById("teamsContainer");

@@ -69,6 +69,14 @@ export async function getMyTeams() {
   return response.data;
 }
 
+export async function getTeamsByEvent(eventId) {
+  const response = await apiFetch(`/teams?idEvent=${eventId}`, {
+    method: "GET",
+  });
+
+  return response.data ?? response;
+}
+
 export async function createTeam(teamData) {
   const payload =
     typeof teamData === "string" ? { name: teamData } : { ...teamData };

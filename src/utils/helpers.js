@@ -55,3 +55,8 @@ export const getEventSectionFromUrl = () => {
   const match = window.location.pathname.match(/events\/\d+\/([^/]+)/);
   return match ? match[1] : null;
 };
+
+export function getSelectedEvent() {
+  const event = sessionStorage.getItem("currentEventId");
+  return event ? JSON.parse(event) : null;
+}
