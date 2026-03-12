@@ -854,24 +854,11 @@ export default class CoderHome {
   }
 
   _showJoinFeedback(message, type) {
-    const existing = document.getElementById("join-feedback-banner");
-    if (existing) existing.remove();
-
-    const banner = document.createElement("div");
-    banner.id = "join-feedback-banner";
-    banner.style.cssText = `
-      padding: 0.85rem 1.25rem; border-radius: 10px; margin-bottom: 1rem;
-      font-size: 0.9rem; font-weight: 500;
-      background: ${type === "success" ? "#f0fdf4" : "#fef2f2"};
-      border: 1px solid ${type === "success" ? "#86efac" : "#fca5a5"};
-      color: ${type === "success" ? "#16a34a" : "#dc2626"};
-    `;
-    banner.textContent = message;
-
-    const container = document.querySelector(".team-selection-container");
-    if (container) container.insertBefore(banner, container.firstChild);
-
-    setTimeout(() => banner.remove(), 4000);
+    if (type === "success") {
+      toast.success('Request sent', message);
+    } else {
+      toast.error('Error', message);
+    }
   }
 
   // ─────────────────────────────────────────
