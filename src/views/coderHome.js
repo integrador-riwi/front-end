@@ -26,7 +26,6 @@ import {
   rejectInvitation,
   leaveTeam,
   requestToJoinTeam,
-  getMyJoinRequests,
   getTeamJoinRequests,
   acceptJoinRequest,
   rejectJoinRequest,
@@ -98,17 +97,6 @@ export default class CoderHome {
       const teams = data?.teams ?? [];
       this.pendingInvitations = data?.pendingInvitations ?? [];
       this.pendingJoinRequests = data?.pendingJoinRequests ?? [];
-
-      // Also fetch join requests if not in my-teams response
-      if (this.pendingJoinRequests.length === 0 && !this.team) {
-        try {
-          const joinRequestsRes = await getMyJoinRequests();
-          this.pendingJoinRequests =
-            joinRequestsRes?.data ?? joinRequestsRes ?? [];
-        } catch (e) {
-          console.error("Error fetching join requests:", e);
-        }
-      }
 
       if (teams.length > 0) {
         // Find team that belongs to selected event directly from the list
