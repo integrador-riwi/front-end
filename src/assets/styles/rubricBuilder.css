@@ -1,0 +1,78 @@
+.rubric-onboarding {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.rubric-opt-card {
+  flex: 1;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.rubric-opt-card:hover {
+  border-color: var(--primary, #5548e2);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+.rubric-opt-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.bg-primary-soft { background: rgba(85, 72, 226, 0.1); color: #5548e2; }
+.bg-secondary-soft { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+
+.rubric-builder {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rubric-area-card {
+  transition: all 0.2s;
+}
+
+.criteria-card {
+  background: #fff;
+  border-radius: 8px;
+}
+
+.crit-input {
+  box-shadow: none !important;
+}
+.crit-input:focus {
+  background: #f8f9fa !important;
+}
+
+.level-card {
+  background: #fff;
+  transition: transform 0.2s;
+}
+.level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.lvl-input:focus {
+  background: #f8f9fa !important;
+  box-shadow: none !important;
+}
+
+.cursor-pointer { cursor: pointer; }
+.cursor-grab { cursor: grab; }
+.cursor-grab:active { cursor: grabbing; }
+
+.min-w-0 { min-width: 0; }
