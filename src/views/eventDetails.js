@@ -3,6 +3,7 @@ import Header from "../components/header/header.js";
 import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
+import { apiFetch } from "../services/api.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
@@ -31,8 +32,9 @@ export default class EventDetails {
       this.event = response.data || response;
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error = err.message || "Error loading event. Please try again later.";
-      toast.error('Error', this.error);
+      this.error =
+        err.message || "Error loading event. Please try again later.";
+      toast.error("Error", this.error);
     } finally {
       this.loading = false;
     }
@@ -80,6 +82,12 @@ export default class EventDetails {
 
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
             <button class="btn btn-outline-accent me-2">Edit Event</button>
+            <button
+              id="calculateGradesBtn"
+              class="btn btn-primary"
+              style="border-radius:10px;font-weight:600;font-size:0.875rem;">
+              Calcular Notas
+            </button>
         </div>
       `;
   }
@@ -180,6 +188,50 @@ export default class EventDetails {
       const route = e.currentTarget.dataset.route;
       if (route) {
         this.router.navigate(route);
+      }
+    });
+
+    const calculateBtn = document.getElementById("calculateGradesBtn");
+    calculateBtn?.addEventListener("click", async () => {
+      if (
+        !confirm(
+          "¿Calcular las notas finales para todos los proyectos de este evento? Esta acción sobreescribe resultados anteriores.",
+        )
+      )
+        return;
+
+      calculateBtn.disabled = true;
+      calculateBtn.textContent = "Calculando...";
+
+      try {
+        const res = await apiFetch(
+          `/evaluations/event/${this.eventId}/calculate`,
+          {
+            method: "POST",
+          },
+        );
+        const data = res?.data ?? res;
+        const skipped = data.skipped?.length ?? 0;
+
+        if (skipped > 0) {
+          toast.warning(
+            "Notas calculadas con advertencias",
+            `${data.calculated} proyecto(s) calculados. ${skipped} omitidos por falta de evaluaciones.`,
+          );
+        } else {
+          toast.success(
+            "Notas calculadas",
+            `${data.calculated} proyecto(s) procesados exitosamente.`,
+          );
+        }
+      } catch (err) {
+        toast.error(
+          "Error",
+          err?.message ?? "No se pudieron calcular las notas.",
+        );
+      } finally {
+        calculateBtn.disabled = false;
+        calculateBtn.textContent = "Calcular Notas";
       }
     });
   }
