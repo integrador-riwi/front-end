@@ -32,7 +32,11 @@ import {
   rejectJoinRequest,
   cancelJoinRequest,
 } from "../services/api.js";
-import { on as socketOn, off as socketOff } from "../services/socket.js";
+import {
+  on as socketOn,
+  off as socketOff,
+  getSocket,
+} from "../services/socket.js";
 
 export default class CoderHome {
   constructor(router, { user, team } = {}) {
@@ -557,7 +561,8 @@ export default class CoderHome {
   // ─────────────────────────────────────────
   _startPolling() {
     this._stopPolling();
-    this._pollingInterval = setInterval(() => this._checkUpdates(), 5000);
+    // Poll every 15s as fallback — socket handles real-time updates when connected
+    this._pollingInterval = setInterval(() => this._checkUpdates(), 15000);
   }
 
   _stopPolling() {
@@ -569,6 +574,10 @@ export default class CoderHome {
   }
 
   async _checkUpdates() {
+    // Skip if socket is connected — it handles real-time updates
+    const socket = getSocket();
+    if (socket?.connected) return;
+
     try {
       // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
       if (!this.team) {
