@@ -7,7 +7,6 @@ import { apiFetch } from "../services/api.js";
 import {
   renderCoderTeam,
   loadComments,
-  loadEvaluationPanel,
   initDeliverables,
 } from "./coderTeam.js";
 
@@ -32,7 +31,6 @@ export default class TeamDetailView {
 
     const app = document.getElementById("app");
 
-    // Skeleton mientras carga
     app.innerHTML = `
       ${this.navbar.render()}
       <div style="display:flex;flex-direction:column;width:100%">
@@ -57,40 +55,27 @@ export default class TeamDetailView {
     const main = document.getElementById("teamDetailMain");
 
     try {
-      // 1. Miembros del equipo
-      const membersRes = await apiFetch(`/teams/${this.teamId}/members`, { method: "GET" });
-      const members = membersRes?.data?.members ?? [];
+      const res = await apiFetch(`/teams/${this.teamId}`, { method: "GET" });
+      const data = res?.data ?? res;
 
-      // 2. Proyecto del equipo (puede no existir)
-      let project = null;
-      try {
-        const projectRes = await apiFetch(`/teams/${this.teamId}/project`, { method: "GET" });
-        project = projectRes?.data?.project ?? projectRes?.data ?? projectRes ?? null;
-        // Evitar que un objeto vacío se cuele como proyecto
-        if (project && !project.id_project && !project.name) project = null;
-      } catch {
-        project = null;
-      }
-
-      // 3. Construir objeto team con la misma forma que usa CoderHome
       const team = {
-        id_team: this.teamId,
-        name: members[0]?.team_name ?? `Equipo #${this.teamId}`,
-        members,
-        project,
+        id_team:  data.id_team,
+        name:     data.name,
+        id_event: data.id_event,
+        members:  data.members ?? [],
+        project:  data.project ?? null,
       };
 
-      // 4. Renderizar con renderCoderTeam (mismo render que el coder ve)
-      //    ADMIN ve el panel de evaluación (isTL: true) pero NO puede editar (isLeader: false)
+      // isTL: false → no carga el panel de evaluación
+      // isLeader: false → no muestra botones de edición ni leave team
       const html = renderCoderTeam({
         user:          this.user,
         team,
-        isLeader:      false,   // ADMIN no edita el equipo
-        isTL:          true,    // sí ve el panel de evaluación
+        isLeader:      false,
+        isTL:          false,
         selectedEvent: null,
       });
 
-      // 5. Inyectar layout con botón volver + contenido
       main.innerHTML = `
         <div style="padding:1.25rem 1.5rem 0;">
           <button class="td-back-btn" id="tdBackBtn">
@@ -100,27 +85,19 @@ export default class TeamDetailView {
         </div>
         ${html}`;
 
-      // 6. Cargar comentarios, deliverables y panel de evaluación
-      //    (igual que CoderHome lo hace en el setTimeout)
-      const projectId = project?.id_project ?? null;
-      const eventId   = project?.id_event   ?? null;
+      // Ocultar el botón "Leave Team" que renderCoderTeam puede inyectar
+      // cuando isSubmitted es false (por si acaso)
+      document.getElementById("leaveTeamBtn")?.remove();
+
+      const projectId = team.project?.id_project ?? null;
 
       setTimeout(() => {
         if (projectId) {
           loadComments(projectId, this.user);
           initDeliverables(projectId);
         }
-        if (projectId && eventId) {
-          loadEvaluationPanel({
-            projectId,
-            eventId,
-            members,
-            userRole: this.user?.role,
-          });
-        }
       }, 0);
 
-      // 7. Event handlers
       document.getElementById("tdBackBtn")
           ?.addEventListener("click", () => this.router.navigate("projects"));
 
@@ -130,9 +107,7 @@ export default class TeamDetailView {
         <div class="container-xl px-3 px-md-4 py-4">
           <div class="bg-white rounded-4 p-5 ct-card-shadow text-center">
             <span class="material-icons-round" style="font-size:2.5rem;color:var(--text-muted);">error_outline</span>
-            <p class="mt-3" style="color:var(--text-muted);">
-              No se pudo cargar el equipo. Intenta de nuevo.
-            </p>
+            <p class="mt-3" style="color:var(--text-muted);">No se pudo cargar el equipo. Intenta de nuevo.</p>
             <button class="ct-btn-post mt-2" id="tdBackBtn">Volver a equipos</button>
           </div>
         </div>`;
