@@ -1021,9 +1021,10 @@ export function initDeliverables(projectId) {
   const fieldMap = {
     video_url: "videoUrl",
     preview_photo_url: "previewPhotoUrl",
+    deploy_url: "deployUrl",
   };
 
-  const editableFields = ["video_url", "preview_photo_url"];
+  const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
 
   async function saveField(field, url, btnEl) {
     const apiKey = fieldMap[field];
