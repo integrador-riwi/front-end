@@ -1,3 +1,5 @@
+import { toast } from "../components/Toast/index.js";
+
 export function renderCoderTeam({
   user,
   team,
@@ -19,6 +21,7 @@ export function renderCoderTeam({
         video_url: project.video_url ?? null,
         preview_photo_url: project.preview_photo_url ?? null,
         presentation_url: project.presentation_url ?? null,
+        deploy_url: project.deploy_url ?? null,
       }
     : null;
 
@@ -143,7 +146,7 @@ export function renderCoderTeam({
               </svg>
               <h2 class="ct-section-title mb-0">Deliverables</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
-                ${deliverableCount(deliverables, repoUrl)}/3 submitted
+                ${deliverableCount(deliverables, repoUrl)}/4 submitted
               </span>
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
@@ -336,6 +339,13 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Preview Photo",
       url: d?.preview_photo_url ?? null,
       color: "var(--color-warning)",
+    },
+    {
+      key: "deploy_url",
+      icon: "",
+      label: "Deploy Link",
+      url: d?.deploy_url ?? null,
+      color: "var(--color-primary)",
     },
   ];
 
@@ -570,7 +580,9 @@ export function renderComment({ name, initial, time, text }) {
 
 function deliverableCount(d, repoUrl) {
   const repo = repoUrl ?? d?.repo_url ?? null;
-  return [d?.video_url, repo, d?.preview_photo_url].filter(Boolean).length;
+  return [d?.video_url, repo, d?.preview_photo_url, d?.deploy_url].filter(
+    Boolean,
+  ).length;
 }
 
 function gradeClass(g) {
@@ -665,7 +677,7 @@ export async function loadComments(projectId, user) {
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      alert(err?.message ?? "Could not post comment.");
+      toast.error('Error', err?.message ?? "Could not post comment.");
     } finally {
       activeBtn.disabled = false;
       activeBtn.textContent = "Post Comment";
@@ -724,7 +736,7 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          alert(err?.message ?? "Could not post reply.");
+          toast.error('Error', err?.message ?? "Could not post reply.");
           btn.disabled = false;
           btn.textContent = "Send";
         }
@@ -742,7 +754,7 @@ export async function loadComments(projectId, user) {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          alert(err?.message ?? "Could not delete comment.");
+          toast.error('Error', err?.message ?? "Could not delete comment.");
           btn.disabled = false;
         }
       });
@@ -830,12 +842,12 @@ export async function loadEvaluationPanel({
   members,
   userRole = null,
 }) {
-  const display = document.getElementById("tl-evaluation-panel")
+  const display = document.getElementById("tl-evaluation-panel");
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
   const feedbackEl = document.getElementById("eval-feedback");
   if (!container || !submitBtn) return;
-  if (userRole !== "CODER") display.classList.remove("d-none")
+  if (userRole !== "CODER") display.classList.remove("d-none");
 
   const ROLE_AREA_MAP = {
     TL_DEVELOPMENT: "DEVELOPMENT",
@@ -975,13 +987,12 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">Por favor puntúa todas las rúbricas para cada miembro.</span>`;
+      toast.error('Error', 'Please rate all rubrics for each member.');
       return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
-    feedbackEl.innerHTML = "";
 
     try {
       await submitEvaluations(projectId, evaluations);
@@ -991,10 +1002,10 @@ export async function loadEvaluationPanel({
       } catch (_) {
         // Silently ignore — grades will recalculate on next submission
       }
-      feedbackEl.innerHTML = `<span style="color:var(--color-success);font-weight:600;">✓ Evaluaciones enviadas exitosamente.</span>`;
+      toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
       submitBtn.textContent = "Actualizar Evaluaciones";
     } catch (err) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">${err?.message ?? "Error al enviar evaluaciones."}</span>`;
+      toast.error('Error', err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";
     } finally {
       submitBtn.disabled = false;
@@ -1011,9 +1022,10 @@ export function initDeliverables(projectId) {
   const fieldMap = {
     video_url: "videoUrl",
     preview_photo_url: "previewPhotoUrl",
+    deploy_url: "deployUrl",
   };
 
-  const editableFields = ["video_url", "preview_photo_url"];
+  const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
 
   async function saveField(field, url, btnEl) {
     const apiKey = fieldMap[field];
@@ -1076,7 +1088,7 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      alert(err?.message ?? "Could not save deliverable.");
+      toast.error('Error', err?.message ?? "Could not save deliverable.");
       btnEl.innerHTML = original;
     } finally {
       btnEl.disabled = false;
@@ -1086,14 +1098,14 @@ export function initDeliverables(projectId) {
   function _refreshDeliverableCount() {
     const badge = document.querySelector(".ct-deliverables-count");
     const done = document.querySelectorAll(".ct-deliverable-done").length;
-    if (badge) badge.textContent = `${done}/3 submitted`;
+    if (badge) badge.textContent = `${done}/4 submitted`;
     _updateSubmitBtn(done);
   }
 
   function _updateSubmitBtn(done) {
     const btn = document.getElementById("submitProjectBtn");
     if (!btn) return;
-    const allDone = done >= 3;
+    const allDone = done >= 4;
     btn.disabled = !allDone;
     btn.style.opacity = allDone ? "1" : "0.4";
     btn.style.cursor = allDone ? "pointer" : "not-allowed";
@@ -1149,7 +1161,7 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        alert(err?.message ?? "Could not submit project.");
+        toast.error('Error', err?.message ?? "Could not submit project.");
         btn.disabled = false;
         btn.textContent = "Submit Project";
       }

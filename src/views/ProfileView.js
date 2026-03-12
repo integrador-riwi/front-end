@@ -2,6 +2,7 @@ import "../assets/styles/profile.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getInitials, getCurrentUser } from "../utils/helpers.js";
+import { toast } from "../components/Toast/index.js";
 import {
   getMyProfile,
   getGithubStatus,
@@ -298,24 +299,11 @@ export default class ProfileView {
   }
 
   _showBanner() {
-    const errorEl = document.querySelector(".profile-alert-error");
-    const successEl = document.querySelector(".profile-alert-success");
-
-    // Remove existing banners
-    errorEl?.remove();
-    successEl?.remove();
-
-    if (!this.errorMessage && !this.successMessage) return;
-
-    const banner = document.createElement("div");
-    banner.className = `profile-alert ${this.errorMessage ? "profile-alert-error" : "profile-alert-success"} mb-3`;
-    banner.textContent = this.errorMessage || this.successMessage;
-
-    const form = document.getElementById("profileForm");
-    form?.parentElement?.insertBefore(banner, form);
-
-    // Auto-dismiss after 4s
-    setTimeout(() => banner.remove(), 4000);
+    if (this.errorMessage) {
+      toast.error('Error', this.errorMessage);
+    } else if (this.successMessage) {
+      toast.success('Success', this.successMessage);
+    }
   }
 }
 

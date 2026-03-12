@@ -1,6 +1,7 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
+import { toast } from "../components/Toast/index.js";
 import {
   renderCoderTeam,
   loadProjectBrief,
@@ -527,7 +528,19 @@ export default class CoderHome {
           : teams[0];
         if (relevantTeam) {
           this._stopPolling();
-          await this.init();
+          toast.success(
+            'You have been accepted!',
+            `Ahora eres parte del equipo ${relevantTeam.name}`,
+            {
+              action: {
+                label: 'Ver equipo',
+                onClick: async () => {
+                  await this.init();
+                  this.render();
+                }
+              }
+            }
+          );
           return;
         }
 
@@ -542,7 +555,10 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingInvitations = newInvitations;
-          this._updateInvitationsBanner();
+          const prevCount = currentIds.split(',').filter(Boolean).length;
+          if (newInvitations.length > prevCount) {
+            this._showInvitationsToast(newInvitations);
+          }
         }
         return;
       }
@@ -564,7 +580,10 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingJoinRequests = newRequests;
-          // Refresh the invite modal's join requests list if it's open
+          const prevCount = currentIds.split(',').filter(Boolean).length;
+          if (newRequests.length > prevCount) {
+            toast.info('New request', `You have ${newRequests.length} join request(s) pending`);
+          }
           this.inviteModal?.refreshJoinRequests?.();
         }
       }
@@ -594,6 +613,61 @@ export default class CoderHome {
         );
       });
     }
+  }
+
+  _showInvitationsToast(invitations) {
+    const count = invitations.length;
+    const dropdownItems = invitations.map((inv) => ({
+      id: inv.id_invitation,
+      idTeam: inv.id_team,
+      title: inv.team_name || 'Equipo sin nombre',
+      subtitle: `${inv.event_name || 'Sin evento'} • Invitado por: ${inv.invited_by_name || 'Alguien'}`,
+      accept: true,
+      deny: true
+    }));
+
+    toast.info(
+      'Invitaciones pendientes',
+      `Tienes ${count} invitación(es) sin responder`,
+      {
+        duration: 0,
+        dropdown: {
+          items: dropdownItems,
+          onAccept: async (item) => {
+            try {
+              await acceptInvitation(item.id);
+              toast.success('Accepted!', `You are now part of team "${item.title}"`, {
+                duration: 5000,
+                action: {
+                  label: 'Ver equipo',
+                  onClick: async () => {
+                    await this.init();
+                    this.render();
+                  },
+                  keepOpen: true
+                }
+              });
+              this.pendingInvitations = this.pendingInvitations.filter(
+                i => i.id_invitation !== item.id
+              );
+            } catch (err) {
+              toast.error('Error', err?.message || 'No se pudo aceptar la invitación');
+            }
+          },
+          onDeny: async (item) => {
+            try {
+              await rejectInvitation(item.id);
+              toast.info('Declined', `Invitation to "${item.title}" declined`);
+              this.pendingInvitations = this.pendingInvitations.filter(
+                i => i.id_invitation !== item.id
+              );
+            } catch (err) {
+              toast.error('Error', err?.message || 'No se pudo rechazar la invitación');
+            }
+          }
+        }
+      }
+    );
   }
 
   // ─────────────────────────────────────────
@@ -679,7 +753,7 @@ export default class CoderHome {
           this.isLeader = false;
           await this.init();
         } catch (err) {
-          alert("Error leaving the team: " + (err?.message ?? "Try again"));
+          toast.error('Error', err?.message ?? "Error leaving the team. Try again.");
         }
       });
   }
@@ -723,6 +797,7 @@ export default class CoderHome {
       console.log("[createTeam] Response:", response);
       const payload = response?.data ?? response;
       this.createTeamSuccess = `Team "${payload?.name ?? teamName}" created successfully.`;
+      toast.success('Team created!', `Team "${payload?.name ?? teamName}" created successfully.`);
       this.formData = { teamName: "", projectTopic: "" };
       this.isCreatingTeam = false;
 
@@ -734,6 +809,7 @@ export default class CoderHome {
         error?.response?.data?.message ||
         error?.message ||
         "Could not create the team.";
+      toast.error('Error', this.createTeamError);
       this.createTeamSuccess = "";
       this.isCreatingTeam = false;
       this.render();
@@ -778,24 +854,11 @@ export default class CoderHome {
   }
 
   _showJoinFeedback(message, type) {
-    const existing = document.getElementById("join-feedback-banner");
-    if (existing) existing.remove();
-
-    const banner = document.createElement("div");
-    banner.id = "join-feedback-banner";
-    banner.style.cssText = `
-      padding: 0.85rem 1.25rem; border-radius: 10px; margin-bottom: 1rem;
-      font-size: 0.9rem; font-weight: 500;
-      background: ${type === "success" ? "#f0fdf4" : "#fef2f2"};
-      border: 1px solid ${type === "success" ? "#86efac" : "#fca5a5"};
-      color: ${type === "success" ? "#16a34a" : "#dc2626"};
-    `;
-    banner.textContent = message;
-
-    const container = document.querySelector(".team-selection-container");
-    if (container) container.insertBefore(banner, container.firstChild);
-
-    setTimeout(() => banner.remove(), 4000);
+    if (type === "success") {
+      toast.success('Request sent', message);
+    } else {
+      toast.error('Error', message);
+    }
   }
 
   // ─────────────────────────────────────────
@@ -822,7 +885,7 @@ export default class CoderHome {
         btn.textContent = "Accept";
       }
       if (rejectBtn) rejectBtn.disabled = false;
-      alert(err?.message ?? "Could not accept the invitation.");
+      toast.error('Error', err?.message ?? "Could not accept the invitation.");
     }
   }
 
@@ -834,7 +897,7 @@ export default class CoderHome {
       );
       this.render();
     } catch (err) {
-      alert(err?.message ?? "Could not reject the invitation.");
+      toast.error('Error', err?.message ?? "Could not reject the invitation.");
     }
   }
 

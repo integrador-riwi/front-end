@@ -5,6 +5,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 
 const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 const AREA_LABELS = {
@@ -19,20 +20,16 @@ const AREA_COLOR = {
 };
 
 const ALL_CLANS = [
-  "GOSLING",
-  "LINUS",
-  "HOPPER",
-  "LOVELACE",
-  "RITCHIE",
-  "VANROSSUM",
-  "BERNERSLEE",
-  "TESLA",
-  "MACONDO",
-  "MANGLAR",
-  "TAYRONA",
-  "CIENAGA",
-  "CAIMAN",
-  "SIERRA",
+  "Magdalena",
+  "Esthercita",
+  "Garabato",
+  "Micaela",
+  "Cayena",
+  "Malecón",
+  "Cortissoz",
+  "Turing",
+  "Tesla",
+  "McCarthy",
 ];
 
 export default class CreateEvent {
@@ -252,10 +249,10 @@ export default class CreateEvent {
         rubrics: this._buildRubricsPayload(),
       };
       await apiFetch("/events", { method: "POST", body });
-      this._showSuccess("¡Evento creado exitosamente!");
+      toast.success('Event created!', 'The event has been created successfully.');
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      this._showError(e.message ?? "Error al crear el evento.");
+      toast.error('Error', e.message ?? "Error creating the event.");
     } finally {
       this._setLoading(false);
     }
@@ -593,11 +590,7 @@ export default class CreateEvent {
         authUrl = urlData?.url ?? urlData ?? "#";
       } catch (_) {}
 
-      picker.innerHTML = `
-        <div class="alert alert-danger py-2 mb-0" style="font-size:0.88rem;">
-          <strong>Debes conectar tu cuenta de GitHub para crear un evento.</strong><br>
-          <a href="${authUrl}" class="alert-link">Conectar GitHub →</a>
-        </div>`;
+      toast.warning('GitHub required', 'You must connect your GitHub account to create an event.');
 
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -653,20 +646,15 @@ export default class CreateEvent {
   // ── UI feedback ────────────────────────────────────────────────────────────
 
   _showError(msg) {
-    const el = document.getElementById("ce-feedback");
-    if (el) el.innerHTML = `<div class="ce-alert ce-alert--error">${msg}</div>`;
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    toast.error('Error', msg);
   }
 
   _showSuccess(msg) {
-    const el = document.getElementById("ce-feedback");
-    if (el)
-      el.innerHTML = `<div class="ce-alert ce-alert--success">${msg}</div>`;
+    toast.success('Success', msg);
   }
 
   _clearFeedback() {
-    const el = document.getElementById("ce-feedback");
-    if (el) el.innerHTML = "";
+    // No longer needed with toast
   }
 
   _setLoading(on) {

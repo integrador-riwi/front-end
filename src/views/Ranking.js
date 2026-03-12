@@ -2,6 +2,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/ranking.css";
@@ -45,8 +46,8 @@ export default class Ranking {
     this.navbar.attachEventHandlers();
 
     if (!this.eventId) {
-      this.error =
-        "No hay un evento seleccionado. Vuelve a Events y selecciona uno.";
+      this.error = "No event selected. Please go to Events and select one.";
+      toast.error('Error', this.error);
       this._paint();
       return;
     }
@@ -67,15 +68,14 @@ export default class Ranking {
     try {
       if (isAdmin(this.user)) {
         const [statusRes, rankingRes] = await Promise.allSettled([
-          apiFetch(`/events/${eventId}/ranking-status`, { method: "GET" }),
+          apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" }),
           apiFetch(`/events/${eventId}/ranking`, { method: "GET" }),
         ]);
         if (statusRes.status === "fulfilled") {
           this.rankingStatus = statusRes.value?.data ?? null;
         } else {
-          this.error =
-            statusRes.reason?.message ??
-            "Error al cargar el estado del ranking.";
+          this.error = statusRes.reason?.message ?? "Error loading ranking status.";
+          toast.error('Error', this.error);
         }
         if (rankingRes.status === "fulfilled") {
           this.rankingData = rankingRes.value?.data ?? null;
@@ -90,7 +90,8 @@ export default class Ranking {
     } catch (e) {
       const is404 = e.response?.status === 404 || e.message?.includes("404");
       if (!is404) {
-        this.error = e.message ?? "Error al cargar el ranking.";
+        this.error = e.message ?? "Error loading ranking.";
+        toast.error('Error', this.error);
       }
     }
 
@@ -124,7 +125,7 @@ export default class Ranking {
 
     try {
       const res = await apiFetch(
-        `/events/${this.selectedEventId}/publish-ranking`,
+        `/events/${this.selectedEventId}/ranking/publish`,
         { method: "POST" },
       );
       this.rankingData = res?.data ?? null;
@@ -132,12 +133,13 @@ export default class Ranking {
 
       // Refresh status after publish
       const statusRes = await apiFetch(
-        `/events/${this.selectedEventId}/ranking-status`,
+        `/events/${this.selectedEventId}/ranking/status`,
         { method: "GET" },
       );
       this.rankingStatus = statusRes?.data ?? null;
     } catch (e) {
-      this.error = e.message ?? "Error al publicar el ranking.";
+      this.error = e.message ?? "Error publishing ranking.";
+      toast.error('Error', this.error);
     }
 
     this.publishing = false;
