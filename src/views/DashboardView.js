@@ -2,6 +2,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -46,7 +47,8 @@ export default class DashboardView {
       });
       this.metrics = res?.data ?? null;
     } catch (e) {
-      this.error = e.message ?? "Error al cargar las métricas.";
+      this.error = e.message ?? "Error loading metrics.";
+      toast.error('Error', this.error);
     }
     this.loading = false;
     this._paint();

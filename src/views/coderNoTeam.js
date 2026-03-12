@@ -68,8 +68,6 @@ export function renderCoderNoTeam({
             You'll be the team administrator.
           </p>
           <form id="createTeamForm">
-            ${createTeamError ? `<div class="alert alert-danger rounded-4 mb-3">${escapeHtml(createTeamError)}</div>` : ""}
-            ${createTeamSuccess ? `<div class="alert alert-success rounded-4 mb-3">${escapeHtml(createTeamSuccess)}</div>` : ""}
             <div class="form-group">
               <label class="form-label" for="teamName">Team Name</label>
               <input type="text" id="teamName" class="form-input"

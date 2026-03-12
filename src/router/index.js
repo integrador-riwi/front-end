@@ -1,7 +1,9 @@
 import "../assets/styles/main.css";
+import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
+import { initSocket } from "../services/socket.js";
 import CreateEvent from "../views/createEvent.js";
 import EventDetails from "../views/eventDetails.js";
 import Teams from "../views/TeamsAndProjects.js";
@@ -16,6 +18,10 @@ import { getMyProfile, getMyTeams } from "../services/api.js";
 import { i18nReady } from "../utils/i18n.js";
 
 await i18nReady;
+
+if (isAuthenticated()) {
+  initSocket();
+}
 
 class App {
   constructor() {

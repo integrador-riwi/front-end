@@ -1,0 +1,287 @@
+.sileo-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  padding: 16px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.sileo-container.top-left { top: 0; left: 0; align-items: flex-start; }
+.sileo-container.top-center { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+.sileo-container.top-right { top: 0; right: 0; align-items: flex-end; }
+.sileo-container.bottom-left { bottom: 0; left: 0; align-items: flex-start; }
+.sileo-container.bottom-center { bottom: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+.sileo-container.bottom-right { bottom: 0; right: 0; align-items: flex-end; }
+
+.sileo-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #181e4b;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: auto;
+  overflow: hidden;
+  transform-origin: center;
+  animation: sileo-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.sileo-toast.exiting {
+  animation: sileo-exit 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.sileo-toast.success { border-left: 4px solid #5acca4; }
+.sileo-toast.error { border-left: 4px solid #fe654f; }
+.sileo-toast.warning { border-left: 4px solid #e6ca52; }
+.sileo-toast.info { border-left: 4px solid #6b5cff; }
+
+.sileo-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sileo-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sileo-icon.success svg { color: #5acca4; }
+.sileo-icon.error svg { color: #fe654f; }
+.sileo-icon.warning svg { color: #e6ca52; }
+.sileo-icon.info svg { color: #6b5cff; }
+
+.sileo-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sileo-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: #fff;
+}
+
+.sileo-message {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  word-wrap: break-word;
+}
+
+.sileo-action {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sileo-action:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sileo-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  margin: -2px -4px -2px 0;
+  transition: color 0.2s;
+}
+
+.sileo-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sileo-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sileo-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 0 16px;
+  transform-origin: left;
+  animation: sileo-progress linear forwards;
+}
+
+.sileo-toast.success .sileo-progress { background: #5acca4; }
+.sileo-toast.error .sileo-progress { background: #fe654f; }
+.sileo-toast.warning .sileo-progress { background: #e6ca52; }
+.sileo-toast.info .sileo-progress { background: #6b5cff; }
+
+@keyframes sileo-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sileo-exit {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+  }
+}
+
+@keyframes sileo-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@media (max-width: 480px) {
+  .sileo-container {
+    max-width: 100%;
+    padding: 12px;
+  }
+}
+
+/* Dropdown styles */
+.sileo-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sileo-action-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sileo-dropdown {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sileo-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sileo-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sileo-dropdown-item-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sileo-dropdown-icon {
+  font-size: 18px;
+}
+
+.sileo-dropdown-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sileo-dropdown-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sileo-dropdown-subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sileo-dropdown-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.sileo-btn-accept,
+.sileo-btn-deny {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sileo-btn-accept {
+  background: rgba(90, 204, 164, 0.2);
+  color: #5acca4;
+}
+
+.sileo-btn-accept:hover {
+  background: #5acca4;
+  color: #fff;
+}
+
+.sileo-btn-deny {
+  background: rgba(254, 101, 79, 0.2);
+  color: #fe654f;
+}
+
+.sileo-btn-deny:hover {
+  background: #fe654f;
+  color: #fff;
+}

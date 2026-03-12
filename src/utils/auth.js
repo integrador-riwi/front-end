@@ -1,3 +1,5 @@
+import { initSocket, disconnectSocket } from "../services/socket.js";
+
 export const setToken = (token) => {
   localStorage.setItem("token", token);
 };
@@ -27,9 +29,11 @@ export function saveUser(user) {
 export function saveSession(token, user) {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));
+  initSocket();
 }
 
 export function clearSession(router) {
+  disconnectSocket();
   clearAuth();
   if (router) {
     router.navigate("login");

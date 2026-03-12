@@ -2,6 +2,7 @@ import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/projectSettings.css";
 import InviteModal from "../components/inviteModal/InviteModal.js";
+import { toast } from "../components/Toast/index.js";
 import {
   apiFetch,
   updateTeam,
@@ -408,14 +409,11 @@ export default class ProjectSettings {
   // UI helpers
   // ─────────────────────────────────────────
   _showFeedback(message, type = "success") {
-    const el = document.getElementById("cs-feedback");
-    if (!el) return;
-    el.style.display = "block";
-    el.className = `mb-3 alert ${type === "success" ? "alert-success" : "alert-danger"} rounded-4`;
-    el.textContent = message;
-    setTimeout(() => {
-      el.style.display = "none";
-    }, 4000);
+    if (type === "success") {
+      toast.success('Success', message);
+    } else {
+      toast.error('Error', message);
+    }
   }
 }
 

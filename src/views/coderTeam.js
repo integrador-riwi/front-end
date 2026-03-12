@@ -1,3 +1,5 @@
+import { toast } from "../components/Toast/index.js";
+
 export function renderCoderTeam({
   user,
   team,
@@ -675,7 +677,7 @@ export async function loadComments(projectId, user) {
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      alert(err?.message ?? "Could not post comment.");
+      toast.error('Error', err?.message ?? "Could not post comment.");
     } finally {
       activeBtn.disabled = false;
       activeBtn.textContent = "Post Comment";
@@ -734,7 +736,7 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          alert(err?.message ?? "Could not post reply.");
+          toast.error('Error', err?.message ?? "Could not post reply.");
           btn.disabled = false;
           btn.textContent = "Send";
         }
@@ -752,7 +754,7 @@ export async function loadComments(projectId, user) {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          alert(err?.message ?? "Could not delete comment.");
+          toast.error('Error', err?.message ?? "Could not delete comment.");
           btn.disabled = false;
         }
       });
@@ -985,13 +987,12 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">Por favor puntúa todas las rúbricas para cada miembro.</span>`;
+      toast.error('Error', 'Please rate all rubrics for each member.');
       return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
-    feedbackEl.innerHTML = "";
 
     try {
       await submitEvaluations(projectId, evaluations);
@@ -1001,10 +1002,10 @@ export async function loadEvaluationPanel({
       } catch (_) {
         // Silently ignore — grades will recalculate on next submission
       }
-      feedbackEl.innerHTML = `<span style="color:var(--color-success);font-weight:600;">✓ Evaluaciones enviadas exitosamente.</span>`;
+      toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
       submitBtn.textContent = "Actualizar Evaluaciones";
     } catch (err) {
-      feedbackEl.innerHTML = `<span style="color:#ef4444;">${err?.message ?? "Error al enviar evaluaciones."}</span>`;
+      toast.error('Error', err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";
     } finally {
       submitBtn.disabled = false;
@@ -1087,7 +1088,7 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      alert(err?.message ?? "Could not save deliverable.");
+      toast.error('Error', err?.message ?? "Could not save deliverable.");
       btnEl.innerHTML = original;
     } finally {
       btnEl.disabled = false;
@@ -1160,7 +1161,7 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        alert(err?.message ?? "Could not submit project.");
+        toast.error('Error', err?.message ?? "Could not submit project.");
         btn.disabled = false;
         btn.textContent = "Submit Project";
       }

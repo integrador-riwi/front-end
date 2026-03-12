@@ -1,3 +1,4 @@
+//const API_BASE_URL = "http://localhost:3010/api";
 const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
 
 function getToken() {
