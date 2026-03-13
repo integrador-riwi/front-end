@@ -111,6 +111,8 @@ const resources = {
         error: "No se pudieron cargar los eventos. Intenta de nuevo.",
         select: "Seleccionar",
         review: "Revisar este evento",
+        upTo: "Hasta",
+        perTeam: "por equipo",
       },
 
       // ── Coder No-Team ─────────────────────────────────────
@@ -290,7 +292,8 @@ const resources = {
       notFound: {
         title: "¡Ups! Página No Encontrada",
         subtitle: "La página que buscas no existe o ha sido movida.",
-        lostMsg: "¿Perdido? No te preocupes,-nos pasa a los mejores. Volvamos a enfocarnos.",
+        lostMsg:
+          "¿Perdido? No te preocupes,-nos pasa a los mejores. Volvamos a enfocarnos.",
         backHome: "Volver al Inicio",
       },
 
@@ -476,6 +479,8 @@ const resources = {
         error: "Could not load events. Please try again.",
         select: "Join this event",
         review: "Review this event",
+        upTo: "Up to",
+        perTeam: "per team",
       },
 
       noTeam: {
@@ -644,8 +649,10 @@ const resources = {
 
       notFound: {
         title: "Oops! Page Not Found",
-        subtitle: "The page you are looking for doesn't exist or has been moved.",
-        lostMsg: "Lost? Don't worry, it happens to the best of us. Let's get you back on track.",
+        subtitle:
+          "The page you are looking for doesn't exist or has been moved.",
+        lostMsg:
+          "Lost? Don't worry, it happens to the best of us. Let's get you back on track.",
         backHome: "Back to Dashboard",
       },
 
