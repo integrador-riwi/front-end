@@ -3,6 +3,7 @@ import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getInitials, getCurrentUser } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import {
   getMyProfile,
   getGithubStatus,
@@ -19,17 +20,13 @@ export default class ProfileView {
     this.navbar.setActiveRoute("profile");
 
     this.profileDetails = null;
-    this.profileForm = {
-      description: "",
-      clan: this.user?.clan ?? "",
-    };
+    this.profileForm = { description: "", clan: this.user?.clan ?? "" };
     this.isLoading = true;
     this.isSaving = false;
     this.errorMessage = "";
     this.successMessage = "";
     this.githubStatus = null;
 
-    // Leer params del router
     const params = router.currentParams ?? {};
     if (params.githubSuccess) {
       this.successMessage = `Github connected correctly${params.githubUsername ? ` as @${params.githubUsername}` : ""}.`;
@@ -43,9 +40,7 @@ export default class ProfileView {
 
   async loadProfile() {
     try {
-      if (!this.user) {
-        this.user = getCurrentUser();
-      }
+      if (!this.user) this.user = getCurrentUser();
 
       const [data] = await Promise.all([
         getMyProfile(),
@@ -55,11 +50,7 @@ export default class ProfileView {
       const profile = data?.profile ?? {};
       const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
 
-      this.profileDetails = {
-        ...profile,
-        clan: clanValue,
-      };
-
+      this.profileDetails = { ...profile, clan: clanValue };
       this.profileForm = {
         description: profile.description ?? "",
         clan: clanValue,
@@ -82,7 +73,7 @@ export default class ProfileView {
       this.errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        "Profile could not be loaded.";
+        t("profile.loading");
       this.profileDetails = this.profileDetails || {
         github_url: "",
         description: "",
@@ -97,7 +88,6 @@ export default class ProfileView {
   async loadGithubStatus() {
     try {
       this.githubStatus = await getGithubStatus();
-      // Persist avatar to localStorage so navbar and other views can use it
       if (this.githubStatus?.github?.avatarUrl) {
         updateUser({ github_avatar_url: this.githubStatus.github.avatarUrl });
         this.user = getCurrentUser();
@@ -113,13 +103,13 @@ export default class ProfileView {
 
     if (this.isLoading) {
       app.innerHTML = `
-              ${this.navbar.render()}
-              <main class="coder-home-main d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-                  <div class="spinner-border text-primary" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                  </div>
-              </main>
-           `;
+        ${this.navbar.render()}
+        <main class="coder-home-main d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">${t("common.loading")}</span>
+          </div>
+        </main>
+      `;
       this.navbar.attachEventHandlers();
       return;
     }
@@ -134,89 +124,90 @@ export default class ProfileView {
 
     const statusLabel = githubConnected
       ? githubExpired
-        ? "Expired connection"
-        : "Connected"
-      : "Not connected";
+        ? (t("profile.githubExpired") ?? "Expired")
+        : (t("profile.githubConnected") ?? "Connected")
+      : t("profile.notConnected");
 
-    // showLink: connected AND we have a username or url
     const showGithubLink =
       githubConnected && (githubUsername || githubProfileUrl);
-    // showBtn: not connected at all, OR connected but token expired
     const showConnectBtn = !githubConnected || githubExpired;
+
     app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main profile-viewport">
         <div class="container-xl px-3 px-md-4 py-5">
-            <div class="row g-4 justify-content-center">
-                <div class="col-12 col-md-6 col-lg-5">
-                   <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
-                     <div class="profile-card-topbar"></div>
-                     <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
-                       ${
-                         githubAvatarUrl
-                           ? `<img src="${escapeHtml(githubAvatarUrl)}" alt="GitHub avatar" class="profile-avatar-img" />`
-                           : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
-                       }
-                     </div>
-                     <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
-                     <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
-                     <div class="clan-badge mx-auto d-inline-block">
-                       Clan: ${escapeHtml(this.profileForm.clan || "N/A")}
-                     </div>
-                     <div class="mt-4 profile-card-details text-start">
-                       <p class="profile-label mb-0">Email</p>
-                       <p class="profile-value w-100">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
-                        <div class="mt-3">
-                          <p class="profile-label mb-1">GitHub</p>
-                          <div class="container align-items-center px-0 d-flex justify-content-between">
-                            ${
-                              showGithubLink
-                                ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
-                                : `<p class="profile-value">Not connected</p>`
-                            }
-                            <div class="profile-github-status">
-                              <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                              ${
-                                showConnectBtn
-                                  ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconnect with GitHub" : "Connect with GitHub"}</button>`
-                                  : ``
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                   </div>
-                </div>
+          <div class="row g-4 justify-content-center">
 
-                <div class="col-12 col-md-6 col-lg-7">
-                   <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
-                     <h2 class="profile-section-title mb-3">Edit your profile</h2>
-                      <form id="profileForm" class="profile-form">
-                        <div class="profile-form-field">
-                          <label class="profile-label" for="description">Description</label>
-                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Tell us about your experience...">${escapeHtml(this.profileForm.description)}</textarea>
-                        </div>
-                        <div class="profile-form-field">
-                          <label class="profile-label" for="clan">Clan</label>
-                          <input id="clan" name="clan" type="text" class="profile-input" value="${escapeHtml(this.profileForm.clan || "N/A")}"
-                                 readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
-                          <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">The clan is assigned by an administrator.</p>
-                        </div>
-                       <button type="submit" class="profile-btn align-self-center" ${this.isSaving ? "disabled" : ""}>
-                         ${this.isSaving ? "Saving..." : "Save changes"}
-                       </button>
-                     </form>
-                   </div>
+            <div class="col-12 col-lg-5">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
+                <div class="profile-card-topbar"></div>
+                <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
+                  ${
+                    githubAvatarUrl
+                      ? `<img src="${escapeHtml(githubAvatarUrl)}" alt="GitHub avatar" class="profile-avatar-img" />`
+                      : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
+                  }
                 </div>
+                <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
+                <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
+                <div class="clan-badge mx-auto d-inline-block">
+                  ${t("profile.clan")}: ${escapeHtml(this.profileForm.clan || "N/A")}
+                </div>
+                <div class="mt-4 profile-card-details text-start">
+                  <p class="profile-label mb-1">${t("profile.email")}</p>
+                  <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
+                  <div class="mt-3">
+                    <p class="profile-label mb-1">${t("profile.github")}</p>
+                    <div class="container align-items-center px-0 d-flex justify-content-between">
+                      ${
+                        showGithubLink
+                          ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
+                          : `<p class="profile-value">${t("profile.notConnected")}</p>`
+                      }
+                      <div class="profile-github-status">
+                        <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                        ${
+                          showConnectBtn
+                            ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconnect with GitHub" : "Connect with GitHub"}</button>`
+                            : ""
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <div class="col-12 col-lg-7">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
+                <h2 class="profile-section-title mb-3">${t("profile.edit")}</h2>
+                <form id="profileForm" class="profile-form">
+                  <div class="profile-form-field">
+                    <label class="profile-label" for="description">${t("profile.description")}</label>
+                    <textarea id="description" name="description" rows="4" class="profile-input"
+                      placeholder="Tell us about your experience...">${escapeHtml(this.profileForm.description)}</textarea>
+                  </div>
+                  <div class="profile-form-field">
+                    <label class="profile-label" for="clan">${t("profile.clan")}</label>
+                    <input id="clan" name="clan" type="text" class="profile-input"
+                      value="${escapeHtml(this.profileForm.clan || "N/A")}"
+                      readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
+                    <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">${t("profile.clanHint")}</p>
+                  </div>
+                  <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
+                    ${this.isSaving ? t("common.loading") : t("common.save")}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
         </div>
       </main>
     `;
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
-
-    // Show OAuth redirect messages (github success/error params)
     if (this.errorMessage || this.successMessage) this._showBanner();
   }
 
@@ -228,10 +219,7 @@ export default class ProfileView {
       input.addEventListener("input", (event) => {
         const { name, value } = event.target;
         if (!name) return;
-        this.profileForm = {
-          ...this.profileForm,
-          [name]: value,
-        };
+        this.profileForm = { ...this.profileForm, [name]: value };
         this.errorMessage = "";
         this.successMessage = "";
       });
@@ -241,13 +229,11 @@ export default class ProfileView {
     githubBtn?.addEventListener("click", async () => {
       try {
         const url = await getGithubAuthUrl();
-        if (!url) {
-          throw new Error("No se pudo obtener la URL de GitHub");
-        }
+        if (!url) throw new Error("No se pudo obtener la URL de GitHub");
         window.location.href = url;
       } catch (error) {
         console.error("Error al obtener URL de GitHub", error);
-        this.errorMessage = error?.message || "Could not connect to GitHub.";
+        this.errorMessage = error?.message || t("common.error");
         this.render();
       }
     });
@@ -255,7 +241,6 @@ export default class ProfileView {
 
   async handleSave(event) {
     event.preventDefault();
-
     if (this.isSaving) return;
 
     this.isSaving = true;
@@ -267,23 +252,17 @@ export default class ProfileView {
       const updatedProfile = await updateProfile({
         description: this.profileForm.description,
       });
-
-      this.profileDetails = {
-        ...this.profileDetails,
-        ...updatedProfile,
-      };
-
+      this.profileDetails = { ...this.profileDetails, ...updatedProfile };
       this.profileForm = {
         description: updatedProfile.description ?? this.profileForm.description,
         clan: this.profileForm.clan,
       };
-      this.successMessage = "Profile updated correctly.";
+      this.successMessage =
+        t("profile.savedOk") ?? "Profile updated correctly.";
     } catch (error) {
       console.error("Error updating profile", error);
       this.errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Error updating profile.";
+        error?.response?.data?.message || error?.message || t("common.error");
     } finally {
       this.isSaving = false;
       this._setSaveBtn(false);
@@ -295,14 +274,14 @@ export default class ProfileView {
     const btn = document.querySelector(".profile-btn[type='submit']");
     if (!btn) return;
     btn.disabled = loading;
-    btn.textContent = loading ? "Saving..." : "Save changes";
+    btn.textContent = loading ? t("common.loading") : t("common.save");
   }
 
   _showBanner() {
     if (this.errorMessage) {
-      toast.error('Error', this.errorMessage);
+      toast.error("Error", this.errorMessage);
     } else if (this.successMessage) {
-      toast.success('Success', this.successMessage);
+      toast.success("Success", this.successMessage);
     }
   }
 }
