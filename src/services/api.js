@@ -1,6 +1,7 @@
 //const API_BASE_URL = "http://localhost:3010/api";
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3010/api";
+    import.meta.env.VITE_API_URL ||
+    "https://back-end-production-7f2c.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
