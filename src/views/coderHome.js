@@ -247,7 +247,7 @@ export default class CoderHome {
       const response = await apiFetch("/teams/my-teams", { method: "GET" });
       const data = response?.data ?? response;
       this.pendingInvitations = data?.pendingInvitations ?? [];
-      this._updateInvitationsBanner();
+      // Banner now via Socket - this._updateInvitationsBanner();
     });
   }
 
@@ -318,13 +318,8 @@ export default class CoderHome {
           selectedEvent: this.selectedEvent ?? null,
         });
 
-    const pendingBanner =
-      !this.team &&
-      (this.pendingInvitations.length > 0 ||
-        this.pendingJoinRequests.length > 0)
-        ? this._renderPendingInvitationsBanner() +
-          this._renderPendingJoinRequestsBanner()
-        : "";
+    // Banners now handled via Socket notifications - keeping code for fallback if needed
+    const pendingBanner = "";
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -642,7 +637,8 @@ export default class CoderHome {
             (i) => !currentIdSet.has(String(i.id_invitation)),
           );
           this.pendingInvitations = newInvitations;
-          this._updateInvitationsBanner();
+        // Banner now via Socket - no need to update
+        // this._updateInvitationsBanner();
           trulyNew.forEach((inv) => {
             toast.info(
               "New invitation",
@@ -685,6 +681,8 @@ export default class CoderHome {
     if (!main) return;
     const existing = main.querySelector(".pending-invitations-banner");
     if (existing) existing.remove();
+    // Banner removed - notifications now via Socket
+    /*
     if (this.pendingInvitations.length > 0) {
       main.insertAdjacentHTML(
         "afterbegin",
@@ -701,6 +699,7 @@ export default class CoderHome {
         );
       });
     }
+    */
   }
 
   // ─────────────────────────────────────────
