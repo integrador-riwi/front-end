@@ -249,19 +249,7 @@ export default class Navbar {
       ?.addEventListener("click", async () => {
         await toggleLang();
       });
-
-    // Re-render navbar when language changes so labels update instantly
-    this._offLangChange = onLangChange(() => {
-      const navEl = document.querySelector("aside.sidebar");
-      if (navEl) {
-        navEl.outerHTML = this.render();
-        // Re-query and re-attach after replacing DOM
-        this.attachEventHandlers();
-      }
-    });
   }
 
-  destroy() {
-    if (this._offLangChange) this._offLangChange();
-  }
+  destroy() {}
 }

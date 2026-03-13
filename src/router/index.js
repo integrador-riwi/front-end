@@ -76,7 +76,7 @@ const ROUTE_PERMISSIONS = {
   "events/create": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
   projects: ["ADMIN", "STAFF", "CODER"],
-  teamDetail: ["ADMIN"],                // ← NUEVO
+  teamDetail: ["ADMIN"], // ← NUEVO
   ranking: ["ADMIN", "STAFF"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -106,6 +106,14 @@ class App {
     this.user = null;
     this.hasTeam = false;
     this.currentParams = {};
+
+    // Re-render the current view whenever the language changes
+    onLangChange(() => {
+      if (this.currentRoute) {
+        this.navigate(this.currentRoute, this.currentParams);
+      }
+    });
+
     this.init();
   }
 
@@ -161,23 +169,20 @@ class App {
     this.navigate(this.getHomeRoute());
   }
 
-async checkUserTeam() {
-  try {
-    console.log("CHECK TEAM CALLED");
-    const response = await getMyTeams();
-     console.log("MY TEAMS:", response);
-    const teams = response?.teams || [];
+  async checkUserTeam() {
+    try {
+      console.log("CHECK TEAM CALLED");
+      const response = await getMyTeams();
+      console.log("MY TEAMS:", response);
+      const teams = response?.teams || [];
 
-    return teams.length > 0;
+      return teams.length > 0;
+    } catch (error) {
+      console.log("User has no team");
 
-  } catch (error) {
-
-    console.log("User has no team");
-
-    return false;
-
+      return false;
+    }
   }
-}
 
   getAppState() {
     return {
