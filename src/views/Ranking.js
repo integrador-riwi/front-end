@@ -3,6 +3,7 @@ import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/ranking.css";
@@ -46,7 +47,7 @@ export default class Ranking {
     this.navbar.attachEventHandlers();
 
     if (!this.eventId) {
-      this.error = "No event selected. Please go to Events and select one.";
+      this.error = t("ranking.noEvent") ?? "No event selected.";
       toast.error("Error", this.error);
       this._paint();
       return;
@@ -74,8 +75,7 @@ export default class Ranking {
         if (statusRes.status === "fulfilled") {
           this.rankingStatus = statusRes.value?.data ?? null;
         } else {
-          this.error =
-            statusRes.reason?.message ?? "Error loading ranking status.";
+          this.error = statusRes.reason?.message ?? t("common.error");
           toast.error("Error", this.error);
         }
         if (rankingRes.status === "fulfilled") {
@@ -91,7 +91,7 @@ export default class Ranking {
     } catch (e) {
       const is404 = e.response?.status === 404 || e.message?.includes("404");
       if (!is404) {
-        this.error = e.message ?? "Error loading ranking.";
+        this.error = e.message ?? t("common.error");
         toast.error("Error", this.error);
       }
     }
@@ -139,7 +139,7 @@ export default class Ranking {
       );
       this.rankingStatus = statusRes?.data ?? null;
     } catch (e) {
-      this.error = e.message ?? "Error publishing ranking.";
+      this.error = e.message ?? t("common.error");
       toast.error("Error", this.error);
     }
 
@@ -192,7 +192,7 @@ export default class Ranking {
         ok: s.isDeadlinePassed,
         warn: !s.isDeadlinePassed,
         label: s.isDeadlinePassed
-          ? "Delivery deadline passed"
+          ? (t("ranking.deadlinePassed") ?? "Delivery deadline passed")
           : `Delivery closes on ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString("en-US") : "—"}`,
       },
       {
@@ -294,7 +294,7 @@ export default class Ranking {
                   this.publishing
                     ? `<span class="rk-spinner"></span> Calculando...`
                     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    ${this.rankingData ? "Recalcular ranking" : "Publicar ranking"}
+                    ${this.rankingData ? (t("ranking.recalculate") ?? "Recalculate ranking") : (t("ranking.publish") ?? "Publish ranking")}
                     ${s.hasIncompleteEvaluations ? warnIcon : ""}`
                 }
               </button>`
@@ -307,7 +307,7 @@ export default class Ranking {
     return `
       <div class="rk-empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:.3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <p>${isAdmin(this.user) ? "The ranking has not been published yet." : "The ranking for this event is not available yet."}</p>
+        <p>${isAdmin(this.user) ? (t("ranking.notPublished") ?? "The ranking has not been published yet.") : (t("ranking.notAvailable") ?? "The ranking is not available yet.")}</p>
       </div>
     `;
   }
