@@ -50,7 +50,7 @@ export function initSocket() {
   });
 
   socket.on("connect", () => {
-    console.log("[Socket] Connected:", socket.id);
+    console.log("[Socket] Connected:", socket.id, "User ID:", socket.user?.id_user);
   });
 
   socket.on("disconnect", (reason) => {
@@ -118,7 +118,7 @@ function setupEventListeners() {
   });
 
   socket.on("join_request:new", (data) => {
-    console.log("[Socket] New join request:", data);
+    console.log("[Socket] New join request received:", data);
 
     let toastId = null;
     toastId = toast.info(
