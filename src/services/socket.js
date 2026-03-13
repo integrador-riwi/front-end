@@ -284,14 +284,16 @@ function setupEventListeners() {
       "Removed from team",
       `You have been removed from "${data.teamName}"`,
       {
-        duration: 5000,
+        duration: 3000,
       },
     );
 
-    // Redirect to event selection after a short delay
+    // Redirect to event selection after delay
     setTimeout(() => {
       window.location.hash = "#/coderEventSelect";
-    }, 2000);
+      // Force reload to refresh team data
+      setTimeout(() => window.location.reload(), 100);
+    }, 2500);
 
     if (eventHandlers["team:member_removed"]) {
       eventHandlers["team:member_removed"](data);
