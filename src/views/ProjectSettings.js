@@ -3,6 +3,7 @@ import { getUser } from "../utils/auth.js";
 import "../assets/styles/projectSettings.css";
 import InviteModal from "../components/inviteModal/InviteModal.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import {
   apiFetch,
   updateTeam,
@@ -327,7 +328,7 @@ export default class ProjectSettings {
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Saving…";
+      btn.textContent = t("common.loading");
     }
 
     try {
@@ -338,9 +339,12 @@ export default class ProjectSettings {
       } else {
         await updateTeam(this.team.id_team, {});
       }
-      this._showFeedback("Changes saved successfully.", "success");
+      this._showFeedback(
+        t("settings.savedOk") ?? "Changes saved successfully.",
+        "success",
+      );
     } catch (err) {
-      this._showFeedback(err?.message ?? "Could not save changes.", "error");
+      this._showFeedback(err?.message ?? t("common.error"), "error");
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -354,7 +358,8 @@ export default class ProjectSettings {
 
   async handleDelete() {
     const confirmed = confirm(
-      "Are you sure you want to delete the team? This action is permanent and cannot be undone.",
+      t("settings.deleteConfirm") ??
+        "Are you sure? This action cannot be undone.",
     );
     if (!confirmed) return;
 
@@ -365,7 +370,7 @@ export default class ProjectSettings {
       await leaveTeam(this.team.id_team);
       this.router.navigate("coderHome");
     } catch (err) {
-      this._showFeedback(err?.message ?? "Could not delete the team.", "error");
+      this._showFeedback(err?.message ?? t("common.error"), "error");
     }
   }
 
@@ -381,10 +386,7 @@ export default class ProjectSettings {
       const badge = document.querySelector(".cs-count-badge");
       if (badge && list) badge.textContent = list.querySelectorAll("li").length;
     } catch (err) {
-      this._showFeedback(
-        err?.message ?? "Could not remove the member.",
-        "error",
-      );
+      this._showFeedback(err?.message ?? t("common.error"), "error");
     }
   }
 
@@ -410,9 +412,9 @@ export default class ProjectSettings {
   // ─────────────────────────────────────────
   _showFeedback(message, type = "success") {
     if (type === "success") {
-      toast.success('Success', message);
+      toast.success("Success", message);
     } else {
-      toast.error('Error', message);
+      toast.error("Error", message);
     }
   }
 }
