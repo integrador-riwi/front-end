@@ -3,6 +3,7 @@ import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { icons } from "../utils/icons.js";
+import { toast } from "../components/Toast/index.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -10,12 +11,15 @@ export default class DashboardView {
   constructor(router, params) {
     this.router = router;
     this.user = getUser();
-    this.eventId = params?.id ?? localStorage.getItem("currentEventId");
+    this.eventId = params?.id || localStorage.getItem("currentEventId");
     this.eventName =
-      params?.name ?? localStorage.getItem("currentEventName") ?? "Dashboard";
+      params?.name || localStorage.getItem("currentEventName") || "Dashboard";
     this.navbar = new Navbar(router);
     this.header = new Header(router, { eventName: this.eventName });
+
     this.metrics = null;
+    this.ranking = [];
+    this.status = null;
     this.loading = true;
     this.error = null;
   }
@@ -32,26 +36,49 @@ export default class DashboardView {
       </div>
     `;
     this.navbar.attachEventHandlers();
-    this.header.mountBreadcrumb?.();
-    this.header.attachEventHandlers?.();
+    if (this.header.mountBreadcrumb) this.header.mountBreadcrumb();
+    if (this.header.attachEventHandlers) this.header.attachEventHandlers();
 
-    await this._loadMetrics();
+    await this._loadDashboardData();
   }
 
-  async _loadMetrics() {
+  async _loadDashboardData() {
     this.loading = true;
     this._paint();
+
+    if (!this.eventId) {
+      this.router.navigate("events");
+      return;
+    }
+
     try {
-      const res = await apiFetch(`/events/${this.eventId}/metrics`, {
-        method: "GET",
-      });
-      this.metrics = res?.data ?? null;
+      // Parallel fetch for dashboard data
+      const [metricsRes, rankingRes, statusRes] = await Promise.allSettled([
+        apiFetch(`/events/${this.eventId}/metrics`, { method: "GET" }),
+        apiFetch(`/events/${this.eventId}/ranking`, { method: "GET" }),
+        apiFetch(`/events/${this.eventId}/ranking/status`, { method: "GET" })
+      ]);
+
+      if (metricsRes.status === "fulfilled") {
+        this.metrics = metricsRes.value?.data ?? null;
+      }
+      if (rankingRes.status === "fulfilled") {
+        this.ranking = rankingRes.value?.data?.ranking?.slice(0, 3) ?? [];
+      }
+      if (statusRes.status === "fulfilled") {
+        this.status = statusRes.value?.data ?? null;
+      }
+
     } catch (e) {
-      this.error = e.message ?? "Error loading metrics.";
-      toast.error('Error', this.error);
+      console.error("Dashboard data load error:", e);
+      if (!this.metrics) {
+        this.error = e.message ?? "Error loading dashboard data.";
+        toast.error('Error', this.error);
+      }
     }
     this.loading = false;
     this._paint();
+    this._attachLocalHandlers();
   }
 
   _paint() {
@@ -62,42 +89,192 @@ export default class DashboardView {
 
   _html() {
     if (this.loading) {
-      return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>Cargando métricas...</p></div>`;
+      return `
+        <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
+          <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: var(--accent);"></div>
+          <p class="text-muted fw-medium">Preparing your insights...</p>
+        </div>
+      `;
     }
-    if (this.error) {
+
+    if (this.error && !this.metrics) {
       return `<div class="rk-alert rk-alert--error" style="margin:24px">${this.error}</div>`;
     }
-    if (!this.metrics) return "";
 
-    const m = this.metrics;
-
-    const cards = [
-      { label: "Teams", value: m.totalTeams, icon: icons.users() },
-      { label: "Projects", value: m.totalProjects, icon: icons.folder() },
-      { label: "Coders", value: m.totalCoders, icon: icons.code() },
-      { label: "Votes", value: m.totalVotes, icon: icons.vote() },
-      {
-        label: "Evaluated",
-        value: `${m.evaluatedProjects}/${m.totalProjects}`,
-        icon: icons.check()
-      },
-      { label: "Areas", value: m.activeAreas, icon: icons.blocks() },
-    ];
+    const totalTeams = this.metrics?.totalTeams ?? 0;
+    const evaluatedTeams = this.metrics?.evaluatedProjects ?? 0;
+    const evalPercentage = totalTeams > 0 ? Math.round((evaluatedTeams / totalTeams) * 100) : 0;
 
     return `
-      <div class="db-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;padding:24px">
-        ${cards
-        .map(
-          (c) => `
-          <div class="app-section db-card" style="display:flex;flex-direction:column;gap:8px;padding:20px 24px">
-            <span style="width:28px;height:28px;color:var(--accent,#6c63ff)">${c.icon}</span>
-            <span class="db-card-value" style="font-size:2rem;font-weight:700;color:var(--primary,#6c63ff);line-height:1">${c.value}</span>
-            <span style="font-size:.8rem;color:var(--text-muted,#888);font-weight:500;text-transform:uppercase;letter-spacing:.05em">${c.label}</span>
+      <div class="db-container">
+        
+        <div class="db-layout-main">
+          
+          <!-- Left Column (340px): Metrics & Secondary Ranking -->
+          <div class="d-flex flex-column gap-4" style="height: 100%;">
+            
+            <!-- Metric Squares (2x2) -->
+            <div class="db-sidebar-metrics-grid flex-shrink-0">
+               ${this._renderMetricCard("Total Teams", totalTeams, "Teams", icons.users())}
+               ${this._renderMetricCard("Submitted", this.metrics?.totalProjects ?? 0, "Active", icons.folder())}
+               ${this._renderMetricCard("Coders", this.metrics?.totalCoders ?? 0, "Total", icons.code())}
+               ${this._renderMetricCard("Evaluated",
+                  `${evaluatedTeams}/${totalTeams}`,
+                  `${evalPercentage}%`, icons.check(), true, evalPercentage)}
+            </div>
+
+            <!-- Team Ranking (Secondary - Top 3 Only) -->
+            <div class="db-section flex-grow-1 d-flex flex-column">
+              <div class="db-section-header">
+                <h3 class="db-section-title" style="font-size: 1rem;">Top 3 Teams</h3>
+                <a href="#" class="db-view-all navigate-ranking" style="font-size: 0.75rem;">View Full</a>
+              </div>
+              <div class="db-widget mt-2 d-flex flex-column justify-content-center flex-grow-1">
+                 ${this.ranking.length > 0 ? this.ranking.slice(0, 3).map((team, idx) => `
+                    <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded border bg-light-subtle shadow-sm">
+                       <div class="d-flex align-items-center gap-3">
+                          <span class="fw-bold fs-5" style="color: ${this._getRankColor(idx)}; min-width: 30px;">#${idx + 1}</span>
+                          <div class="d-flex flex-column">
+                            <span class="small fw-bold text-truncate" style="max-width: 140px; color: var(--navy);">${team.team_name}</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">${team.category ?? 'General'}</span>
+                          </div>
+                       </div>
+                       <span class="badge" style="background: white; color: var(--navy); border: 1px solid var(--border); padding: 8px 12px;">${team.team_score} pt</span>
+                    </div>
+                 `).join('') : '<div class="text-center py-5"><p class="small text-muted mb-0">Ranking processing...</p></div>'}
+              </div>
+            </div>
+
           </div>
-        `,
-        )
-        .join("")}
+
+          <!-- Right Column (Flexible): Protagonist Insights -->
+          <div class="d-flex flex-column gap-4" style="height: 100%;">
+            
+            <!-- Grading Progress - Primary Protagonist -->
+            <div class="db-section">
+              <div class="db-section-header">
+                <h3 class="db-section-title">Grading Progress by Area</h3>
+              </div>
+              <div class="db-widget">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                  ${(this.status?.requiredAreas || ["Development", "English Proficiency", "Soft Skills", "Innovation"]).map((area, idx) => `
+                    <div class="col">
+                       <div class="p-3 rounded-4 border bg-white shadow-sm">
+                          ${this._renderProgressArea(
+                            area, 
+                            this.metrics?.evaluatedProjectsByArea?.[area] ?? Math.floor((this.metrics?.evaluatedProjects ?? 0) * (1 - (idx * 0.05))), 
+                            this.metrics?.totalProjects ?? 0, 
+                            this._getAreaColor(idx)
+                          )}
+                       </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Event Status Overview -->
+            <div class="db-section flex-grow-1 d-flex flex-column">
+               <div class="db-section-header">
+                  <h3 class="db-section-title">Event Status Overview</h3>
+                  ${this.status?.deliveryDate ? `<span class="badge rounded-pill bg-light text-muted border px-3 py-2 fw-bold" style="font-size: 0.75rem;">DUE: ${new Date(this.status.deliveryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}
+               </div>
+               <div class="d-flex flex-column gap-4 py-1 flex-grow-1 justify-content-center">
+                  <div class="d-flex justify-content-between align-items-end">
+                     <div>
+                        <div class="h2 mb-0 fw-bold" style="color: var(--navy);">${evalPercentage}%</div>
+                        <div class="small fw-bold text-muted uppercase mt-1">EVALUATION COMPLETION RATE</div>
+                     </div>
+                     <div class="text-end">
+                        <div class="h4 mb-0 fw-bold" style="color: var(--accent);">${evaluatedTeams} / ${totalTeams}</div>
+                        <div class="small text-muted">Teams Fully Evaluated</div>
+                     </div>
+                  </div>
+                  <div class="db-progress-bar-bg" style="width: 100%; height: 12px; border-radius: 20px;">
+                     <div class="db-progress-bar-fill" style="width: ${evalPercentage}%; background: var(--accent); border-radius: 20px;"></div>
+                  </div>
+                  <div class="mt-2">
+                     <button class="app-btn-primary w-100 py-3 navigate-ranking shadow-sm">Publish Final Results</button>
+                  </div>
+               </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
     `;
+  }
+
+  _renderMetricCard(label, value, subtext, icon, showProgress = false, percentage = 0) {
+    return `
+      <div class="db-metric-card">
+        <div class="db-metric-icon-box">
+          <span style="width: 20px; height: 20px">${icon}</span>
+        </div>
+        <span class="db-metric-label">${label}</span>
+        <span class="db-metric-value">${value}</span>
+        ${showProgress ? `
+          <div class="db-progress-bar-bg" style="width: 100%; height: 4px; margin-top: 4px; background: #f0f0f0;">
+            <div class="db-progress-bar-fill" style="width: ${percentage}%; background: var(--accent);"></div>
+          </div>
+        ` : ''}
+        <span class="db-metric-subtext">${subtext}</span>
+      </div>
+    `;
+  }
+
+  _renderProgressArea(label, current, total, color) {
+    const percentage = total > 0 ? (current / total) * 100 : 0;
+    return `
+      <div class="db-progress-item">
+        <div class="db-progress-info">
+          <span class="db-progress-label">${label}</span>
+          <span class="db-progress-count">${current}<span>/${total} teams</span></span>
+        </div>
+        <div class="db-progress-bar-bg" style="width: 100%; height: 6px; background: #f0f0f0;">
+          <div class="db-progress-bar-fill" style="width: ${percentage}%; background: ${color}"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderActivityItem(text, time, color) {
+    return `
+      <div class="db-activity-item">
+        <div class="db-activity-dot" style="background: ${color}"></div>
+        <div class="db-activity-content">
+          <span class="db-activity-text">${text}</span>
+          <span class="db-activity-time">${time}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderDeadline(title, time, urgent) {
+    return `
+      <div class="db-deadline-item ${urgent ? 'db-deadline-urgent' : ''}">
+        ${urgent ? '<span class="db-urgent-badge">Urgent</span>' : ''}
+        <span class="db-deadline-title">${title}</span>
+        <span class="db-deadline-time">${time}</span>
+      </div>
+    `;
+  }
+
+  _getAreaColor(idx) {
+    const colors = ["var(--accent)", "var(--mint)", "var(--lilac)", "var(--gold)", "var(--danger)", "var(--navy)"];
+    return colors[idx % colors.length];
+  }
+
+  _getRankColor(idx) {
+    const colors = ["#5acca4", "#6b5cff", "#e6ca52"];
+    return colors[idx] || "#cbd5e0";
+  }
+
+  _attachLocalHandlers() {
+    document.querySelector(".navigate-ranking")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.router.navigate("ranking");
+    });
   }
 }

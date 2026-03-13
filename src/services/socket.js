@@ -16,9 +16,23 @@ export function initSocket() {
     return null;
   }
 
+  // Already connected — nothing to do
   if (socket?.connected) {
     console.log("[Socket] Already connected");
     return socket;
+  }
+
+  // Socket exists and is actively trying to connect — don't create a new one
+  if (socket?.active) {
+    console.log("[Socket] Already connecting");
+    return socket;
+  }
+
+  // Clean up any existing disconnected socket before creating a new one
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
+    socket = null;
   }
 
   socket = io(SOCKET_URL, {
@@ -51,21 +65,6 @@ function setupEventListeners() {
 
   socket.on("invitation:new", (data) => {
     console.log("[Socket] New invitation:", data);
-
-    toast.info(
-      "New invitation",
-      `You have been invited to join "${data.teamName}"`,
-      {
-        duration: 0,
-        action: {
-          label: "View",
-          onClick: () => {
-            window.location.hash = "#/coder";
-          },
-          keepOpen: true,
-        },
-      },
-    );
 
     if (eventHandlers["invitation:new"]) {
       eventHandlers["invitation:new"](data);
@@ -195,9 +194,12 @@ export function off(event) {
 
 export function disconnectSocket() {
   if (socket) {
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }
+  // Clear all view-level handlers so stale callbacks don't accumulate
+  eventHandlers = {};
 }
 
 export function getSocket() {

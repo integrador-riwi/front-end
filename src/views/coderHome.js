@@ -26,13 +26,16 @@ import {
   rejectInvitation,
   leaveTeam,
   requestToJoinTeam,
-  getMyJoinRequests,
   getTeamJoinRequests,
   acceptJoinRequest,
   rejectJoinRequest,
   cancelJoinRequest,
 } from "../services/api.js";
-import { on as socketOn, off as socketOff } from "../services/socket.js";
+import {
+  on as socketOn,
+  off as socketOff,
+  getSocket,
+} from "../services/socket.js";
 
 export default class CoderHome {
   constructor(router, { user, team } = {}) {
@@ -94,17 +97,6 @@ export default class CoderHome {
       const teams = data?.teams ?? [];
       this.pendingInvitations = data?.pendingInvitations ?? [];
       this.pendingJoinRequests = data?.pendingJoinRequests ?? [];
-
-      // Also fetch join requests if not in my-teams response
-      if (this.pendingJoinRequests.length === 0 && !this.team) {
-        try {
-          const joinRequestsRes = await getMyJoinRequests();
-          this.pendingJoinRequests =
-            joinRequestsRes?.data ?? joinRequestsRes ?? [];
-        } catch (e) {
-          console.error("Error fetching join requests:", e);
-        }
-      }
 
       if (teams.length > 0) {
         // Find team that belongs to selected event directly from the list
@@ -201,6 +193,11 @@ export default class CoderHome {
           },
         ];
         this._updateInvitationsBanner();
+        toast.info(
+          "New invitation",
+          `${data.invitedByName} invited you to join "${data.teamName}"`,
+          { duration: 5000 },
+        );
       }
     });
 
@@ -228,6 +225,29 @@ export default class CoderHome {
       } catch (err) {
         toast.error("Error", err?.message ?? "Could not decline the request.");
       }
+    });
+
+    // Socket: coder recibe confirmación de que su join request fue aceptada → recargar vista
+    socketOn("join_request:accepted", async () => {
+      await this.init();
+    });
+
+    // Socket: coder recibe confirmación de que su join request fue rechazada → limpiar estado
+    socketOn("join_request:rejected", () => {
+      this.pendingJoinRequests = [];
+    });
+
+    // Socket: líder recibe confirmación de que su invitación fue aceptada → recargar equipo
+    socketOn("invitation:accepted", async () => {
+      await this.init();
+    });
+
+    // Socket: líder recibe confirmación de que su invitación fue rechazada → solo actualizar invitaciones pendientes
+    socketOn("invitation:rejected", async () => {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      this.pendingInvitations = data?.pendingInvitations ?? [];
+      this._updateInvitationsBanner();
     });
   }
 
@@ -545,15 +565,20 @@ export default class CoderHome {
   destroy() {
     this._stopPolling();
     socketOff("invitation:new");
+    socketOff("invitation:accepted");
+    socketOff("invitation:rejected");
     socketOff("join_request:new:accept");
     socketOff("join_request:new:deny");
+    socketOff("join_request:accepted");
+    socketOff("join_request:rejected");
   }
 
   // Polling de invitaciones y join requests
   // ─────────────────────────────────────────
   _startPolling() {
     this._stopPolling();
-    this._pollingInterval = setInterval(() => this._checkUpdates(), 5000);
+    // Poll every 15s as fallback — socket handles real-time updates when connected
+    this._pollingInterval = setInterval(() => this._checkUpdates(), 15000);
   }
 
   _stopPolling() {
@@ -565,6 +590,10 @@ export default class CoderHome {
   }
 
   async _checkUpdates() {
+    // Skip if socket is connected — it handles real-time updates
+    const socket = getSocket();
+    if (socket?.connected) return;
+
     try {
       // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
       console.log("POLLING CHECK RUNNING");
@@ -581,11 +610,11 @@ export default class CoderHome {
         if (relevantTeam) {
           this._stopPolling();
           toast.success(
-            "You have been accepted!",
-            `Ahora eres parte del equipo ${relevantTeam.name}`,
+            'You have been accepted!',
+            `You are now part of team ${relevantTeam.name}`,
             {
               action: {
-                label: "Ver equipo",
+                label: 'View team',
                 onClick: async () => {
                   await this.init();
                   this.render();
@@ -606,11 +635,19 @@ export default class CoderHome {
           .sort()
           .join(",");
         if (currentIds !== newIds) {
+          const currentIdSet = new Set(currentIds.split(",").filter(Boolean));
+          const trulyNew = newInvitations.filter(
+            (i) => !currentIdSet.has(String(i.id_invitation)),
+          );
           this.pendingInvitations = newInvitations;
-          const prevCount = currentIds.split(",").filter(Boolean).length;
-          if (newInvitations.length > prevCount) {
-            this._showInvitationsToast(newInvitations);
-          }
+          this._updateInvitationsBanner();
+          trulyNew.forEach((inv) => {
+            toast.info(
+              "New invitation",
+              `${inv.invited_by_name ?? "Someone"} invited you to join "${inv.team_name}"`,
+              { duration: 5000 },
+            );
+          });
         }
         return;
       }
@@ -632,13 +669,7 @@ export default class CoderHome {
           .join(",");
         if (currentIds !== newIds) {
           this.pendingJoinRequests = newRequests;
-          const prevCount = currentIds.split(",").filter(Boolean).length;
-          if (newRequests.length > prevCount) {
-            toast.info(
-              "New request",
-              `You have ${newRequests.length} join request(s) pending`,
-            );
-          }
+          // No toast here — socket already shows the accept/deny notification in real time
           this.inviteModal?.refreshJoinRequests?.();
         }
       }
@@ -675,15 +706,15 @@ export default class CoderHome {
     const dropdownItems = invitations.map((inv) => ({
       id: inv.id_invitation,
       idTeam: inv.id_team,
-      title: inv.team_name || "Equipo sin nombre",
-      subtitle: `${inv.event_name || "Sin evento"} • Invitado por: ${inv.invited_by_name || "Alguien"}`,
+      title: inv.team_name || 'Unnamed Team',
+      subtitle: `${inv.event_name || 'No event'} • Invited by: ${inv.invited_by_name || 'Someone'}`,
       accept: true,
-      deny: true,
+      deny: true
     }));
 
     toast.info(
-      "Invitaciones pendientes",
-      `Tienes ${count} invitación(es) sin responder`,
+      'Pending invitations',
+      `You have ${count} unanswered invitation(s)`,
       {
         duration: 0,
         dropdown: {
@@ -691,35 +722,37 @@ export default class CoderHome {
           onAccept: async (item) => {
             try {
               await acceptInvitation(item.id);
+              toast.success('Accepted!', `You are now part of team "${item.title}"`, {
+                duration: 5000,
+                action: {
+                  label: 'View team',
+                  onClick: async () => {
+                    await this.init();
+                    this.render();
+                  },
+                  keepOpen: true
+                }
+              });
               this.pendingInvitations = this.pendingInvitations.filter(
-                (i) => i.id_invitation !== item.id,
+                i => i.id_invitation !== item.id
               );
-              this._updateInvitationsBanner();
-              await this.init();
             } catch (err) {
-              toast.error(
-                "Error",
-                err?.message || "No se pudo aceptar la invitación",
-              );
+              toast.error('Error', err?.message || 'Could not accept the invitation');
             }
           },
           onDeny: async (item) => {
             try {
               await rejectInvitation(item.id);
-              toast.info("Declined", `Invitation to "${item.title}" declined`);
+              toast.info('Declined', `Invitation to "${item.title}" declined`);
               this.pendingInvitations = this.pendingInvitations.filter(
-                (i) => i.id_invitation !== item.id,
+                i => i.id_invitation !== item.id
               );
-              this._updateInvitationsBanner();
             } catch (err) {
-              toast.error(
-                "Error",
-                err?.message || "No se pudo rechazar la invitación",
-              );
+              toast.error('Error', err?.message || 'Could not reject the invitation');
             }
-          },
-        },
-      },
+          }
+        }
+      }
     );
   }
 

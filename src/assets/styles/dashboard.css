@@ -4,3 +4,295 @@
   padding: 24px;
   width: 100%;
 }
+
+.db-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.db-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.db-sidebar-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.db-metric-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 140px;
+}
+
+.db-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+}
+
+.db-metric-icon-box {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.db-metric-card .db-metric-icon-box svg {
+  width: 16px;
+  height: 16px;
+}
+
+.db-metric-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.db-metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.db-metric-subtext {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.db-layout-main {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .db-layout-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.db-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.db-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.db-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.db-view-all {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Ranking Table style */
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.db-table td {
+  padding: 16px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.db-rank-num {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.db-team-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.db-team-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.db-team-name {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.db-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.db-score-val {
+  font-weight: 700;
+  color: var(--navy);
+  margin-right: 8px;
+}
+
+.db-progress-bar-bg {
+  width: 80px;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 10px;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.db-progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+}
+
+/* Activity List */
+.db-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.db-activity-item {
+  display: flex;
+  gap: 16px;
+}
+
+.db-activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.db-activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.db-activity-text {
+  font-size: 0.9rem;
+  color: var(--navy);
+}
+
+.db-activity-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Sidebar Widgets */
+.db-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.db-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.db-progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.db-progress-label {
+  font-weight: 600;
+  color: var(--text-gray-700);
+}
+
+.db-progress-count {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.db-progress-count span {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Deadlines */
+.db-deadline-item {
+  padding: 12px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.db-deadline-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--navy);
+}
+
+.db-deadline-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.db-deadline-urgent {
+  background: var(--danger-dim);
+  border-left-color: var(--danger);
+}
+
+.db-urgent-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--danger);
+  text-transform: uppercase;
+  float: right;
+}

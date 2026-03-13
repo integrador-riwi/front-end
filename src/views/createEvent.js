@@ -1,11 +1,13 @@
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/eventCreated.css";
+import "../assets/styles/rubricBuilder.css";
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import * as XLSX from 'xlsx';
 
 const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 const AREA_LABELS = {
@@ -17,6 +19,7 @@ const AREA_COLOR = {
   DEVELOPMENT: "#6b5cff",
   SOFT_SKILLS: "#5acca4",
   ENGLISH: "#eaa2fc",
+  INACTIVE: "#d1d5db",
 };
 
 const ALL_CLANS = [
@@ -39,35 +42,32 @@ export default class CreateEvent {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.loading = false;
-    this.targetClans = []; // [] = all clans (will send null to API)
+    this.targetClans = [];
     this.githubOrgs = [];
     this.githubConnected = false;
     this.githubUsername = null;
 
-    // State: which areas are enabled and their rubrics
-    // rubrics[area] = [{ id, name, description, weight, grades: [score,...] }]
-    this.enabledAreas = { DEVELOPMENT: true, SOFT_SKILLS: true, ENGLISH: true };
-    this.rubrics = { DEVELOPMENT: [], SOFT_SKILLS: [], ENGLISH: [] };
-    this._rubricCounter = 0;
+    // Rubric Builder state
+    this.rubricMode = null; // 'platform' or 'template'
+    this.templateFile = null;
+    this.rubricAreas = [
+      { id: 'dev', type: 'DEVELOPMENT', title: AREA_LABELS['DEVELOPMENT'], weight: 0, criteria: [], isExpanded: true },
+      { id: 'soft', type: 'SOFT_SKILLS', title: AREA_LABELS['SOFT_SKILLS'], weight: 0, criteria: [], isExpanded: false },
+      { id: 'eng', type: 'ENGLISH', title: AREA_LABELS['ENGLISH'], weight: 0, criteria: [], isExpanded: false }
+    ];
   }
 
-  // ── Data collection ─────────────────────────────────────────────────────────
+  // ── Event Data ──────────────────────────────────────────────────────────────
 
   _getEventData() {
     return {
       title: document.getElementById("ev-title")?.value?.trim() ?? "",
-      description:
-        document.getElementById("ev-description")?.value?.trim() ?? "",
+      description: document.getElementById("ev-description")?.value?.trim() ?? "",
       eventType: document.getElementById("ev-type")?.value ?? "CAPSTONE",
       route: document.getElementById("ev-route")?.value ?? "BASIC",
       cohort: document.getElementById("ev-cohort")?.value?.trim() ?? "",
-      githubOrg:
-        document.getElementById("ev-github-org")?.value?.trim() ||
-        this.selectedGithubOrg ||
-        null,
-      maxTeamSize: parseInt(
-        document.getElementById("ev-max-team")?.value ?? "5",
-      ),
+      githubOrg: document.getElementById("ev-github-org")?.value?.trim() || this.selectedGithubOrg || null,
+      maxTeamSize: parseInt(document.getElementById("ev-max-team")?.value ?? "5"),
       eventDate: document.getElementById("ev-start-date")?.value
         ? `${document.getElementById("ev-start-date").value}T10:00:00`
         : null,
@@ -75,7 +75,6 @@ export default class CreateEvent {
         ? `${document.getElementById("ev-end-date").value}T18:00:00`
         : null,
       status: "UPCOMING",
-      // null = all clans; array = specific clans
       targetClans: this.targetClans.length > 0 ? this.targetClans : null,
     };
   }
@@ -105,7 +104,7 @@ export default class CreateEvent {
     const summary = document.getElementById("clan-summary");
     if (!summary) return;
     if (this.targetClans.length === 0) {
-      summary.textContent = "Todos los clanes";
+      summary.textContent = "All clans";
       summary.className = "ce-clan-summary ce-clan-summary--all";
     } else {
       summary.textContent = this.targetClans.join(", ");
@@ -117,28 +116,28 @@ export default class CreateEvent {
     const allSelected = this.targetClans.length === 0;
     return `
       <button class="ce-clan-chip ${allSelected ? "ce-clan-chip--active" : ""}" data-clan="ALL" type="button">
-        Todos los clanes
+        All clans
       </button>
       ${ALL_CLANS.map((clan) => {
-        const active = this.targetClans.includes(clan);
-        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
-      }).join("")}
+      const active = this.targetClans.includes(clan);
+      return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+    }).join("")}
     `;
   }
 
   _renderClanSection() {
     return `
       <div class="ce-clan-section">
-        <label class="form-label fw-semibold">Clanes participantes</label>
+        <label class="form-label fw-semibold">Participating clans</label>
         <p class="ce-section-subtitle" style="margin-bottom: 10px;">
-          Selecciona los clanes que verán este evento, o déjalo en "Todos los clanes".
+          Select the clans that will see this event, or leave it as "All clans".
         </p>
         <div class="ce-clan-picker" id="clan-picker-body">
           ${this._renderClanPickerBody()}
         </div>
         <div class="ce-clan-footer">
           <span>Scope: </span>
-          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">Todos los clanes</span>
+          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">All clans</span>
         </div>
       </div>
     `;
@@ -158,26 +157,16 @@ export default class CreateEvent {
 
   _buildRubricsPayload() {
     const payload = [];
-    for (const area of AREAS) {
-      if (!this.enabledAreas[area]) continue;
-      for (const r of this.rubrics[area]) {
-        const nameEl = document.getElementById(`rubric-name-${r.id}`);
-        const descEl = document.getElementById(`rubric-desc-${r.id}`);
-        const weightEl = document.getElementById(`rubric-weight-${r.id}`);
-        const gradeEls = document.querySelectorAll(
-          `.grade-score[data-rubric="${r.id}"]`,
-        );
+    if (this.rubricMode !== 'platform') return payload;
 
-        const grades = Array.from(gradeEls)
-          .map((el) => ({ score: parseFloat(el.value) }))
-          .filter((g) => !isNaN(g.score));
-
+    for (const area of this.rubricAreas) {
+      for (const crit of area.criteria) {
         payload.push({
-          area,
-          name: nameEl?.value?.trim() ?? "",
-          description: descEl?.value?.trim() || null,
-          weight: parseFloat(weightEl?.value ?? "0"),
-          grades,
+          area: area.type,
+          name: crit.name || "Untitled Criteria",
+          description: crit.description || null,
+          weight: (crit.weight / 100), // convert percentage to 0-1
+          grades: crit.levels.map(l => ({ score: l.score, description: l.description, name: l.name }))
         });
       }
     }
@@ -188,57 +177,37 @@ export default class CreateEvent {
 
   _validate() {
     const ev = this._getEventData();
-    if (!ev.title) return "El título del evento es obligatorio.";
-    if (!ev.eventDate) return "La fecha de inicio es obligatoria.";
+    if (!ev.title) return "Event title is required.";
+    if (!ev.eventDate) return "Start date is required.";
 
-    for (const area of AREAS) {
-      if (!this.enabledAreas[area]) continue;
-
-      const rubrics = this.rubrics[area];
-      if (rubrics.length === 0) {
-        return `El área ${AREA_LABELS[area]} está habilitada pero no tiene rúbricas. Agrega al menos una o deshabilita el área.`;
-      }
-
-      let totalWeight = 0;
-      for (const r of rubrics) {
-        const name = document
-          .getElementById(`rubric-name-${r.id}`)
-          ?.value?.trim();
-        const weight = parseFloat(
-          document.getElementById(`rubric-weight-${r.id}`)?.value ?? "0",
-        );
-        const grades = document.querySelectorAll(
-          `.grade-score[data-rubric="${r.id}"]`,
-        );
-
-        if (!name)
-          return `Una rúbrica de ${AREA_LABELS[area]} no tiene nombre.`;
-        if (isNaN(weight) || weight <= 0 || weight > 1)
-          return `El peso de "${name}" debe ser un número entre 0.01 y 1.`;
-        if (grades.length === 0)
-          return `La rúbrica "${name}" no tiene opciones de calificación.`;
-
-        for (const g of grades) {
-          if (isNaN(parseFloat(g.value)))
-            return `Todas las opciones de calificación de "${name}" deben ser números.`;
+    if (this.rubricMode === 'platform') {
+      this._recalculateWeights();
+      let totalWeight = this._getTotalWeight();
+      for (const a of this.rubricAreas) {
+        for (const c of a.criteria) {
+          if (!c.name) return `A criteria for ${a.title} has no name.`;
+          if (c.levels.length === 0) return `The criteria "${c.name}" has no performance levels.`;
         }
-        totalWeight += weight;
       }
-
-      if (Math.abs(totalWeight - 1) > 0.01) {
-        return `Los pesos de ${AREA_LABELS[area]} deben sumar 1.0 (actualmente suman ${totalWeight.toFixed(2)}).`;
+      if (Math.abs(totalWeight - 100) > 0.1 && totalWeight > 0) {
+        return `Total rubric weight is ${totalWeight}%. It must be exactly 100%.`;
       }
+      if (totalWeight === 0) {
+        return `You must define at least one criteria with weight greater than 0%.`;
+      }
+    } else if (this.rubricMode === 'template' && !this.templateFile) {
+      return `Please upload a template file.`;
     }
+
     return null;
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
   async _handleSubmit() {
-    this._clearFeedback();
     const err = this._validate();
     if (err) {
-      this._showError(err);
+      toast.error('Error de Validación', err);
       return;
     }
 
@@ -246,10 +215,10 @@ export default class CreateEvent {
     try {
       const body = {
         ...this._getEventData(),
-        rubrics: this._buildRubricsPayload(),
+        rubrics: this.rubricMode === 'platform' ? this._buildRubricsPayload() : [],
       };
       await apiFetch("/events", { method: "POST", body });
-      toast.success('Event created!', 'The event has been created successfully.');
+      toast.success('Event Created!', 'The event has been created successfully.');
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
       toast.error('Error', e.message ?? "Error creating the event.");
@@ -258,157 +227,406 @@ export default class CreateEvent {
     }
   }
 
-  // ── Rubric state helpers ───────────────────────────────────────────────────
 
-  _addRubric(area) {
-    const id = `r${++this._rubricCounter}`;
-    this.rubrics[area].push({ id, grades: [5, 3, 1] });
-    this._rerenderArea(area);
+
+  _generateId() {
+    return Math.random().toString(36).substr(2, 9);
   }
 
-  _removeRubric(area, rubricId) {
-    this.rubrics[area] = this.rubrics[area].filter((r) => r.id !== rubricId);
-    this._rerenderArea(area);
-  }
-
-  _addGrade(rubricId) {
-    const area = this._findAreaForRubric(rubricId);
-    const rubric = this.rubrics[area]?.find((r) => r.id === rubricId);
-    if (rubric) {
-      rubric.grades.push(0);
-      this._rerenderArea(area);
+  _rerenderRubricSection() {
+    const container = document.getElementById('ce-rubrics-container');
+    if (container) {
+      container.innerHTML = this._renderRubricState();
+      this._attachRubricHandlers();
     }
   }
 
-  _removeGrade(rubricId, index) {
-    const area = this._findAreaForRubric(rubricId);
-    const rubric = this.rubrics[area]?.find((r) => r.id === rubricId);
-    if (rubric && rubric.grades.length > 1) {
-      rubric.grades.splice(index, 1);
-      this._rerenderArea(area);
+  // ── Template Download ──────────────────────────────────────────────────────
+
+  _downloadTemplate() {
+  const link = document.createElement("a");
+  link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
+  link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  toast.success("Descarga iniciada", "La plantilla se descargó correctamente.");}
+
+  _addCriteria(areaId) {
+    const area = this.rubricAreas.find(a => a.id === areaId);
+    if (area) {
+      area.criteria.push({
+        id: this._generateId(),
+        name: '',
+        description: '',
+        weight: 0,
+        isExpanded: true,
+        levels: [
+          { score: 0, name: 'Unsatisfactory', description: '', color: '#ff4d4f' },
+          { score: 50, name: 'Good', description: '', color: '#faad14' },
+          { score: 100, name: 'Excellent', description: '', color: '#52c41a' }
+        ]
+      });
+      area.isExpanded = true;
+      this._recalculateWeights();
+      this._rerenderRubricSection();
     }
   }
 
-  _findAreaForRubric(rubricId) {
-    return AREAS.find((a) => this.rubrics[a]?.some((r) => r.id === rubricId));
+  _removeCriteria(areaId, critId) {
+    const area = this.rubricAreas.find(a => a.id === areaId);
+    if (area) {
+      area.criteria = area.criteria.filter(c => c.id !== critId);
+      this._recalculateWeights();
+      this._rerenderRubricSection();
+    }
   }
 
-  _toggleArea(area) {
-    this.enabledAreas[area] = !this.enabledAreas[area];
-    this._rerenderArea(area);
-  }
-
-  // ── Render helpers ─────────────────────────────────────────────────────────
-
-  _rerenderArea(area) {
-    const container = document.getElementById(`area-body-${area}`);
-    const toggle = document.getElementById(`area-toggle-${area}`);
-    if (!container || !toggle) return;
-
-    const enabled = this.enabledAreas[area];
-    toggle.textContent = enabled ? "Deshabilitar" : "Habilitar";
-    toggle.className = `ce-area-toggle ${enabled ? "ce-area-toggle--on" : "ce-area-toggle--off"}`;
-    container.innerHTML = enabled
-      ? this._renderAreaBody(area)
-      : this._renderAreaDisabled();
-    if (enabled) this._attachAreaHandlers(area);
-  }
-
-  _renderAreaDisabled() {
-    return `
-      <p class="ce-area-disabled">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;opacity:.5;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        Esta área no será evaluada en este evento.
-      </p>`;
-  }
-
-  _renderAreaBody(area) {
-    const rubrics = this.rubrics[area];
-    const totalW = rubrics.reduce((s, r) => {
-      const el = document.getElementById(`rubric-weight-${r.id}`);
-      return s + parseFloat(el?.value ?? r.weight ?? 0);
-    }, 0);
-
-    return `
-      <div class="ce-rubrics-list" id="rubrics-list-${area}">
-        ${rubrics.map((r) => this._renderRubricCard(r, area)).join("")}
-      </div>
-      ${
-        rubrics.length === 0
-          ? `<p class="ce-no-rubrics">Sin rúbricas. Agrega al menos una.</p>`
-          : ""
+  _addLevel(areaId, critId) {
+    const area = this.rubricAreas.find(a => a.id === areaId);
+    if (area) {
+      const crit = area.criteria.find(c => c.id === critId);
+      if (crit) {
+        crit.levels.push({ score: 0, name: 'New Level', description: '', color: '#1890ff' });
+        this._rerenderRubricSection();
       }
-      <div class="ce-area-footer">
-        <button class="ce-add-rubric-btn" data-area="${area}" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Agregar rúbrica
-        </button>
-        ${
-          rubrics.length > 0
-            ? `<span class="ce-weight-badge ${Math.abs(totalW - 1) < 0.01 ? "ce-weight-ok" : "ce-weight-warn"}">
-              Peso total: ${totalW.toFixed(2)} / 1.0
-            </span>`
-            : ""
+    }
+  }
+
+  _removeLevel(areaId, critId, levelIndex) {
+    const area = this.rubricAreas.find(a => a.id === areaId);
+    if (area) {
+      const crit = area.criteria.find(c => c.id === critId);
+      if (crit) {
+        crit.levels.splice(levelIndex, 1);
+        this._rerenderRubricSection();
+      }
+    }
+  }
+
+  _recalculateWeights() {
+    this.rubricAreas.forEach(area => {
+      let areaW = 0;
+      area.criteria.forEach(crit => {
+        const wInput = document.getElementById(`weight-${crit.id}`);
+        if (wInput) crit.weight = parseFloat(wInput.value) || 0;
+        areaW += crit.weight;
+      });
+      area.weight = areaW;
+    });
+  }
+
+  _getTotalWeight() {
+    return this.rubricAreas.reduce((sum, a) => sum + a.weight, 0);
+  }
+
+  _renderRubricState() {
+    if (!this.rubricMode) {
+      return `
+         <div class="rubric-onboarding text-center py-5">
+            <h4 class="fw-bold mb-2">Create New Rubric</h4>
+            <p class="text-muted mb-4">Select how you want to build your evaluation framework.</p>
+            <div class="d-flex justify-content-center gap-4">
+              <div class="rubric-opt-card" id="btn-mode-platform">
+                <div class="rubric-opt-icon flex-center bg-primary-soft text-primary mb-3">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </div>
+                <h5 class="fw-bold mb-2">Create in Platform</h5>
+                <p class="text-muted small mb-0">Build your rubric step by step using our interactive editor.</p>
+              </div>
+              <div class="rubric-opt-card" id="btn-mode-template">
+                <div class="rubric-opt-icon flex-center bg-secondary-soft text-secondary mb-3">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <h5 class="fw-bold mb-2">Upload Excel Template</h5>
+                <p class="text-muted small mb-0">Download our template, complete it and upload it to generate your rubric instantly.</p>
+              </div>
+            </div>
+         </div>
+       `;
+    }
+
+    if (this.rubricMode === 'template') {
+      return `
+          <div class="rubric-builder fade-in">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2" id="btn-mode-back">←</button> Use Template</h5>
+            </div>
+            <div class="card p-4 shadow-sm text-center bg-light">
+              <div class="mb-4">
+                <svg width="48" height="48" fill="none" stroke="#6c757d" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <h6 class="fw-bold">Upload your .xlsx file</h6>
+              <p class="text-muted small mb-4">Download the template, complete it and drag it here.</p>
+              <div class="d-flex justify-content-center gap-3">
+                <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
+                <button class="btn btn-primary" type="button">Select File</button>
+              </div>
+            </div>
+          </div>
+       `;
+    }
+
+    // Platform mode
+    this._recalculateWeights();
+    const totalW = this._getTotalWeight();
+    const isWeightOk = Math.abs(totalW - 100) < 0.1;
+    const compCriteria = this.rubricAreas.reduce((s, a) => s + a.criteria.length, 0);
+
+    return `
+       <div class="rubric-builder fade-in">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2 cursor-pointer" id="btn-mode-back">←</button> Model Rubric</h5>
+            <div class="d-flex align-items-center gap-3">
+               <div class="text-end">
+                 <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">TOTAL WEIGHT</div>
+                 <div class="fw-bold ${isWeightOk ? 'text-success' : 'text-primary'}">${totalW}% / 100%</div>
+               </div>
+               <div class="progress" style="width: 150px; height: 8px; border-radius: 4px;">
+                 <div class="progress-bar ${isWeightOk ? 'bg-success' : 'bg-primary'}" role="progressbar" style="width: ${Math.min(totalW, 100)}%;"></div>
+               </div>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-12">
+               <div class="bg-light p-3 rounded d-flex justify-content-between align-items-center border">
+                  <div>
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-1">Rubric Progress</span>
+                    <span class="badge bg-white text-dark border me-2">Areas: 3</span>
+                    <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
+                  </div>
+                  ${!isWeightOk ? `
+                    <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Total weight must be 100%
+                    </div>
+                  ` : `
+                     <div class="text-success small fw-semibold d-flex align-items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      Weight correctly assigned
+                    </div>
+                  `}
+               </div>
+            </div>
+          </div>
+
+          <div class="rubric-areas">
+            ${this.rubricAreas.map(area => this._renderAreaItem(area)).join('')}
+          </div>
+       </div>
+     `;
+  }
+
+  _renderAreaItem(area) {
+    const hasCrit = area.criteria.length > 0;
+    const isActivated = area.weight > 0;
+    const badgeColor = isActivated ? (AREA_COLOR[area.type] || '#6c63ff') : AREA_COLOR.INACTIVE;
+    
+    return `
+        <div class="card shadow-sm mb-3 rubric-area-card ${!isActivated ? 'area-inactive' : ''}" style="border-left: 4px solid ${badgeColor}; border-radius: 8px; overflow:hidden;">
+           <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+              <div class="d-flex align-items-center gap-3 cursor-pointer area-toggle-btn" data-area="${area.id}">
+                 <div class="text-muted">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="${area.isExpanded ? '6 9 12 15 18 9' : '9 18 15 12 9 6'}"/></svg>
+                 </div>
+                 <div>
+                   <h6 class="mb-0 fw-bold" style="${!isActivated ? 'color: #8898aa;' : ''}">${area.title} ${!isActivated ? '<span class="ms-2 fw-normal small">(Inactive)</span>' : ''}</h6>
+                 </div>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                 <span class="badge ${isActivated ? 'bg-light text-dark' : 'bg-transparent text-muted'} border">WEIGHT: ${area.weight}%</span>
+              </div>
+           </div>
+           
+           ${area.isExpanded ? `
+             <div class="card-body bg-light border-top">
+                ${!hasCrit ? `
+                   <div class="text-center py-3">
+                     <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
+                   </div>
+                ` : `
+                   <div class="criteria-list">
+                      ${area.criteria.map(crit => this._renderCriteriaItem(area, crit)).join('')}
+                   </div>
+                `}
+                <div class="mt-3">
+                  <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Criteria
+                  </button>
+                </div>
+             </div>
+           ` : ''}
+        </div>
+     `;
+  }
+
+  _renderCriteriaItem(area, crit) {
+    return `
+        <div class="criteria-item p-3 mb-3 border rounded bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1 pe-3">
+                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="Criteria name" value="${crit.name}">
+                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="Optional description" value="${crit.description}">
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="input-group input-group-sm" style="width: 100px;">
+                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end" placeholder="0" value="${crit.weight}">
+                        <span class="input-group-text bg-white">%</span>
+                    </div>
+                    <button class="btn btn-sm btn-light text-danger btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="levels-container mt-3">
+                <div class="row g-2">
+                    ${crit.levels.map((lvl, index) => `
+                        <div class="col-md-4">
+                            <div class="level-card h-100 p-2 border rounded" style="border-top: 3px solid ${lvl.color} !important; background: white;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge" style="background-color: ${lvl.color}15; color: ${lvl.color}; font-size: 0.7rem;">LEVEL ${index + 1} - ${lvl.score}%</span>
+                                    <button class="btn btn-sm p-0 text-muted btn-rm-lvl" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="Level Name">
+                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="Expected performance..." rows="2">${lvl.description}</textarea>
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    <label class="small text-muted mb-0">Pts %:</label>
+                                    <input type="number" class="form-control form-control-sm px-1 lvl-input" style="width: 50px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
+                                    <input type="color" class="form-control form-control-color form-control-sm p-0 border-0 ms-auto lvl-input" style="width:20px;height:20px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}">
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="col-md-12 mt-2">
+                        <button class="btn btn-sm btn-light w-100 border border-dashed text-primary btn-add-lvl" data-area="${area.id}" data-crit="${crit.id}">
+                            + Add Level
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+  }
+
+  _attachRubricHandlers() {
+    const saveInputs = () => {
+      document.querySelectorAll('.crit-input').forEach(el => {
+        const id = el.id.split('-')[1];
+        const field = el.id.split('-')[0];
+        this.rubricAreas.forEach(a => {
+          const c = a.criteria.find(crit => crit.id === id);
+          if (c) {
+            if (field === 'weight') c.weight = parseFloat(el.value) || 0;
+            if (field === 'name') c.name = el.value;
+            if (field === 'desc') c.description = el.value;
+          }
+        });
+      });
+      document.querySelectorAll('.lvl-input').forEach(el => {
+        const aId = el.dataset.area;
+        const cId = el.dataset.crit;
+        const index = parseInt(el.dataset.index);
+        const field = el.dataset.field;
+        const a = this.rubricAreas.find(area => area.id === aId);
+        if (a) {
+          const c = a.criteria.find(crit => crit.id === cId);
+          if (c && c.levels[index]) {
+            if (field === 'score') c.levels[index].score = parseFloat(el.value) || 0;
+            if (field === 'name') c.levels[index].name = el.value;
+            if (field === 'description') c.levels[index].description = el.value;
+            if (field === 'color') c.levels[index].color = el.value;
+          }
         }
-      </div>`;
+      });
+    };
+
+    document.getElementById('btn-mode-platform')?.addEventListener('click', () => {
+      this.rubricMode = 'platform';
+      this._rerenderRubricSection();
+    });
+
+    document.getElementById('btn-mode-template')?.addEventListener('click', () => {
+      this.rubricMode = 'template';
+      this._rerenderRubricSection();
+    });
+
+    document.getElementById('btn-download-tpl')?.addEventListener('click', () => {
+      this._downloadTemplate();
+    });
+
+    document.getElementById('btn-mode-back')?.addEventListener('click', () => {
+      this.rubricMode = null;
+      this._rerenderRubricSection();
+    });
+
+    document.querySelectorAll('.area-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveInputs();
+        const a = this.rubricAreas.find(area => area.id === btn.dataset.area);
+        if (a) {
+          a.isExpanded = !a.isExpanded;
+          this._rerenderRubricSection();
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-add-criteria').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveInputs();
+        this._addCriteria(btn.dataset.area);
+      });
+    });
+
+    document.querySelectorAll('.btn-rm-crit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveInputs();
+        this._removeCriteria(btn.dataset.area, btn.dataset.crit);
+      });
+    });
+
+    document.querySelectorAll('.btn-add-lvl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveInputs();
+        this._addLevel(btn.dataset.area, btn.dataset.crit);
+      });
+    });
+
+    document.querySelectorAll('.btn-rm-lvl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveInputs();
+        this._removeLevel(btn.dataset.area, btn.dataset.crit, parseInt(btn.dataset.index));
+      });
+    });
+
+    document.querySelectorAll('.crit-input[id^="weight-"]').forEach(input => {
+      input.addEventListener('change', () => {
+        saveInputs();
+        this._rerenderRubricSection();
+      });
+    });
+
+    document.querySelectorAll('.lvl-input[data-field="color"]').forEach(input => {
+      input.addEventListener('change', () => {
+        saveInputs();
+        this._rerenderRubricSection();
+      });
+    });
+
+    document.querySelectorAll('.lvl-input[data-field="score"]').forEach(input => {
+      input.addEventListener('change', () => {
+        saveInputs();
+        this._rerenderRubricSection();
+      });
+    });
   }
 
-  _renderRubricCard(r, area) {
-    const grades = r.grades ?? [5, 3, 1];
-    return `
-      <div class="ce-rubric-card" id="rubric-card-${r.id}">
-        <div class="ce-rubric-card-header">
-          <span class="ce-rubric-num">Rúbrica</span>
-          <button class="ce-rubric-remove" data-rubric-id="${r.id}" data-area="${area}" type="button" title="Eliminar rúbrica">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div>
-        <div class="ce-rubric-row">
-          <div class="ce-rubric-field ce-rubric-field--name">
-            <label class="ce-field-label">Nombre *</label>
-            <input id="rubric-name-${r.id}" type="text" class="ce-input" placeholder="Ej: Código limpio" value="${r.name ?? ""}" />
-          </div>
-          <div class="ce-rubric-field ce-rubric-field--weight">
-            <label class="ce-field-label">Peso (0–1) *</label>
-            <input id="rubric-weight-${r.id}" type="number" class="ce-input" step="0.01" min="0.01" max="1" placeholder="0.40" value="${r.weight ?? ""}" />
-          </div>
-        </div>
-        <div class="ce-rubric-field" style="margin-top:8px;">
-          <label class="ce-field-label">Descripción (opcional)</label>
-          <input id="rubric-desc-${r.id}" type="text" class="ce-input" placeholder="Descripción corta" value="${r.description ?? ""}" />
-        </div>
-        <div class="ce-grades-section">
-          <label class="ce-field-label" style="margin-bottom:6px;">Opciones de calificación *</label>
-          <div class="ce-grades-list" id="grades-list-${r.id}">
-            ${grades.map((score, i) => this._renderGradeInput(r.id, score, i)).join("")}
-          </div>
-          <button class="ce-add-grade-btn" data-rubric-id="${r.id}" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Agregar puntaje
-          </button>
-        </div>
-      </div>`;
-  }
-
-  _renderGradeInput(rubricId, score, index) {
-    return `
-      <div class="ce-grade-row" id="grade-row-${rubricId}-${index}">
-        <span class="ce-grade-pill">${index + 1}</span>
-        <input
-          type="number"
-          class="ce-input ce-grade-score grade-score"
-          data-rubric="${rubricId}"
-          data-index="${index}"
-          value="${score}"
-          min="0"
-          placeholder="Puntaje" />
-        <button class="ce-grade-remove" data-rubric-id="${rubricId}" data-index="${index}" type="button" title="Eliminar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>`;
-  }
-
-  // ── Full page render ───────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   async render() {
     const app = document.getElementById("app");
@@ -416,62 +634,61 @@ export default class CreateEvent {
       ${this.navbar.render()}
       <div class="container p-0">
         ${this.header.render()}
-        <main class="dashboard-main">
+        <main class="dashboard-main pb-5">
           <div class="ce-page">
-
             <!-- Event details card -->
-            <section class="app-section p-4 p-md-5 mb-4">
+            <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="app-section-header mb-0">Detalles del Evento</h5>
-                <span class="badge-draft">Draft Mode</span>
+                <h5 class="fw-bold mb-0">Event Details</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">Draft Mode</span>
               </div>
 
               <div class="row g-4">
                 <div class="col-12">
-                  <label class="form-label fw-semibold">Título *</label>
-                  <input id="ev-title" type="text" class="form-control app-input" placeholder="Ej: Integrador 2025-1" />
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Title *</label>
+                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="Ex: Capstone 2025-1" />
                 </div>
                 <div class="col-12">
-                  <label class="form-label fw-semibold">Descripción</label>
-                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="Describe el evento…"></textarea>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Description</label>
+                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="Describe the event…"></textarea>
                 </div>
+                
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Tipo</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Type</label>
                   <select id="ev-type" class="form-select app-input">
-                    <option value="CAPSTONE">Capstone / Integrador</option>
+                    <option value="CAPSTONE">Capstone / Integrator</option>
                     <option value="WORKSHOP">Workshop</option>
-                    <option value="EVENT">Evento Social</option>
+                    <option value="EVENT">Social Event</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Ruta</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Route</label>
                   <select id="ev-route" class="form-select app-input">
                     <option value="BASIC">Basic</option>
                     <option value="ADVANCED">Advanced</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Cohorte</label>
-                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="Ej: 2025-1" />
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Cohort</label>
+                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="Ex: 2025-1" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Fecha inicio *</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Start date *</label>
                   <input id="ev-start-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Fecha entrega final</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Final delivery date</label>
                   <input id="ev-end-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold">Tamaño máximo de equipo</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Max team size</label>
                   <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
                 </div>
                 <div class="col-12" id="github-org-section">
-                  <label class="form-label fw-semibold">Organización de GitHub <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">GitHub Organization <span class="text-danger">*</span></label>
                   <div id="github-org-picker">
-                    <!-- Rendered dynamically after render() via _loadGithubOrgs() -->
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
-                      <span class="spinner-border spinner-border-sm"></span> Verificando GitHub...
+                      <span class="spinner-border spinner-border-sm"></span> Verifying GitHub...
                     </div>
                   </div>
                 </div>
@@ -481,27 +698,20 @@ export default class CreateEvent {
               </div>
             </section>
 
-            <!-- Rubrics section -->
-            <section class="app-section p-4 p-md-5 mb-4">
-              <div class="mb-4">
-                <h5 class="app-section-header mb-1">Rúbricas de Evaluación</h5>
-                <p class="ce-section-subtitle">
-                  Define qué áreas se evaluarán y sus criterios. Los pesos de cada área deben sumar 1.0.
-                </p>
+            <!-- Rubrics section UX/UI Redesign -->
+            <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
+              <div id="ce-rubrics-container">
+                 ${this._renderRubricState()}
               </div>
-
-              ${AREAS.map((area) => this._renderAreaSection(area)).join("")}
             </section>
 
-            <!-- Feedback + Submit -->
-            <div id="ce-feedback"></div>
-            <div class="ce-submit-row">
-              <button id="ce-back-btn" class="app-btn-outline" type="button">Cancelar</button>
-              <button id="ce-submit-btn" class="app-btn-primary ce-submit-btn" type="button">
-                Crear Evento
+            <!-- Submit row -->
+            <div class="d-flex justify-content-end gap-3 mt-4">
+              <button id="ce-back-btn" class="btn btn-light px-4 py-2 bg-white border fw-semibold cursor-pointer" type="button">Cancel</button>
+              <button id="ce-submit-btn" class="btn btn-primary px-5 py-2 fw-semibold cursor-pointer" type="button" style="background:#5548e2;border:none;">
+                Create Event
               </button>
             </div>
-
           </div>
         </main>
       </div>
@@ -510,77 +720,53 @@ export default class CreateEvent {
     this.header.mountBreadcrumb?.();
     this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
-    this._attachPageHandlers();
+
+    // Setup listeners
+    document.getElementById("ce-submit-btn")?.addEventListener("click", () => this._handleSubmit());
+    document.getElementById("ce-back-btn")?.addEventListener("click", () => this.router.navigate("events"));
     this._attachClanHandlers();
-    AREAS.forEach((area) => this._attachAreaHandlers(area));
+
+    // Defer rubric handler binding to ensure DOM is ready
+    setTimeout(() => {
+      this._attachRubricHandlers();
+    }, 0);
+
     this._loadGithubOrgs();
   }
 
-  _renderAreaSection(area) {
-    const color = AREA_COLOR[area];
-    return `
-      <div class="ce-area-section" style="--area-color:${color};" id="area-section-${area}">
-        <div class="ce-area-header">
-          <div class="ce-area-title-row">
-            <span class="ce-area-dot"></span>
-            <h6 class="ce-area-title">${AREA_LABELS[area]}</h6>
-          </div>
-          <button
-            id="area-toggle-${area}"
-            class="ce-area-toggle ce-area-toggle--on"
-            data-area="${area}"
-            type="button">
-            Deshabilitar
-          </button>
-        </div>
-        <div id="area-body-${area}">
-          ${this._renderAreaBody(area)}
-        </div>
-      </div>`;
-  }
-
-  // ── GitHub org loader ─────────────────────────────────────────────────────
 
   async _loadGithubOrgs() {
-    const picker = document.getElementById("github-org-picker");
+    const picker = document.getElementById("ce-github-org-picker");
     const submitBtn = document.getElementById("ce-submit-btn");
-    if (!picker) return;
-
     try {
       const data = await getGithubOrgs();
+      this.githubOrgs = data.orgs || [];
       this.githubConnected = true;
       this.githubUsername = data.username;
-      this.githubOrgs = data.orgs ?? [];
+
+      if (!picker) return;
 
       if (this.githubOrgs.length === 0) {
-        picker.innerHTML = `
-          <div class="alert alert-warning py-2 mb-0" style="font-size:0.88rem;">
-            <strong>@${data.username}</strong> no pertenece a ninguna organización de GitHub.
-            Los repositorios se crearán en tu cuenta personal.
-          </div>
-          <input type="hidden" id="ev-github-org" value="" />`;
+        picker.innerHTML = `<p class="text-danger small">No organizations found. Join one or create one first.</p>`;
         return;
       }
 
-      // Auto-select first org
       this.selectedGithubOrg = this.githubOrgs[0].login;
       picker.innerHTML = `
         <div class="d-flex align-items-center gap-2 mb-2" style="font-size:0.85rem;color:var(--color-text-muted);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          Conectado como <strong>@${data.username}</strong>
+          Connected as <strong>@${data.username}</strong>
         </div>
         <select id="ev-github-org" class="form-select app-input">
           ${this.githubOrgs.map((org) => `<option value="${org.login}">${org.login}</option>`).join("")}
         </select>
         <div class="mt-1" style="font-size:0.8rem;color:var(--color-text-muted);">
-          Los repositorios de los equipos se crearán en esta organización.
+          Team repositories will be created in this organization.
         </div>`;
 
-      document
-        .getElementById("ev-github-org")
-        ?.addEventListener("change", (e) => {
-          this.selectedGithubOrg = e.target.value;
-        });
+      document.getElementById("ev-github-org")?.addEventListener("change", (e) => {
+        this.selectedGithubOrg = e.target.value;
+      });
     } catch (err) {
       this.githubConnected = false;
       this.githubOrgs = [];
@@ -588,73 +774,15 @@ export default class CreateEvent {
       try {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
-      } catch (_) {}
+      } catch (_) { }
 
       toast.warning('GitHub required', 'You must connect your GitHub account to create an event.');
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.title = "Conecta GitHub primero";
+        submitBtn.title = "Connect GitHub first";
       }
     }
-  }
-
-  // ── Event handlers ─────────────────────────────────────────────────────────
-
-  _attachPageHandlers() {
-    document
-      .getElementById("ce-submit-btn")
-      ?.addEventListener("click", () => this._handleSubmit());
-    document
-      .getElementById("ce-back-btn")
-      ?.addEventListener("click", () => this.router.navigate("events"));
-  }
-
-  _attachAreaHandlers(area) {
-    // Toggle area
-    document
-      .getElementById(`area-toggle-${area}`)
-      ?.addEventListener("click", () => this._toggleArea(area));
-
-    // Add rubric
-    document
-      .querySelector(`[data-area="${area}"].ce-add-rubric-btn`)
-      ?.addEventListener("click", () => this._addRubric(area));
-
-    // Remove rubric buttons
-    document
-      .querySelectorAll(`.ce-rubric-remove[data-area="${area}"]`)
-      .forEach((btn) => {
-        btn.addEventListener("click", () =>
-          this._removeRubric(area, btn.dataset.rubricId),
-        );
-      });
-
-    // Add grade buttons
-    document.querySelectorAll(".ce-add-grade-btn").forEach((btn) => {
-      btn.addEventListener("click", () => this._addGrade(btn.dataset.rubricId));
-    });
-
-    // Remove grade buttons
-    document.querySelectorAll(".ce-grade-remove").forEach((btn) => {
-      btn.addEventListener("click", () =>
-        this._removeGrade(btn.dataset.rubricId, parseInt(btn.dataset.index)),
-      );
-    });
-  }
-
-  // ── UI feedback ────────────────────────────────────────────────────────────
-
-  _showError(msg) {
-    toast.error('Error', msg);
-  }
-
-  _showSuccess(msg) {
-    toast.success('Success', msg);
-  }
-
-  _clearFeedback() {
-    // No longer needed with toast
   }
 
   _setLoading(on) {
@@ -662,7 +790,11 @@ export default class CreateEvent {
     if (!btn) return;
     btn.disabled = on;
     btn.innerHTML = on
-      ? `<span class="ce-spinner"></span> Creando…`
-      : "Crear Evento";
+      ? `<span class="spinner-border spinner-border-sm me-2"></span> Creating…`
+      : "Create Event";
   }
+
+  _clearFeedback() { }
+  _showError(msg) { toast.error('Error', msg); }
+  _showSuccess(msg) { toast.success('Success', msg); }
 }

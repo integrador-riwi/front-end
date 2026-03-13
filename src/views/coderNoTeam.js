@@ -87,7 +87,7 @@ export function renderCoderNoTeam({
                     ? `
                   <div class="ai-loading">
                     <span class="ai-spinner"></span>
-                    Analizando...
+                    Analyzing...
                   </div>
                 `
                     : aiResult
@@ -336,7 +336,7 @@ export function setupAIAnalysis(instance) {
       resultBox.innerHTML = `
         <div class="ai-loading">
           <span class="ai-spinner"></span>
-          Analizando...
+          Analyzing...
         </div>
       `;
     }
@@ -364,13 +364,13 @@ export function setupAIAnalysis(instance) {
           instance.aiResult = {
             class: "very-similar",
             icon: "🚨",
-            message: `Your project is <strong>very similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
+            message: `Your project is <strong>very similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% similarity)`,
           };
         } else {
           instance.aiResult = {
             class: "similar",
             icon: "⚠️",
-            message: `Your project <strong>is similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% coincidencia)`,
+            message: `Your project <strong>is similar</strong> to: <br><em>${similarProject.project_name}</em> (${percent}% similarity)`,
           };
         }
       }
@@ -396,7 +396,7 @@ export function setupAIAnalysis(instance) {
           resultBox.innerHTML = `
             <div class="ai-result error">
               <span class="ai-icon">⚙️</span>
-              <span class="ai-message">Configura tu API key de OpenAI en el backend.</span>
+              <span class="ai-message">Configure your OpenAI API key in the backend.</span>
             </div>
           `;
         } else {

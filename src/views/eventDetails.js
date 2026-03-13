@@ -31,8 +31,9 @@ export default class EventDetails {
       this.event = response.data || response;
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error = err.message || "Error loading event. Please try again later.";
-      toast.error('Error', this.error);
+      this.error =
+        err.message || "Error loading event. Please try again later.";
+      toast.error("Error", this.error);
     } finally {
       this.loading = false;
     }
