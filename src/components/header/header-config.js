@@ -13,19 +13,14 @@ export const HEADER_LINKS_BY_VIEW = {
     { label: "Teams & Projects",  route: "projects",       },
   ],
   "teamDetail": [
-    { label: "Dashboard",         route: "dashboard",      },
-    { label: "Teams & Projects",  route: "projects",       },
-    { label: "Team Detail",       route: null,             },
+    { label: "Events",         route: "events",      },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: "Team Details",       route: null,       },
   ],
   "ranking": [
     { label: "Event",         route: "events",      },
     { label: "Ranking",       route: "ranking",       },
-  ],
-  "details": [
-    { label: "Events",         route: "events",      },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
-    { label: "Details",       route: "details",       },
-  ],
+  ]
 };
 
 export const HEADER_LAYOUT_BY_ROUTE = {
@@ -43,7 +38,7 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   },
   "teamDetail": {
     variant: "details",
-    title: "Team Detail",
+    title: "Details",
   },
   "ranking": {
     variant: "ranking",
