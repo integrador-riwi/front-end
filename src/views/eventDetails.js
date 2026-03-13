@@ -3,6 +3,7 @@ import Header from "../components/header/header.js";
 import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
@@ -31,8 +32,7 @@ export default class EventDetails {
       this.event = response.data || response;
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error =
-        err.message || "Error loading event. Please try again later.";
+      this.error = err.message || t("common.error");
       toast.error("Error", this.error);
     } finally {
       this.loading = false;
@@ -68,7 +68,7 @@ export default class EventDetails {
 
   renderEvent(event) {
     const title = event.title || event.name || "Untitled Event";
-    const desc = event.description || "No description provided.";
+    const desc = event.description || t("common.noDescription");
 
     return `
         <div class="col-lg-8">
@@ -164,7 +164,9 @@ export default class EventDetails {
     }
 
     if (!this.event) {
-      eventContainer.innerHTML = this.renderError("Event not found");
+      eventContainer.innerHTML = this.renderError(
+        t("events.notFound") ?? "Event not found",
+      );
       return;
     }
 
