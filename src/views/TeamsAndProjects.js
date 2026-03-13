@@ -105,63 +105,52 @@ export default class Teams {
 
     teamsContainer.innerHTML = "";
 
-    // Tooltip solo para ADMIN
-    const adminHint = this.isAdmin
-        ? `title="Ver detalle del equipo"`
-        : "";
+    totalTeams.forEach((team) => {
+      // Los miembros ya vienen en el response del listado — no hace falta otra llamada
+      const members = team.members ?? [];
+      const membersIcons = this.renderAvatars(members);
 
-    await Promise.all(
-        totalTeams.map(async (team) => {
-          const members = await apiFetch(`/teams/${team.id_team}/members`, {
-            method: "GET",
-          });
-          const membersIcons = this.renderAvatars(members.data.members);
+      const clickableClass = this.isAdmin ? "td-clickable" : "";
+      const dataAttr      = this.isAdmin ? `data-team-id="${team.id_team}"` : "";
+      const adminHint     = this.isAdmin ? `title="Ver detalle del equipo"` : "";
 
-          // La card es clickeable solo para ADMIN
-          const clickableClass = this.isAdmin ? "td-clickable" : "";
-          const dataAttr = this.isAdmin
-              ? `data-team-id="${team.id_team}"`
-              : "";
-
-          const card = `
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="app-project-card ${clickableClass}"
-                 ${dataAttr}
-                 ${adminHint}
-                 role="${this.isAdmin ? "button" : ""}"
-                 tabindex="${this.isAdmin ? "0" : ""}">
-              <div class="app-project-image">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
-                  alt="Project image"
-                  class="img-fluid"
-                />
-                <span class="app-project-badge engineering">${members.data.members[0]?.clan}</span>
-              </div>
-              <div class="p-4">
-                <h5 class="app-card-title">${team.name}</h5>
-                <p class="app-card-text text-break">${team.description}</p>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <div class="app-avatar-group">
-                    ${membersIcons}
-                  </div>
-                  ${this.isAdmin
-              ? `<span class="td-view-detail-hint">
-                         <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
-                         Ver detalle
-                       </span>`
-              : ""}
+      const card = `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="app-project-card ${clickableClass}"
+               ${dataAttr}
+               ${adminHint}
+               role="${this.isAdmin ? "button" : ""}"
+               tabindex="${this.isAdmin ? "0" : ""}">
+            <div class="app-project-image">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
+                alt="Project image"
+                class="img-fluid"
+              />
+            </div>
+            <div class="p-4">
+              <h5 class="app-card-title">${team.name}</h5>
+              <p class="app-card-text text-break">${team.description ?? ""}</p>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="app-avatar-group">
+                  ${membersIcons}
                 </div>
+                ${this.isAdmin
+          ? `<span class="td-view-detail-hint">
+                       <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
+                       Ver detalle
+                     </span>`
+          : ""}
               </div>
             </div>
           </div>
-        `;
+        </div>
+      `;
 
-          teamsContainer.insertAdjacentHTML("beforeend", card);
-        }),
-    );
+      teamsContainer.insertAdjacentHTML("beforeend", card);
+    });
 
-    // Delegación de eventos — solo si ADMIN
+    // Delegación de eventos — solo ADMIN
     if (this.isAdmin) {
       teamsContainer.addEventListener("click", (e) => {
         const card = e.target.closest("[data-team-id]");
@@ -170,7 +159,6 @@ export default class Teams {
         this.router.navigate("teamDetail", { teamId });
       });
 
-      // Accesibilidad: también con teclado
       teamsContainer.addEventListener("keydown", (e) => {
         if (e.key !== "Enter" && e.key !== " ") return;
         const card = e.target.closest("[data-team-id]");
@@ -208,10 +196,10 @@ export default class Teams {
           <table class="table table-striped table-hover" style="width:100%;">
             <thead>
               <tr>
-                <th style="width:20%;">Clan</th>
-                <th style="width:20%;">Project</th>
+                <th style="width:20%;">Leader</th>
+                <th style="width:20%;">Team</th>
                 <th style="width:45%;">Description</th>
-                <th style="width:15%;">Team</th>
+                <th style="width:15%;">Members</th>
                 ${this.isAdmin ? `<th style="width:10%;"></th>` : ""}
               </tr>
             </thead>
@@ -223,19 +211,17 @@ export default class Teams {
 
     const tbody = document.getElementById("teamsTableBody");
 
-    for (const team of totalTeams) {
-      const members = await apiFetch(`/teams/${team.id_team}/members`, {
-        method: "GET",
-      });
-
-      const membersIcons = this.renderAvatars(members.data.members);
-      const clan = members.data.members?.[0]?.clan || "N/A";
+    totalTeams.forEach((team) => {
+      const members     = team.members ?? [];
+      const membersIcons = this.renderAvatars(members);
 
       const row = `
-        <tr ${this.isAdmin ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="Ver detalle"` : ""}>
-          <td><span class="app-project-badge engineering">${clan}</span></td>
+        <tr ${this.isAdmin
+          ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="Ver detalle"`
+          : ""}>
+          <td><span style="font-size:0.85rem;">${team.leader_name ?? "—"}</span></td>
           <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
-          <td><p class="app-card-text text-break">${team.description}</p></td>
+          <td><p class="app-card-text text-break">${team.description ?? ""}</p></td>
           <td><div class="app-avatar-group">${membersIcons}</div></td>
           ${this.isAdmin
           ? `<td>
@@ -249,7 +235,7 @@ export default class Teams {
       `;
 
       tbody.insertAdjacentHTML("beforeend", row);
-    }
+    });
 
     // Delegación de eventos en tabla — solo ADMIN
     if (this.isAdmin) {
@@ -266,7 +252,6 @@ export default class Teams {
     const gridViewBtn = document.getElementById("grid-view-btn");
     const listViewBtn = document.getElementById("list-view-btn");
 
-    // Inyectar estilos de hint si es ADMIN
     if (this.isAdmin) {
       this._injectAdminHintStyle();
     }

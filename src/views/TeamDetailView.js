@@ -45,6 +45,7 @@ export default class TeamDetailView {
       </div>`;
 
     this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
     this.navbar.attachEventHandlers();
     this._injectShimmer();
 
@@ -66,8 +67,6 @@ export default class TeamDetailView {
         project:  data.project ?? null,
       };
 
-      // isTL: false → no carga el panel de evaluación
-      // isLeader: false → no muestra botones de edición ni leave team
       const html = renderCoderTeam({
         user:          this.user,
         team,
@@ -76,17 +75,9 @@ export default class TeamDetailView {
         selectedEvent: null,
       });
 
-      main.innerHTML = `
-        <div style="padding:1.25rem 1.5rem 0;">
-          <button class="td-back-btn" id="tdBackBtn">
-            <span class="material-icons-round" style="font-size:1.1rem;vertical-align:middle;">arrow_back</span>
-            Volver a equipos
-          </button>
-        </div>
-        ${html}`;
+      main.innerHTML = html;
 
-      // Ocultar el botón "Leave Team" que renderCoderTeam puede inyectar
-      // cuando isSubmitted es false (por si acaso)
+      // Quitar botón leave team por si acaso
       document.getElementById("leaveTeamBtn")?.remove();
 
       const projectId = team.project?.id_project ?? null;
@@ -98,9 +89,6 @@ export default class TeamDetailView {
         }
       }, 0);
 
-      document.getElementById("tdBackBtn")
-          ?.addEventListener("click", () => this.router.navigate("projects"));
-
     } catch (err) {
       console.error("TeamDetailView error:", err);
       main.innerHTML = `
@@ -108,11 +96,8 @@ export default class TeamDetailView {
           <div class="bg-white rounded-4 p-5 ct-card-shadow text-center">
             <span class="material-icons-round" style="font-size:2.5rem;color:var(--text-muted);">error_outline</span>
             <p class="mt-3" style="color:var(--text-muted);">No se pudo cargar el equipo. Intenta de nuevo.</p>
-            <button class="ct-btn-post mt-2" id="tdBackBtn">Volver a equipos</button>
           </div>
         </div>`;
-      document.getElementById("tdBackBtn")
-          ?.addEventListener("click", () => this.router.navigate("projects"));
     }
   }
 
@@ -125,21 +110,6 @@ export default class TeamDetailView {
         0%   { background-position: -400px 0; }
         100% { background-position:  400px 0; }
       }
-      .td-back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background: none;
-        border: none;
-        color: var(--color-primary, #6366f1);
-        font-size: 0.875rem;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 0;
-        margin-bottom: 0.5rem;
-        transition: opacity .2s;
-      }
-      .td-back-btn:hover { opacity: .65; }
     `;
     document.head.appendChild(s);
   }

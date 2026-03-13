@@ -1,5 +1,5 @@
 export const HEADER_LINKS_BY_VIEW = {
-    "dashboard": [
+  "dashboard": [
     { label: "Events", route: "events" },
     { label: localStorage.getItem("currentEventName"), route: "dashboard" },
   ],
@@ -11,6 +11,11 @@ export const HEADER_LINKS_BY_VIEW = {
   "projects": [
     { label: "Dashboard",         route: "dashboard",      },
     { label: "Teams & Projects",  route: "projects",       },
+  ],
+  "teamDetail": [
+    { label: "Dashboard",         route: "dashboard",      },
+    { label: "Teams & Projects",  route: "projects",       },
+    { label: "Team Detail",       route: null,             },
   ],
   "ranking": [
     { label: "Event",         route: "events",      },
@@ -25,9 +30,9 @@ export const HEADER_LINKS_BY_VIEW = {
 
 export const HEADER_LAYOUT_BY_ROUTE = {
   "dashboard": {
-      variant: "details",
-      title: "Dashboard",
-    },
+    variant: "details",
+    title: "Dashboard",
+  },
   "events/create": {
     variant: "create-event",
     title: "Create New Event",
@@ -35,6 +40,10 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   "projects": {
     variant: "teams",
     title: "Projects Overview",
+  },
+  "teamDetail": {
+    variant: "details",
+    title: "Team Detail",
   },
   "ranking": {
     variant: "ranking",

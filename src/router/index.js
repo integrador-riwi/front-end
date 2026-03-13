@@ -15,7 +15,7 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
-import TeamDetailView from "../views/TeamDetailView.js";   // ← NUEVO
+import TeamDetailView from "../views/TeamDetailView.js";
 import { i18nReady } from "../utils/i18n.js";
 
 await i18nReady;
@@ -26,6 +26,7 @@ if (isAuthenticated()) {
 
 import QRVoting from "../views/EventVoting.js"
 import NotFoundView from "../views/NotFoundView.js";
+
 const ROUTE_PERMISSIONS = {
   login: "PUBLIC",
   dashboard: ["ADMIN", "STAFF"],
@@ -33,6 +34,7 @@ const ROUTE_PERMISSIONS = {
   "events/create": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
   projects: ["ADMIN", "STAFF", "CODER"],
+  teamDetail: ["ADMIN"],                // ← NUEVO
   ranking: ["ADMIN", "STAFF"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -114,18 +116,15 @@ class App {
   }
 
   navigate(route, params = {}) {
-    // Enforcement layer
     const isAuth = isAuthenticated();
     const user = getCurrentUser();
     const permission = ROUTE_PERMISSIONS[route];
 
-    // 1. Check if route exists in permissions
     if (!permission && route !== "not-found") {
       this.navigate("not-found");
       return;
     }
 
-    // 2. Handle Public vs Private
     if (permission === "PUBLIC") {
       if (isAuth && route === "login") {
         this.navigate(this.getHomeRoute());
@@ -137,7 +136,6 @@ class App {
         return;
       }
 
-      // 3. Role-based check
       if (Array.isArray(permission) && !permission.includes(user?.role)) {
         console.warn(`Access denied for ${user?.role} to ${route}`);
         this.navigate(this.getHomeRoute());
@@ -173,7 +171,7 @@ class App {
       case "projects":
         this.currentView = new Teams(this);
         break;
-      case "teamDetail":                                    // ← NUEVO
+      case "teamDetail":
         this.currentView = new TeamDetailView(this, params);
         break;
       case "ranking":
