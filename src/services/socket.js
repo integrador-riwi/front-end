@@ -1,6 +1,12 @@
 import { io } from "socket.io-client";
 import { getToken } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
+import {
+  acceptInvitation,
+  rejectInvitation,
+  acceptJoinRequest,
+  rejectJoinRequest,
+} from "./api.js";
 
 let socket = null;
 let eventHandlers = {};
@@ -66,6 +72,46 @@ function setupEventListeners() {
   socket.on("invitation:new", (data) => {
     console.log("[Socket] New invitation:", data);
 
+    let toastId = null;
+    toastId = toast.info(
+      "New invitation",
+      `${data.invitedByName} invited you to join "${data.teamName}"`,
+      {
+        duration: 0,
+        dropdown: {
+          items: [
+            {
+              title: data.teamName,
+              subtitle: data.eventName || "Event",
+              accept: true,
+              deny: true,
+              id: data.id,
+              teamId: data.teamId,
+            },
+          ],
+          onAccept: async (item) => {
+            toast.remove(toastId);
+            try {
+              await acceptInvitation(item.id);
+              toast.success("Invitation accepted!", "You joined the team.");
+              window.location.hash = "#/coder";
+            } catch (err) {
+              toast.error("Error", err?.message ?? "Could not accept the invitation.");
+            }
+          },
+          onDeny: async (item) => {
+            toast.remove(toastId);
+            try {
+              await rejectInvitation(item.id);
+              toast.info("Invitation declined", "You rejected the invitation.");
+            } catch (err) {
+              toast.error("Error", err?.message ?? "Could not reject the invitation.");
+            }
+          },
+        },
+      },
+    );
+
     if (eventHandlers["invitation:new"]) {
       eventHandlers["invitation:new"](data);
     }
@@ -93,14 +139,28 @@ function setupEventListeners() {
           ],
           onAccept: async (item) => {
             toast.remove(toastId);
-            if (eventHandlers["join_request:new:accept"]) {
-              await eventHandlers["join_request:new:accept"](item);
+            try {
+              await acceptJoinRequest(item.id);
+              toast.success("Request accepted!", "The coder is now part of your team.");
+            } catch (err) {
+              if (eventHandlers["join_request:new:accept"]) {
+                await eventHandlers["join_request:new:accept"](item);
+              } else {
+                toast.error("Error", err?.message ?? "Could not accept the request.");
+              }
             }
           },
           onDeny: async (item) => {
             toast.remove(toastId);
-            if (eventHandlers["join_request:new:deny"]) {
-              await eventHandlers["join_request:new:deny"](item);
+            try {
+              await rejectJoinRequest(item.id);
+              toast.info("Request declined", "The request was rejected.");
+            } catch (err) {
+              if (eventHandlers["join_request:new:deny"]) {
+                await eventHandlers["join_request:new:deny"](item);
+              } else {
+                toast.error("Error", err?.message ?? "Could not reject the request.");
+              }
             }
           },
         },
