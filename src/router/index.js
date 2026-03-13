@@ -14,19 +14,59 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
-import TeamDetailView from "../views/TeamDetailView.js";
+import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyProfile, getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
-import { i18nReady } from "../utils/i18n.js";
-
+import {
+  i18nReady,
+  t,
+  toggleLang,
+  onLangChange,
+  getLang,
+} from "../utils/i18n.js";
 
 await i18nReady;
+
+// ── Floating language toggle (always visible, all views) ──────────────────────
+function mountLangToggle() {
+  const existing = document.getElementById("floatingLangBtn");
+  if (existing) existing.remove();
+
+  const btn = document.createElement("button");
+  btn.id = "floatingLangBtn";
+  btn.textContent = t("nav.langToggle");
+  btn.title = t("nav.langLabel");
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: var(--color-primary, #6b5cff);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    transition: opacity 0.2s;
+  `;
+  btn.addEventListener("mouseenter", () => (btn.style.opacity = "0.85"));
+  btn.addEventListener("mouseleave", () => (btn.style.opacity = "1"));
+  btn.addEventListener("click", () => toggleLang());
+  document.body.appendChild(btn);
+}
+
+mountLangToggle();
+onLangChange(() => mountLangToggle());
 
 if (isAuthenticated()) {
   initSocket();
 }
 
-import QRVoting from "../views/EventVoting.js"
+import QRVoting from "../views/EventVoting.js";
 import NotFoundView from "../views/NotFoundView.js";
 
 const ROUTE_PERMISSIONS = {
@@ -211,7 +251,7 @@ async checkUserTeam() {
       case "projects":
         this.currentView = new Teams(this);
         break;
-      case "teamDetail":
+      case "teamDetail": // ← NUEVO
         this.currentView = new TeamDetailView(this, params);
         break;
       case "ranking":
