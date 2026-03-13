@@ -1,10 +1,9 @@
 import Navbar from "../components/navbar/navbar.js";
-import { t } from "../utils/i18n.js";
 import Header from "../components/header/header.js";
 import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
@@ -176,6 +175,8 @@ export default class EventDetails {
     locationContainer.innerHTML = this.renderEventInfo(this.event);
 
     this.attachEventHandlers();
+
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventHandlers() {

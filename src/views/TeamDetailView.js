@@ -3,7 +3,7 @@ import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
 import {
   renderCoderTeam,
@@ -52,6 +52,8 @@ export default class TeamDetailView {
     this._injectShimmer();
 
     await this._loadAndRender();
+
+    this._offLangChange = onLangChange(() => this._loadAndRender());
   }
 
   async _loadAndRender() {

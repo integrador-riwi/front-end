@@ -1,6 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/components.css";
 
 export default class NotFoundView {
@@ -56,6 +56,8 @@ export default class NotFoundView {
 
     this.navbar.attachEventHandlers();
     this.attachEventListeners();
+
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventListeners() {

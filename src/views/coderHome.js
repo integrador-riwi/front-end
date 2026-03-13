@@ -2,7 +2,7 @@ import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import {
   renderCoderTeam,
   loadProjectBrief,
@@ -383,6 +383,8 @@ export default class CoderHome {
     if (!this.team) {
       setupAIAnalysis(this);
     }
+
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   // ─────────────────────────────────────────

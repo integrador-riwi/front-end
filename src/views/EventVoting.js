@@ -3,7 +3,7 @@ import Header from "../components/header/header.js";
 import { getEventRanking } from "../services/api-events.js";
 import { createQR, getQR } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
@@ -382,6 +382,12 @@ export default class QRVoting {
     );
 
     this.attachTeamSelection(); // Re-attach handlers after full render
+
+    this._offLangChange = onLangChange(() => {
+      this.updateQrStatusPill();
+      this.renderRankingPanel();
+      this.renderVotingView();
+    });
   }
 
   attachEventHandlers() {

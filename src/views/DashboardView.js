@@ -4,7 +4,7 @@ import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { icons } from "../utils/icons.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -39,6 +39,8 @@ export default class DashboardView {
     this.navbar.attachEventHandlers();
     if (this.header.mountBreadcrumb) this.header.mountBreadcrumb();
     if (this.header.attachEventHandlers) this.header.attachEventHandlers();
+
+    this._offLangChange = onLangChange(() => this._paint());
 
     await this._loadDashboardData();
   }

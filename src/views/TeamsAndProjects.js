@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser, clearSession } from "../utils/auth.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
@@ -84,6 +84,8 @@ export default class Teams {
     this.navbar.attachEventHandlers();
     await this.renderTeamsGrid();
     this.attachEventHandlers();
+
+    this._offLangChange = onLangChange(() => this.renderTeamsGrid());
   }
 
   async loadTeams() {
