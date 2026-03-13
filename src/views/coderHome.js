@@ -98,6 +98,38 @@ export default class CoderHome {
       this.pendingInvitations = data?.pendingInvitations ?? [];
       this.pendingJoinRequests = data?.pendingJoinRequests ?? [];
 
+      // Show toast for pending invitations
+      if (this.pendingInvitations.length > 0 && !this.team) {
+        const inv = this.pendingInvitations[0];
+        toast.info(
+          "Pending invitation",
+          `You have an invitation to join "${inv.team_name || 'a team'}"`,
+          {
+            duration: 0,
+            dropdown: {
+              items: [
+                {
+                  title: inv.team_name || "Team",
+                  subtitle: inv.event_name || "Event",
+                  accept: true,
+                  deny: true,
+                  id: inv.id_invitation,
+                  teamId: inv.id_team,
+                },
+              ],
+              onAccept: async (item) => {
+                toast.remove();
+                await this.handleAcceptInvitation(item.id);
+              },
+              onDeny: async (item) => {
+                toast.remove();
+                await this.handleRejectInvitation(item.id);
+              },
+            },
+          },
+        );
+      }
+
       if (teams.length > 0) {
         // Find team that belongs to selected event directly from the list
         // (getMyTeams now returns id_event — no extra per-team requests needed)
