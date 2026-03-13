@@ -1,0 +1,112 @@
+@import url("./root.css");
+
+.card-custom {
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  transition: all .25s ease;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.btn-primary-custom {
+  background: var(--accent);
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: .25s;
+  color: white;
+}
+
+.btn-primary-custom:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  color: white;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.status-active {
+  background: rgba(90,204,164,.15);
+  color: var(--mint);
+}
+
+/* ---------------- Finalist Cards ---------------- */
+.teamF-card {
+  border-radius: 16px;
+  border: 1px solid var(--border-card);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: .25s ease;
+  cursor: pointer;
+  min-width: 220px;
+  padding: 0.5rem;
+}
+
+.teamF-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.team-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #e9f2ff;
+  color: #0d6efd;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---------------- Audience Preview ---------------- */
+.slot {
+  border-radius: 22px;
+  border: 2px dashed;
+  font-weight: 700;
+  padding-bottom: 15px;
+  transition: .3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
+.slot:hover {
+  transform: scale(1.05);
+}
+
+.big-slot {
+  height: 180px;
+}
+
+.small-slot {
+  height: 130px;
+}
+
+.slot-1 {
+  background: rgba(234,162,252,0.15);
+  border-color: var(--lilac);
+  color: var(--lilac);
+}
+
+.slot-2 {
+  background: rgba(90,204,164,0.15);
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+.slot-3 {
+  background: rgba(230,202,82,0.15);
+  border-color: var(--gold);
+  color: var(--gold);
+}

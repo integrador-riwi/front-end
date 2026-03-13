@@ -44,6 +44,13 @@ export async function loginUser(email, password) {
   });
 }
 
+export async function createQR(id_event, expires_at) {
+  return apiFetch("/qr-votes", {
+    method: "POST",
+    body: { id_event, expires_at },
+  })
+}
+
 export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
 }

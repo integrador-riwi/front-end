@@ -125,7 +125,7 @@ export default class Navbar {
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.getElementById("overlay");
 
-    sidebar?.classList.remove("active");
+    sidebar?.classList.remove("open");
     overlay?.classList.remove("active");
   }
 
@@ -148,13 +148,14 @@ export default class Navbar {
           localStorage.removeItem("currentEventId");
           localStorage.removeItem("currentEventName");
         }
-
-        this.setActiveRoute(btn.dataset.route);
         // Clear selected event context when navigating away to event selection
         if (btn.dataset.route === "coderEventSelect") {
           sessionStorage.removeItem("selectedEvent");
         }
+
+        this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
+        this.closeSidebarMobile();
       });
     });
 

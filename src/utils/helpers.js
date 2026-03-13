@@ -42,8 +42,8 @@ export const getCurrentUser = () => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  sessionStorage.clear();
+  localStorage.clear();
 };
 
 export const getEventIdFromUrl = () => {
