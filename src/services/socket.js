@@ -248,14 +248,13 @@ function setupEventListeners() {
       `Your request to join "${data.teamName}" was declined`,
       {
         duration: 5000,
-        action: {
-          label: "View Teams",
-          onClick: () => {
-            window.location.hash = "#/coderEventSelect";
-          },
-        },
       },
     );
+
+    // Redirect to event selection after a short delay
+    setTimeout(() => {
+      window.location.hash = "#/coderEventSelect";
+    }, 2000);
 
     if (eventHandlers["join_request:rejected"]) {
       eventHandlers["join_request:rejected"](data);
@@ -277,15 +276,14 @@ function setupEventListeners() {
       "Removed from team",
       `You have been removed from "${data.teamName}"`,
       {
-        duration: 0,
-        action: {
-          label: "View Teams",
-          onClick: () => {
-            window.location.hash = "#/coderEventSelect";
-          },
-        },
+        duration: 5000,
       },
     );
+
+    // Redirect to event selection after a short delay
+    setTimeout(() => {
+      window.location.hash = "#/coderEventSelect";
+    }, 2000);
 
     if (eventHandlers["team:member_removed"]) {
       eventHandlers["team:member_removed"](data);
