@@ -248,6 +248,12 @@ function setupEventListeners() {
       `Your request to join "${data.teamName}" was declined`,
       {
         duration: 5000,
+        action: {
+          label: "View Teams",
+          onClick: () => {
+            window.location.hash = "#/coderEventSelect";
+          },
+        },
       },
     );
 
@@ -261,6 +267,28 @@ function setupEventListeners() {
 
     if (eventHandlers["comment:new"]) {
       eventHandlers["comment:new"](data);
+    }
+  });
+
+  socket.on("team:member_removed", (data) => {
+    console.log("[Socket] Member removed from team:", data);
+
+    toast.error(
+      "Removed from team",
+      `You have been removed from "${data.teamName}"`,
+      {
+        duration: 0,
+        action: {
+          label: "View Teams",
+          onClick: () => {
+            window.location.hash = "#/coderEventSelect";
+          },
+        },
+      },
+    );
+
+    if (eventHandlers["team:member_removed"]) {
+      eventHandlers["team:member_removed"](data);
     }
   });
 }
