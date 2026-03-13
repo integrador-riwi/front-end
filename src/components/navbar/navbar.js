@@ -6,12 +6,15 @@ import {
   renderAvatar,
 } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
+import { t, toggleLang, getLang, onLangChange } from "../../utils/i18n.js";
 import "../../assets/styles/navbar.css";
+
 export default class Navbar {
   constructor(router) {
     this.router = router;
     this.user = getCurrentUser();
     this.currentRoute = router.currentRoute || "dashboard";
+    this._offLangChange = null;
   }
 
   render() {
@@ -104,10 +107,15 @@ export default class Navbar {
             </div>
           </div>
 
-          <button class="sidebar-logout d-flex align-items-center gap-3 w-100 logout-btn">
-            ${icons.logout()}
-            Sign out
-          </button>
+          <div class="d-flex gap-2 mt-1">
+            <button class="sidebar-logout flex-grow-1 d-flex align-items-center gap-3 logout-btn">
+              ${icons.logout()}
+              ${t("nav.signOut")}
+            </button>
+            <button class="btn btn-sm lang-toggle-btn" id="langToggleBtn" title="${t("nav.langLabel")}" style="flex-shrink:0; font-size:0.75rem; font-weight:600; border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              ${t("nav.langToggle")}
+            </button>
+          </div>
         </div>
 
       </aside>
@@ -204,8 +212,24 @@ export default class Navbar {
       overlay?.classList.toggle("active");
     });
 
-    overlay?.addEventListener("click", () => {
-      this.closeSidebarMobile();
+    document
+      .getElementById("langToggleBtn")
+      ?.addEventListener("click", async () => {
+        await toggleLang();
+      });
+
+    // Re-render navbar when language changes so labels update instantly
+    this._offLangChange = onLangChange(() => {
+      const navEl = document.querySelector("aside.sidebar");
+      if (navEl) {
+        navEl.outerHTML = this.render();
+        // Re-query and re-attach after replacing DOM
+        this.attachEventHandlers();
+      }
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }
