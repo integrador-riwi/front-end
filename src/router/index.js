@@ -26,6 +26,35 @@ if (isAuthenticated()) {
 
 import QRVoting from "../views/EventVoting.js"
 import NotFoundView from "../views/NotFoundView.js";
+const ROUTE_PERMISSIONS = {
+  login: "PUBLIC",
+  dashboard: ["ADMIN", "STAFF"],
+  events: ["ADMIN", "STAFF"],
+  "events/create": ["ADMIN"],
+  details: ["ADMIN", "STAFF"],
+  projects: ["ADMIN", "STAFF", "CODER"],
+  ranking: ["ADMIN", "STAFF"],
+  qr: ["ADMIN"],
+  coderEventSelect: [
+    "CODER",
+    "TL_DEVELOPMENT",
+    "TL_SOFT_SKILLS",
+    "TL_ENGLISH",
+    "ADMIN",
+  ],
+  coderHome: ["CODER", "TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"],
+  projectSettings: ["CODER", "TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"],
+  profile: [
+    "ADMIN",
+    "STAFF",
+    "CODER",
+    "TL_DEVELOPMENT",
+    "TL_SOFT_SKILLS",
+    "TL_ENGLISH",
+  ],
+  tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
+};
+
 class App {
   constructor() {
     this.app = document.getElementById("app");
@@ -33,6 +62,25 @@ class App {
     this.user = getCurrentUser();
     this.currentParams = {};
     this.init();
+  }
+
+  getHomeRoute() {
+    const user = getCurrentUser();
+    if (!user) return "login";
+
+    switch (user.role) {
+      case "ADMIN":
+        return "events";
+      case "STAFF":
+        return "dashboard";
+      case "CODER":
+      case "TL_DEVELOPMENT":
+      case "TL_SOFT_SKILLS":
+      case "TL_ENGLISH":
+        return "coderEventSelect";
+      default:
+        return "login";
+    }
   }
 
   init() {
@@ -61,34 +109,42 @@ class App {
       this.navigate("login");
       return;
     }
-    console.log("USER FROM STORAGE:", this.user);
-    console.log("ROLE:", this.user?.role);
 
-    console.log("User:", this.user);
-    console.log("Role:", this.user?.role);
-    console.log("Authenticated:", isAuthenticated());
-    switch (this.user?.role) {
-      case "ADMIN":
-        this.navigate("events");
-        break;
-      case "CODER":
-        this.navigate("coderEventSelect");
-        break;
-      case "TL_DEVELOPMENT":
-        this.navigate("coderEventSelect");
-        break;
-      case "TL_SOFT_SKILLS":
-        this.navigate("coderEventSelect");
-        break;
-      case "TL_ENGLISH":
-        this.navigate("coderEventSelect");
-        break;
-      default:
-        this.navigate("login");
-    }
+    this.navigate(this.getHomeRoute());
   }
 
   navigate(route, params = {}) {
+    // Enforcement layer
+    const isAuth = isAuthenticated();
+    const user = getCurrentUser();
+    const permission = ROUTE_PERMISSIONS[route];
+
+    // 1. Check if route exists in permissions
+    if (!permission && route !== "not-found") {
+      this.navigate("not-found");
+      return;
+    }
+
+    // 2. Handle Public vs Private
+    if (permission === "PUBLIC") {
+      if (isAuth && route === "login") {
+        this.navigate(this.getHomeRoute());
+        return;
+      }
+    } else {
+      if (!isAuth) {
+        this.navigate("login");
+        return;
+      }
+
+      // 3. Role-based check
+      if (Array.isArray(permission) && !permission.includes(user?.role)) {
+        console.warn(`Access denied for ${user?.role} to ${route}`);
+        this.navigate(this.getHomeRoute());
+        return;
+      }
+    }
+
     if (this.currentView && typeof this.currentView.destroy === "function") {
       this.currentView.destroy();
     }
@@ -113,7 +169,6 @@ class App {
         break;
       case "details":
         this.currentView = new EventDetails(this, params);
-        console.log(params);
         break;
       case "projects":
         this.currentView = new Teams(this);
