@@ -622,9 +622,20 @@ export async function loadComments(projectId, user) {
 
   const currentUserId = user?.id_user ?? null;
 
-  // Lazy-import to avoid circular deps
   const { getComments, postComment, deleteComment } =
     await import("../services/api.js");
+  
+  const { on, off, joinProject, leaveProject } = await import("../services/socket.js");
+
+  joinProject(projectId);
+
+  const socketHandler = (newComment) => {
+    const commentProjectId = newComment.id_project || newComment.project_id;
+    if (commentProjectId === projectId && newComment.author_user_id !== currentUserId) {
+      refresh();
+    }
+  };
+  on("comment:new", socketHandler);
 
   // ── Render helpers ──────────────────────────────────────────
   function renderAll(comments) {
@@ -768,6 +779,11 @@ export async function loadComments(projectId, user) {
       });
     });
   }
+
+  return () => {
+    off("comment:new", socketHandler);
+    leaveProject(projectId);
+  };
 }
 
 // ─────────────────────────────────────────────────────────────

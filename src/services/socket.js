@@ -182,6 +182,14 @@ function setupEventListeners() {
       eventHandlers["join_request:rejected"](data);
     }
   });
+
+  socket.on("comment:new", (data) => {
+    console.log("[Socket] New comment:", data);
+
+    if (eventHandlers["comment:new"]) {
+      eventHandlers["comment:new"](data);
+    }
+  });
 }
 
 export function on(event, callback) {
@@ -190,6 +198,18 @@ export function on(event, callback) {
 
 export function off(event) {
   delete eventHandlers[event];
+}
+
+export function joinProject(projectId) {
+  if (socket?.connected) {
+    socket.emit("join_project", projectId);
+  }
+}
+
+export function leaveProject(projectId) {
+  if (socket?.connected) {
+    socket.emit("leave_project", projectId);
+  }
 }
 
 export function disconnectSocket() {
@@ -210,6 +230,8 @@ export default {
   initSocket,
   on,
   off,
+  joinProject,
+  leaveProject,
   disconnectSocket,
   getSocket,
 };
