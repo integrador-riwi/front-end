@@ -57,6 +57,6 @@ export const getEventSectionFromUrl = () => {
 };
 
 export function getSelectedEvent() {
-  const event = sessionStorage.getItem("currentEventId");
+  const event = localStorage.getItem("currentEventId");
   return event ? JSON.parse(event) : null;
 }
