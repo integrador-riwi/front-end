@@ -20,28 +20,21 @@ export function initSocket() {
   const user = getUser();
   
   if (!token) {
-    console.warn("[Socket] No token found, skipping connection");
     return null;
   }
 
   if (!user || !user.id_user) {
-    console.warn("[Socket] No user found, waiting...");
-    // Retry after a short delay
     setTimeout(() => initSocket(), 500);
     return null;
   }
 
-  console.log("[Socket] Initializing for user:", user.id_user);
-
   // Already connected — nothing to do
   if (socket?.connected) {
-    console.log("[Socket] Already connected");
     return socket;
   }
 
   // Socket exists and is actively trying to connect — don't create a new one
   if (socket?.active) {
-    console.log("[Socket] Already connecting");
     return socket;
   }
 
@@ -60,14 +53,12 @@ export function initSocket() {
     reconnectionDelay: 1000,
   });
 
-  console.log("[Socket] Attempting to connect to:", SOCKET_URL);
-
   socket.on("connect", () => {
-    console.log("[Socket] Connected:", socket.id, "User ID:", socket.user?.id_user);
+    console.log("[Socket] Connected:", socket.id);
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("[Socket] Disconnected:", reason);
+    // Silent disconnect
   });
 
   socket.on("connect_error", (error) => {
@@ -83,8 +74,6 @@ function setupEventListeners() {
   if (!socket) return;
 
   socket.on("invitation:new", (data) => {
-    console.log("[Socket] New invitation:", data);
-
     let toastId = null;
     toastId = toast.info(
       "New invitation",
@@ -131,8 +120,6 @@ function setupEventListeners() {
   });
 
   socket.on("join_request:new", (data) => {
-    console.log("[Socket] New join request received:", data);
-
     let toastId = null;
     toastId = toast.info(
       "New join request",
@@ -186,8 +173,6 @@ function setupEventListeners() {
   });
 
   socket.on("invitation:accepted", (data) => {
-    console.log("[Socket] Invitation accepted:", data);
-
     toast.success(
       "Invitation accepted",
       `${data.userName} joined your team "${data.teamName}"`,
@@ -202,8 +187,6 @@ function setupEventListeners() {
   });
 
   socket.on("invitation:rejected", (data) => {
-    console.log("[Socket] Invitation rejected:", data);
-
     toast.info(
       "Invitation declined",
       `${data.userName} declined the invitation to "${data.teamName}"`,
@@ -218,8 +201,6 @@ function setupEventListeners() {
   });
 
   socket.on("join_request:accepted", (data) => {
-    console.log("[Socket] Join request accepted:", data);
-
     toast.success(
       "Request accepted!",
       `Your request to join "${data.teamName}" has been accepted!`,
@@ -241,8 +222,6 @@ function setupEventListeners() {
   });
 
   socket.on("join_request:rejected", (data) => {
-    console.log("[Socket] Join request rejected:", data);
-
     toast.info(
       "Request declined",
       `Your request to join "${data.teamName}" was declined`,
@@ -262,8 +241,6 @@ function setupEventListeners() {
   });
 
   socket.on("comment:new", (data) => {
-    console.log("[Socket] New comment:", data);
-
     toast.info(
       "New comment",
       `${data.author_name || 'Someone'} commented on your project`,
@@ -278,8 +255,6 @@ function setupEventListeners() {
   });
 
   socket.on("team:member_removed", (data) => {
-    console.log("[Socket] Member removed from team:", data);
-
     toast.error(
       "Removed from team",
       `You have been removed from "${data.teamName}"`,
