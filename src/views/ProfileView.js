@@ -148,7 +148,7 @@ export default class ProfileView {
                       : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
                   }
                 </div>
-                <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
+                <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? t("profile.defaultName") ?? "User Name")}</h2>
                 <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
                 <div class="clan-badge mx-auto d-inline-block">
                   ${t("profile.clan")}: ${escapeHtml(this.profileForm.clan || "N/A")}
@@ -168,7 +168,7 @@ export default class ProfileView {
                         <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
                         ${
                           showConnectBtn
-                            ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? "Reconnect with GitHub" : "Connect with GitHub"}</button>`
+                            ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? (t("profile.githubReconnect") ?? "Reconnect with GitHub") : (t("profile.githubConnect") ?? "Connect with GitHub")}</button>`
                             : ""
                         }
                       </div>

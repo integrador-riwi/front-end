@@ -1,4 +1,5 @@
 import { searchSimilarProjects } from "../services/api.js";
+import { t } from "../utils/i18n.js";
 
 export function renderCoderNoTeam({
   user,
@@ -19,7 +20,7 @@ export function renderCoderNoTeam({
     error: createTeamError = "",
     success: createTeamSuccess = "",
   } = createTeamState || {};
-  
+
   return `
     <div class="team-selection-container">
 
@@ -42,10 +43,10 @@ export function renderCoderNoTeam({
         `
             : ""
         }
-        <h1 class="team-selection-title">Find your squad.</h1>
+        <h1 class="team-selection-title">${t("noTeam.heading")}</h1>
         <p class="team-selection-subtitle">
           Welcome, ${user?.name ?? "Coder"}. To start the Capstone Project, you need to
-          establish a new team or join an existing group of peers.
+          ${t("noTeam.subtitle") ?? "Establish a new team or join an existing group of peers."}
         </p>
       </header>
 
@@ -61,22 +62,21 @@ export function renderCoderNoTeam({
                 <line x1="8" y1="12" x2="16" y2="12"/>
               </svg>
             </div>
-            <h2 class="create-team-title">Start a New Team</h2>
+            <h2 class="create-team-title">${t("noTeam.createTitle")}</h2>
           </div>
           <p class="create-team-description">
-            Take the lead. Create a team and invite your classmates to join you.
-            You'll be the team administrator.
+            ${t("noTeam.createDesc") ?? "Take the lead. Create a team and invite your classmates."}
           </p>
           <form id="createTeamForm">
             <div class="form-group">
-              <label class="form-label" for="teamName">Team Name</label>
+              <label class="form-label" for="teamName">${t("noTeam.teamName")}</label>
               <input type="text" id="teamName" class="form-input"
                      placeholder="e.g., The Code Wizards" 
                       value="${formData?.teamName || ""}" 
                      required />
             </div>
             <div class="form-group">
-              <label class="form-label" for="projectTopic">Project Description</label>
+              <label class="form-label" for="projectTopic">${t("noTeam.projectDesc")}</label>
               <textarea id="projectTopic" class="form-textarea"
                         placeholder="Briefly describe what your team wants to work on...">${formData?.projectTopic || ""}</textarea>
               
@@ -87,7 +87,7 @@ export function renderCoderNoTeam({
                     ? `
                   <div class="ai-loading">
                     <span class="ai-spinner"></span>
-                    Analyzing...
+                    ${t("noTeam.analyzing") ?? "Analyzing..."}
                   </div>
                 `
                     : aiResult
@@ -102,7 +102,7 @@ export function renderCoderNoTeam({
               </div>
             </div>
             <button type="submit" class="btn-create-team" ${isCreating ? "disabled" : ""}>
-              ${isCreating ? "Creating..." : "Create Team"}
+              ${isCreating ? (t("noTeam.creating") ?? "Creating...") : (t("noTeam.createBtn") ?? "Create Team")}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
@@ -123,9 +123,9 @@ export function renderCoderNoTeam({
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
               </div>
-              <h2 class="join-team-title">Join an Existing Team</h2>
+              <h2 class="join-team-title">${t("noTeam.joinTitle")}</h2>
             </div>
-            <span class="available-count">${availableCount} Available</span>
+            <span class="available-count">${availableCount} ${t("noTeam.available")}</span>
           </div>
 
           <div class="search-wrapper">
@@ -134,12 +134,12 @@ export function renderCoderNoTeam({
               <path d="m21 21-4.35-4.35"/>
             </svg>
             <input type="text" id="teamSearch" class="search-input"
-                   placeholder="Search by team name or topic..."
+                   placeholder="${t("noTeam.searchPlaceholder") ?? "Search by team name or topic..."}"
                    value="${searchQuery}" />
           </div>
 
           <div class="team-filters">
-            <button class="filter-btn ${!activeFilter || activeFilter === "all" ? "active" : ""}" data-filter="all">All</button>
+            <button class="filter-btn ${!activeFilter || activeFilter === "all" ? "active" : ""}" data-filter="all">${t("noTeam.all")}</button>
             <button class="filter-btn ${activeFilter === "open" ? "active" : ""}" data-filter="open">
               <span class="filter-dot open"></span> Open
             </button>
@@ -160,7 +160,7 @@ export function renderCoderNoTeam({
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                       </svg>
-                      <p>${searchQuery || activeFilter !== "all" ? "No teams match your filters." : "No teams available right now."}</p>
+                      <p>${searchQuery || activeFilter !== "all" ? (t("noTeam.noMatch") ?? "No teams match your filters.") : (t("noTeam.noTeams") ?? "No teams available right now.")}</p>
                     </div>`
                   : teams.map((team) => renderTeamCard(team)).join("")
             }
@@ -174,7 +174,7 @@ export function renderCoderNoTeam({
 }
 
 export function renderSkeletonCards(count = 3) {
-  console.log('coder no team')
+  console.log("coder no team");
   return Array.from(
     { length: count },
     () => `
@@ -251,7 +251,7 @@ export function renderTeamCard(team) {
 
   const description = team.description
     ? escapeHtml(team.description)
-    : `<span class="no-description">No project description yet.</span>`;
+    : `<span class="no-description">${t("noTeam.noDesc")}</span>`;
 
   return `
     <article class="team-card ${team.status}">
@@ -259,7 +259,7 @@ export function renderTeamCard(team) {
         <div class="team-card-title-row">
           <h3 class="team-card-title">${escapeHtml(team.name)}</h3>
           <span class="team-badge ${team.status}">
-            ${isFull ? "FULL" : isPending ? "PENDING" : "OPEN"}
+            ${isFull ? (t("noTeam.statusFull") ?? "FULL") : isPending ? (t("noTeam.statusPending") ?? "PENDING") : (t("noTeam.statusOpen") ?? "OPEN")}
           </span>
         </div>
       </div>
@@ -268,7 +268,7 @@ export function renderTeamCard(team) {
 
       <div class="team-card-leader">
         ${leaderAvatar}
-        <span class="leader-label">Led by <strong>${escapeHtml(team.leaderName ?? "Unknown")}</strong></span>
+        <span class="leader-label">${t("noTeam.ledBy")} <strong>${escapeHtml(team.leaderName ?? "Unknown")}</strong></span>
       </div>
 
       <div class="team-card-footer">
@@ -279,22 +279,22 @@ export function renderTeamCard(team) {
           <div class="slot-dots">${slotDots}</div>
           <span class="member-count">
             ${team.memberCount}/${team.maxMembers}
-            ${!isFull ? `<span class="slots-left">· ${team.slotsLeft} left</span>` : ""}
+            ${!isFull ? `<span class="slots-left">· ${team.slotsLeft} ${t("noTeam.slotsLeft")}</span>` : ""}
           </span>
         </div>
 
         ${
           isFull
-            ? `<button class="btn-full" disabled>Full Team</button>`
+            ? `<button class="btn-full" disabled>${t("noTeam.fullBtn") ?? "Full Team"}</button>`
             : isPending
               ? `<button class="btn-pending" disabled>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  Request Sent
+                  ${t("noTeam.requestSent") ?? "Request Sent"}
                 </button>`
-              : `<button class="btn-join" data-team-id="${team.id}">Request to Join</button>`
+              : `<button class="btn-join" data-team-id="${team.id}">${t("noTeam.joinBtn") ?? "Request to Join"}</button>`
         }
       </div>
     </article>
@@ -396,7 +396,7 @@ export function setupAIAnalysis(instance) {
           resultBox.innerHTML = `
             <div class="ai-result error">
               <span class="ai-icon">⚙️</span>
-              <span class="ai-message">Configure your OpenAI API key in the backend.</span>
+              <span class="ai-message">${t("noTeam.aiConfigKey") ?? "Configure your OpenAI API key in the backend."}</span>
             </div>
           `;
         } else {

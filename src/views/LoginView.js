@@ -142,10 +142,8 @@ export default class LoginView {
       this.router.init();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Login failed. Try again.";
-      toast.error("Login failed", errorMessage);
+        err.response?.data?.message || err.message || t("login.error");
+      toast.error(t("login.errorTitle"), errorMessage);
       this.loading = false;
       this.render();
     }

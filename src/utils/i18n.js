@@ -47,6 +47,8 @@ const resources = {
         password: "Contraseña",
         forgot: "¿Olvidaste tu contraseña?",
         submit: "Iniciar sesión",
+        error: "Error al iniciar sesión. Intenta de nuevo.",
+        errorTitle: "Error de inicio de sesión",
       },
 
       // ── Events ────────────────────────────────────────────
@@ -65,6 +67,8 @@ const resources = {
         loading: "Cargando...",
         error: "Error al cargar los eventos. Intenta de nuevo.",
         tbd: "Por definir",
+        notFound: "Evento no encontrado",
+        untitled: "Evento sin título",
       },
 
       // ── Dashboard ─────────────────────────────────────────
@@ -106,20 +110,39 @@ const resources = {
         loading: "Cargando eventos...",
         error: "No se pudieron cargar los eventos. Intenta de nuevo.",
         select: "Seleccionar",
+        review: "Revisar este evento",
       },
 
       // ── Coder No-Team ─────────────────────────────────────
       noTeam: {
         heading: "Encuentra tu equipo.",
+        subtitle: "Crea un equipo nuevo o únete a uno existente para empezar.",
         createTitle: "Crear un Nuevo Equipo",
+        createDesc:
+          "Toma la delantera. Crea un equipo e invita a tus compañeros.",
         joinTitle: "Unirse a un Equipo",
         teamName: "Nombre del equipo",
         projectDesc: "Descripción del proyecto",
+        creating: "Creando...",
+        createBtn: "Crear Equipo",
         available: "Disponibles",
+        searchPlaceholder: "Buscar por nombre o tema...",
         all: "Todos",
+        noMatch: "Ningún equipo coincide con los filtros.",
+        noTeams: "No hay equipos disponibles ahora.",
         noDesc: "Sin descripción de proyecto aún.",
         ledBy: "Líder: ",
+        statusFull: "COMPLETO",
+        statusPending: "PENDIENTE",
+        statusOpen: "ABIERTO",
         slotsLeft: "lugar(es) disponible(s)",
+        fullBtn: "Equipo completo",
+        requestSent: "Solicitud enviada",
+        joinBtn: "Solicitar unirse",
+        analyzing: "Analizando...",
+        aiConfigKey: "Configura tu API key de OpenAI en el backend.",
+        allTeamsSeen: "Ya viste todos los equipos",
+        teamCreated: "¡Equipo creado!",
       },
 
       // ── Coder Team ────────────────────────────────────────
@@ -131,10 +154,31 @@ const resources = {
         activity: "Actividad",
         deliverables: "Entregables",
         submitted: "Proyecto enviado — en revisión",
-        postComment: "Publicar comentario",
+        postComment: "Publicar Comentario",
         settings: "Info & Ajustes del Proyecto",
         evaluate: "Evaluar Equipo",
         open: "Abrir",
+        pitchVideo: "Video Pitch",
+        repository: "Repositorio",
+        previewPhoto: "Foto de Vista Previa",
+        deployLink: "Enlace de Despliegue",
+        pending: "Pendiente",
+        commentPlaceholder: "Comparte tus pensamientos...",
+        replyPlaceholder: "Escribe una respuesta...",
+        gradeExcellent: "Excelente",
+        gradeGood: "Bueno",
+        gradeAverage: "Regular",
+        gradeBelow: "Por debajo del promedio",
+        posting: "Publicando...",
+        sending: "Enviando...",
+        send: "Enviar",
+        deleteComment: "¿Eliminar este comentario?",
+        evalSent: "¡Evaluaciones enviadas!",
+        evalSavedMsg: "Las evaluaciones se guardaron correctamente.",
+        evalIncomplete:
+          "Por favor califica todas las rúbricas de cada miembro.",
+        updateEval: "Actualizar Evaluaciones",
+        leaveConfirm: "¿Estás seguro de que quieres abandonar el equipo?",
       },
 
       // ── Invitations ───────────────────────────────────────
@@ -142,6 +186,14 @@ const resources = {
         accept: "Aceptar",
         reject: "Rechazar",
         cancel: "Cancelar",
+        pendingInvitation: "Invitación pendiente",
+        pendingInvitations: "Invitaciones pendientes",
+        newInvitation: "Nueva invitación",
+        accepted: "¡Aceptada!",
+        declined: "Rechazada",
+        joinedTeam: "Te uniste al equipo.",
+        rejected: "Rechazaste la invitación.",
+        viewTeam: "Ver equipo",
       },
 
       // ── Project Settings ──────────────────────────────────
@@ -156,6 +208,9 @@ const resources = {
         deleteTeam: "Eliminar Equipo",
         members: "Miembros actuales",
         manageMembers: "Gestiona los miembros y sus roles.",
+        namePlaceholder: "Ingresa el nombre del proyecto",
+        savedOk: "Cambios guardados correctamente.",
+        deleteConfirm: "¿Estás seguro? Esta acción no se puede deshacer.",
       },
 
       // ── Profile ───────────────────────────────────────────
@@ -172,6 +227,9 @@ const resources = {
         loading: "Cargando...",
         savedOk: "Perfil actualizado correctamente.",
         loadError: "No se pudo cargar el perfil.",
+        githubConnect: "Conectar con GitHub",
+        githubReconnect: "Reconectar con GitHub",
+        defaultName: "Nombre de usuario",
       },
 
       // ── TL Dashboard ──────────────────────────────────────
@@ -190,6 +248,7 @@ const resources = {
         areaSoft: "Soft Skills",
         areaEnglish: "Inglés",
         areaAdmin: "Admin",
+        teamLead: "Líder de Equipo",
       },
 
       // ── Teams & Projects ──────────────────────────────────
@@ -221,6 +280,13 @@ const resources = {
         rubricDesc: "Descripción (opcional)",
         rubricGrades: "Opciones de calificación *",
         noRubrics: "Sin rúbricas. Agrega al menos una.",
+        allClans: "Todos los clanes",
+        validTitle: "El título del evento es requerido.",
+        validDate: "La fecha de inicio es requerida.",
+        successTitle: "¡Evento creado!",
+        successMsg: "El evento fue creado exitosamente.",
+        createBtn: "Crear Evento",
+        connectGithub: "Conecta GitHub primero",
       },
 
       // ── Event Details ─────────────────────────────────────
@@ -248,6 +314,7 @@ const resources = {
         noDescription: "Sin descripción.",
         team: "Equipo",
         event: "Evento",
+        someone: "Alguien",
       },
     },
   },
@@ -293,6 +360,8 @@ const resources = {
         password: "Password",
         forgot: "Forgot password?",
         submit: "Sign in",
+        error: "Login failed. Try again.",
+        errorTitle: "Login failed",
       },
 
       events: {
@@ -310,6 +379,8 @@ const resources = {
         loading: "Loading...",
         error: "Error loading events. Please try again later.",
         tbd: "TBD",
+        notFound: "Event not found",
+        untitled: "Untitled Event",
       },
 
       dashboard: {
@@ -347,20 +418,39 @@ const resources = {
         noEvents: "No active events at this time.",
         loading: "Loading events...",
         error: "Could not load events. Please try again.",
-        select: "Select",
+        select: "Join this event",
+        review: "Review this event",
       },
 
       noTeam: {
         heading: "Find your squad.",
+        subtitle:
+          "Establish a new team or join an existing group to get started.",
         createTitle: "Start a New Team",
+        createDesc: "Take the lead. Create a team and invite your classmates.",
         joinTitle: "Join an Existing Team",
         teamName: "Team Name",
         projectDesc: "Project Description",
+        creating: "Creating...",
+        createBtn: "Create Team",
         available: "Available",
+        searchPlaceholder: "Search by team name or topic...",
         all: "All",
+        noMatch: "No teams match your filters.",
+        noTeams: "No teams available right now.",
         noDesc: "No project description yet.",
         ledBy: "Led by ",
+        statusFull: "FULL",
+        statusPending: "PENDING",
+        statusOpen: "OPEN",
         slotsLeft: "left",
+        fullBtn: "Full Team",
+        requestSent: "Request Sent",
+        joinBtn: "Request to Join",
+        analyzing: "Analyzing...",
+        aiConfigKey: "Configure your OpenAI API key in the backend.",
+        allTeamsSeen: "You've seen all teams",
+        teamCreated: "Team created!",
       },
 
       team: {
@@ -375,12 +465,40 @@ const resources = {
         settings: "Project Info & Settings",
         evaluate: "Evaluate Team",
         open: "Open",
+        pitchVideo: "Pitch Video",
+        repository: "Repository",
+        previewPhoto: "Preview Photo",
+        deployLink: "Deploy Link",
+        pending: "Pending",
+        commentPlaceholder: "Share your thoughts...",
+        replyPlaceholder: "Write a reply...",
+        gradeExcellent: "Excellent",
+        gradeGood: "Good",
+        gradeAverage: "Average",
+        gradeBelow: "Below Average",
+        posting: "Posting...",
+        sending: "Sending...",
+        send: "Send",
+        deleteComment: "Delete this comment?",
+        evalSent: "Evaluations sent!",
+        evalSavedMsg: "The evaluations have been saved successfully.",
+        evalIncomplete: "Please rate all rubrics for each member.",
+        updateEval: "Update Evaluations",
+        leaveConfirm: "Are you sure you want to leave the team?",
       },
 
       invite: {
         accept: "Accept",
         reject: "Reject",
         cancel: "Cancel",
+        pendingInvitation: "Pending invitation",
+        pendingInvitations: "Pending invitations",
+        newInvitation: "New invitation",
+        accepted: "Accepted!",
+        declined: "Declined",
+        joinedTeam: "You joined the team.",
+        rejected: "You rejected the invitation.",
+        viewTeam: "View team",
       },
 
       settings: {
@@ -394,6 +512,9 @@ const resources = {
         deleteTeam: "Delete Team",
         members: "Current Members",
         manageMembers: "Manage members and roles.",
+        namePlaceholder: "Enter project name",
+        savedOk: "Changes saved successfully.",
+        deleteConfirm: "Are you sure? This action cannot be undone.",
       },
 
       profile: {
@@ -409,6 +530,9 @@ const resources = {
         loading: "Loading...",
         savedOk: "Profile updated correctly.",
         loadError: "Profile could not be loaded.",
+        githubConnect: "Connect with GitHub",
+        githubReconnect: "Reconnect with GitHub",
+        defaultName: "User Name",
       },
 
       tl: {
@@ -426,6 +550,7 @@ const resources = {
         areaSoft: "Soft Skills",
         areaEnglish: "English",
         areaAdmin: "Admin",
+        teamLead: "Team Lead",
       },
 
       teamsProjects: {
@@ -455,6 +580,13 @@ const resources = {
         rubricDesc: "Description (optional)",
         rubricGrades: "Grading options *",
         noRubrics: "No rubrics. Add at least one.",
+        allClans: "All clans",
+        validTitle: "Event title is required.",
+        validDate: "Start date is required.",
+        successTitle: "Event Created!",
+        successMsg: "The event has been created successfully.",
+        createBtn: "Create Event",
+        connectGithub: "Connect GitHub first",
       },
 
       eventDetails: {
@@ -481,6 +613,7 @@ const resources = {
         noDescription: "No description provided.",
         team: "Team",
         event: "Event",
+        someone: "Someone",
       },
     },
   },

@@ -1,4 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
+import { t } from "../utils/i18n.js";
 import Header from "../components/header/header.js";
 import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
@@ -165,7 +166,7 @@ export default class EventDetails {
 
     if (!this.event) {
       eventContainer.innerHTML = this.renderError(
-        t("events.notFound") ?? "Event not found",
+        t("events.notFound") ?? t("events.notFound") ?? "Event not found",
       );
       return;
     }

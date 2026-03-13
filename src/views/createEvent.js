@@ -1,4 +1,5 @@
 import "../assets/styles/dashboard.css";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/components.css";
 import "../assets/styles/eventCreated.css";
 import "../assets/styles/rubricBuilder.css";
@@ -7,7 +8,7 @@ import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 const AREA_LABELS = {
@@ -51,9 +52,30 @@ export default class CreateEvent {
     this.rubricMode = null; // 'platform' or 'template'
     this.templateFile = null;
     this.rubricAreas = [
-      { id: 'dev', type: 'DEVELOPMENT', title: AREA_LABELS['DEVELOPMENT'], weight: 0, criteria: [], isExpanded: true },
-      { id: 'soft', type: 'SOFT_SKILLS', title: AREA_LABELS['SOFT_SKILLS'], weight: 0, criteria: [], isExpanded: false },
-      { id: 'eng', type: 'ENGLISH', title: AREA_LABELS['ENGLISH'], weight: 0, criteria: [], isExpanded: false }
+      {
+        id: "dev",
+        type: "DEVELOPMENT",
+        title: AREA_LABELS["DEVELOPMENT"],
+        weight: 0,
+        criteria: [],
+        isExpanded: true,
+      },
+      {
+        id: "soft",
+        type: "SOFT_SKILLS",
+        title: AREA_LABELS["SOFT_SKILLS"],
+        weight: 0,
+        criteria: [],
+        isExpanded: false,
+      },
+      {
+        id: "eng",
+        type: "ENGLISH",
+        title: AREA_LABELS["ENGLISH"],
+        weight: 0,
+        criteria: [],
+        isExpanded: false,
+      },
     ];
   }
 
@@ -62,12 +84,18 @@ export default class CreateEvent {
   _getEventData() {
     return {
       title: document.getElementById("ev-title")?.value?.trim() ?? "",
-      description: document.getElementById("ev-description")?.value?.trim() ?? "",
+      description:
+        document.getElementById("ev-description")?.value?.trim() ?? "",
       eventType: document.getElementById("ev-type")?.value ?? "CAPSTONE",
       route: document.getElementById("ev-route")?.value ?? "BASIC",
       cohort: document.getElementById("ev-cohort")?.value?.trim() ?? "",
-      githubOrg: document.getElementById("ev-github-org")?.value?.trim() || this.selectedGithubOrg || null,
-      maxTeamSize: parseInt(document.getElementById("ev-max-team")?.value ?? "5"),
+      githubOrg:
+        document.getElementById("ev-github-org")?.value?.trim() ||
+        this.selectedGithubOrg ||
+        null,
+      maxTeamSize: parseInt(
+        document.getElementById("ev-max-team")?.value ?? "5",
+      ),
       eventDate: document.getElementById("ev-start-date")?.value
         ? `${document.getElementById("ev-start-date").value}T10:00:00`
         : null,
@@ -104,7 +132,7 @@ export default class CreateEvent {
     const summary = document.getElementById("clan-summary");
     if (!summary) return;
     if (this.targetClans.length === 0) {
-      summary.textContent = "All clans";
+      summary.textContent = t("createEvent.allClans") ?? "All clans";
       summary.className = "ce-clan-summary ce-clan-summary--all";
     } else {
       summary.textContent = this.targetClans.join(", ");
@@ -119,9 +147,9 @@ export default class CreateEvent {
         All clans
       </button>
       ${ALL_CLANS.map((clan) => {
-      const active = this.targetClans.includes(clan);
-      return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
-    }).join("")}
+        const active = this.targetClans.includes(clan);
+        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+      }).join("")}
     `;
   }
 
@@ -130,14 +158,14 @@ export default class CreateEvent {
       <div class="ce-clan-section">
         <label class="form-label fw-semibold">Participating clans</label>
         <p class="ce-section-subtitle" style="margin-bottom: 10px;">
-          Select the clans that will see this event, or leave it as "All clans".
+          Select the clans that will see this event, or leave it as "${t("createEvent.allClans") ?? "All clans"}".
         </p>
         <div class="ce-clan-picker" id="clan-picker-body">
           ${this._renderClanPickerBody()}
         </div>
         <div class="ce-clan-footer">
           <span>Scope: </span>
-          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">All clans</span>
+          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">${t("createEvent.allClans") ?? "All clans"}</span>
         </div>
       </div>
     `;
@@ -157,7 +185,7 @@ export default class CreateEvent {
 
   _buildRubricsPayload() {
     const payload = [];
-    if (this.rubricMode !== 'platform') return payload;
+    if (this.rubricMode !== "platform") return payload;
 
     for (const area of this.rubricAreas) {
       for (const crit of area.criteria) {
@@ -165,8 +193,12 @@ export default class CreateEvent {
           area: area.type,
           name: crit.name || "Untitled Criteria",
           description: crit.description || null,
-          weight: (crit.weight / 100), // convert percentage to 0-1
-          grades: crit.levels.map(l => ({ score: l.score, description: l.description, name: l.name }))
+          weight: crit.weight / 100, // convert percentage to 0-1
+          grades: crit.levels.map((l) => ({
+            score: l.score,
+            description: l.description,
+            name: l.name,
+          })),
         });
       }
     }
@@ -177,16 +209,19 @@ export default class CreateEvent {
 
   _validate() {
     const ev = this._getEventData();
-    if (!ev.title) return "Event title is required.";
-    if (!ev.eventDate) return "Start date is required.";
+    if (!ev.title)
+      return t("createEvent.validTitle") ?? "Event title is required.";
+    if (!ev.eventDate)
+      return t("createEvent.validDate") ?? "Start date is required.";
 
-    if (this.rubricMode === 'platform') {
+    if (this.rubricMode === "platform") {
       this._recalculateWeights();
       let totalWeight = this._getTotalWeight();
       for (const a of this.rubricAreas) {
         for (const c of a.criteria) {
           if (!c.name) return `A criteria for ${a.title} has no name.`;
-          if (c.levels.length === 0) return `The criteria "${c.name}" has no performance levels.`;
+          if (c.levels.length === 0)
+            return `The criteria "${c.name}" has no performance levels.`;
         }
       }
       if (Math.abs(totalWeight - 100) > 0.1 && totalWeight > 0) {
@@ -195,7 +230,7 @@ export default class CreateEvent {
       if (totalWeight === 0) {
         return `You must define at least one criteria with weight greater than 0%.`;
       }
-    } else if (this.rubricMode === 'template' && !this.templateFile) {
+    } else if (this.rubricMode === "template" && !this.templateFile) {
       return `Please upload a template file.`;
     }
 
@@ -207,7 +242,7 @@ export default class CreateEvent {
   async _handleSubmit() {
     const err = this._validate();
     if (err) {
-      toast.error('Error de Validación', err);
+      toast.error("Error de Validación", err);
       return;
     }
 
@@ -215,26 +250,29 @@ export default class CreateEvent {
     try {
       const body = {
         ...this._getEventData(),
-        rubrics: this.rubricMode === 'platform' ? this._buildRubricsPayload() : [],
+        rubrics:
+          this.rubricMode === "platform" ? this._buildRubricsPayload() : [],
       };
       await apiFetch("/events", { method: "POST", body });
-      toast.success('Event Created!', 'The event has been created successfully.');
+      toast.success(
+        t("createEvent.successTitle") ?? "Event Created!",
+        t("createEvent.successMsg") ??
+          "The event has been created successfully.",
+      );
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      toast.error('Error', e.message ?? "Error creating the event.");
+      toast.error("Error", e.message ?? "Error creating the event.");
     } finally {
       this._setLoading(false);
     }
   }
-
-
 
   _generateId() {
     return Math.random().toString(36).substr(2, 9);
   }
 
   _rerenderRubricSection() {
-    const container = document.getElementById('ce-rubrics-container');
+    const container = document.getElementById("ce-rubrics-container");
     if (container) {
       container.innerHTML = this._renderRubricState();
       this._attachRubricHandlers();
@@ -244,29 +282,38 @@ export default class CreateEvent {
   // ── Template Download ──────────────────────────────────────────────────────
 
   _downloadTemplate() {
-  const link = document.createElement("a");
-  link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
-  link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    const link = document.createElement("a");
+    link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-  toast.success("Descarga iniciada", "La plantilla se descargó correctamente.");}
+    toast.success(
+      "Descarga iniciada",
+      "La plantilla se descargó correctamente.",
+    );
+  }
 
   _addCriteria(areaId) {
-    const area = this.rubricAreas.find(a => a.id === areaId);
+    const area = this.rubricAreas.find((a) => a.id === areaId);
     if (area) {
       area.criteria.push({
         id: this._generateId(),
-        name: '',
-        description: '',
+        name: "",
+        description: "",
         weight: 0,
         isExpanded: true,
         levels: [
-          { score: 0, name: 'Unsatisfactory', description: '', color: '#ff4d4f' },
-          { score: 50, name: 'Good', description: '', color: '#faad14' },
-          { score: 100, name: 'Excellent', description: '', color: '#52c41a' }
-        ]
+          {
+            score: 0,
+            name: "Unsatisfactory",
+            description: "",
+            color: "#ff4d4f",
+          },
+          { score: 50, name: "Good", description: "", color: "#faad14" },
+          { score: 100, name: "Excellent", description: "", color: "#52c41a" },
+        ],
       });
       area.isExpanded = true;
       this._recalculateWeights();
@@ -275,29 +322,34 @@ export default class CreateEvent {
   }
 
   _removeCriteria(areaId, critId) {
-    const area = this.rubricAreas.find(a => a.id === areaId);
+    const area = this.rubricAreas.find((a) => a.id === areaId);
     if (area) {
-      area.criteria = area.criteria.filter(c => c.id !== critId);
+      area.criteria = area.criteria.filter((c) => c.id !== critId);
       this._recalculateWeights();
       this._rerenderRubricSection();
     }
   }
 
   _addLevel(areaId, critId) {
-    const area = this.rubricAreas.find(a => a.id === areaId);
+    const area = this.rubricAreas.find((a) => a.id === areaId);
     if (area) {
-      const crit = area.criteria.find(c => c.id === critId);
+      const crit = area.criteria.find((c) => c.id === critId);
       if (crit) {
-        crit.levels.push({ score: 0, name: 'New Level', description: '', color: '#1890ff' });
+        crit.levels.push({
+          score: 0,
+          name: "New Level",
+          description: "",
+          color: "#1890ff",
+        });
         this._rerenderRubricSection();
       }
     }
   }
 
   _removeLevel(areaId, critId, levelIndex) {
-    const area = this.rubricAreas.find(a => a.id === areaId);
+    const area = this.rubricAreas.find((a) => a.id === areaId);
     if (area) {
-      const crit = area.criteria.find(c => c.id === critId);
+      const crit = area.criteria.find((c) => c.id === critId);
       if (crit) {
         crit.levels.splice(levelIndex, 1);
         this._rerenderRubricSection();
@@ -306,9 +358,9 @@ export default class CreateEvent {
   }
 
   _recalculateWeights() {
-    this.rubricAreas.forEach(area => {
+    this.rubricAreas.forEach((area) => {
       let areaW = 0;
-      area.criteria.forEach(crit => {
+      area.criteria.forEach((crit) => {
         const wInput = document.getElementById(`weight-${crit.id}`);
         if (wInput) crit.weight = parseFloat(wInput.value) || 0;
         areaW += crit.weight;
@@ -347,7 +399,7 @@ export default class CreateEvent {
        `;
     }
 
-    if (this.rubricMode === 'template') {
+    if (this.rubricMode === "template") {
       return `
           <div class="rubric-builder fade-in">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -372,7 +424,10 @@ export default class CreateEvent {
     this._recalculateWeights();
     const totalW = this._getTotalWeight();
     const isWeightOk = Math.abs(totalW - 100) < 0.1;
-    const compCriteria = this.rubricAreas.reduce((s, a) => s + a.criteria.length, 0);
+    const compCriteria = this.rubricAreas.reduce(
+      (s, a) => s + a.criteria.length,
+      0,
+    );
 
     return `
        <div class="rubric-builder fade-in">
@@ -381,10 +436,10 @@ export default class CreateEvent {
             <div class="d-flex align-items-center gap-3">
                <div class="text-end">
                  <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">TOTAL WEIGHT</div>
-                 <div class="fw-bold ${isWeightOk ? 'text-success' : 'text-primary'}">${totalW}% / 100%</div>
+                 <div class="fw-bold ${isWeightOk ? "text-success" : "text-primary"}">${totalW}% / 100%</div>
                </div>
                <div class="progress" style="width: 150px; height: 8px; border-radius: 4px;">
-                 <div class="progress-bar ${isWeightOk ? 'bg-success' : 'bg-primary'}" role="progressbar" style="width: ${Math.min(totalW, 100)}%;"></div>
+                 <div class="progress-bar ${isWeightOk ? "bg-success" : "bg-primary"}" role="progressbar" style="width: ${Math.min(totalW, 100)}%;"></div>
                </div>
             </div>
           </div>
@@ -397,23 +452,27 @@ export default class CreateEvent {
                     <span class="badge bg-white text-dark border me-2">Areas: 3</span>
                     <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
                   </div>
-                  ${!isWeightOk ? `
+                  ${
+                    !isWeightOk
+                      ? `
                     <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Total weight must be 100%
                     </div>
-                  ` : `
+                  `
+                      : `
                      <div class="text-success small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Weight correctly assigned
                     </div>
-                  `}
+                  `
+                  }
                </div>
             </div>
           </div>
 
           <div class="rubric-areas">
-            ${this.rubricAreas.map(area => this._renderAreaItem(area)).join('')}
+            ${this.rubricAreas.map((area) => this._renderAreaItem(area)).join("")}
           </div>
        </div>
      `;
@@ -422,35 +481,43 @@ export default class CreateEvent {
   _renderAreaItem(area) {
     const hasCrit = area.criteria.length > 0;
     const isActivated = area.weight > 0;
-    const badgeColor = isActivated ? (AREA_COLOR[area.type] || '#6c63ff') : AREA_COLOR.INACTIVE;
-    
+    const badgeColor = isActivated
+      ? AREA_COLOR[area.type] || "#6c63ff"
+      : AREA_COLOR.INACTIVE;
+
     return `
-        <div class="card shadow-sm mb-3 rubric-area-card ${!isActivated ? 'area-inactive' : ''}" style="border-left: 4px solid ${badgeColor}; border-radius: 8px; overflow:hidden;">
+        <div class="card shadow-sm mb-3 rubric-area-card ${!isActivated ? "area-inactive" : ""}" style="border-left: 4px solid ${badgeColor}; border-radius: 8px; overflow:hidden;">
            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
               <div class="d-flex align-items-center gap-3 cursor-pointer area-toggle-btn" data-area="${area.id}">
                  <div class="text-muted">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="${area.isExpanded ? '6 9 12 15 18 9' : '9 18 15 12 9 6'}"/></svg>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="${area.isExpanded ? "6 9 12 15 18 9" : "9 18 15 12 9 6"}"/></svg>
                  </div>
                  <div>
-                   <h6 class="mb-0 fw-bold" style="${!isActivated ? 'color: #8898aa;' : ''}">${area.title} ${!isActivated ? '<span class="ms-2 fw-normal small">(Inactive)</span>' : ''}</h6>
+                   <h6 class="mb-0 fw-bold" style="${!isActivated ? "color: #8898aa;" : ""}">${area.title} ${!isActivated ? '<span class="ms-2 fw-normal small">(Inactive)</span>' : ""}</h6>
                  </div>
               </div>
               <div class="d-flex align-items-center gap-3">
-                 <span class="badge ${isActivated ? 'bg-light text-dark' : 'bg-transparent text-muted'} border">WEIGHT: ${area.weight}%</span>
+                 <span class="badge ${isActivated ? "bg-light text-dark" : "bg-transparent text-muted"} border">WEIGHT: ${area.weight}%</span>
               </div>
            </div>
            
-           ${area.isExpanded ? `
+           ${
+             area.isExpanded
+               ? `
              <div class="card-body bg-light border-top">
-                ${!hasCrit ? `
+                ${
+                  !hasCrit
+                    ? `
                    <div class="text-center py-3">
                      <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
                    </div>
-                ` : `
+                `
+                    : `
                    <div class="criteria-list">
-                      ${area.criteria.map(crit => this._renderCriteriaItem(area, crit)).join('')}
+                      ${area.criteria.map((crit) => this._renderCriteriaItem(area, crit)).join("")}
                    </div>
-                `}
+                `
+                }
                 <div class="mt-3">
                   <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -458,7 +525,9 @@ export default class CreateEvent {
                   </button>
                 </div>
              </div>
-           ` : ''}
+           `
+               : ""
+           }
         </div>
      `;
   }
@@ -484,7 +553,9 @@ export default class CreateEvent {
 
             <div class="levels-container mt-3">
                 <div class="row g-2">
-                    ${crit.levels.map((lvl, index) => `
+                    ${crit.levels
+                      .map(
+                        (lvl, index) => `
                         <div class="col-md-4">
                             <div class="level-card h-100 p-2 border rounded" style="border-top: 3px solid ${lvl.color} !important; background: white;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -502,7 +573,9 @@ export default class CreateEvent {
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                    `,
+                      )
+                      .join("")}
                     <div class="col-md-12 mt-2">
                         <button class="btn btn-sm btn-light w-100 border border-dashed text-primary btn-add-lvl" data-area="${area.id}" data-crit="${crit.id}">
                             + Add Level
@@ -516,59 +589,66 @@ export default class CreateEvent {
 
   _attachRubricHandlers() {
     const saveInputs = () => {
-      document.querySelectorAll('.crit-input').forEach(el => {
-        const id = el.id.split('-')[1];
-        const field = el.id.split('-')[0];
-        this.rubricAreas.forEach(a => {
-          const c = a.criteria.find(crit => crit.id === id);
+      document.querySelectorAll(".crit-input").forEach((el) => {
+        const id = el.id.split("-")[1];
+        const field = el.id.split("-")[0];
+        this.rubricAreas.forEach((a) => {
+          const c = a.criteria.find((crit) => crit.id === id);
           if (c) {
-            if (field === 'weight') c.weight = parseFloat(el.value) || 0;
-            if (field === 'name') c.name = el.value;
-            if (field === 'desc') c.description = el.value;
+            if (field === "weight") c.weight = parseFloat(el.value) || 0;
+            if (field === "name") c.name = el.value;
+            if (field === "desc") c.description = el.value;
           }
         });
       });
-      document.querySelectorAll('.lvl-input').forEach(el => {
+      document.querySelectorAll(".lvl-input").forEach((el) => {
         const aId = el.dataset.area;
         const cId = el.dataset.crit;
         const index = parseInt(el.dataset.index);
         const field = el.dataset.field;
-        const a = this.rubricAreas.find(area => area.id === aId);
+        const a = this.rubricAreas.find((area) => area.id === aId);
         if (a) {
-          const c = a.criteria.find(crit => crit.id === cId);
+          const c = a.criteria.find((crit) => crit.id === cId);
           if (c && c.levels[index]) {
-            if (field === 'score') c.levels[index].score = parseFloat(el.value) || 0;
-            if (field === 'name') c.levels[index].name = el.value;
-            if (field === 'description') c.levels[index].description = el.value;
-            if (field === 'color') c.levels[index].color = el.value;
+            if (field === "score")
+              c.levels[index].score = parseFloat(el.value) || 0;
+            if (field === "name") c.levels[index].name = el.value;
+            if (field === "description") c.levels[index].description = el.value;
+            if (field === "color") c.levels[index].color = el.value;
           }
         }
       });
     };
 
-    document.getElementById('btn-mode-platform')?.addEventListener('click', () => {
-      this.rubricMode = 'platform';
-      this._rerenderRubricSection();
-    });
+    document
+      .getElementById("btn-mode-platform")
+      ?.addEventListener("click", () => {
+        this.rubricMode = "platform";
+        this._rerenderRubricSection();
+      });
 
-    document.getElementById('btn-mode-template')?.addEventListener('click', () => {
-      this.rubricMode = 'template';
-      this._rerenderRubricSection();
-    });
+    document
+      .getElementById("btn-mode-template")
+      ?.addEventListener("click", () => {
+        this.rubricMode = "template";
+        this._rerenderRubricSection();
+      });
 
-    document.getElementById('btn-download-tpl')?.addEventListener('click', () => {
-      this._downloadTemplate();
-    });
+    document
+      .getElementById("btn-download-tpl")
+      ?.addEventListener("click", () => {
+        this._downloadTemplate();
+      });
 
-    document.getElementById('btn-mode-back')?.addEventListener('click', () => {
+    document.getElementById("btn-mode-back")?.addEventListener("click", () => {
       this.rubricMode = null;
       this._rerenderRubricSection();
     });
 
-    document.querySelectorAll('.area-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".area-toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
-        const a = this.rubricAreas.find(area => area.id === btn.dataset.area);
+        const a = this.rubricAreas.find((area) => area.id === btn.dataset.area);
         if (a) {
           a.isExpanded = !a.isExpanded;
           this._rerenderRubricSection();
@@ -576,54 +656,62 @@ export default class CreateEvent {
       });
     });
 
-    document.querySelectorAll('.btn-add-criteria').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".btn-add-criteria").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
         this._addCriteria(btn.dataset.area);
       });
     });
 
-    document.querySelectorAll('.btn-rm-crit').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".btn-rm-crit").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
         this._removeCriteria(btn.dataset.area, btn.dataset.crit);
       });
     });
 
-    document.querySelectorAll('.btn-add-lvl').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".btn-add-lvl").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
         this._addLevel(btn.dataset.area, btn.dataset.crit);
       });
     });
 
-    document.querySelectorAll('.btn-rm-lvl').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".btn-rm-lvl").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
-        this._removeLevel(btn.dataset.area, btn.dataset.crit, parseInt(btn.dataset.index));
+        this._removeLevel(
+          btn.dataset.area,
+          btn.dataset.crit,
+          parseInt(btn.dataset.index),
+        );
       });
     });
 
-    document.querySelectorAll('.crit-input[id^="weight-"]').forEach(input => {
-      input.addEventListener('change', () => {
+    document.querySelectorAll('.crit-input[id^="weight-"]').forEach((input) => {
+      input.addEventListener("change", () => {
         saveInputs();
         this._rerenderRubricSection();
       });
     });
 
-    document.querySelectorAll('.lvl-input[data-field="color"]').forEach(input => {
-      input.addEventListener('change', () => {
-        saveInputs();
-        this._rerenderRubricSection();
+    document
+      .querySelectorAll('.lvl-input[data-field="color"]')
+      .forEach((input) => {
+        input.addEventListener("change", () => {
+          saveInputs();
+          this._rerenderRubricSection();
+        });
       });
-    });
 
-    document.querySelectorAll('.lvl-input[data-field="score"]').forEach(input => {
-      input.addEventListener('change', () => {
-        saveInputs();
-        this._rerenderRubricSection();
+    document
+      .querySelectorAll('.lvl-input[data-field="score"]')
+      .forEach((input) => {
+        input.addEventListener("change", () => {
+          saveInputs();
+          this._rerenderRubricSection();
+        });
       });
-    });
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -658,14 +746,14 @@ export default class CreateEvent {
                   <select id="ev-type" class="form-select app-input">
                     <option value="CAPSTONE">Capstone / Integrator</option>
                     <option value="WORKSHOP">Workshop</option>
-                    <option value="EVENT">Social Event</option>
+                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label fw-semibold text-muted small text-uppercase">Route</label>
                   <select id="ev-route" class="form-select app-input">
-                    <option value="BASIC">Basic</option>
-                    <option value="ADVANCED">Advanced</option>
+                    <option value="BASIC">${t("createEvent.basic") ?? "Basic"}</option>
+                    <option value="ADVANCED">${t("createEvent.advanced") ?? "Advanced"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
@@ -722,8 +810,12 @@ export default class CreateEvent {
     this.navbar.attachEventHandlers();
 
     // Setup listeners
-    document.getElementById("ce-submit-btn")?.addEventListener("click", () => this._handleSubmit());
-    document.getElementById("ce-back-btn")?.addEventListener("click", () => this.router.navigate("events"));
+    document
+      .getElementById("ce-submit-btn")
+      ?.addEventListener("click", () => this._handleSubmit());
+    document
+      .getElementById("ce-back-btn")
+      ?.addEventListener("click", () => this.router.navigate("events"));
     this._attachClanHandlers();
 
     // Defer rubric handler binding to ensure DOM is ready
@@ -733,7 +825,6 @@ export default class CreateEvent {
 
     this._loadGithubOrgs();
   }
-
 
   async _loadGithubOrgs() {
     const picker = document.getElementById("ce-github-org-picker");
@@ -764,9 +855,11 @@ export default class CreateEvent {
           Team repositories will be created in this organization.
         </div>`;
 
-      document.getElementById("ev-github-org")?.addEventListener("change", (e) => {
-        this.selectedGithubOrg = e.target.value;
-      });
+      document
+        .getElementById("ev-github-org")
+        ?.addEventListener("change", (e) => {
+          this.selectedGithubOrg = e.target.value;
+        });
     } catch (err) {
       this.githubConnected = false;
       this.githubOrgs = [];
@@ -774,13 +867,17 @@ export default class CreateEvent {
       try {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
-      } catch (_) { }
+      } catch (_) {}
 
-      toast.warning('GitHub required', 'You must connect your GitHub account to create an event.');
+      toast.warning(
+        "GitHub required",
+        "You must connect your GitHub account to create an event.",
+      );
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.title = "Connect GitHub first";
+        submitBtn.title =
+          t("createEvent.connectGithub") ?? "Connect GitHub first";
       }
     }
   }
@@ -790,11 +887,15 @@ export default class CreateEvent {
     if (!btn) return;
     btn.disabled = on;
     btn.innerHTML = on
-      ? `<span class="spinner-border spinner-border-sm me-2"></span> Creating…`
-      : "Create Event";
+      ? `<span class="spinner-border spinner-border-sm me-2"></span> ${t("noTeam.creating") ?? "Creating…"}`
+      : (t("createEvent.createBtn") ?? "Create Event");
   }
 
-  _clearFeedback() { }
-  _showError(msg) { toast.error('Error', msg); }
-  _showSuccess(msg) { toast.success('Success', msg); }
+  _clearFeedback() {}
+  _showError(msg) {
+    toast.error("Error", msg);
+  }
+  _showSuccess(msg) {
+    toast.success("Success", msg);
+  }
 }

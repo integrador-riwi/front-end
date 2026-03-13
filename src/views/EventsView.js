@@ -60,7 +60,7 @@ export default class EventsView {
   }
 
   renderEventCard(event) {
-    const title = event.title || event.name || "Untitled Event";
+    const title = event.title || event.name || t("events.untitled");
     const desc = event.description || "No description provided.";
     const date = event.date || event.start_date || event.createdAt;
     const eventId = event.id;

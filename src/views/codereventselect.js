@@ -37,7 +37,7 @@ export default class CoderEventSelect {
       if (pendingInvitations.length > 0) {
         const inv = pendingInvitations[0];
         toast.info(
-          t("invite.pending") ?? "Pending invitation",
+          t("invite.pendingInvitation") ?? "Pending invitation",
           `You have an invitation to join "${inv.team_name || "a team"}"`,
           {
             duration: 0,
@@ -246,13 +246,13 @@ export default class CoderEventSelect {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
               </svg>
-              <span>${t("ces.upTo") ?? "Up to"} ${event.max_team_size} ${t("ces.perTeam") ?? "per team"}</span>
+              <span>Up to ${event.max_team_size} per team</span>
             </div>`
               : ""
           }
         </div>
         <button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
-          ${isTL ? (t("ces.review") ?? "Review this event") : t("ces.select")}
+          ${isTL ? (t("ces.review") ?? "Review this event") : (t("ces.select") ?? "Join this event")}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>

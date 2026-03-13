@@ -103,7 +103,7 @@ export default class CoderHome {
         const inv = this.pendingInvitations[0];
         toast.info(
           "Pending invitation",
-          `You have an invitation to join "${inv.team_name || 'a team'}"`,
+          `You have an invitation to join "${inv.team_name || "a team"}"`,
           {
             duration: 0,
             dropdown: {
@@ -287,7 +287,7 @@ export default class CoderHome {
   // Main render
   // ─────────────────────────────────────────
   render() {
-    console.log('esta es coder home')
+    console.log("esta es coder home");
     const app = document.getElementById("app");
 
     const content = this.team
@@ -614,8 +614,8 @@ export default class CoderHome {
   _stopPolling() {
     if (this._pollingInterval) {
       clearInterval(this._pollingInterval);
-    this._pollingInterval = null;
-    this.commentsCleanup = null;
+      this._pollingInterval = null;
+      this.commentsCleanup = null;
     }
     this._destroyScrollObserver();
   }
@@ -641,11 +641,11 @@ export default class CoderHome {
         if (relevantTeam) {
           this._stopPolling();
           toast.success(
-            'You have been accepted!',
+            "You have been accepted!",
             `You are now part of team ${relevantTeam.name}`,
             {
               action: {
-                label: 'View team',
+                label: "View team",
                 onClick: async () => {
                   await this.init();
                   this.render();
@@ -671,12 +671,12 @@ export default class CoderHome {
             (i) => !currentIdSet.has(String(i.id_invitation)),
           );
           this.pendingInvitations = newInvitations;
-        // Banner now via Socket - no need to update
-        // this._updateInvitationsBanner();
+          // Banner now via Socket - no need to update
+          // this._updateInvitationsBanner();
           trulyNew.forEach((inv) => {
             toast.info(
               "New invitation",
-              `${inv.invited_by_name ?? "Someone"} invited you to join "${inv.team_name}"`,
+              `${t("common.someone")} invited you to join "${inv.team_name}"`,
               { duration: 5000 },
             );
           });
@@ -741,14 +741,14 @@ export default class CoderHome {
     const dropdownItems = invitations.map((inv) => ({
       id: inv.id_invitation,
       idTeam: inv.id_team,
-      title: inv.team_name || 'Unnamed Team',
-      subtitle: `${inv.event_name || 'No event'} • Invited by: ${inv.invited_by_name || 'Someone'}`,
+      title: inv.team_name || "Unnamed Team",
+      subtitle: `${inv.event_name || "No event"} • Invited by: ${inv.invited_by_name || t("common.someone")}`,
       accept: true,
-      deny: true
+      deny: true,
     }));
 
     toast.info(
-      'Pending invitations',
+      "Pending invitations",
       `You have ${count} unanswered invitation(s)`,
       {
         duration: 0,
@@ -757,37 +757,47 @@ export default class CoderHome {
           onAccept: async (item) => {
             try {
               await acceptInvitation(item.id);
-              toast.success('Accepted!', `You are now part of team "${item.title}"`, {
-                duration: 5000,
-                action: {
-                  label: 'View team',
-                  onClick: async () => {
-                    await this.init();
-                    this.render();
+              toast.success(
+                "Accepted!",
+                `You are now part of team "${item.title}"`,
+                {
+                  duration: 5000,
+                  action: {
+                    label: "View team",
+                    onClick: async () => {
+                      await this.init();
+                      this.render();
+                    },
+                    keepOpen: true,
                   },
-                  keepOpen: true
-                }
-              });
+                },
+              );
               this.pendingInvitations = this.pendingInvitations.filter(
-                i => i.id_invitation !== item.id
+                (i) => i.id_invitation !== item.id,
               );
             } catch (err) {
-              toast.error('Error', err?.message || 'Could not accept the invitation');
+              toast.error(
+                "Error",
+                err?.message || "Could not accept the invitation",
+              );
             }
           },
           onDeny: async (item) => {
             try {
               await rejectInvitation(item.id);
-              toast.info('Declined', `Invitation to "${item.title}" declined`);
+              toast.info("Declined", `Invitation to "${item.title}" declined`);
               this.pendingInvitations = this.pendingInvitations.filter(
-                i => i.id_invitation !== item.id
+                (i) => i.id_invitation !== item.id,
               );
             } catch (err) {
-              toast.error('Error', err?.message || 'Could not reject the invitation');
+              toast.error(
+                "Error",
+                err?.message || "Could not reject the invitation",
+              );
             }
-          }
-        }
-      }
+          },
+        },
+      },
     );
   }
 

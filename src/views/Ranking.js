@@ -292,7 +292,7 @@ export default class Ranking {
               >
                 ${
                   this.publishing
-                    ? `<span class="rk-spinner"></span> Calculando...`
+                    ? `<span class="rk-spinner"></span> ${t("common.loading") ?? "Calculando..."}`
                     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     ${this.rankingData ? (t("ranking.recalculate") ?? "Recalculate ranking") : (t("ranking.publish") ?? "Publish ranking")}
                     ${s.hasIncompleteEvaluations ? warnIcon : ""}`

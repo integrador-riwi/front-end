@@ -1,4 +1,5 @@
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 
 export function renderCoderTeam({
   user,
@@ -12,7 +13,8 @@ export function renderCoderTeam({
   const grade = project?.grade ?? null;
   const dueDate = project?.final_delivery_date ?? "TBD";
   const projectName = project?.name ?? teamName;
-  const projectDesc = project?.description ?? "No description yet.";
+  const projectDesc =
+    project?.description ?? t("noTeam.noDesc") ?? "No description yet.";
   const isSubmitted = !!project?.submitted_at;
 
   // deliverables come flat on the project object, not nested
@@ -192,7 +194,7 @@ export function renderCoderTeam({
                   : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
               }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
-                        placeholder="Share your thoughts..."></textarea>
+                        placeholder="${t("team.commentPlaceholder") ?? "Share your thoughts..."}"></textarea>
             </div>
             <div class="d-flex justify-content-end mb-4 ps-5">
               <button class="ct-btn-post" id="postCommentBtn">Post Comment</button>
@@ -322,28 +324,28 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
     {
       key: "video_url",
       icon: "",
-      label: "Pitch Video",
+      label: t("team.pitchVideo") ?? "Pitch Video",
       url: d?.video_url ?? null,
       color: "var(--color-accent)",
     },
     {
       key: "repo_url",
       icon: "",
-      label: "Repository",
+      label: t("team.repository") ?? "Repository",
       url: repoUrl,
       color: "var(--color-success)",
     },
     {
       key: "preview_photo_url",
       icon: "",
-      label: "Preview Photo",
+      label: t("team.previewPhoto") ?? "Preview Photo",
       url: d?.preview_photo_url ?? null,
       color: "var(--color-warning)",
     },
     {
       key: "deploy_url",
       icon: "",
-      label: "Deploy Link",
+      label: t("team.deployLink") ?? "Deploy Link",
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
     },
@@ -377,7 +379,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               `
                   : `
                 <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
-                  ${item.url ? "Submitted" : "Pending"}
+                  ${item.url ? (t("team.submitted") ?? "Submitted") : (t("team.pending") ?? "Pending")}
                 </span>
               `
               }
@@ -536,7 +538,7 @@ function _renderComment(comment, currentUserId) {
           <div class="ct-reply-box d-none mt-2" id="reply-box-${comment.id_comment}">
             <div class="d-flex gap-2 align-items-start">
               <textarea class="ct-comment-input flex-grow-1" style="min-height:54px;font-size:0.82rem;"
-                        placeholder="Write a reply..." id="reply-input-${comment.id_comment}"></textarea>
+                        placeholder="${t("team.replyPlaceholder") ?? "Write a reply..."}" id="reply-input-${comment.id_comment}"></textarea>
               <div class="d-flex flex-column gap-1">
                 <button class="ct-btn-post ct-btn-post-reply" style="padding:7px 14px;font-size:0.8rem;"
                         data-parent-id="${comment.id_comment}">Send</button>
@@ -593,10 +595,10 @@ function gradeClass(g) {
 }
 
 function gradeLabel(g) {
-  if (g >= 90) return "Excellent";
-  if (g >= 75) return "Good";
-  if (g >= 60) return "Average";
-  return "Below Average";
+  if (g >= 90) return t("team.gradeExcellent") ?? "Excellent";
+  if (g >= 75) return t("team.gradeGood") ?? "Good";
+  if (g >= 60) return t("team.gradeAverage") ?? "Average";
+  return t("team.gradeBelow") ?? "Below Average";
 }
 
 function formatDate(dateStr) {
@@ -624,14 +626,18 @@ export async function loadComments(projectId, user) {
 
   const { getComments, postComment, deleteComment } =
     await import("../services/api.js");
-  
-  const { on, off, joinProject, leaveProject } = await import("../services/socket.js");
+
+  const { on, off, joinProject, leaveProject } =
+    await import("../services/socket.js");
 
   joinProject(projectId);
 
   const socketHandler = (newComment) => {
     const commentProjectId = newComment.id_project || newComment.project_id;
-    if (commentProjectId === projectId && newComment.author_user_id !== currentUserId) {
+    if (
+      commentProjectId === projectId &&
+      newComment.author_user_id !== currentUserId
+    ) {
       refresh();
     }
   };
@@ -681,7 +687,7 @@ export async function loadComments(projectId, user) {
     if (!text) return;
 
     activeBtn.disabled = true;
-    activeBtn.textContent = "Posting...";
+    activeBtn.textContent = t("team.posting") ?? "Posting...";
 
     try {
       await postComment({ projectId, comment: text });
@@ -691,7 +697,7 @@ export async function loadComments(projectId, user) {
       toast.error("Error", err?.message ?? "Could not post comment.");
     } finally {
       activeBtn.disabled = false;
-      activeBtn.textContent = "Post Comment";
+      activeBtn.textContent = t("team.postComment") ?? "Post Comment";
     }
   });
 
@@ -737,7 +743,7 @@ export async function loadComments(projectId, user) {
         if (!text) return;
 
         btn.disabled = true;
-        btn.textContent = "Sending...";
+        btn.textContent = t("team.sending") ?? "Sending...";
 
         try {
           await postComment({
@@ -749,7 +755,7 @@ export async function loadComments(projectId, user) {
         } catch (err) {
           toast.error("Error", err?.message ?? "Could not post reply.");
           btn.disabled = false;
-          btn.textContent = "Send";
+          btn.textContent = t("team.send") ?? "Send";
         }
       });
     });
@@ -758,7 +764,7 @@ export async function loadComments(projectId, user) {
     list.querySelectorAll(".ct-btn-delete-comment").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const commentId = btn.dataset.commentId;
-        if (!confirm("Delete this comment?")) return;
+        if (!confirm(t("team.deleteComment") ?? "Delete this comment?")) return;
 
         btn.disabled = true;
         try {
@@ -1019,20 +1025,24 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      toast.error("Error", "Please rate all rubrics for each member.");
+      toast.error(
+        "Error",
+        t("team.evalIncomplete") ?? "Please rate all rubrics for each member.",
+      );
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Enviando...";
+    submitBtn.textContent = t("team.sending") ?? "Enviando...";
 
     try {
       await submitEvaluations(projectId, evaluations);
       toast.success(
-        "Evaluations sent!",
-        "The evaluations have been saved successfully.",
+        t("team.evalSent") ?? "Evaluations sent!",
+        t("team.evalSavedMsg") ??
+          "The evaluations have been saved successfully.",
       );
-      submitBtn.textContent = "Actualizar Evaluaciones";
+      submitBtn.textContent = t("team.updateEval") ?? "Actualizar Evaluaciones";
     } catch (err) {
       toast.error("Error", err?.message ?? "Error sending evaluations.");
       submitBtn.textContent = "Enviar Evaluaciones";

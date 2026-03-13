@@ -148,7 +148,7 @@ export default class ProjectSettings {
                   <div>
                     <label class="cs-label">Project Name</label>
                     <input type="text" class="cs-input" id="settingProjectName"
-                           value="${escHtml(projectName)}" placeholder="Enter project name"
+                           value="${escHtml(projectName)}" placeholder="${t('settings.namePlaceholder') ?? 'Enter project name'}"
                            readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
                     <p class="cs-hint mt-1">The project name cannot be edited.</p>
                   </div>

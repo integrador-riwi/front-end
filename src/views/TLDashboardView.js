@@ -240,7 +240,7 @@ export default class TLDashboardView {
       ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
       : hasProject
         ? deliverables === totalDeliverables
-          ? `<span class="tld-status-dot tld-dot-complete" title=t("tl.allDeliverables") ?? "All deliverables submitted"></span>`
+          ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
           : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
         : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
 
@@ -369,7 +369,7 @@ export default class TLDashboardView {
       TL_ENGLISH: t("tl.areaEnglish") ?? "English",
       ADMIN: t("tl.areaAdmin") ?? "Admin",
     };
-    return map[this.user?.role] ?? "Team Lead";
+    return map[this.user?.role] ?? t("tl.teamLead") ?? "Team Lead";
   }
 
   // ── Event handlers ────────────────────────────────────────────────────────
