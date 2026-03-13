@@ -3,6 +3,7 @@ import Header from "../components/header/header.js";
 import { getEventRanking } from "../services/api-events.js";
 import { createQR, getQR } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
@@ -44,11 +45,11 @@ export default class QRVoting {
     if (!pill) return;
 
     if (this.qrActive) {
-      pill.textContent = "Active";
+      pill.textContent = t('voting.active');
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
     } else {
-      pill.textContent = "Inactive";
+      pill.textContent = t('voting.inactive');
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
     }
@@ -100,10 +101,10 @@ export default class QRVoting {
 
     <div class="d-flex justify-content-between align-items-center mb-3">
 
-      <h5>Event Ranking</h5>
+      <h5>${t('nav.ranking')}</h5>
 
       <div>
-        Finalists:
+        ${t('events.finalists')}:
         <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
 
           <option value="3">Top 3</option>
@@ -142,7 +143,7 @@ export default class QRVoting {
 
             ${
               this.finalists.find((t) => t.id === team.id)
-                ? `<span class="badge bg-success mt-2">Finalist</span>`
+                ? `<span class="badge bg-success mt-2">${t('events.finalists')}</span>`
                 : ""
             }
 
@@ -159,7 +160,7 @@ export default class QRVoting {
     <div class="text-end mt-4">
 
       <button class="btn btn-success" id="approve-finalists-btn">
-        Approve Finalists
+        ${t('events.finalists')}
       </button>
 
     </div>
@@ -208,7 +209,7 @@ export default class QRVoting {
     return `
       <div class="d-flex justify-content-center align-items-center py-5">
         <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">${t('common.loading')}</span>
         </div>
       </div>
     `;
@@ -224,7 +225,7 @@ export default class QRVoting {
 
   renderFinalistsSection(finalists = []) {
     if (!finalists.length) {
-      return `<div class="text-muted">No teams available</div>`;
+      return `<div class="text-muted">${t('voting.noTeams')}</div>`;
     }
 
     return finalists.map((team) => this.renderTeamCard(team)).join("");
@@ -264,7 +265,7 @@ export default class QRVoting {
 
   renderAvailableTeams(finalists = []) {
     if (!finalists.length) {
-      return `<div class="text-muted">No teams available</div>`;
+      return `<div class="text-muted">${t('voting.noTeams')}</div>`;
     }
 
     const rankedIds = this.ranking.filter(Boolean).map((team) => team.id);
@@ -272,7 +273,7 @@ export default class QRVoting {
     const available = finalists.filter((team) => !rankedIds.includes(team.id));
 
     if (!available.length) {
-      return `<div class="text-muted">All teams have been ranked</div>`;
+      return `<div class="text-muted">${t('voting.allRanked')}</div>`;
     }
 
     return available
@@ -306,10 +307,7 @@ export default class QRVoting {
           this.ranking[emptyIndex] = team;
           this.renderVotingView();
         } else {
-          // Show subtle alert if all slots filled
-          alert(
-            "You have already selected 3 finalists. Remove one to add another.",
-          );
+          alert(t('voting.select3'));
         }
       });
     });
@@ -319,18 +317,18 @@ export default class QRVoting {
       launchBtn.addEventListener("click", () => {
         const selectedTeams = this.ranking.filter(Boolean);
         if (selectedTeams.length < 3) {
-          alert("Please select 1st, 2nd, and 3rd place before launching.");
+          alert(t('voting.select3'));
           return;
         }
 
         launchBtn.disabled = true;
-        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Launching Session...`;
+        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${t('voting.launching')}`;
 
         setTimeout(() => {
           alert(
-            `Voting session launched successfully for: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
+            `${t('voting.launched')}: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
           );
-          launchBtn.innerHTML = "Voting Session Active";
+          launchBtn.innerHTML = t('voting.launched');
           launchBtn.classList.remove("btn-primary-custom");
           launchBtn.classList.add("btn-success");
         }, 1500);
@@ -404,12 +402,11 @@ export default class QRVoting {
 
     generateQrBtn.addEventListener("click", async () => {
       try {
-        // DESACTIVAR QR
         if (this.qrActive) {
           this.qrActive = false;
 
           qrImg.src = "../src/assets/logo.svg";
-          generateQrBtn.innerText = "Generate QR";
+          generateQrBtn.innerText = t('voting.generateQR');
           generateQrBtn.classList.remove("btn-primary-disabled");
           generateQrBtn.classList.add("btn-primary-custom");
 
@@ -417,11 +414,10 @@ export default class QRVoting {
           return;
         }
 
-        // ACTIVAR QR
         generateQrBtn.disabled = true;
         generateQrBtn.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
-        Generating QR...
+        ${t('common.loading')}
       `;
 
         let qrSrc = await getQR(getSelectedEvent());
@@ -437,13 +433,13 @@ export default class QRVoting {
 
         this.qrActive = true;
 
-        generateQrBtn.innerText = "Disable QR";
+        generateQrBtn.innerText = t('voting.disableQR');
         generateQrBtn.classList.remove("btn-primary-custom");
         generateQrBtn.classList.add("btn-primary-disabled");
         this.updateQrStatusPill();
       } catch (err) {
         console.error("QR error:", err);
-        alert("Error generating QR");
+        alert(t('common.error'));
       } finally {
         generateQrBtn.disabled = false;
       }

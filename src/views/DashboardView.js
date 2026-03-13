@@ -4,6 +4,7 @@ import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { icons } from "../utils/icons.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -72,8 +73,8 @@ export default class DashboardView {
     } catch (e) {
       console.error("Dashboard data load error:", e);
       if (!this.metrics) {
-        this.error = e.message ?? "Error loading dashboard data.";
-        toast.error('Error', this.error);
+        this.error = e.message ?? t('common.error');
+        toast.error(t('common.error'), this.error);
       }
     }
     this.loading = false;
@@ -92,7 +93,7 @@ export default class DashboardView {
       return `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: var(--accent);"></div>
-          <p class="text-muted fw-medium">Preparing your insights...</p>
+          <p class="text-muted fw-medium">${t('dashboard.preparingInsights')}</p>
         </div>
       `;
     }
@@ -115,10 +116,10 @@ export default class DashboardView {
             
             <!-- Metric Squares (2x2) -->
             <div class="db-sidebar-metrics-grid flex-shrink-0">
-               ${this._renderMetricCard("Total Teams", totalTeams, "Teams", icons.users())}
-               ${this._renderMetricCard("Submitted", this.metrics?.totalProjects ?? 0, "Active", icons.folder())}
-               ${this._renderMetricCard("Coders", this.metrics?.totalCoders ?? 0, "Total", icons.code())}
-               ${this._renderMetricCard("Evaluated",
+               ${this._renderMetricCard(t('dashboard.totalTeams'), totalTeams, t('dashboard.teams'), icons.users())}
+               ${this._renderMetricCard(t('dashboard.submitted'), this.metrics?.totalProjects ?? 0, t('dashboard.projects'), icons.folder())}
+               ${this._renderMetricCard(t('dashboard.coders'), this.metrics?.totalCoders ?? 0, t('dashboard.coders'), icons.code())}
+               ${this._renderMetricCard(t('dashboard.evaluated'),
                   `${evaluatedTeams}/${totalTeams}`,
                   `${evalPercentage}%`, icons.check(), true, evalPercentage)}
             </div>
@@ -126,8 +127,8 @@ export default class DashboardView {
             <!-- Team Ranking (Secondary - Top 3 Only) -->
             <div class="db-section flex-grow-1 d-flex flex-column">
               <div class="db-section-header">
-                <h3 class="db-section-title" style="font-size: 1rem;">Top 3 Teams</h3>
-                <a href="#" class="db-view-all navigate-ranking" style="font-size: 0.75rem;">View Full</a>
+                <h3 class="db-section-title" style="font-size: 1rem;">${t('dashboard.top3Teams')}</h3>
+                <a href="#" class="db-view-all navigate-ranking" style="font-size: 0.75rem;">${t('dashboard.viewFull')}</a>
               </div>
               <div class="db-widget mt-2 d-flex flex-column justify-content-center flex-grow-1">
                  ${this.ranking.length > 0 ? this.ranking.slice(0, 3).map((team, idx) => `
@@ -141,7 +142,7 @@ export default class DashboardView {
                        </div>
                        <span class="badge" style="background: white; color: var(--navy); border: 1px solid var(--border); padding: 8px 12px;">${team.team_score} pt</span>
                     </div>
-                 `).join('') : '<div class="text-center py-5"><p class="small text-muted mb-0">Ranking processing...</p></div>'}
+                 `).join('') : `<div class="text-center py-5"><p class="small text-muted mb-0">${t('ranking.notAvailable')}</p></div>`}
               </div>
             </div>
 
@@ -153,7 +154,7 @@ export default class DashboardView {
             <!-- Grading Progress - Primary Protagonist -->
             <div class="db-section">
               <div class="db-section-header">
-                <h3 class="db-section-title">Grading Progress by Area</h3>
+                <h3 class="db-section-title">${t('dashboard.gradingProgress')}</h3>
               </div>
               <div class="db-widget">
                 <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -176,25 +177,25 @@ export default class DashboardView {
             <!-- Event Status Overview -->
             <div class="db-section flex-grow-1 d-flex flex-column">
                <div class="db-section-header">
-                  <h3 class="db-section-title">Event Status Overview</h3>
+                  <h3 class="db-section-title">${t('dashboard.eventStatus')}</h3>
                   ${this.status?.deliveryDate ? `<span class="badge rounded-pill bg-light text-muted border px-3 py-2 fw-bold" style="font-size: 0.75rem;">DUE: ${new Date(this.status.deliveryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}
                </div>
                <div class="d-flex flex-column gap-4 py-1 flex-grow-1 justify-content-center">
                   <div class="d-flex justify-content-between align-items-end">
                      <div>
                         <div class="h2 mb-0 fw-bold" style="color: var(--navy);">${evalPercentage}%</div>
-                        <div class="small fw-bold text-muted uppercase mt-1">EVALUATION COMPLETION RATE</div>
+                        <div class="small fw-bold text-muted uppercase mt-1">${t('dashboard.evaluationRate')}</div>
                      </div>
                      <div class="text-end">
                         <div class="h4 mb-0 fw-bold" style="color: var(--accent);">${evaluatedTeams} / ${totalTeams}</div>
-                        <div class="small text-muted">Teams Fully Evaluated</div>
+                        <div class="small text-muted">${t('dashboard.teamsFullyEvaluated')}</div>
                      </div>
                   </div>
                   <div class="db-progress-bar-bg" style="width: 100%; height: 12px; border-radius: 20px;">
                      <div class="db-progress-bar-fill" style="width: ${evalPercentage}%; background: var(--accent); border-radius: 20px;"></div>
                   </div>
                   <div class="mt-2">
-                     <button class="app-btn-primary w-100 py-3 navigate-ranking shadow-sm">Publish Final Results</button>
+                     <button class="app-btn-primary w-100 py-3 navigate-ranking shadow-sm">${t('dashboard.publishResults')}</button>
                   </div>
                </div>
             </div>
@@ -230,7 +231,7 @@ export default class DashboardView {
       <div class="db-progress-item">
         <div class="db-progress-info">
           <span class="db-progress-label">${label}</span>
-          <span class="db-progress-count">${current}<span>/${total} teams</span></span>
+          <span class="db-progress-count">${current}<span>/${total} ${t('dashboard.teams')}</span></span>
         </div>
         <div class="db-progress-bar-bg" style="width: 100%; height: 6px; background: #f0f0f0;">
           <div class="db-progress-bar-fill" style="width: ${percentage}%; background: ${color}"></div>

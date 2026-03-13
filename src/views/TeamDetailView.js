@@ -3,6 +3,7 @@ import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
+import { t } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
 import {
   renderCoderTeam,
@@ -97,7 +98,7 @@ export default class TeamDetailView {
         <div class="container-xl px-3 px-md-4 py-4">
           <div class="bg-white rounded-4 p-5 ct-card-shadow text-center">
             <span class="material-icons-round" style="font-size:2.5rem;color:var(--text-muted);">error_outline</span>
-            <p class="mt-3" style="color:var(--text-muted);">No se pudo cargar el equipo. Intenta de nuevo.</p>
+            <p class="mt-3" style="color:var(--text-muted);">${t('teamsProjects.loadError')}</p>
           </div>
         </div>`;
     }

@@ -1,6 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
 import { getUser, clearSession } from "../utils/auth.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
@@ -46,9 +47,9 @@ export default class Teams {
     <div class="col-12">
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3">
         <div class="spinner-border" role="status" style="width:2.5rem;height:2.5rem;color:var(--color-primary);">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">${t('common.loading')}</span>
         </div>
-        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">Loading teams...</p>
+        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">${t('teamsProjects.loading')}</p>
       </div>
     </div>`;
   }
@@ -59,8 +60,8 @@ export default class Teams {
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3 text-center">
         <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span>
         <div>
-          <p class="app-page-title mb-1" style="font-size:1rem;">No teams yet</p>
-          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">When teams are created, they will appear here.</p>
+          <p class="app-page-title mb-1" style="font-size:1rem;">${t('teamsProjects.noTeams')}</p>
+          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">${t('teamsProjects.noTeamsMsg')}</p>
         </div>
       </div>
     </div>`;
@@ -134,7 +135,7 @@ export default class Teams {
 
       const clickableClass = this.isAdmin ? "td-clickable" : "";
       const dataAttr      = this.isAdmin ? `data-team-id="${team.id_team}"` : "";
-      const adminHint     = this.isAdmin ? `title="Ver detalle del equipo"` : "";
+      const adminHint     = this.isAdmin ? `title="${t('teamsProjects.viewDetail')}"` : "";
 
       const card = `
         <div class="col-12 col-md-6 col-lg-4">
@@ -158,11 +159,11 @@ export default class Teams {
                   ${membersIcons}
                 </div>
                 ${this.isAdmin
-          ? `<span class="td-view-detail-hint">
+           ? `<span class="td-view-detail-hint">
                        <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
-                       Ver detalle
+                       ${t('teamsProjects.viewDetail')}
                      </span>`
-          : ""}
+           : ""}
               </div>
             </div>
           </div>
@@ -218,10 +219,10 @@ export default class Teams {
           <table class="table table-striped table-hover" style="width:100%;">
             <thead>
               <tr>
-                <th style="width:20%;">Leader</th>
-                <th style="width:20%;">Team</th>
-                <th style="width:45%;">Description</th>
-                <th style="width:15%;">Members</th>
+                <th style="width:20%;">${t('teamsProjects.leader')}</th>
+                <th style="width:20%;">${t('teamsProjects.team')}</th>
+                <th style="width:45%;">${t('teamsProjects.desc')}</th>
+                <th style="width:15%;">${t('teamsProjects.members')}</th>
                 ${this.isAdmin ? `<th style="width:10%;"></th>` : ""}
               </tr>
             </thead>
@@ -239,7 +240,7 @@ export default class Teams {
 
       const row = `
         <tr ${this.isAdmin
-          ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="Ver detalle"`
+          ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t('teamsProjects.viewDetail')}"`
           : ""}>
           <td><span style="font-size:0.85rem;">${team.leader_name ?? "—"}</span></td>
           <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
