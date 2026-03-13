@@ -264,6 +264,14 @@ function setupEventListeners() {
   socket.on("comment:new", (data) => {
     console.log("[Socket] New comment:", data);
 
+    toast.info(
+      "New comment",
+      `${data.author_name || 'Someone'} commented on your project`,
+      {
+        duration: 5000,
+      },
+    );
+
     if (eventHandlers["comment:new"]) {
       eventHandlers["comment:new"](data);
     }
