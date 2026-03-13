@@ -163,6 +163,7 @@
 }
 
 .profile-value {
+  width: 50%;
   font-size: 1.05rem;
   color: var(--color-text-main);
   line-height: 1.6;
@@ -276,6 +277,7 @@
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .status-pill {

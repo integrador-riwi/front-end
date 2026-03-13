@@ -10,13 +10,15 @@ import Teams from "../views/TeamsAndProjects.js";
 import Ranking from "../views/Ranking.js";
 import coderHome from "../views/coderHome.js";
 import CoderEventSelect from "../views/codereventselect.js";
-import { getCurrentUser } from "../utils/helpers.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
 import TeamDetailView from "../views/TeamDetailView.js";
+import { getMyProfile, getMyTeams } from "../services/api.js";
+import { getCurrentUser } from "../utils/helpers.js";
 import { i18nReady } from "../utils/i18n.js";
+
 
 await i18nReady;
 
@@ -61,7 +63,8 @@ class App {
   constructor() {
     this.app = document.getElementById("app");
     this.currentView = null;
-    this.user = getCurrentUser();
+    this.user = null;
+    this.hasTeam = false;
     this.currentParams = {};
     this.init();
   }
@@ -95,15 +98,18 @@ class App {
 
     if (githubSuccess === "success" || githubError) {
       window.history.replaceState({}, "", "/");
+
       if (!isAuthenticated()) {
         this.navigate("login");
         return;
       }
+
       this.navigate("profile", {
         githubSuccess: githubSuccess === "success",
         githubUsername: params.get("username"),
         githubError: githubError,
       });
+
       return;
     }
 
@@ -115,16 +121,44 @@ class App {
     this.navigate(this.getHomeRoute());
   }
 
+async checkUserTeam() {
+  try {
+    console.log("CHECK TEAM CALLED");
+    const response = await getMyTeams();
+     console.log("MY TEAMS:", response);
+    const teams = response?.teams || [];
+
+    return teams.length > 0;
+
+  } catch (error) {
+
+    console.log("User has no team");
+
+    return false;
+
+  }
+}
+
+  getAppState() {
+    return {
+      user: this.user,
+      hasTeam: this.hasTeam,
+    };
+  }
+
   navigate(route, params = {}) {
+    // Enforcement layer
     const isAuth = isAuthenticated();
     const user = getCurrentUser();
     const permission = ROUTE_PERMISSIONS[route];
 
+    // 1. Check if route exists in permissions
     if (!permission && route !== "not-found") {
       this.navigate("not-found");
       return;
     }
 
+    // 2. Handle Public vs Private
     if (permission === "PUBLIC") {
       if (isAuth && route === "login") {
         this.navigate(this.getHomeRoute());
@@ -136,6 +170,7 @@ class App {
         return;
       }
 
+      // 3. Role-based check
       if (Array.isArray(permission) && !permission.includes(user?.role)) {
         console.warn(`Access denied for ${user?.role} to ${route}`);
         this.navigate(this.getHomeRoute());
@@ -156,18 +191,23 @@ class App {
       case "login":
         this.currentView = new LoginView(this);
         break;
+
       case "dashboard":
         this.currentView = new DashboardView(this, params);
         break;
+
       case "events":
         this.currentView = new EventsView(this);
         break;
+
       case "events/create":
         this.currentView = new CreateEvent(this);
         break;
+
       case "details":
         this.currentView = new EventDetails(this, params);
         break;
+
       case "projects":
         this.currentView = new Teams(this);
         break;
@@ -184,20 +224,25 @@ class App {
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
         return;
+
       case "coderHome":
         this.currentView = new coderHome(this);
         this.currentView.init();
         return;
+
       case "projectSettings":
         this.currentView = new ProjectSettings(this, params);
         break;
+
       case "profile":
         this.currentView = new ProfileView(this);
         break;
+
       case "tlDashboard":
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
+
       default:
         this.currentView = new NotFoundView(this);
         break;
@@ -207,6 +252,7 @@ class App {
       console.error("No view created for route:", route);
       return;
     }
+
     this.currentView.render();
   }
 }
