@@ -1,5 +1,5 @@
 import "../assets/styles/codereventselect.css";
-import { getActiveEvents } from "../services/api.js";
+import { getActiveEvents, apiFetch, acceptInvitation, rejectInvitation } from "../services/api.js";
 import Navbar from "../components/navbar/navbar.js";
 import { toast } from "../components/Toast/index.js";
 export default class CoderEventSelect {
@@ -21,6 +21,58 @@ export default class CoderEventSelect {
       this.error = "Could not load events. Please try again.";
       toast.error('Error', this.error);
     }
+
+    // Check for pending invitations
+    try {
+      const response = await apiFetch("/teams/my-teams", { method: "GET" });
+      const data = response?.data ?? response;
+      const pendingInvitations = data?.pendingInvitations ?? [];
+
+      if (pendingInvitations.length > 0) {
+        const inv = pendingInvitations[0];
+        toast.info(
+          "Pending invitation",
+          `You have an invitation to join "${inv.team_name || 'a team'}"`,
+          {
+            duration: 0,
+            dropdown: {
+              items: [
+                {
+                  title: inv.team_name || "Team",
+                  subtitle: inv.event_name || "Event",
+                  accept: true,
+                  deny: true,
+                  id: inv.id_invitation,
+                  teamId: inv.id_team,
+                },
+              ],
+              onAccept: async (item) => {
+                toast.remove();
+                try {
+                  await acceptInvitation(item.id);
+                  toast.success("Invitation accepted!", "You joined the team.");
+                  window.location.hash = "#/coder";
+                } catch (err) {
+                  toast.error("Error", err?.message ?? "Could not accept the invitation.");
+                }
+              },
+              onDeny: async (item) => {
+                toast.remove();
+                try {
+                  await rejectInvitation(item.id);
+                  toast.info("Invitation declined", "You rejected the invitation.");
+                } catch (err) {
+                  toast.error("Error", err?.message ?? "Could not reject the invitation.");
+                }
+              },
+            },
+          },
+        );
+      }
+    } catch (e) {
+      console.error("Error checking invitations:", e);
+    }
+
     this.isLoading = false;
     this.render();
     this._attachHandlers();
