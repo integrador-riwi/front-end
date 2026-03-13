@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { getToken } from "../utils/auth.js";
+import { getToken, getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
 import {
   acceptInvitation,
@@ -17,10 +17,21 @@ const SOCKET_URL =
 
 export function initSocket() {
   const token = getToken();
+  const user = getUser();
+  
   if (!token) {
     console.warn("[Socket] No token found, skipping connection");
     return null;
   }
+
+  if (!user || !user.id_user) {
+    console.warn("[Socket] No user found, waiting...");
+    // Retry after a short delay
+    setTimeout(() => initSocket(), 500);
+    return null;
+  }
+
+  console.log("[Socket] Initializing for user:", user.id_user);
 
   // Already connected — nothing to do
   if (socket?.connected) {
