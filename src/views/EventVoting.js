@@ -1,6 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header.js";
-import { getEventById } from "../services/api-events.js";
+import { getEventRanking } from "../services/api-events.js";
 import { createQR, getQR } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
@@ -18,8 +18,10 @@ export default class QRVoting {
     this.event = null;
     this.loading = true;
     this.error = null;
-    this.ranking = [null, null, null]; // 1st, 2nd, 3rd
     this.qrActive = false;
+    this.ranking = [];
+    this.finalists = [];
+    this.finalistsCount = 3;
   }
 
   async generateQR() {
@@ -52,6 +54,10 @@ export default class QRVoting {
     }
   }
 
+  updateFinalists() {
+    this.finalists = this.ranking.slice(0, this.finalistsCount);
+  }
+
   //   async fetchCurrentEvent() {
   //     try {
   //       this.loading = true;
@@ -71,63 +77,119 @@ export default class QRVoting {
   //     }
   //   }
 
-  async fetchCurrentEvent() {
+  async fetchRanking() {
     try {
-      this.loading = true;
+      const eventId = getSelectedEvent();
 
-      //  SI NO HAY EVENT ID → SIMULAMOS
-      if (!this.eventId) {
-        console.warn("No Event ID provided. Using mock event.");
+      const ranking = await getEventRanking(eventId);
 
-        this.event = {
-          id: "mock-1",
-          title: "Demo Final Pitch Event",
-          description: "This is a simulated event for development purposes.",
-          finalists: [
-            {
-              id: "p1",
-              project_name: "EcoTrack",
-              team_name: "Green Innovators",
-            },
-            {
-              id: "p2",
-              project_name: "HealthSync",
-              team_name: "Vital Coders",
-            },
-            {
-              id: "p3",
-              project_name: "EduSmart",
-              team_name: "Future Minds",
-            },
-            {
-              id: "p4",
-              project_name: "EcoTrack",
-              team_name: "Green Innovators",
-            },
-            {
-              id: "p5",
-              project_name: "HealthSync",
-              team_name: "Vital Coders",
-            },
-            {
-              id: "p6",
-              project_name: "EduSmart",
-              team_name: "Future Minds",
-            },
-          ],
-        };
+      this.ranking = ranking?.data || ranking || [];
 
-        return; //
-      }
-
-      const response = await getEventById(this.eventId);
-      this.event = response.data || response;
+      this.updateFinalists();
     } catch (err) {
-      console.error("Failed to fetch event:", err);
-      this.error =
-        err.message || "Error loading event. Please try again later.";
-    } finally {
-      this.loading = false;
+      console.error("Failed to fetch ranking:", err);
+    }
+  }
+
+  renderRankingPanel() {
+    const container = document.getElementById("ranking-container");
+
+    if (!container) return;
+
+    container.innerHTML = `
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+      <h5>Event Ranking</h5>
+
+      <div>
+        Finalists:
+        <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
+
+          <option value="3">Top 3</option>
+          <option value="5">Top 5</option>
+          <option value="8">Top 8</option>
+
+        </select>
+      </div>
+
+    </div>
+
+    <div class="row g-3">
+
+      ${this.ranking
+        .map(
+          (team, index) => `
+      
+        <div class="col-md-4">
+
+          <div class="card p-3 ranking-card">
+
+            <div class="d-flex justify-content-between">
+
+              <div>
+
+                <strong>#${index + 1} ${team.team_name}</strong><br>
+                <small class="text-muted">${team.project_name}</small>
+
+              </div>
+
+              <span class="badge bg-primary">
+                ${team.score ?? "—"}
+              </span>
+
+            </div>
+
+            ${
+              this.finalists.find((t) => t.id === team.id)
+                ? `<span class="badge bg-success mt-2">Finalist</span>`
+                : ""
+            }
+
+          </div>
+
+        </div>
+
+      `,
+        )
+        .join("")}
+
+    </div>
+
+    <div class="text-end mt-4">
+
+      <button class="btn btn-success" id="approve-finalists-btn">
+        Approve Finalists
+      </button>
+
+    </div>
+
+  `;
+
+    this.attachRankingHandlers();
+  }
+
+  attachRankingHandlers() {
+    const select = document.getElementById("finalists-count");
+
+    if (select) {
+      select.value = this.finalistsCount;
+
+      select.addEventListener("change", (e) => {
+        this.finalistsCount = Number(e.target.value);
+
+        this.updateFinalists();
+
+        this.renderRankingPanel();
+      });
+    }
+
+    const approveBtn = document.getElementById("approve-finalists-btn");
+
+    if (approveBtn) {
+      approveBtn.addEventListener("click", () => {
+        this.approveFinalists();
+      });
     }
   }
 
@@ -137,7 +199,6 @@ export default class QRVoting {
 
     if (!slotsContainer || !teamsContainer || !this.event) return;
 
-    slotsContainer.innerHTML = this.renderRankingSlots();
     teamsContainer.innerHTML = this.renderAvailableTeams(this.event.finalists);
 
     this.attachTeamSelection();
@@ -159,38 +220,6 @@ export default class QRVoting {
         ${message}
       </div>
     `;
-  }
-
-  renderRankingSlots() {
-    const labels = [
-      { place: "2nd Place", medal: "SILVER", class: "slot-2 small-slot" },
-      { place: "Winner", medal: "GOLD", class: "slot-1 big-slot" },
-      { place: "3rd Place", medal: "BRONZE", class: "slot-3 small-slot" },
-    ];
-
-    return labels
-      .map((slot, index) => {
-        const team = this.ranking[index];
-
-        return `
-      <div class="col-4">
-        <div class="slot ${slot.class}">
-          ${
-            team
-              ? `
-              <strong>${team.team_name}</strong>
-              <small>${slot.medal}</small>
-            `
-              : `
-              ${index === 1 ? "1" : index === 0 ? "2" : "3"}
-              <br><small>${slot.medal}</small>
-            `
-          }
-        </div>
-      </div>
-    `;
-      })
-      .join("");
   }
 
   renderFinalistsSection(finalists = []) {
@@ -329,7 +358,8 @@ export default class QRVoting {
     this.attachEventHandlers();
     this.updateQrStatusPill();
 
-    await this.fetchCurrentEvent();
+    await this.fetchRanking();
+    this.renderRankingPanel();
 
     if (this.error) return;
 

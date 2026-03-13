@@ -27,8 +27,8 @@ export default class LoginView {
           <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-              sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            From idea to <strong>winner</strong> — organize <strong>events</strong>, 
+            showcase <strong>projects</strong>, and <strong>vote</strong> in real time.
             </p>
             <div class="left-tags d-flex flex-wrap justify-content-center gap-2 mt-4">
               <span class="tag tag-lilac">${t("login.collaborate")}</span>
@@ -74,8 +74,7 @@ export default class LoginView {
               <!-- Password -->
               <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label for="password" class="form-label field-label mb-0">${t("login.password")}</label>
-                  <a href="#" class="forgot-link">${t("login.forgot")}</a>
+                  <label for="password" class="form-label field-label mb-0">Password</label>
                 </div>
                 <div class="input-wrap">
                   <input id="password" type="password" class="form-control custom-input"
