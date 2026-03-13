@@ -3,6 +3,7 @@
 import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
+import { t } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import {
@@ -46,8 +47,8 @@ export default class TLDashboardView {
 
   async _loadTeams() {
     if (!this.selectedEvent?.id) {
-      this.error = "No event selected.";
-      toast.error('Error', this.error);
+      this.error = "No event selected."; // t("tl.noEventSelected");
+      toast.error("Error", this.error);
       this.isLoading = false;
       this._renderList();
       return;
@@ -79,8 +80,8 @@ export default class TLDashboardView {
         }),
       );
     } catch (err) {
-      this.error = "Could not load teams.";
-      toast.error('Error', this.error);
+      this.error = t("tl.loadError") ?? "Could not load teams.";
+      toast.error("Error", this.error);
     }
 
     this.isLoading = false;
@@ -236,12 +237,12 @@ export default class TLDashboardView {
         : "";
 
     const statusDot = isSubmitted
-      ? `<span class="tld-status-dot tld-dot-submitted" title="Submitted — ready for review"></span>`
+      ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
       : hasProject
         ? deliverables === totalDeliverables
-          ? `<span class="tld-status-dot tld-dot-complete" title="All deliverables submitted"></span>`
+          ? `<span class="tld-status-dot tld-dot-complete" title=t("tl.allDeliverables") ?? "All deliverables submitted"></span>`
           : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-        : `<span class="tld-status-dot tld-dot-none" title="No project yet"></span>`;
+        : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
 
     // Button state
     let evalBtnContent, evalBtnDisabled, evalBtnClass;
@@ -279,7 +280,7 @@ export default class TLDashboardView {
             <div class="tld-progress-bar">
               <div class="tld-progress-fill${isSubmitted ? " tld-progress-fill--submitted" : ""}" style="width:${progress}%"></div>
             </div>
-            <span class="tld-progress-label">${isSubmitted ? "Submitted for review" : `${deliverables}/${totalDeliverables} deliverables`}</span>
+            <span class="tld-progress-label">${isSubmitted ? (t("tl.submittedReview") ?? "Submitted for review") : `${deliverables}/${totalDeliverables} deliverables`}</span>
           </div>
         `
             : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">No deliverables</span></div>`
@@ -363,10 +364,10 @@ export default class TLDashboardView {
 
   _roleLabel() {
     const map = {
-      TL_DEVELOPMENT: "Development",
-      TL_SOFT_SKILLS: "Soft Skills",
-      TL_ENGLISH: "English",
-      ADMIN: "Admin",
+      TL_DEVELOPMENT: t("tl.areaDev") ?? "Development",
+      TL_SOFT_SKILLS: t("tl.areaSoft") ?? "Soft Skills",
+      TL_ENGLISH: t("tl.areaEnglish") ?? "English",
+      ADMIN: t("tl.areaAdmin") ?? "Admin",
     };
     return map[this.user?.role] ?? "Team Lead";
   }
