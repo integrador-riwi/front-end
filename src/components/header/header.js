@@ -103,7 +103,7 @@ export default class Header {
   renderCreateEventHeader(layout) {
     return `
     <header class="app-header">
-      <div class="container app-header-inner">
+      <div class="container mw-100 app-header-inner">
         
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           
@@ -126,7 +126,7 @@ export default class Header {
     return `
     <header class="app-header">
       
-      <div class="container app-header-inner">
+      <div class="container mx-0 app-header-inner">
         
         <nav class="app-breadcrumb">
           <ol id="breadcrumb" class="breadcrumb mb-2"></ol>

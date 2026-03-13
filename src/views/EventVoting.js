@@ -9,35 +9,44 @@ import "../assets/styles/qr-voting.css";
 import { getSelectedEvent } from "../utils/helpers.js";
 
 export default class QRVoting {
-  constructor(router, params = {}) {
+  constructor(router) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
-    this.eventId = params.eventId || null;
-    this.event = null;
-    this.loading = true;
-    this.error = null;
-    this.qrActive = false;
+
     this.ranking = [];
     this.finalists = [];
     this.finalistsCount = 3;
+
+    this.qrActive = false;
   }
 
-  async generateQR() {
+  /* -------------------------- RANKING -------------------------- */
+
+  async fetchRanking() {
     try {
-      const qrSection = document.getElementById("qr");
+      const eventId = getSelectedEvent();
 
-      const qrUrl = await createQR(
-        getSelectedEvent(),
-        "2026-03-27T24:00:00.000Z",
-      );
+      const response = await getEventRanking(eventId);
 
-      qrSection.src = qrUrl;
+      console.log("Ranking API response:", response);
+
+      this.ranking = response?.data?.ranking || [];
+      console.log("Ranking array:", this.ranking);
+
+
+      this.updateFinalists();
     } catch (err) {
-      console.error("Failed QR generation:", err);
+      console.error("Failed to fetch ranking:", err);
     }
   }
+
+  updateFinalists() {
+    this.finalists = this.ranking.slice(0, this.finalistsCount);
+  }
+
+  /* -------------------------- QR -------------------------- */
 
   updateQrStatusPill() {
     const pill = document.getElementById("qr-status-pill");
@@ -54,24 +63,61 @@ export default class QRVoting {
     }
   }
 
-  updateFinalists() {
-    this.finalists = this.ranking.slice(0, this.finalistsCount);
+  async handleQRButton() {
+    const btn = document.getElementById("generate-qr-btn");
+    const qrImg = document.getElementById("qr");
+
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+      try {
+        if (this.qrActive) {
+          this.qrActive = false;
+
+          qrImg.src = "../src/assets/logo.svg";
+
+          btn.innerText = "Generate QR";
+          btn.classList.remove("btn-primary-disabled");
+          btn.classList.add("btn-primary-custom");
+
+          this.updateQrStatusPill();
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Generating QR...
+        `;
+
+        let qrSrc = await getQR(getSelectedEvent());
+
+        if (!qrSrc) {
+          qrSrc = await createQR(
+            getSelectedEvent(),
+            "2026-03-27T24:00:00.000Z"
+          );
+        }
+
+        qrImg.src = qrSrc;
+
+        this.qrActive = true;
+
+        btn.innerText = "Disable QR";
+        btn.classList.remove("btn-primary-custom");
+        btn.classList.add("btn-primary-disabled");
+
+        this.updateQrStatusPill();
+      } catch (err) {
+        console.error("QR error:", err);
+        alert("Error generating QR");
+      } finally {
+        btn.disabled = false;
+      }
+    });
   }
 
-async fetchRanking() {
-  try {
-    const eventId = getSelectedEvent();
-
-    const ranking = await getEventRanking(eventId);
-
-    this.ranking = ranking?.data || ranking || [];
-
-    this.updateFinalists();
-
-  } catch (err) {
-    console.error("Failed to fetch ranking:", err);
-  }
-}
+  /* -------------------------- RENDER RANKING -------------------------- */
 
   renderRankingPanel() {
     const container = document.getElementById("ranking-container");
@@ -80,73 +126,74 @@ async fetchRanking() {
 
     container.innerHTML = `
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
 
-      <h5>Event Ranking</h5>
+        <h5>Event Ranking</h5>
 
-      <div>
-        Finalists:
-        <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
+        <div>
+          Finalists:
+          <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
 
-          <option value="3">Top 3</option>
-          <option value="5">Top 5</option>
-          <option value="8">Top 8</option>
+            <option value="3">Top 3</option>
+            <option value="5">Top 5</option>
+            <option value="8">Top 8</option>
 
-        </select>
+          </select>
+        </div>
+
       </div>
 
-    </div>
+      <div class="row g-3">
 
-    <div class="row g-3">
+        ${this.ranking
+          .map(
+            (team, index) => `
+          
+          <div class="col-md-4">
 
-      ${this.ranking
-        .map(
-          (team, index) => `
-      
-        <div class="col-md-4">
+            <div class="card p-3 ranking-card">
 
-          <div class="card p-3 ranking-card">
+              <div class="d-flex justify-content-between">
 
-            <div class="d-flex justify-content-between">
+                <div>
 
-              <div>
+                  <strong>#${index + 1} ${team.team_name}</strong><br>
 
-                <strong>#${index + 1} ${team.team_name}</strong><br>
-                <small class="text-muted">${team.project_name}</small>
+                  <small class="text-muted">
+                    ${team.project_name}
+                  </small>
+
+                </div>
+
+                <span class="badge bg-primary">
+                  ${team.score ?? "—"}
+                </span>
 
               </div>
 
-              <span class="badge bg-primary">
-                ${team.score ?? "—"}
-              </span>
+              ${
+                this.finalists.find((t) => t.id_team === team.id_team)
+                  ? `<span class="badge bg-success mt-2">Finalist</span>`
+                  : ""
+              }
 
             </div>
 
-            ${
-              this.finalists.find((t) => t.id === team.id)
-                ? `<span class="badge bg-success mt-2">Finalist</span>`
-                : ""
-            }
-
           </div>
+        `
+          )
+          .join("")}
 
-        </div>
+      </div>
 
-      `,
-        )
-        .join("")}
+      <div class="text-end mt-4">
 
-    </div>
+        <button class="btn btn-success" id="approve-finalists-btn">
+          Approve Finalists
+        </button>
 
-    <div class="text-end mt-4">
-
-      <button class="btn btn-success" id="approve-finalists-btn">
-        Approve Finalists
-      </button>
-
-    </div>
-
-  `;
+      </div>
+    `;
 
     this.attachRankingHandlers();
   }
@@ -170,265 +217,39 @@ async fetchRanking() {
 
     if (approveBtn) {
       approveBtn.addEventListener("click", () => {
-        this.approveFinalists();
+        console.log("Finalists approved:", this.finalists);
+
+        alert("Finalists approved successfully!");
       });
     }
   }
 
-  renderVotingView() {
-    const slotsContainer = document.getElementById("ranking-slots");
-    const teamsContainer = document.getElementById("available-teams");
-
-    if (!slotsContainer || !teamsContainer || !this.event) return;
-
-    teamsContainer.innerHTML = this.renderAvailableTeams(this.event.finalists);
-
-    this.attachTeamSelection();
-  }
-
-  renderLoading() {
-    return `
-      <div class="d-flex justify-content-center align-items-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    `;
-  }
-
-  renderError(message) {
-    return `
-      <div class="alert alert-danger rounded-4 mt-4" role="alert">
-        ${message}
-      </div>
-    `;
-  }
-
-  renderFinalistsSection(finalists = []) {
-    if (!finalists.length) {
-      return `<div class="text-muted">No teams available</div>`;
-    }
-
-    return finalists.map((team) => this.renderTeamCard(team)).join("");
-  }
-
-  renderTeamCard(team, { selectable = false } = {}) {
-    if (!team) return "";
-
-    const initials = (team.team_name || "NA")
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    return `
-    <div class="col-md-6 col-lg-4">
-      <div class="teamF-card ${selectable ? "selectable-team" : ""} 
-           d-flex flex-column align-items-center"
-           ${selectable ? `data-id="${team.id}"` : ""}>
-           
-        <div class="team-avatar">
-          ${initials}
-        </div>
-
-        <div class="mt-2 text-center">
-          <strong>${team.team_name || "Unnamed Team"}</strong><br>
-          <small class="text-muted">
-            ${team.project_name || "Project"}
-          </small>
-        </div>
-
-      </div>
-    </div>
-  `;
-  }
-
-  renderAvailableTeams(finalists = []) {
-    if (!finalists.length) {
-      return `<div class="text-muted">No teams available</div>`;
-    }
-
-    const rankedIds = this.ranking.filter(Boolean).map((team) => team.id);
-
-    const available = finalists.filter((team) => !rankedIds.includes(team.id));
-
-    if (!available.length) {
-      return `<div class="text-muted">All teams have been ranked</div>`;
-    }
-
-    return available
-      .map((team) => this.renderTeamCard(team, { selectable: true }))
-      .join("");
-  }
-
-  attachTeamSelection() {
-    document.querySelectorAll(".selectable-team").forEach((card) => {
-      card.addEventListener("click", (e) => {
-        const id = e.currentTarget.dataset.id;
-        const team = this.event.finalists.find((t) => t.id == id);
-
-        if (!team) return;
-
-        // Toggle logic: if already ranked, remove it
-        const rankedIndex = this.ranking.findIndex((t) => t?.id === team.id);
-        if (rankedIndex !== -1) {
-          this.ranking[rankedIndex] = null;
-          this.renderVotingView();
-          return;
-        }
-
-        // Add logic: fill first available slot in 2-1-3 order
-        const fillOrder = [1, 0, 2];
-        const emptyIndex = fillOrder.find(
-          (index) => this.ranking[index] === null,
-        );
-
-        if (emptyIndex !== undefined) {
-          this.ranking[emptyIndex] = team;
-          this.renderVotingView();
-        } else {
-          // Show subtle alert if all slots filled
-          alert(
-            "You have already selected 3 finalists. Remove one to add another.",
-          );
-        }
-      });
-    });
-
-    const launchBtn = document.querySelector(".btn-primary-custom.shadow");
-    if (launchBtn) {
-      launchBtn.addEventListener("click", () => {
-        const selectedTeams = this.ranking.filter(Boolean);
-        if (selectedTeams.length < 3) {
-          alert("Please select 1st, 2nd, and 3rd place before launching.");
-          return;
-        }
-
-        launchBtn.disabled = true;
-        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Launching Session...`;
-
-        setTimeout(() => {
-          alert(
-            `Voting session launched successfully for: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
-          );
-          launchBtn.innerHTML = "Voting Session Active";
-          launchBtn.classList.remove("btn-primary-custom");
-          launchBtn.classList.add("btn-success");
-        }, 1500);
-      });
-    }
-  }
+  /* -------------------------- MAIN RENDER -------------------------- */
 
   async render() {
     const app = document.getElementById("app");
 
     const template = await fetch("../../pages/admin_qr.html").then((r) =>
-      r.text(),
+      r.text()
     );
 
     app.innerHTML = `
-    ${this.navbar.render()}
-    ${this.header.render()}
-    <main class="dashboard-main">
-      ${template}
-    </main>
-  `;
+      ${this.navbar.render()}
+      ${this.header.render()}
+      <main class="dashboard-main">
+        ${template}
+      </main>
+    `;
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
-    this.attachEventHandlers();
-    this.updateQrStatusPill();
 
     await this.fetchRanking();
+
     this.renderRankingPanel();
 
-    if (this.error) return;
+    this.handleQRButton();
 
-    const finalistsContainer = document.getElementById("finalists-container");
-
-    if (!finalistsContainer) {
-      console.error("Finalists container not found");
-      return;
-    }
-
-    this.renderVotingView();
-
-    const availableTeamsContainer = document.getElementById("available-teams");
-
-    if (!availableTeamsContainer) {
-      console.error("Available teams container not found");
-      return;
-    }
-
-    availableTeamsContainer.innerHTML = this.renderAvailableTeams(
-      this.event?.finalists || [],
-    );
-
-    this.attachTeamSelection(); // Re-attach handlers after full render
-  }
-
-  attachEventHandlers() {
-    const generateQrBtn = document.getElementById("generate-qr-btn");
-    const qrImg = document.getElementById("qr");
-
-    document.querySelectorAll(".view-project-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const id = e.currentTarget.dataset.id;
-
-        if (id) {
-          this.router.navigate(`/projects/${id}`);
-        }
-      });
-    });
-
-    if (!generateQrBtn) return;
-
-    generateQrBtn.addEventListener("click", async () => {
-      try {
-        // DESACTIVAR QR
-        if (this.qrActive) {
-          this.qrActive = false;
-
-          qrImg.src = "../src/assets/logo.svg";
-          generateQrBtn.innerText = "Generate QR";
-          generateQrBtn.classList.remove("btn-primary-disabled");
-          generateQrBtn.classList.add("btn-primary-custom");
-
-          this.updateQrStatusPill();
-          return;
-        }
-
-        // ACTIVAR QR
-        generateQrBtn.disabled = true;
-        generateQrBtn.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Generating QR...
-      `;
-
-        let qrSrc = await getQR(getSelectedEvent());
-
-        if (!qrSrc) {
-          qrSrc = await createQR(
-            getSelectedEvent(),
-            "2026-03-27T24:00:00.000Z",
-          );
-        }
-
-        qrImg.src = qrSrc;
-
-        this.qrActive = true;
-
-        generateQrBtn.innerText = "Disable QR";
-        generateQrBtn.classList.remove("btn-primary-custom");
-        generateQrBtn.classList.add("btn-primary-disabled");
-        this.updateQrStatusPill();
-      } catch (err) {
-        console.error("QR error:", err);
-        alert("Error generating QR");
-      } finally {
-        generateQrBtn.disabled = false;
-      }
-    });
+    this.updateQrStatusPill();
   }
 }
