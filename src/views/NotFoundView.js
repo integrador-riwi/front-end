@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import "../assets/styles/components.css";
 
 export default class NotFoundView {

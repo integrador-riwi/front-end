@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getEventRanking } from "../services/api-events.js";
 import { createQR, getQR } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
