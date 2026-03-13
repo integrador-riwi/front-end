@@ -37,27 +37,6 @@ export function renderCoderTeam({
 
           <!-- Project hero -->
           <div class="ct-hero-card rounded-4 p-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              ${
-                selectedEvent
-                  ? `
-              <div class="event-context-badge event-context-badge--sm" id="eventBadgeBack">
-                <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                <svg class="event-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span>${selectedEvent.title ?? selectedEvent.event_name ?? "Event"}</span>
-              </div>
-              `
-                  : ""
-              }
-            </div>
-
             <h1 class="ct-hero-title mb-1">${projectName}</h1>
             <p class="ct-hero-tagline mb-0">${projectDesc}</p>
 
