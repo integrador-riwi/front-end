@@ -58,25 +58,6 @@ export default class QRVoting {
     this.finalists = this.ranking.slice(0, this.finalistsCount);
   }
 
-  //   async fetchCurrentEvent() {
-  //     try {
-  //       this.loading = true;
-
-  //       if (!this.eventId) {
-  //         throw new Error('Event ID not provided');
-  //       }
-
-  //       const response = await getEventById(this.eventId);
-  //       this.event = response.data || response;
-
-  //     } catch (err) {
-  //       console.error("Failed to fetch event:", err);
-  //       this.error = err.message || "Error loading event. Please try again later.";
-  //     } finally {
-  //       this.loading = false;
-  //     }
-  //   }
-
   async fetchRanking() {
     try {
       const eventId = getSelectedEvent();

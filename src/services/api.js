@@ -91,6 +91,20 @@ export async function getTeamsByEvent(eventId) {
   return response.data ?? response;
 }
 
+export async function getEventById(eventId) {
+  const response = await apiFetch(`/events/${eventId}`, 
+    {method: 'GET'});
+
+    return response.data
+} 
+
+export async function submitVote(data) {
+  return apiFetch("/api/votes", {
+    method: "POST",
+    body: { data },
+  });
+}
+
 export async function createTeam(teamData) {
   const payload =
     typeof teamData === "string" ? { name: teamData } : { ...teamData };

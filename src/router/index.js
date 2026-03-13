@@ -17,6 +17,7 @@ import TLDashboardView from "../views/TLDashboardView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyProfile, getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
+import PublicVotingPage from "../views/PublicVotingPage.js";
 import {
   i18nReady,
   t,
@@ -76,7 +77,7 @@ const ROUTE_PERMISSIONS = {
   "events/create": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
   projects: ["ADMIN", "STAFF", "CODER"],
-  teamDetail: ["ADMIN"],                // ← NUEVO
+  teamDetail: ["ADMIN"], // ← NUEVO
   ranking: ["ADMIN", "STAFF"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -97,6 +98,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
+  vote: "PUBLIC",
 };
 
 class App {
@@ -161,23 +163,20 @@ class App {
     this.navigate(this.getHomeRoute());
   }
 
-async checkUserTeam() {
-  try {
-    console.log("CHECK TEAM CALLED");
-    const response = await getMyTeams();
-     console.log("MY TEAMS:", response);
-    const teams = response?.teams || [];
+  async checkUserTeam() {
+    try {
+      console.log("CHECK TEAM CALLED");
+      const response = await getMyTeams();
+      console.log("MY TEAMS:", response);
+      const teams = response?.teams || [];
 
-    return teams.length > 0;
+      return teams.length > 0;
+    } catch (error) {
+      console.log("User has no team");
 
-  } catch (error) {
-
-    console.log("User has no team");
-
-    return false;
-
+      return false;
+    }
   }
-}
 
   getAppState() {
     return {
@@ -282,6 +281,9 @@ async checkUserTeam() {
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
+      case "vote":
+        this.currentView = new PublicVotingPage(this, params);
+        break;
 
       default:
         this.currentView = new NotFoundView(this);
