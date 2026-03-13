@@ -1,17 +1,18 @@
 import { icons } from "../../utils/icons.js";
 import { t } from "../../utils/i18n.js";
 
-const getTLBaseLinks = () => [
+// Define constant arrays for navigation links (using t() for internationalization)
+const TL_BASE_LINKS = [
   { label: t("nav.teamsProjects"), route: "tlDashboard", icon: "edit" },
   { label: t("nav.events"), route: "coderEventSelect", icon: "calendar" },
 ];
 
-const getAdminBaseLinks = () => [
+const ADMIN_BASE_LINKS = [
   { label: t("nav.events"), route: "events", icon: "calendar" },
   { label: t("nav.newEvent"), route: "events/create", icon: "plus" },
 ];
 
-const getAdminEventLinks = () => [
+const ADMIN_EVENT_LINKS = [
   { label: t("nav.backToEvents"), route: "events", icon: "calendar" },
   { label: t("nav.metrics"), route: "dashboard", icon: "metrics" },
   { label: t("nav.projects"), route: "projects", icon: "globe" },
@@ -58,7 +59,7 @@ export const getNavLinks = (role, hasTeam) => {
 
   if (role === "ADMIN") {
     const eventId = localStorage.getItem("currentEventId");
-    return eventId ? getAdminEventLinks() : getAdminBaseLinks();
+    return eventId ? ADMIN_EVENT_LINKS : ADMIN_BASE_LINKS;
   }
 
   if (role === "CODER") {
@@ -70,7 +71,7 @@ export const getNavLinks = (role, hasTeam) => {
   }
 
   if (["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"].includes(role)) {
-    return getTLBaseLinks();
+    return TL_BASE_LINKS;
   }
 
   return NAV_LINKS_BY_ROLE[role] ?? [];
