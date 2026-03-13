@@ -275,7 +275,10 @@ export default class CoderHome {
           const eventId = this.team?.id_event ?? this.selectedEvent?.id ?? null;
           setTimeout(() => {
             loadProjectBrief();
-            if (projectId) loadComments(projectId, this.user);
+            if (projectId) {
+              if (this.commentsCleanup) this.commentsCleanup();
+              this.commentsCleanup = loadComments(projectId, this.user);
+            }
             if (projectId) initDeliverables(projectId);
             if (
               projectId &&
@@ -583,7 +586,8 @@ export default class CoderHome {
   _stopPolling() {
     if (this._pollingInterval) {
       clearInterval(this._pollingInterval);
-      this._pollingInterval = null;
+    this._pollingInterval = null;
+    this.commentsCleanup = null;
     }
     this._destroyScrollObserver();
   }

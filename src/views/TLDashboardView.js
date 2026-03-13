@@ -35,6 +35,7 @@ export default class TLDashboardView {
 
     // Detail mode — when a TL clicks "Evaluate" on a team
     this.detailTeam = null;
+    this.commentsCleanup = null;
   }
 
   async init() {
@@ -322,7 +323,10 @@ export default class TLDashboardView {
 
     setTimeout(() => {
       loadProjectBrief();
-      if (projectId) loadComments(projectId, this.user);
+      if (projectId) {
+        if (this.commentsCleanup) this.commentsCleanup();
+        this.commentsCleanup = loadComments(projectId, this.user);
+      }
       if (projectId && eventId && isTL) {
         loadEvaluationPanel({
           projectId,

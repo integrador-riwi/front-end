@@ -17,6 +17,7 @@ export default class TeamDetailView {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.teamId = params.teamId;
+    this.commentsCleanup = null;
   }
 
   _isAdmin() {
@@ -93,7 +94,8 @@ export default class TeamDetailView {
 
       setTimeout(() => {
         if (projectId) {
-          loadComments(projectId, this.user);
+          if (this.commentsCleanup) this.commentsCleanup();
+          this.commentsCleanup = loadComments(projectId, this.user);
           initDeliverables(projectId);
         }
       }, 0);
