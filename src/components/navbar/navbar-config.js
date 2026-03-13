@@ -20,6 +20,16 @@ const ADMIN_EVENT_LINKS = [
   { label: "Finalists", route: "finalists", icon: "trophy" },
 ];
 
+const CODER_NO_TEAM_LINKS = [
+  { label: "Events", route: "coderEventSelect", icon: "calendar" },
+];
+
+const CODER_TEAM_LINKS = [
+  { label: "My Project", route: "coderHome", icon: "globe" },
+  { label: "Teams & Projects", route: "projects", icon: "bulb" },
+  { label: "Events", route: "coderEventSelect", icon: "calendar" },
+];
+
 export const NAV_LINKS_BY_ROLE = {
   // ADMIN: [
   //   { label: "Events", route: "events", icon: "calendar" },
@@ -36,13 +46,14 @@ export const NAV_LINKS_BY_ROLE = {
   TL_DEVELOPMENT: TL_BASE_LINKS,
   TL_SOFT_SKILLS: TL_BASE_LINKS,
   TL_ENGLISH: TL_BASE_LINKS,
-  CODER: [
-    { label: "My Project", route: "coderHome", icon: "globe" },
-    { label: "Teams & Projects", route: "projects", icon: "bulb" },
-    // { label: "My Grades", route: "my-grades", icon: "bulb" },
-    // { label: "Events", route: "events", icon: "calendar" },
-    // { label: "Project Settings", route: "projectSettings", icon: "calendar" },
-  ],
+  CODER: CODER_NO_TEAM_LINKS,
+  // CODER: [
+  //   { label: "My Project", route: "coderHome", icon: "globe" },
+  //   { label: "Teams & Projects", route: "projects", icon: "bulb" },
+  //   // { label: "My Grades", route: "my-grades", icon: "bulb" },
+  //   // { label: "Events", route: "events", icon: "calendar" },
+  //   // { label: "Project Settings", route: "projectSettings", icon: "calendar" },
+  // ],
   STAFF: [
     { label: "Dashboard", route: "dashboard", icon: "calendar" },
     { label: "Events", route: "events", icon: "calendar" },
@@ -60,7 +71,9 @@ export const ROLE_LABELS = {
   STAFF: "Staff",
 };
 
-export const getNavLinks = (role) => {
+export const getNavLinks = (role, hasTeam) => {
+  console.log("getNavLinks", role, hasTeam);
+
   if (role === "ADMIN") {
     const eventId = localStorage.getItem("currentEventId");
 
@@ -69,6 +82,16 @@ export const getNavLinks = (role) => {
     }
 
     return ADMIN_BASE_LINKS;
+  }
+
+  if (role === "CODER") {
+
+    if (!hasTeam) {
+      console.log("CODER_NO_TEAM_LINKS:", CODER_NO_TEAM_LINKS);
+      return CODER_NO_TEAM_LINKS;
+    }
+
+    return CODER_TEAM_LINKS;
   }
 
   return NAV_LINKS_BY_ROLE[role] ?? [];

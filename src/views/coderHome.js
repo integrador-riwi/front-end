@@ -287,6 +287,7 @@ export default class CoderHome {
   // Main render
   // ─────────────────────────────────────────
   render() {
+    console.log('esta es coder home')
     const app = document.getElementById("app");
 
     const content = this.team
@@ -626,6 +627,7 @@ export default class CoderHome {
 
     try {
       // Coder sin equipo: chequear invitaciones nuevas Y si fue aceptado en un team
+      console.log("POLLING CHECK RUNNING");
       if (!this.team) {
         const response = await apiFetch("/teams/my-teams", { method: "GET" });
         const data = response?.data ?? response;
