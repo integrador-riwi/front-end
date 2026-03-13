@@ -1,5 +1,6 @@
 import "../assets/styles/voting.css";
-import { getEventById, getEventRanking, submitVote } from "../services/api.js";
+import { getEventById, submitVote } from "../services/api.js";
+import { getEventRanking } from "../services/api-events.js";
 
 export default class PublicVotingPage {
 constructor(app, params) {

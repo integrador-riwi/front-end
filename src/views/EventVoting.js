@@ -58,19 +58,20 @@ export default class QRVoting {
     this.finalists = this.ranking.slice(0, this.finalistsCount);
   }
 
-  async fetchRanking() {
-    try {
-      const eventId = getSelectedEvent();
+async fetchRanking() {
+  try {
+    const eventId = getSelectedEvent();
 
-      const ranking = await getEventRanking(eventId);
+    const ranking = await getEventRanking(eventId);
 
-      this.ranking = ranking?.data || ranking || [];
+    this.ranking = ranking?.data || ranking || [];
 
-      this.updateFinalists();
-    } catch (err) {
-      console.error("Failed to fetch ranking:", err);
-    }
+    this.updateFinalists();
+
+  } catch (err) {
+    console.error("Failed to fetch ranking:", err);
   }
+}
 
   renderRankingPanel() {
     const container = document.getElementById("ranking-container");
