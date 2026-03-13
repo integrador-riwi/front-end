@@ -60,6 +60,8 @@ export function initSocket() {
     reconnectionDelay: 1000,
   });
 
+  console.log("[Socket] Attempting to connect to:", SOCKET_URL);
+
   socket.on("connect", () => {
     console.log("[Socket] Connected:", socket.id, "User ID:", socket.user?.id_user);
   });
