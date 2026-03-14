@@ -918,11 +918,71 @@ export async function loadEvaluationPanel({
     totalExpected > 0 && existingEvals.length >= totalExpected;
 
   if (alreadyEvaluated) {
+    // Build a read-only summary of what was graded
+    const summaryHtml = evaluableMembers
+      .map((member) => {
+        const initial = member.name?.charAt(0)?.toUpperCase() ?? "?";
+        const avatarHtml = member.github_avatar_url
+          ? `<img src="${member.github_avatar_url}" alt="${member.name}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+          : `<div class="ct-avatar-sm flex-shrink-0" style="width:32px;height:32px;font-size:0.8rem;">${initial}</div>`;
+
+        const rubricsHtml = rubrics
+          .map((rubric) => {
+            const key = `${rubric.id_rubric}_${member.id_user}`;
+            const ev = existingMap[key];
+            const scorePct = ev?.score ?? null;
+
+            // Color bar based on score
+            const barColor =
+              scorePct >= 75
+                ? "#22c55e"
+                : scorePct >= 50
+                  ? "#f59e0b"
+                  : scorePct !== null
+                    ? "#ef4444"
+                    : "#cbd5e1";
+
+            return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:0.78rem;color:var(--text-muted);font-weight:500;">
+                ${rubric.name}
+                <span style="opacity:0.55;">(${rubric.area} · ${rubric.weight})</span>
+              </span>
+              <span style="font-size:0.82rem;font-weight:700;color:${barColor};">
+                ${scorePct !== null ? `${scorePct} pts` : "—"}
+              </span>
+            </div>
+            <div style="height:5px;border-radius:99px;background:#e2e8f0;overflow:hidden;">
+              <div style="height:100%;width:${scorePct ?? 0}%;background:${barColor};border-radius:99px;transition:width 0.4s;"></div>
+            </div>
+            ${ev?.feedback ? `<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;font-style:italic;">"${ev.feedback}"</p>` : ""}
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            ${avatarHtml}
+            <div>
+              <p style="margin:0;font-weight:600;font-size:0.875rem;">${member.name}</p>
+              <p style="margin:0;font-size:0.75rem;color:var(--text-muted);">${member.team_role ?? "Member"}</p>
+            </div>
+          </div>
+          ${rubricsHtml}
+        </div>
+      `;
+      })
+      .join("");
+
     container.innerHTML = `
-      <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:0.75rem;color:#15803d;font-size:0.875rem;font-weight:500;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:10px;padding:0.875rem 1rem;display:flex;align-items:center;gap:0.65rem;color:#15803d;font-size:0.82rem;font-weight:600;margin-bottom:1.25rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         ${t("team.evalAlreadySent")}
       </div>
+      <div>${summaryHtml}</div>
     `;
     submitBtn.classList.add("d-none");
     return;

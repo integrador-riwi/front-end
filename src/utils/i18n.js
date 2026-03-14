@@ -181,7 +181,7 @@ const resources = {
         postComment: "Publicar Comentario",
         settings: "Info & Ajustes del Proyecto",
         evaluate: "Evaluar Equipo",
-        open: "Abrir",
+        reviewEval: "Ver Evaluación",
         pitchVideo: "Video Pitch",
         repository: "Repositorio",
         previewPhoto: "Foto de Vista Previa",
@@ -363,9 +363,8 @@ const resources = {
         noTeamsFound: "No se encontraron equipos",
         membersCount: "miembro(s)",
         notSubmitted: "No enviado",
+        alreadyEvaluated: "Ya evaluado",
       },
-
-      // ── Teams & Projects ──────────────────────────────────
       teamsProjects: {
         clan: "Clan",
         project: "Proyecto",
@@ -716,7 +715,7 @@ const resources = {
         postComment: "Post Comment",
         settings: "Project Info & Settings",
         evaluate: "Evaluate Team",
-        open: "Open",
+        reviewEval: "View Evaluation",
         pitchVideo: "Pitch Video",
         repository: "Repository",
         previewPhoto: "Preview Photo",
@@ -893,6 +892,7 @@ const resources = {
         noTeamsFound: "No teams found",
         membersCount: "member(s)",
         notSubmitted: "Not submitted yet",
+        alreadyEvaluated: "Already evaluated",
       },
 
       teamsProjects: {

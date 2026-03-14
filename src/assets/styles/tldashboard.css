@@ -437,3 +437,29 @@
   background: var(--color-primary-dark);
   transform: translateY(-1px);
 }
+
+/* "Ver Evaluación" — already reviewed state */
+.tld-eval-btn--reviewed {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+  box-shadow: none;
+}
+
+.tld-eval-btn--reviewed:hover {
+  background: #dcfce7;
+  transform: translateY(-1px);
+}
+
+/* "Ya evaluado" badge on the card */
+.tld-evaluated-badge {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid #86efac;
+}
