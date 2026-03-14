@@ -113,11 +113,8 @@ export default class Teams {
 
     this.showLoading(teamsContainer);
 
-    const fetchTeams = await apiFetch(`/teams?limit=50`, { method: "GET" });
-    const totalTeams = fetchTeams.data.teams.filter(
-      (team) => team.id_event === this.eventId,
-    );
-    console.log("awo",totalTeams)
+    const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true`, { method: "GET"});
+    const totalTeams = fetchTeams.data.teams;
     if (!totalTeams || totalTeams.length === 0) {
       this.showEmpty(teamsContainer);
       return;
