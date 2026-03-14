@@ -54,15 +54,6 @@ export async function deleteEventRubric(eventId, rubricId) {
   });
 }
 
-// events
-// events/create
-
-// events/:id
-// events/:id/projects
-// events/:id/ranking
-// events/:id/voting
-// events/:id/finalists
-// Ranking
 export async function getEventRankingStatus(eventId) {
   return apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" });
 }
@@ -74,3 +65,15 @@ export async function publishEventRanking(eventId) {
 export async function getEventRanking(eventId) {
   return apiFetch(`/events/${eventId}/ranking`, { method: "GET" });
 }
+
+export async function getEventPublicRanking(eventId) {
+  return apiFetch(`/events/${eventId}/ranking`, {
+    method: "GET",
+    auth: false
+  });
+}
+
+export const getEventFinalists = async (eventId) => {
+  const res = await apiFetch(`/events/${eventId}/finalists`);
+  return res.data;
+};

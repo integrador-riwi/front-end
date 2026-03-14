@@ -1,4 +1,5 @@
 import { getNavLinks, getRoleLabel, getIcon } from "./navbar-config.js";
+
 import {
   getInitials,
   getCurrentUser,
@@ -6,16 +7,24 @@ import {
   renderAvatar,
 } from "../../utils/helpers.js";
 import { icons } from "../../utils/icons.js";
+import { t, toggleLang, getLang, onLangChange } from "../../utils/i18n.js";
 import "../../assets/styles/navbar.css";
+
 export default class Navbar {
   constructor(router) {
     this.router = router;
-    this.user = getCurrentUser();
-    this.currentRoute = router.currentRoute || "dashboard";
+    const state = this.router.getAppState ? this.router.getAppState() : {};
+    this.user = state.user || getCurrentUser();
+    this.hasTeam = state.hasTeam || false;
+    this.currentRoute = this.router.currentRoute || "dashboard";
+    this._offLangChange = null;
   }
 
   render() {
-    const links = getNavLinks(this.user?.role);
+    const links = getNavLinks(this.user?.role, this.hasTeam);
+
+    console.log("HAS TEAM:", this.hasTeam);
+    console.log("LINKS:", links);
 
     return `
     <!-- ── Sidebar (desktop) / Top Navbar (mobile) ── -->
@@ -27,7 +36,7 @@ export default class Navbar {
   <div class="sidebar-brand" >
   <div class="container d-flex align-items-center gap-2 p-2 " style="cursor: pointer;">
   <!-- MOBILE TOP NAVBAR -->
-    <button class="hamburger" id="hamburgerBtn" style= "width:40px; height:40px;">
+    <button class="hamburger" style= "width:40px; height:40px;">
       ${icons.burger()}
     </button>
     <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0 return-home">
@@ -58,8 +67,11 @@ export default class Navbar {
 
         <!-- Brand -->
         <div class="sidebar-brand d-flex align-items-center gap-3">
-          <div class="container d-flex align-items-center p-2 gap-2 return-home" style="cursor: pointer;">
-            <div class="sidebar-brand-icon d-flex align-items-center justify-content-center flex-shrink-0">
+          <div class="container mx-0 d-flex align-items-center p-2 gap-2" style="cursor: pointer;">
+              <button class="hamburger" style= "width:40px; height:40px;">
+                ${icons.burger()}
+              </button>
+            <div class="sidebar-brand-icon d-flex align-items-center return-home justify-content-center flex-shrink-0">
               ${icons.teamUp()}
             </div>
             <span class="sidebar-brand-name">TeamUp</span>
@@ -104,23 +116,25 @@ export default class Navbar {
             </div>
           </div>
 
-          <button class="sidebar-logout d-flex align-items-center gap-3 w-100 logout-btn">
-            ${icons.logout()}
-            Sign out
-          </button>
+          <div class="d-flex gap-2 mt-1">
+            <button class="sidebar-logout flex-grow-1 d-flex align-items-center gap-3 logout-btn">
+              ${icons.logout()}
+              ${t("nav.signOut")}
+            </button>
+            <button class="btn btn-sm lang-toggle-btn" id="langToggleBtn" title="${t("nav.langLabel")}" style="flex-shrink:0; font-size:0.75rem; font-weight:600; border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              ${t("nav.langToggle")}
+            </button>
+          </div>
         </div>
 
       </aside>
-
-
     `;
   }
-
   closeSidebarMobile() {
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.getElementById("overlay");
 
-    sidebar?.classList.remove("active");
+    sidebar?.classList.remove("open");
     overlay?.classList.remove("active");
   }
 
@@ -137,6 +151,11 @@ export default class Navbar {
   }
 
   attachEventHandlers() {
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("overlay");
+    const hamburger = document.querySelectorAll(".hamburger");
+
+    // NAV LINKS
     document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (btn.dataset.route === "events") {
@@ -144,15 +163,19 @@ export default class Navbar {
           localStorage.removeItem("currentEventName");
         }
 
-        this.setActiveRoute(btn.dataset.route);
-        // Clear selected event context when navigating away to event selection
         if (btn.dataset.route === "coderEventSelect") {
           sessionStorage.removeItem("selectedEvent");
         }
+
+        this.setActiveRoute(btn.dataset.route);
         this.router.navigate(btn.dataset.route);
+
+        // cerrar sidebar en mobile
+        this.closeSidebarMobile();
       });
     });
 
+    // LOGOUT
     document.querySelectorAll(".logout-btn")?.forEach((e) => {
       e.addEventListener("click", () => {
         logout();
@@ -160,6 +183,7 @@ export default class Navbar {
       });
     });
 
+    // PROFILE
     document.querySelectorAll(".profileBtn")?.forEach((e) => {
       e.addEventListener("click", () => {
         this.setActiveRoute("profile");
@@ -169,6 +193,7 @@ export default class Navbar {
       });
     });
 
+    // RETURN HOME
     document.querySelectorAll(".return-home")?.forEach((e) => {
       e.addEventListener("click", () => {
         let homeRoute;
@@ -179,15 +204,19 @@ export default class Navbar {
             localStorage.removeItem("currentEventId");
             localStorage.removeItem("currentEventName");
             break;
+
           case "CODER":
-            homeRoute = "coderHome";
+            homeRoute = this.hasTeam ? "coderHome" : "coderEventSelect";
             break;
+
           case "organizer":
             homeRoute = "organizerHome";
             break;
+
           default:
             homeRoute = "dashboard";
         }
+
         this.setActiveRoute(homeRoute);
         this.router.navigate(homeRoute);
 
@@ -195,17 +224,32 @@ export default class Navbar {
       });
     });
 
-    const hamburger = document.getElementById("hamburgerBtn");
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("overlay");
+    // HAMBURGER
+    hamburger?.forEach((e) => {
+      e.addEventListener("click", () => {
+        const isOpen = sidebar?.classList.contains("open");
 
-    hamburger?.addEventListener("click", () => {
-      sidebar?.classList.toggle("open");
-      overlay?.classList.toggle("active");
+        if (isOpen) {
+          this.closeSidebarMobile();
+        } else {
+          sidebar?.classList.add("open");
+          overlay?.classList.add("active");
+        }
+      });
     });
 
+    // OVERLAY
     overlay?.addEventListener("click", () => {
       this.closeSidebarMobile();
     });
+
+    // LANG TOGGLE
+    document
+      .getElementById("langToggleBtn")
+      ?.addEventListener("click", async () => {
+        await toggleLang();
+      });
   }
+
+  destroy() {}
 }

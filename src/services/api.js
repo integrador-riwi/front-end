@@ -1,5 +1,6 @@
 //const API_BASE_URL = "http://localhost:3010/api";
-const API_BASE_URL = "https://back-end-production-7f2c.up.railway.app/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -44,6 +45,25 @@ export async function loginUser(email, password) {
   });
 }
 
+export async function createQR(id_event, expires_at, finalists) {
+  return apiFetch("/qr-votes", {
+    method: "POST",
+    body: { id_event, expires_at, top_n: finalists.length },
+  });
+}
+
+export async function getQR(id_event) {
+  return apiFetch(`/qr-votes/event/${id_event}`, {
+    method: "GET",
+  });
+}
+
+export async function getVotingProjects(id_event) {
+  return apiFetch(`/qr-votes/vote/${id_event}/projects`, {
+    method: "GET"})
+}
+
+
 export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
 }
@@ -64,6 +84,33 @@ export async function refreshTokens() {
 /* export async function getUserTeam(userId) {
   return apiFetch(`/users/${userId}/team`, { method: 'GET' });
 } */
+
+export async function getMyTeams() {
+  const response = await apiFetch("/teams/my-teams");
+  return response.data;
+}
+
+export async function getTeamsByEvent(eventId) {
+  const response = await apiFetch(`/teams?idEvent=${eventId}`, {
+    method: "GET",
+  });
+
+  return response.data ?? response;
+}
+
+export async function getEventById(eventId) {
+  const response = await apiFetch(`/events/${eventId}`, 
+    {method: 'GET'});
+
+    return response.data
+} 
+
+export async function submitVote(qr_vote_id,project_id) {
+  return apiFetch("/qr-votes/vote", {
+    method: "POST",
+    body: { qr_vote_id, project_id },
+  });
+}
 
 export async function createTeam(teamData) {
   const payload =

@@ -2,6 +2,7 @@ import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/login.css";
 
 export default class LoginView {
@@ -26,13 +27,12 @@ export default class LoginView {
           <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-              sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            ${t("login.leftDesc")}
             </p>
             <div class="left-tags d-flex flex-wrap justify-content-center gap-2 mt-4">
-              <span class="tag tag-lilac">Collaborate</span>
-              <span class="tag tag-mint">Track Progress</span>
-              <span class="tag tag-gold">Grow Together</span>
+              <span class="tag tag-lilac">${t("login.collaborate")}</span>
+              <span class="tag tag-mint">${t("login.track")}</span>
+              <span class="tag tag-gold">${t("login.grow")}</span>
             </div>
           </div>
         </section>
@@ -47,9 +47,9 @@ export default class LoginView {
             </div>
 
             <header class="form-header mb-4">
-              <p class="form-eyebrow">Welcome back</p>
-              <h2 class="form-title">Sign in to your<br/>account</h2>
-              <p class="form-subtitle">Enter your credentials to continue.</p>
+              <p class="form-eyebrow">${t("login.welcome")}</p>
+              <h2 class="form-title">${t("login.title")}</h2>
+              <p class="form-subtitle">${t("login.subtitle")}</p>
             </header>
 
             ${renderErrorBox(this.error)}
@@ -58,7 +58,7 @@ export default class LoginView {
 
               <!-- Email -->
               <div class="mb-3">
-                <label for="email" class="form-label field-label">Email Address</label>
+                <label for="email" class="form-label field-label">${t("login.email")}</label>
                 <div class="input-wrap">
                   <input id="email" type="email" class="form-control custom-input"
                          placeholder="name@correo.com"
@@ -73,8 +73,7 @@ export default class LoginView {
               <!-- Password -->
               <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label for="password" class="form-label field-label mb-0">Password</label>
-                  <a href="#" class="forgot-link">Forgot password?</a>
+                  <label for="password" class="form-label field-label mb-0">${t("login.password")}</label>
                 </div>
                 <div class="input-wrap">
                   <input id="password" type="password" class="form-control custom-input"
@@ -92,7 +91,7 @@ export default class LoginView {
                 ${
                   this.loading
                     ? `<span class="login-spinner"></span>`
-                    : "Sign in"
+                    : t("login.submit")
                 }
               </button>
 
@@ -113,6 +112,7 @@ export default class LoginView {
     `;
 
     this.attachEventHandlers();
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventHandlers() {
@@ -140,10 +140,15 @@ export default class LoginView {
       saveSession(response.data.token, response.data.user);
       this.router.init();
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Login failed. Try again.";
-      toast.error('Login failed', errorMessage);
+      const errorMessage =
+        err.response?.data?.message || err.message || t("login.error");
+      toast.error(t("login.errorTitle"), errorMessage);
       this.loading = false;
       this.render();
     }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

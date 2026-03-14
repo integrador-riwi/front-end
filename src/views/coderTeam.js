@@ -1,4 +1,5 @@
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 
 export function renderCoderTeam({
   user,
@@ -12,7 +13,8 @@ export function renderCoderTeam({
   const grade = project?.grade ?? null;
   const dueDate = project?.final_delivery_date ?? "TBD";
   const projectName = project?.name ?? teamName;
-  const projectDesc = project?.description ?? "No description yet.";
+  const projectDesc =
+    project?.description ?? t("noTeam.noDesc") ?? "No description yet.";
   const isSubmitted = !!project?.submitted_at;
 
   // deliverables come flat on the project object, not nested
@@ -38,24 +40,7 @@ export function renderCoderTeam({
           <!-- Project hero -->
           <div class="ct-hero-card rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              ${
-                selectedEvent
-                  ? `
-              <div class="event-context-badge event-context-badge--sm" id="eventBadgeBack">
-                <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                <svg class="event-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span>${selectedEvent.title ?? selectedEvent.event_name ?? "Event"}</span>
-              </div>
-              `
-                  : ""
-              }
+              
             </div>
 
             <h1 class="ct-hero-title mb-1">${projectName}</h1>
@@ -67,28 +52,28 @@ export function renderCoderTeam({
 
               <!-- Due date -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Due Date</span>
+                <span class="ct-stat-label">${t("team.dueDate")}</span>
                 <span class="ct-stat-value">Mon, Mar 9 2026</span>
               </div>
 
               <!-- Repo Link -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Repo Link</span>
+                <span class="ct-stat-label">${t("team.repoLink")}</span>
                 ${
                   repoUrl
                     ? `<a href="${repoUrl}" target="_blank" rel="noopener" class="ct-stat-value ct-repo-link" style="color: var(--color-primary); text-decoration: none;">
                         <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-right:4px;">
                           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                         </svg>
-                        View Repo
+                        ${t("team.viewRepo")}
                        </a>`
-                    : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
+                    : `<span class="ct-stat-value" style="opacity: 0.5;">${t("team.noLink")}</span>`
                 }
               </div>
 
               <!-- Team -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Team</span>
+                <span class="ct-stat-label">${t("team.team")}</span>
                 <div class="ct-mini-avatars mt-1">
                   ${members
                     .slice(0, 3)
@@ -120,7 +105,7 @@ export function renderCoderTeam({
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                <h2 class="ct-section-title mb-0">Activity</h2>
+                <h2 class="ct-section-title mb-0">${t("team.activity")}</h2>
               </div>
               <a id="downloadBriefBtn" href="#" download="crudactivity-supcrud.md"
                  class="ct-btn-download d-flex align-items-center gap-2">
@@ -144,7 +129,7 @@ export function renderCoderTeam({
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Deliverables</h2>
+                <h2 class="ct-section-title mb-0">${t("team.deliverables")}</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
                 ${deliverableCount(deliverables, repoUrl)}/4 submitted
               </span>
@@ -158,7 +143,7 @@ export function renderCoderTeam({
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
-                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("team.submitted")}</span>
               </div>
             `
                 : canEdit
@@ -167,7 +152,7 @@ export function renderCoderTeam({
                 class="btn w-100 mt-3"
                 style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
                 disabled>
-                Submit Project
+                ${t("team.submitProject")}
               </button>
             `
                   : ""
@@ -175,14 +160,14 @@ export function renderCoderTeam({
           </div>
 
 
-          <!-- Comments -->
+            <!-- Comments -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
                    style="width:16px;height:16px;flex-shrink:0">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              Comments
+              ${t("team.comments")}
             </h2>
 
             <div class="d-flex gap-3 align-items-start mb-2">
@@ -192,10 +177,10 @@ export function renderCoderTeam({
                   : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
               }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
-                        placeholder="Share your thoughts..."></textarea>
+                        placeholder="${t("team.commentPlaceholder") ?? "Share your thoughts..."}"></textarea>
             </div>
             <div class="d-flex justify-content-end mb-4 ps-5">
-              <button class="ct-btn-post" id="postCommentBtn">Post Comment</button>
+              <button class="ct-btn-post" id="postCommentBtn">${t("team.postComment")}</button>
             </div>
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
@@ -206,7 +191,7 @@ export function renderCoderTeam({
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
+              <h2 class="ct-section-title mb-0">${t("team.evaluate")}</h2>
             </div>
             <div id="tl-rubrics-container">
               <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
@@ -215,7 +200,7 @@ export function renderCoderTeam({
               id="submitEvaluationsBtn"
               class="btn w-100 mt-3 d-none"
               style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
-              Submit Evaluations
+              ${t("team.submitEvaluations")}
             </button>
             <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
           </div>
@@ -227,7 +212,7 @@ export function renderCoderTeam({
           <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
-                <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
+                <h2 class="ct-section-title mb-0">${t("team.settings")}</h2>
                 ${
                   isLeader
                     ? `
@@ -236,14 +221,14 @@ export function renderCoderTeam({
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    Settings
+                    ${t("team.settingsBtn")}
                 </button>
                 `
                     : ""
                 }
             </div>
 
-            <h2 class="ct-section-title mb-3">Project Team</h2>
+            <h2 class="ct-section-title mb-3">${t("team.projectTeam")}</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
                 .map(
@@ -256,7 +241,7 @@ export function renderCoderTeam({
                   }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0">${m.name}</p>
-                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
+                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? (i === 0 ? t("team.lead") : t("team.member"))}</p>
                   </div>
                 </li>
               `,
@@ -276,7 +261,7 @@ export function renderCoderTeam({
                 <line x1="19" y1="8" x2="19" y2="14"/>
                 <line x1="22" y1="11" x2="16" y2="11"/>
               </svg>
-              Add Member
+              ${t("team.addMember")}
             </button>
             `
                 : ""
@@ -293,7 +278,7 @@ export function renderCoderTeam({
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Leave Team
+              ${t("team.leaveTeam")}
             </button>
             `
                 : ""
@@ -322,28 +307,28 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
     {
       key: "video_url",
       icon: "",
-      label: "Pitch Video",
+      label: t("team.pitchVideo") ?? "Pitch Video",
       url: d?.video_url ?? null,
       color: "var(--color-accent)",
     },
     {
       key: "repo_url",
       icon: "",
-      label: "Repository",
+      label: t("team.repository") ?? "Repository",
       url: repoUrl,
       color: "var(--color-success)",
     },
     {
       key: "preview_photo_url",
       icon: "",
-      label: "Preview Photo",
+      label: t("team.previewPhoto") ?? "Preview Photo",
       url: d?.preview_photo_url ?? null,
       color: "var(--color-warning)",
     },
     {
       key: "deploy_url",
       icon: "",
-      label: "Deploy Link",
+      label: t("team.deployLink") ?? "Deploy Link",
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
     },
@@ -377,7 +362,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               `
                   : `
                 <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
-                  ${item.url ? "Submitted" : "Pending"}
+                  ${item.url ? (t("team.submitted") ?? "Submitted") : (t("team.pending") ?? "Pending")}
                 </span>
               `
               }
@@ -389,11 +374,11 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             ${
               item.url
                 ? `
-              <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+              <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">${t("team.open")}</a>
               ${
                 canEdit && item.key !== "repo_url"
                   ? `
-                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
+                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="${t("team.titleEdit")}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -406,7 +391,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                 : canEdit
                   ? `
               <div class="d-flex align-items-center gap-2">
-                <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+                <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="${t("team.placeholderPasteUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="5" y1="12" x2="19" y2="12"/>
@@ -424,7 +409,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                 ? `
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-                       value="${item.url ?? ""}" placeholder="New URL…" />
+                       value="${item.url ?? ""}" placeholder="${t("team.placeholderNewUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${item.key}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
@@ -484,7 +469,7 @@ function _renderReply(reply, currentUserId) {
           ${
             isOwner
               ? `
-            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="Delete reply"
+            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="${t("team.titleDeleteReply")}"
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
               : ""
@@ -518,12 +503,12 @@ function _renderComment(comment, currentUserId) {
             <div class="d-flex align-items-center gap-2">
               <button class="ct-btn-reply" data-comment-id="${comment.id_comment}"
                 style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;font-weight:600;padding:2px 6px;border-radius:6px;transition:background 0.15s;">
-                Reply
+                ${t("team.reply")}
               </button>
               ${
                 isOwner
                   ? `
-                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="Delete comment"
+                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="${t("team.titleDeleteComment")}"
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
                   : ""
@@ -536,12 +521,12 @@ function _renderComment(comment, currentUserId) {
           <div class="ct-reply-box d-none mt-2" id="reply-box-${comment.id_comment}">
             <div class="d-flex gap-2 align-items-start">
               <textarea class="ct-comment-input flex-grow-1" style="min-height:54px;font-size:0.82rem;"
-                        placeholder="Write a reply..." id="reply-input-${comment.id_comment}"></textarea>
+                        placeholder="${t("team.replyPlaceholder") ?? "Write a reply..."}" id="reply-input-${comment.id_comment}"></textarea>
               <div class="d-flex flex-column gap-1">
                 <button class="ct-btn-post ct-btn-post-reply" style="padding:7px 14px;font-size:0.8rem;"
-                        data-parent-id="${comment.id_comment}">Send</button>
+                        data-parent-id="${comment.id_comment}">${t("team.send")}</button>
                 <button class="ct-btn-cancel-reply" data-comment-id="${comment.id_comment}"
-                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">Cancel</button>
+                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">${t("common.cancel")}</button>
               </div>
             </div>
           </div>
@@ -593,10 +578,10 @@ function gradeClass(g) {
 }
 
 function gradeLabel(g) {
-  if (g >= 90) return "Excellent";
-  if (g >= 75) return "Good";
-  if (g >= 60) return "Average";
-  return "Below Average";
+  if (g >= 90) return t("team.gradeExcellent") ?? "Excellent";
+  if (g >= 75) return t("team.gradeGood") ?? "Good";
+  if (g >= 60) return t("team.gradeAverage") ?? "Average";
+  return t("team.gradeBelow") ?? "Below Average";
 }
 
 function formatDate(dateStr) {
@@ -622,14 +607,29 @@ export async function loadComments(projectId, user) {
 
   const currentUserId = user?.id_user ?? null;
 
-  // Lazy-import to avoid circular deps
   const { getComments, postComment, deleteComment } =
     await import("../services/api.js");
+
+  const { on, off, joinProject, leaveProject } =
+    await import("../services/socket.js");
+
+  joinProject(projectId);
+
+  const socketHandler = (newComment) => {
+    const commentProjectId = newComment.id_project || newComment.project_id;
+    if (
+      commentProjectId === projectId &&
+      newComment.author_user_id !== currentUserId
+    ) {
+      refresh();
+    }
+  };
+  on("comment:new", socketHandler);
 
   // ── Render helpers ──────────────────────────────────────────
   function renderAll(comments) {
     if (comments.length === 0) {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">No comments yet. Be the first!</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">${t("team.noComments")}</p>`;
       return;
     }
     list.innerHTML = comments
@@ -650,7 +650,7 @@ export async function loadComments(projectId, user) {
       const comments = await getComments(projectId);
       renderAll(Array.isArray(comments) ? comments : []);
     } catch {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">Could not load comments.</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">${t("team.errorLoadingComments")}</p>`;
     }
   }
 
@@ -670,17 +670,20 @@ export async function loadComments(projectId, user) {
     if (!text) return;
 
     activeBtn.disabled = true;
-    activeBtn.textContent = "Posting...";
+    activeBtn.textContent = t("team.posting") ?? "Posting...";
 
     try {
       await postComment({ projectId, comment: text });
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not post comment.");
+      toast.error(
+        t("common.errorTitle"),
+        err?.message ?? t("team.errorPostComment"),
+      );
     } finally {
       activeBtn.disabled = false;
-      activeBtn.textContent = "Post Comment";
+      activeBtn.textContent = t("team.postComment") ?? "Post Comment";
     }
   });
 
@@ -726,7 +729,7 @@ export async function loadComments(projectId, user) {
         if (!text) return;
 
         btn.disabled = true;
-        btn.textContent = "Sending...";
+        btn.textContent = t("team.sending") ?? "Sending...";
 
         try {
           await postComment({
@@ -736,9 +739,12 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not post reply.");
+          toast.error(
+            t("common.errorTitle"),
+            err?.message ?? t("team.errorPostReply"),
+          );
           btn.disabled = false;
-          btn.textContent = "Send";
+          btn.textContent = t("team.send") ?? "Send";
         }
       });
     });
@@ -747,14 +753,17 @@ export async function loadComments(projectId, user) {
     list.querySelectorAll(".ct-btn-delete-comment").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const commentId = btn.dataset.commentId;
-        if (!confirm("Delete this comment?")) return;
+        if (!confirm(t("team.deleteComment") ?? "Delete this comment?")) return;
 
         btn.disabled = true;
         try {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not delete comment.");
+          toast.error(
+            t("common.errorTitle"),
+            err?.message ?? t("team.errorDeleteComment"),
+          );
           btn.disabled = false;
         }
       });
@@ -768,6 +777,11 @@ export async function loadComments(projectId, user) {
       });
     });
   }
+
+  return () => {
+    off("comment:new", socketHandler);
+    leaveProject(projectId);
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -873,7 +887,7 @@ export async function loadEvaluationPanel({
       getMyEvaluationsForProject(projectId),
     ]);
   } catch (err) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">Could not load rubrics.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.errorLoadingRubrics")}</p>`;
     return;
   }
 
@@ -883,7 +897,7 @@ export async function loadEvaluationPanel({
   }
 
   if (!rubrics.length) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">No rubrics configured for this event.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.noRubricsConfigured")}</p>`;
     return;
   }
 
@@ -897,6 +911,82 @@ export async function loadEvaluationPanel({
   }
 
   const evaluableMembers = members.filter((m) => m.id_user);
+
+  // If this TL already has evaluations for every member+rubric, lock the form
+  const totalExpected = evaluableMembers.length * rubrics.length;
+  const alreadyEvaluated =
+    totalExpected > 0 && existingEvals.length >= totalExpected;
+
+  if (alreadyEvaluated) {
+    // Build a read-only summary of what was graded
+    const summaryHtml = evaluableMembers
+      .map((member) => {
+        const initial = member.name?.charAt(0)?.toUpperCase() ?? "?";
+        const avatarHtml = member.github_avatar_url
+          ? `<img src="${member.github_avatar_url}" alt="${member.name}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+          : `<div class="ct-avatar-sm flex-shrink-0" style="width:32px;height:32px;font-size:0.8rem;">${initial}</div>`;
+
+        const rubricsHtml = rubrics
+          .map((rubric) => {
+            const key = `${rubric.id_rubric}_${member.id_user}`;
+            const ev = existingMap[key];
+            const scorePct = ev?.score ?? null;
+
+            // Color bar based on score
+            const barColor =
+              scorePct >= 75
+                ? "#22c55e"
+                : scorePct >= 50
+                  ? "#f59e0b"
+                  : scorePct !== null
+                    ? "#ef4444"
+                    : "#cbd5e1";
+
+            return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:0.78rem;color:var(--text-muted);font-weight:500;">
+                ${rubric.name}
+                <span style="opacity:0.55;">(${rubric.area} · ${rubric.weight})</span>
+              </span>
+              <span style="font-size:0.82rem;font-weight:700;color:${barColor};">
+                ${scorePct !== null ? `${scorePct} pts` : "—"}
+              </span>
+            </div>
+            <div style="height:5px;border-radius:99px;background:#e2e8f0;overflow:hidden;">
+              <div style="height:100%;width:${scorePct ?? 0}%;background:${barColor};border-radius:99px;transition:width 0.4s;"></div>
+            </div>
+            ${ev?.feedback ? `<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;font-style:italic;">"${ev.feedback}"</p>` : ""}
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            ${avatarHtml}
+            <div>
+              <p style="margin:0;font-weight:600;font-size:0.875rem;">${member.name}</p>
+              <p style="margin:0;font-size:0.75rem;color:var(--text-muted);">${member.team_role ?? "Member"}</p>
+            </div>
+          </div>
+          ${rubricsHtml}
+        </div>
+      `;
+      })
+      .join("");
+
+    container.innerHTML = `
+      <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:10px;padding:0.875rem 1rem;display:flex;align-items:center;gap:0.65rem;color:#15803d;font-size:0.82rem;font-weight:600;margin-bottom:1.25rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        ${t("team.evalAlreadySent")}
+      </div>
+      <div>${summaryHtml}</div>
+    `;
+    submitBtn.classList.add("d-none");
+    return;
+  }
 
   const membersHtml = evaluableMembers
     .map((member) => {
@@ -927,14 +1017,14 @@ export async function loadEvaluationPanel({
                 data-rubric-id="${rubric.id_rubric}"
                 data-member-id="${member.id_user}"
                 style="font-size:0.82rem;border-radius:8px;">
-                <option value="">-- Puntaje --</option>
+                <option value="">-- ${t("team.score")} --</option>
                 ${optionsHtml}
               </select>
               <textarea
                 class="form-control mt-1 eval-feedback-input"
                 data-rubric-id="${rubric.id_rubric}"
                 data-member-id="${member.id_user}"
-                placeholder="Feedback (opcional)"
+                placeholder="${t("team.feedbackOptional")}"
                 rows="2"
                 style="font-size:0.78rem;border-radius:8px;resize:none;">${existing?.feedback ?? ""}</textarea>
             </div>
@@ -959,7 +1049,7 @@ export async function loadEvaluationPanel({
 
   container.innerHTML =
     membersHtml ||
-    `<p style="color:var(--text-muted);font-size:0.85rem;">No hay miembros para evaluar.</p>`;
+    `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.noMembersToEvaluate")}</p>`;
   submitBtn.classList.remove("d-none");
 
   submitBtn.onclick = async () => {
@@ -987,26 +1077,27 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      toast.error('Error', 'Please rate all rubrics for each member.');
+      toast.error(
+        t("common.errorTitle"),
+        t("team.evalIncomplete") ?? "Please rate all rubrics for each member.",
+      );
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Enviando...";
+    submitBtn.textContent = t("team.sending") ?? "Enviando...";
 
     try {
       await submitEvaluations(projectId, evaluations);
-      // Recalculate grades immediately so results reflect this TL's input
-      try {
-        await calculateProjectGrades(projectId);
-      } catch (_) {
-        // Silently ignore — grades will recalculate on next submission
-      }
-      toast.success('Evaluations sent!', 'The evaluations have been saved successfully.');
-      submitBtn.textContent = "Actualizar Evaluaciones";
+      toast.success(
+        t("team.evalSent") ?? "Evaluations sent!",
+        t("team.evalSavedMsg") ??
+          "The evaluations have been saved successfully.",
+      );
+      submitBtn.textContent = t("team.updateEval") ?? "Actualizar Evaluaciones";
     } catch (err) {
-      toast.error('Error', err?.message ?? "Error sending evaluations.");
-      submitBtn.textContent = "Enviar Evaluaciones";
+      toast.error(t("common.errorTitle"), err?.message ?? t("common.error"));
+      submitBtn.textContent = t("team.submitEvaluations");
     } finally {
       submitBtn.disabled = false;
     }
@@ -1053,15 +1144,15 @@ export function initDeliverables(projectId) {
           const statusEl = row.querySelector(".ct-del-status");
           if (statusEl) {
             statusEl.className = "ct-del-status ct-status-done";
-            statusEl.textContent = "Submitted";
+            statusEl.textContent = t("team.submitted");
           }
 
           // Replace the entire actions div with the post-submit state
           const actionsDiv = row.querySelector(".ct-deliverable-actions");
           if (actionsDiv) {
             actionsDiv.innerHTML = `
-              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
-              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">${t("team.open")}</a>
+              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="${t("team.titleEdit")}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -1069,7 +1160,7 @@ export function initDeliverables(projectId) {
               </button>
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${field}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${field}"
-                       value="${url}" placeholder="New URL…" />
+                       value="${url}" placeholder="${t("team.placeholderNewUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${field}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
@@ -1088,7 +1179,10 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not save deliverable.");
+      toast.error(
+        t("common.errorTitle"),
+        err?.message ?? t("team.errorSaveDeliverable"),
+      );
       btnEl.innerHTML = original;
     } finally {
       btnEl.disabled = false;
@@ -1128,7 +1222,7 @@ export function initDeliverables(projectId) {
         return;
 
       btn.disabled = true;
-      btn.textContent = "Submitting…";
+      btn.textContent = t("team.sending");
 
       try {
         const { submitProject } = await import("../services/api.js");
@@ -1142,7 +1236,7 @@ export function initDeliverables(projectId) {
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("team.submitted")}</span>
           </div>
         `,
         );
@@ -1161,9 +1255,9 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error('Error', err?.message ?? "Could not submit project.");
+        toast.error(t("common.errorTitle"), err?.message ?? t("common.error"));
         btn.disabled = false;
-        btn.textContent = "Submit Project";
+        btn.textContent = t("team.submitProject");
       }
     });
   }

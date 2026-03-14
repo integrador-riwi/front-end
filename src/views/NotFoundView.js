@@ -1,5 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/components.css";
 
 export default class NotFoundView {
@@ -11,7 +12,7 @@ export default class NotFoundView {
 
   render() {
     const app = document.getElementById("app");
-    
+
     app.innerHTML = `
       <div class="d-flex h-100 bg-light">
         ${this.navbar.render()}
@@ -27,9 +28,9 @@ export default class NotFoundView {
                 </h1>
                 
                 <div class="position-relative" style="z-index: 1;">
-                  <h2 class="fw-bold mb-3 display-5" style="color: var(--text-primary);">Opps! Page Not Found</h2>
+                  <h2 class="fw-bold mb-3 display-5" style="color: var(--text-primary);">${t("notFound.title")}</h2>
                   <p class="text-muted fs-5 mb-0 px-4">
-                    The page you are looking for doesn't exist or has been moved to another location.
+                    ${t("notFound.subtitle")}
                   </p>
                 </div>
               </div>
@@ -37,14 +38,14 @@ export default class NotFoundView {
               <div class="card-custom p-4 mb-5 mx-auto" style="border: 1px dashed var(--border-card); background: var(--accent-dim); border-radius: 20px; max-width: 450px;">
                 <p class="small text-muted mb-0">
                   <i class="bi bi-info-circle me-2"></i>
-                  Lost? Don't worry, it happens to the best of us. Let's get you back on track.
+                  ${t("notFound.lostMsg")}
                 </p>
               </div>
 
               <div class="d-flex justify-content-center gap-3">
                 <button id="go-home-btn" class="app-btn-primary px-5 py-3 d-flex align-items-center">
                   <i class="bi bi-house-door-fill me-2 fs-5"></i> 
-                  <span>Back to Dashboard</span>
+                  <span>${t("notFound.backHome")}</span>
                 </button>
               </div>
             </div>
@@ -55,6 +56,8 @@ export default class NotFoundView {
 
     this.navbar.attachEventHandlers();
     this.attachEventListeners();
+
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventListeners() {
@@ -64,5 +67,9 @@ export default class NotFoundView {
         this.router.init(); // This re-evaluates the role-based home
       });
     }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

@@ -42,8 +42,8 @@ export const getCurrentUser = () => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  sessionStorage.clear();
+  localStorage.clear();
 };
 
 export const getEventIdFromUrl = () => {
@@ -55,3 +55,8 @@ export const getEventSectionFromUrl = () => {
   const match = window.location.pathname.match(/events\/\d+\/([^/]+)/);
   return match ? match[1] : null;
 };
+
+export function getSelectedEvent() {
+  const event = localStorage.getItem("currentEventId");
+  return event ? JSON.parse(event) : null;
+}

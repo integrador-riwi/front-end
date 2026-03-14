@@ -18,6 +18,29 @@
   color: white;
 }
 
+.bg-active{
+  background-color: var(--mint);
+}
+
+.bg-inactive{
+  background-color: var(--bg-header);
+}
+
+.btn-primary-disabled {
+  background: var(--navy);
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: .25s;
+  color: white;
+}
+
+#qr {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
 .btn-primary-custom:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);

@@ -1,8 +1,9 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getEvents } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import { icons } from "./../utils/icons.js";
@@ -37,15 +38,15 @@ export default class EventsView {
       }
     } catch (err) {
       console.error("Failed to fetch events:", err);
-      this.error = err.message || "Error loading events. Please try again later.";
-      toast.error('Error', this.error);
+      this.error = err.message || t("events.error");
+      toast.error(t("common.errorTitle"), this.error);
     } finally {
       this.loading = false;
     }
   }
 
   formatDate(dateString) {
-    if (!dateString) return "TBD";
+    if (!dateString) return t("events.tbd");
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return dateString;
     return d.toLocaleDateString("en-US", {
@@ -59,7 +60,7 @@ export default class EventsView {
   }
 
   renderEventCard(event) {
-    const title = event.title || event.name || "Untitled Event";
+    const title = event.title || event.name || t("events.untitled");
     const desc = event.description || "No description provided.";
     const date = event.date || event.start_date || event.createdAt;
     const eventId = event.id;
@@ -72,7 +73,7 @@ export default class EventsView {
                 ${date ? new Date(date).getDate() : "-"}
               </span>
               <span class="text-uppercase fw-semibold" style="font-size: 0.85rem; color: var(--text-sidebar);">
-                ${date ? new Date(date).toLocaleString("en-US", { month: "short" }) : "TBD"}
+                ${date ? new Date(date).toLocaleString("en-US", { month: "short" }) : t("events.tbd")}
               </span>
             </div>
 
@@ -85,7 +86,7 @@ export default class EventsView {
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  Ends: ${this.formatDate(date)}
+                  ${t("events.ends")} ${this.formatDate(date)}
                 </div>
               </div>
             </div>
@@ -95,10 +96,10 @@ export default class EventsView {
           <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column flex-md-row flex-lg-column gap-2" style="min-width: 150px;">
           
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-name="${title}" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
-              Details
+              ${t("events.details")}
             </button>
             <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
-              Finalists
+              ${t("events.finalists")}
             </button>
           </div>
         </div>
@@ -110,7 +111,7 @@ export default class EventsView {
       return `
         <div class="d-flex justify-content-center align-items-center py-5">
           <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">${t("events.loading")}</span>
           </div>
         </div>
       `;
@@ -133,8 +134,8 @@ export default class EventsView {
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <h4 class="text-muted">No upcoming events</h4>
-          <p class="text-muted mb-0">Check back later for new events.</p>
+          <h4 class="text-muted">${t("events.noEvents")}</h4>
+          <p class="text-muted mb-0">${t("events.noEventsMsg")}</p>
         </div>
       `;
     }
@@ -157,7 +158,7 @@ export default class EventsView {
             <div class="mb-5">
                 <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--color-primary); font-weight: 700;">
                   <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--mint);"></span>
-                  In Progress
+                  ${t("events.inProgress")}
                 </h2>
                 <div class="d-flex flex-column">
                   ${inProgressEvents.map((event) => this.renderEventCard(event)).join("")}
@@ -177,7 +178,7 @@ export default class EventsView {
                      <circle cx="12" cy="12" r="10"></circle>
                      <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
-                  Past Events
+                  ${t("events.past")}
                 </h2>
                 <div class="d-flex flex-column opacity-75">
                   ${pastEvents.map((event) => this.renderEventCard(event)).join("")}
@@ -190,7 +191,7 @@ export default class EventsView {
         ${
           inProgressEvents.length === 0 && pastEvents.length === 0
             ? `
-           <p class="text-muted mt-3">No events found.</p>
+           <p class="text-muted mt-3">${t("events.noEventsFound")}</p>
         `
             : ""
         }
@@ -220,10 +221,10 @@ export default class EventsView {
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
-                <h1 class="mb-0 fw-bold" style="color: var(--color-primary); font-size: 2.25rem; letter-spacing: -0.5px;">Upcoming Events</h1>
+                <h1 class="mb-0 fw-bold" style="color: var(--color-primary); font-size: 2.25rem; letter-spacing: -0.5px;">${t("events.title")}</h1>
               </div>
             </div>
-            <p class="mb-0 ps-3" style="color: var(--text-sidebar); font-size: 1.05rem;">Discover and track ongoing and past project capstones and events.</p>
+            <p class="mb-0 ps-3" style="color: var(--text-sidebar); font-size: 1.05rem;">${t("events.subtitle")}</p>
             
           </div>
 
@@ -236,6 +237,8 @@ export default class EventsView {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
+
+    this._offLangChange = onLangChange(() => this.render());
 
     await this.fetchEvents();
 
@@ -269,5 +272,9 @@ export default class EventsView {
     newEventBtn?.addEventListener("click", () => {
       this.router.navigate("events/create");
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }
