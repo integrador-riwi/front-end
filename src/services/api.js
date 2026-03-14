@@ -58,12 +58,11 @@ export async function getQR(id_event) {
     method: "GET"})
 }
 
-export async function getPublicEvent(id) {
-  return apiFetch(`/event/${id}`, {
-    method: "GET",
-    auth: false
-  });
+export async function getVotingProjects(id_event) {
+  return apiFetch(`/qr-votes/vote/${id_event}/projects`, {
+    method: "GET"})
 }
+
 
 export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
@@ -106,10 +105,10 @@ export async function getEventById(eventId) {
     return response.data
 } 
 
-export async function submitVote(data) {
-  return apiFetch("/votes", {
+export async function submitVote(qr_vote_id,project_id) {
+  return apiFetch("/qr-votes/vote", {
     method: "POST",
-    body: { data },
+    body: { qr_vote_id, project_id },
   });
 }
 

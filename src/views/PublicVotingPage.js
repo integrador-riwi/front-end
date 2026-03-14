@@ -1,5 +1,5 @@
 import "../assets/styles/voting.css";
-import { submitVote, getPublicEvent } from "../services/api.js";
+import { submitVote, getVotingProjects } from "../services/api.js";
 import { getEventRanking } from "../services/api-events.js";
 
 export default class PublicVotingPage {
@@ -19,7 +19,9 @@ export default class PublicVotingPage {
         console.error("No eventId found");
         return;
       }
-      this.event = await getPublicEvent(this.eventId);
+      const eventPath = window.location.pathname.split('/')
+      this.event = eventPath[eventPath.length - 1]
+
     } catch (error) {
       console.error("Error loading event", error);
     }
@@ -27,8 +29,11 @@ export default class PublicVotingPage {
 
   async fetchRanking() {
     try {
-      const res    = await getEventRanking(this.eventId); 
-      this.ranking = res?.data?.ranking || [];            
+      const res    = await getVotingProjects(this.eventId); 
+      this.ranking = res?.projects || [];     
+      const qrVoteId = res.qr_vote_id;
+      console.log(qrVoteId)
+      sessionStorage.setItem("qrVoteId",JSON.stringify(qrVoteId));
     } catch (error) {
       console.error("Error loading ranking", error);
       this.ranking = [];
@@ -37,11 +42,15 @@ export default class PublicVotingPage {
 
   /* -------------------------- VOTING -------------------------- */
 
-  async handleVote(teamId) {
+  async handleVote(projectId) {
     try {
-      await submitVote({ eventId: this.eventId, teamId });
+        const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"))
+        console.log(qrVoteId)
+        console.log(projectId)
+        console.log({ qr_vote_id:qrVoteId, project_id: Number(projectId)})
+      await submitVote(qrVoteId, Number(projectId));
 
-      localStorage.setItem(`voted_event_${this.eventId}`, "true");
+      sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
       alert("Vote registered successfully!");
       this.disableVoting();
 
@@ -66,7 +75,7 @@ export default class PublicVotingPage {
       <div class="team-card">
         <h3>${team.team_name}</h3>
         <p>${team.project_name || ""}</p>
-        <button class="vote-btn" data-team="${team.id_team}">Vote</button>
+        <button class="vote-btn" data-team="${team.id_project}">Vote</button>
       </div>
     `).join("");
   }
@@ -93,7 +102,7 @@ export default class PublicVotingPage {
     container.innerHTML = `
       <div class="vote-page">
         <header class="vote-header">
-          <h1>${this.event.name}</h1>
+          <h1>TeamUp Voting</h1>
           <p>Vote for the best project</p>
         </header>
         <section class="finalists-list">
