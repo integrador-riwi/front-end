@@ -321,10 +321,13 @@ export default class QRVoting {
 
   async render() {
     const app = document.getElementById("app");
+    let template = ''
+    await fetch('../pages/admin_qr.html')
+        .then(response => response.text())
+        .then(data => template = data)
 
-    const template = await fetch("../pages/admin_qr.html").then((r) =>
-      r.text(),
-    );
+    // Cargar contenido HTML crudo
+
 
     app.innerHTML = `
     ${this.navbar.render()}
