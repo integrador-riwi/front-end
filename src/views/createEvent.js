@@ -3,7 +3,7 @@ import "../assets/styles/components.css";
 import "../assets/styles/eventCreated.css";
 import "../assets/styles/rubricBuilder.css";
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
