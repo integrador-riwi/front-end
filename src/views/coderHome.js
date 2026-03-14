@@ -410,9 +410,15 @@ export default class CoderHome {
 
     try {
       const nextPage = this._teamsPage + 1;
-      const teamsRes = await apiFetch(`/teams?limit=10&page=${nextPage}`, {
-        method: "GET",
-      });
+      const eventIdParam = this.selectedEvent?.id
+        ? `&idEvent=${this.selectedEvent.id}`
+        : "";
+      const teamsRes = await apiFetch(
+        `/teams?limit=10&page=${nextPage}${eventIdParam}`,
+        {
+          method: "GET",
+        },
+      );
       const teamsData = teamsRes?.data ?? teamsRes;
       const rawTeams = teamsData?.teams ?? [];
       this._teamsTotalPages =
