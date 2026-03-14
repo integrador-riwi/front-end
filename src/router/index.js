@@ -13,7 +13,7 @@ import CoderEventSelect from "../views/codereventselect.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
-import TLDashboardView from "../views/TLDashboardView.js";
+
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyProfile, getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
@@ -61,7 +61,16 @@ function mountLangToggle() {
 }
 
 mountLangToggle();
-onLangChange(() => mountLangToggle());
+// Update only the button label on lang change — no full re-mount needed
+onLangChange(() => {
+  const btn = document.getElementById("floatingLangBtn");
+  if (btn) {
+    btn.textContent = t("nav.langToggle");
+    btn.title = t("nav.langLabel");
+  } else {
+    mountLangToggle();
+  }
+});
 
 if (isAuthenticated()) {
   initSocket();
@@ -108,11 +117,13 @@ class App {
     this.user = null;
     this.hasTeam = false;
     this.currentParams = {};
+    this._langUnsubscribe = null;
 
-    // Re-render the current view whenever the language changes
-    onLangChange(() => {
+    // Re-render the current view whenever the language changes.
+    // Guard: register only once and skip auth checks on lang-triggered re-renders.
+    this._langUnsubscribe = onLangChange(() => {
       if (this.currentRoute) {
-        this.navigate(this.currentRoute, this.currentParams);
+        this._renderView(this.currentRoute, this.currentParams);
       }
     });
 
@@ -202,6 +213,18 @@ class App {
     };
   }
 
+  // Internal render without auth checks — used for language-triggered re-renders
+  _renderView(route, params = {}) {
+    if (this.currentView && typeof this.currentView.destroy === "function") {
+      this.currentView.destroy();
+    }
+    this.currentView = null;
+    this.app.innerHTML = "";
+    this.currentRoute = route;
+    this.currentParams = params;
+    this._mountView(route, params);
+  }
+
   navigate(route, params = {}) {
     // Enforcement layer
     const isAuth = isAuthenticated();
@@ -234,15 +257,10 @@ class App {
       }
     }
 
-    if (this.currentView && typeof this.currentView.destroy === "function") {
-      this.currentView.destroy();
-    }
-    this.currentView = null;
+    this._renderView(route, params);
+  }
 
-    this.app.innerHTML = "";
-    this.currentRoute = route;
-    this.currentParams = params;
-
+  _mountView(route, params = {}) {
     switch (route) {
       case "login":
         this.currentView = new LoginView(this);
@@ -267,15 +285,19 @@ class App {
       case "projects":
         this.currentView = new Teams(this);
         break;
-      case "teamDetail": // ← NUEVO
+
+      case "teamDetail":
         this.currentView = new TeamDetailView(this, params);
         break;
+
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+
       case "qr":
         this.currentView = new QRVoting(this);
         break;
+
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
@@ -298,10 +320,12 @@ class App {
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
+
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
         this.currentView.render(this.app);
         return;
+
       default:
         this.currentView = new NotFoundView(this);
         break;
