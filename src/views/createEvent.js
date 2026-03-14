@@ -263,9 +263,11 @@ export default class CreateEvent {
         weight: 0,
         isExpanded: true,
         levels: [
-          { score: 0, name: 'Unsatisfactory', description: '', color: '#ff4d4f' },
-          { score: 50, name: 'Good', description: '', color: '#faad14' },
-          { score: 100, name: 'Excellent', description: '', color: '#52c41a' }
+          { score: 0, name: 'Insatisfactorio', description: '', color: '#ff4d4f' },
+          { score: 25, name: 'Necesitas Mejorar', description: '', color: '#ff7a45' },
+          { score: 50, name: 'Bueno', description: '', color: '#faad14' },
+          { score: 75, name: 'Satisfactorio', description: '', color: '#7cb305' },
+          { score: 100, name: 'Excelente', description: '', color: '#52c41a' }
         ]
       });
       area.isExpanded = true;
@@ -303,6 +305,90 @@ export default class CreateEvent {
         this._rerenderRubricSection();
       }
     }
+  }
+
+  _handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        let sheetData = [];
+        
+        for (const sn of workbook.SheetNames) {
+           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], { header: 1, defval: '' });
+           for (let i = 0; i < Math.min(rows.length, 15); i++) {
+              const row = rows[i].map(c => String(c || "").trim().toLowerCase());
+              if (row.includes('area') && row.includes('criterio')) {
+                this._parseExcelRubric(row, rows.slice(i + 1));
+                return;
+              }
+           }
+        }
+        toast.error("Format Error", "Could not find 'Area' and 'Criterio' columns.");
+      } catch (err) {
+        toast.error("Import Error", "Failed to process file.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  _parseExcelRubric(headerRow, rows) {
+    const colIdx = (key) => headerRow.indexOf(key.toLowerCase());
+    const idxArea = colIdx('area');
+    const idxName = colIdx('criterio');
+    const idxDesc = colIdx('descripcion_criterio');
+    const idxWeight = colIdx('peso_criterio');
+    
+    // Level description columns
+    const idxL1 = colIdx('insatisfactorio');
+    const idxL2 = colIdx('necesitas_mejorar');
+    const idxL3 = colIdx('bueno');
+    const idxL4 = colIdx('satisfactorio');
+    const idxL5 = colIdx('excelente');
+
+    // Reset areas
+    this.rubricAreas.forEach(a => { a.criteria = []; a.weight = 0; });
+
+    rows.forEach(row => {
+      const areaType = this._mapArea(String(row[idxArea] || ""));
+      const name = String(row[idxName] || "").trim();
+      if (!name) return;
+
+      const area = this.rubricAreas.find(a => a.type === areaType);
+      if (area) {
+        area.criteria.push({
+          id: this._generateId(),
+          name: name,
+          description: String(row[idxDesc] || "").trim(),
+          weight: parseFloat(row[idxWeight]) || 0,
+          isExpanded: false,
+          levels: [
+            { score: 0,   name: 'Insatisfactorio',   description: String(row[idxL1] || ""), color: '#ff4d4f' },
+            { score: 25,  name: 'Necesitas Mejorar', description: String(row[idxL2] || ""), color: '#ff7a45' },
+            { score: 50,  name: 'Bueno',             description: String(row[idxL3] || ""), color: '#faad14' },
+            { score: 75,  name: 'Satisfactorio',     description: String(row[idxL4] || ""), color: '#7cb305' },
+            { score: 100, name: 'Excelente',         description: String(row[idxL5] || ""), color: '#52c41a' }
+          ]
+        });
+      }
+    });
+
+    this.rubricMode = 'platform';
+    this._recalculateWeights();
+    this._rerenderRubricSection();
+    toast.success("Import Successful", "Rubric populated from Excel.");
+  }
+
+  _mapArea(val) {
+    const v = val.toUpperCase();
+    if (v.includes("DEV") || v.includes("DESARROLLO")) return "DEVELOPMENT";
+    if (v.includes("SOFT") || v.includes("HABILIDADES")) return "SOFT_SKILLS";
+    if (v.includes("ENGLISH") || v.includes("INGLES")) return "ENGLISH";
+    return "DEVELOPMENT";
   }
 
   _recalculateWeights() {
@@ -361,7 +447,10 @@ export default class CreateEvent {
               <p class="text-muted small mb-4">Download the template, complete it and drag it here.</p>
               <div class="d-flex justify-content-center gap-3">
                 <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
-                <button class="btn btn-primary" type="button">Select File</button>
+                <label class="btn btn-primary" style="cursor: pointer;">
+                  Select File
+                  <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;">
+                </label>
               </div>
             </div>
           </div>
@@ -563,6 +652,10 @@ export default class CreateEvent {
     document.getElementById('btn-mode-back')?.addEventListener('click', () => {
       this.rubricMode = null;
       this._rerenderRubricSection();
+    });
+
+    document.getElementById('excel-upload-input')?.addEventListener('change', (e) => {
+      this._handleFileUpload(e);
     });
 
     document.querySelectorAll('.area-toggle-btn').forEach(btn => {
