@@ -7,7 +7,6 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   "events/create": [
     { label: t("nav.events"), route: "events" },
-    { label: t("nav.management"), route: "settings" },
     { label: t("nav.createNew"), route: "events/create" },
   ],
   tlDashboard: [
