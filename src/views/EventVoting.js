@@ -15,11 +15,11 @@ export default class QRVoting {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
 
-    this.ranking        = [];
-    this.finalists      = [];
+    this.ranking = [];
+    this.finalists = [];
     this.finalistsCount = 3;
-    this.qrActive       = false;
-    this.finalistsApproved = false; 
+    this.qrActive = false;
+    this.finalistsApproved = false;
   }
 
   /* -------------------------- RANKING -------------------------- */
@@ -76,8 +76,8 @@ export default class QRVoting {
   }
 
   async handleQRButton() {
-    const btn             = document.getElementById("generate-qr-btn");
-    const qrImg           = document.getElementById("qr");
+    const btn = document.getElementById("generate-qr-btn");
+    const qrImg = document.getElementById("qr");
     const expirationInput = document.getElementById("qr-expiration");
 
     if (!btn) return;
@@ -86,7 +86,7 @@ export default class QRVoting {
       try {
         if (this.qrActive) {
           this.qrActive = false;
-          qrImg.src     = "../src/assets/logo.svg";
+          qrImg.src = "../src/assets/logo.svg";
 
           btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
@@ -104,7 +104,7 @@ export default class QRVoting {
 
         const expirationDate = new Date(expirationValue).toISOString();
 
-        btn.disabled  = true;
+        btn.disabled = true;
         btn.innerHTML = `
           <span class="spinner-border spinner-border-sm me-2"></span>
           Generating QR...
@@ -114,12 +114,20 @@ export default class QRVoting {
 
         let qrSrc = await getQR(eventId);
 
-        if (!qrSrc) {
-
-          qrSrc = await createQR(eventId, expirationDate, this.finalists);
+        if (
+          !qrSrc ||
+          (Array.isArray(qrSrc) && qrSrc.length === 0) ||
+          typeof qrSrc !== "string"
+        ) {
+          const response = await createQR(
+            eventId,
+            expirationDate,
+            this.finalists,
+          );
+          qrSrc = response?.qrImage; // 👈 extrae el base64
         }
 
-        qrImg.src     = qrSrc;
+        qrImg.src = qrSrc;
         this.qrActive = true;
 
         btn.innerText = "Disable QR";
@@ -127,7 +135,6 @@ export default class QRVoting {
         btn.classList.add("btn-primary-disabled");
 
         this.updateQrStatusPill();
-
       } catch (err) {
         console.error("QR error:", err);
         alert("Error generating QR");
@@ -157,7 +164,9 @@ export default class QRVoting {
       </div>
 
       <div class="row g-3">
-        ${this.ranking.map((team, index) => `
+        ${this.ranking
+          .map(
+            (team, index) => `
           <div class="col-md-4">
             <div class="card p-3 ranking-card">
               <div class="d-flex justify-content-between">
@@ -167,12 +176,16 @@ export default class QRVoting {
                 </div>
                 <span class="badge bg-primary">${team.score ?? "—"}</span>
               </div>
-              ${this.finalists.find(t => t.id_team === team.id_team)
-                ? `<span class="badge bg-success mt-2">Finalist</span>`
-                : ""}
+              ${
+                this.finalists.find((t) => t.id_team === team.id_team)
+                  ? `<span class="badge bg-success mt-2">Finalist</span>`
+                  : ""
+              }
             </div>
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
 
       <div class="text-end mt-4">
@@ -192,12 +205,12 @@ export default class QRVoting {
       select.value = this.finalistsCount;
 
       select.addEventListener("change", (e) => {
-        this.finalistsCount    = Number(e.target.value);
+        this.finalistsCount = Number(e.target.value);
         this.finalistsApproved = false;
 
         this.updateFinalists();
         this.renderRankingPanel();
-        this.updateQrButtonState(); 
+        this.updateQrButtonState();
       });
     }
 
@@ -205,14 +218,14 @@ export default class QRVoting {
 
     if (approveBtn) {
       approveBtn.addEventListener("click", () => {
-        this.finalistsApproved = true; 
+        this.finalistsApproved = true;
 
-        approveBtn.disabled   = true;
-        approveBtn.innerHTML  = `Finalists Approved`;
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = `Finalists Approved`;
         approveBtn.classList.remove("btn-success");
         approveBtn.classList.add("btn-secondary");
 
-        this.updateQrButtonState(); // 
+        this.updateQrButtonState(); //
 
         console.log("Finalists approved:", this.finalists);
       });
@@ -224,14 +237,18 @@ export default class QRVoting {
   async render() {
     const app = document.getElementById("app");
 
-    const template = await fetch("../../pages/admin_qr.html").then(r => r.text());
+    const template = await fetch("../../pages/admin_qr.html").then((r) =>
+      r.text(),
+    );
 
     app.innerHTML = `
-      ${this.navbar.render()}
+    ${this.navbar.render()}
+    <div style="display:flex;flex-direction:column;width:100%">
       ${this.header.render()}
       <main class="dashboard-main">
         ${template}
       </main>
+    </div>
     `;
 
     this.header.mountBreadcrumb();
@@ -241,6 +258,6 @@ export default class QRVoting {
     this.renderRankingPanel();
     this.handleQRButton();
     this.updateQrStatusPill();
-    this.updateQrButtonState(); 
+    this.updateQrButtonState();
   }
 }

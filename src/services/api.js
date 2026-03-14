@@ -49,7 +49,7 @@ export async function loginUser(email, password) {
 export async function createQR(id_event, expires_at, finalists) {
   return apiFetch("/qr-votes", {
     method: "POST",
-    body: { id_event, expires_at, finalists },
+    body: { id_event, expires_at, top_n: finalists.length },
   })
 }
 
@@ -59,7 +59,7 @@ export async function getQR(id_event) {
 }
 
 export async function getPublicEvent(id) {
-  return apiFetch(`/public/events/${id}`, {
+  return apiFetch(`/event/${id}`, {
     method: "GET",
     auth: false
   });
