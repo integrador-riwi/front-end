@@ -18,8 +18,8 @@ export default class QRVoting {
     this.ranking = [];
     this.finalists = [];
     this.finalistsCount = 3;
-
     this.qrActive = false;
+    this.finalistsApproved = false;
   }
 
   /* -------------------------- RANKING -------------------------- */
@@ -27,14 +27,9 @@ export default class QRVoting {
   async fetchRanking() {
     try {
       const eventId = getSelectedEvent();
-
       const response = await getEventRanking(eventId);
 
-      console.log("Ranking API response:", response);
-
       this.ranking = response?.data?.ranking || [];
-      console.log("Ranking array:", this.ranking);
-
       this.updateFinalists();
     } catch (err) {
       console.error("Failed to fetch ranking:", err);
@@ -42,6 +37,7 @@ export default class QRVoting {
   }
 
   updateFinalists() {
+    if (!Array.isArray(this.ranking)) return;
     this.finalists = this.ranking.slice(0, this.finalistsCount);
   }
 
@@ -62,6 +58,23 @@ export default class QRVoting {
     }
   }
 
+  updateQrButtonState() {
+    const btn = document.getElementById("generate-qr-btn");
+    if (!btn) return;
+
+    if (this.finalistsApproved) {
+      btn.disabled = false;
+      btn.classList.remove("btn-secondary");
+      btn.classList.add("btn-primary-custom");
+      btn.title = "";
+    } else {
+      btn.disabled = true;
+      btn.classList.remove("btn-primary-custom");
+      btn.classList.add("btn-secondary");
+      btn.title = "Approve finalists first";
+    }
+  }
+
   async handleQRButton() {
     const btn = document.getElementById("generate-qr-btn");
     const qrImg = document.getElementById("qr");
@@ -73,7 +86,6 @@ export default class QRVoting {
       try {
         if (this.qrActive) {
           this.qrActive = false;
-
           qrImg.src = "../src/assets/logo.svg";
 
           btn.innerText = "Generate QR";
@@ -85,7 +97,6 @@ export default class QRVoting {
         }
 
         const expirationValue = expirationInput?.value;
-
         if (!expirationValue) {
           alert("Please select a QR expiration date.");
           return;
@@ -95,22 +106,28 @@ export default class QRVoting {
 
         btn.disabled = true;
         btn.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Generating QR...
-      `;
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Generating QR...
+        `;
 
         const eventId = getSelectedEvent();
 
-        const voteUrl = `https://team-up.crudzaso.com/vote/${eventId}`;
-
         let qrSrc = await getQR(eventId);
 
-        if (!qrSrc) {
-          qrSrc = await createQR(eventId, expirationDate, voteUrl);
+        if (
+          !qrSrc ||
+          (Array.isArray(qrSrc) && qrSrc.length === 0) ||
+          typeof qrSrc !== "string"
+        ) {
+          const response = await createQR(
+            eventId,
+            expirationDate,
+            this.finalists,
+          );
+          qrSrc = response?.qrImage; // 👈 extrae el base64
         }
 
         qrImg.src = qrSrc;
-
         this.qrActive = true;
 
         btn.innerText = "Disable QR";
@@ -131,77 +148,50 @@ export default class QRVoting {
 
   renderRankingPanel() {
     const container = document.getElementById("ranking-container");
-
     if (!container) return;
 
     container.innerHTML = `
-
       <div class="d-flex justify-content-between align-items-center mb-3">
-
         <h5>Event Ranking</h5>
-
         <div>
           Finalists:
           <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
-
             <option value="3">Top 3</option>
             <option value="6">Top 6</option>
             <option value="10">Top 10</option>
-
           </select>
         </div>
-
       </div>
 
       <div class="row g-3">
-
         ${this.ranking
           .map(
             (team, index) => `
-          
           <div class="col-md-4">
-
             <div class="card p-3 ranking-card">
-
               <div class="d-flex justify-content-between">
-
                 <div>
-
                   <strong>#${index + 1} ${team.team_name}</strong><br>
-
-                  <small class="text-muted">
-                    ${team.project_name}
-                  </small>
-
+                  <small class="text-muted">${team.project_name}</small>
                 </div>
-
-                <span class="badge bg-primary">
-                  ${team.score ?? "—"}
-                </span>
-
+                <span class="badge bg-primary">${team.score ?? "—"}</span>
               </div>
-
               ${
                 this.finalists.find((t) => t.id_team === team.id_team)
                   ? `<span class="badge bg-success mt-2">Finalist</span>`
                   : ""
               }
-
             </div>
-
           </div>
         `,
           )
           .join("")}
-
       </div>
 
       <div class="text-end mt-4">
-
         <button class="btn btn-success" id="approve-finalists-btn">
           Approve Finalists
         </button>
-
       </div>
     `;
 
@@ -216,10 +206,11 @@ export default class QRVoting {
 
       select.addEventListener("change", (e) => {
         this.finalistsCount = Number(e.target.value);
+        this.finalistsApproved = false;
 
         this.updateFinalists();
-
         this.renderRankingPanel();
+        this.updateQrButtonState();
       });
     }
 
@@ -227,9 +218,16 @@ export default class QRVoting {
 
     if (approveBtn) {
       approveBtn.addEventListener("click", () => {
-        console.log("Finalists approved:", this.finalists);
+        this.finalistsApproved = true;
 
-        alert("Finalists approved successfully!");
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = `Finalists Approved`;
+        approveBtn.classList.remove("btn-success");
+        approveBtn.classList.add("btn-secondary");
+
+        this.updateQrButtonState(); //
+
+        console.log("Finalists approved:", this.finalists);
       });
     }
   }
@@ -240,26 +238,26 @@ export default class QRVoting {
     const app = document.getElementById("app");
 
     const template = await fetch("../../pages/admin_qr.html").then((r) =>
-        r.text(),
+      r.text(),
     );
 
     app.innerHTML = `
-      ${this.navbar.render()}
+    ${this.navbar.render()}
+    <div style="display:flex;flex-direction:column;width:100%">
       ${this.header.render()}
       <main class="dashboard-main">
         ${template}
       </main>
+    </div>
     `;
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
 
     await this.fetchRanking();
-
     this.renderRankingPanel();
-
     this.handleQRButton();
-
     this.updateQrStatusPill();
+    this.updateQrButtonState();
   }
 }
