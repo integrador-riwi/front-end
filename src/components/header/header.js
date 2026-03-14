@@ -12,7 +12,16 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   tlDashboard: [
     { label: t("nav.events"), route: "coderEventSelect" },
-    { label: t("nav.teams"), route: null },
+    {
+      label: (() => {
+        try {
+          const stored = sessionStorage.getItem("selectedEvent");
+          if (stored) return JSON.parse(stored).title || t("nav.teams");
+        } catch (_) {}
+        return t("nav.teams");
+      })(),
+      route: null,
+    },
   ],
   projects: [
     { label: t("nav.dashboard"), route: "dashboard" },
