@@ -147,9 +147,9 @@ export default class CreateEvent {
         ${t("createEvent.allClans")}
       </button>
       ${ALL_CLANS.map((clan) => {
-      const active = this.targetClans.includes(clan);
-      return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
-    }).join("")}
+        const active = this.targetClans.includes(clan);
+        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+      }).join("")}
     `;
   }
 
@@ -220,10 +220,11 @@ export default class CreateEvent {
       for (const a of this.rubricAreas) {
         for (const c of a.criteria) {
           if (!c.name?.trim()) return `A criteria for ${a.title} has no name.`;
-          if (!c.description?.trim()) return `The criteria "${c.name}" requires a description.`;
+          if (!c.description?.trim())
+            return `The criteria "${c.name}" requires a description.`;
           if (c.levels.length === 0)
             return `The criteria "${c.name}" has no performance levels.`;
-          
+
           for (let i = 0; i < c.levels.length; i++) {
             if (!c.levels[i].description?.trim()) {
               return `Level ${i + 1} description is missing for criteria "${c.name}".`;
@@ -264,7 +265,7 @@ export default class CreateEvent {
       toast.success(
         t("createEvent.successTitle") ?? "Event Created!",
         t("createEvent.successMsg") ??
-        "The event has been created successfully.",
+          "The event has been created successfully.",
       );
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
@@ -315,12 +316,27 @@ export default class CreateEvent {
         weight: 0,
         isExpanded: true,
         levels: [
-          { score: 0, name: 'Insatisfactorio', description: '', color: '#ff4d4f' },
-          { score: 25, name: 'Necesitas Mejorar', description: '', color: '#ff7a45' },
-          { score: 50, name: 'Bueno', description: '', color: '#faad14' },
-          { score: 75, name: 'Satisfactorio', description: '', color: '#7cb305' },
-          { score: 100, name: 'Excelente', description: '', color: '#52c41a' }
-        ]
+          {
+            score: 0,
+            name: "Insatisfactorio",
+            description: "",
+            color: "#ff4d4f",
+          },
+          {
+            score: 25,
+            name: "Necesitas Mejorar",
+            description: "",
+            color: "#ff7a45",
+          },
+          { score: 50, name: "Bueno", description: "", color: "#faad14" },
+          {
+            score: 75,
+            name: "Satisfactorio",
+            description: "",
+            color: "#7cb305",
+          },
+          { score: 100, name: "Excelente", description: "", color: "#52c41a" },
+        ],
       });
       area.isExpanded = true;
       this._recalculateWeights();
@@ -372,20 +388,30 @@ export default class CreateEvent {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, { type: "array" });
         let sheetData = [];
 
         for (const sn of workbook.SheetNames) {
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], { header: 1, defval: '' });
+          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {
+            header: 1,
+            defval: "",
+          });
           for (let i = 0; i < Math.min(rows.length, 15); i++) {
-            const row = rows[i].map(c => String(c || "").trim().toLowerCase());
-            if (row.includes('area') && row.includes('criterio')) {
+            const row = rows[i].map((c) =>
+              String(c || "")
+                .trim()
+                .toLowerCase(),
+            );
+            if (row.includes("area") && row.includes("criterio")) {
               this._parseExcelRubric(row, rows.slice(i + 1));
               return;
             }
           }
         }
-        toast.error("Format Error", "Could not find 'Area' and 'Criterio' columns.");
+        toast.error(
+          "Format Error",
+          "Could not find 'Area' and 'Criterio' columns.",
+        );
       } catch (err) {
         toast.error("Import Error", "Failed to process file.");
       }
@@ -395,24 +421,34 @@ export default class CreateEvent {
 
   _parseExcelRubric(headerRow, rows) {
     const colIdx = (key) => headerRow.indexOf(key.toLowerCase());
-    const requiredCols = ['area', 'criterio', 'descripcion_criterio', 'peso_criterio', 'insatisfactorio', 'necesitas_mejorar', 'bueno', 'satisfactorio', 'excelente'];
-    
+    const requiredCols = [
+      "area",
+      "criterio",
+      "descripcion_criterio",
+      "peso_criterio",
+      "insatisfactorio",
+      "necesitas_mejorar",
+      "bueno",
+      "satisfactorio",
+      "excelente",
+    ];
+
     // Check for missing columns
-    const missingCols = requiredCols.filter(c => colIdx(c) === -1);
+    const missingCols = requiredCols.filter((c) => colIdx(c) === -1);
     if (missingCols.length > 0) {
       toast.error("Format Error", `Missing columns: ${missingCols.join(", ")}`);
       return;
     }
 
-    const idxArea = colIdx('area');
-    const idxName = colIdx('criterio');
-    const idxDesc = colIdx('descripcion_criterio');
-    const idxWeight = colIdx('peso_criterio');
-    const idxL1 = colIdx('insatisfactorio');
-    const idxL2 = colIdx('necesitas_mejorar');
-    const idxL3 = colIdx('bueno');
-    const idxL4 = colIdx('satisfactorio');
-    const idxL5 = colIdx('excelente');
+    const idxArea = colIdx("area");
+    const idxName = colIdx("criterio");
+    const idxDesc = colIdx("descripcion_criterio");
+    const idxWeight = colIdx("peso_criterio");
+    const idxL1 = colIdx("insatisfactorio");
+    const idxL2 = colIdx("necesitas_mejorar");
+    const idxL3 = colIdx("bueno");
+    const idxL4 = colIdx("satisfactorio");
+    const idxL5 = colIdx("excelente");
 
     let totalWeight = 0;
     const errors = [];
@@ -423,7 +459,7 @@ export default class CreateEvent {
       const name = String(row[idxName] || "").trim();
       const desc = String(row[idxDesc] || "").trim();
       const weight = parseFloat(row[idxWeight]) || 0;
-      
+
       if (!areaVal && !name) return; // Skip empty rows
 
       const areaType = this._mapArea(areaVal);
@@ -431,51 +467,97 @@ export default class CreateEvent {
 
       if (!name) errors.push(`Row ${rowNum}: Missing 'Criterio' name.`);
       if (!desc) errors.push(`Row ${rowNum}: Missing 'Descripcion_Criterio'.`);
-      
+
       const levels = [
-        { score: 0, name: 'Insatisfactorio', description: String(row[idxL1] || "").trim(), color: '#ff4d4f' },
-        { score: 25, name: 'Necesitas Mejorar', description: String(row[idxL2] || "").trim(), color: '#ff7a45' },
-        { score: 50, name: 'Bueno', description: String(row[idxL3] || "").trim(), color: '#faad14' },
-        { score: 75, name: 'Satisfactorio', description: String(row[idxL4] || "").trim(), color: '#7cb305' },
-        { score: 100, name: 'Excelente', description: String(row[idxL5] || "").trim(), color: '#52c41a' }
+        {
+          score: 0,
+          name: "Insatisfactorio",
+          description: String(row[idxL1] || "").trim(),
+          color: "#ff4d4f",
+        },
+        {
+          score: 25,
+          name: "Necesitas Mejorar",
+          description: String(row[idxL2] || "").trim(),
+          color: "#ff7a45",
+        },
+        {
+          score: 50,
+          name: "Bueno",
+          description: String(row[idxL3] || "").trim(),
+          color: "#faad14",
+        },
+        {
+          score: 75,
+          name: "Satisfactorio",
+          description: String(row[idxL4] || "").trim(),
+          color: "#7cb305",
+        },
+        {
+          score: 100,
+          name: "Excelente",
+          description: String(row[idxL5] || "").trim(),
+          color: "#52c41a",
+        },
       ];
 
-      levels.forEach(lvl => {
-        if (!lvl.description) errors.push(`Row ${rowNum}: Missing description for level '${lvl.name}'.`);
+      levels.forEach((lvl) => {
+        if (!lvl.description)
+          errors.push(
+            `Row ${rowNum}: Missing description for level '${lvl.name}'.`,
+          );
       });
 
       totalWeight += weight;
-      newCriteria.push({ areaType, data: {
-        id: this._generateId(),
-        name,
-        description: desc,
-        weight,
-        isExpanded: false,
-        levels
-      }});
+      newCriteria.push({
+        areaType,
+        data: {
+          id: this._generateId(),
+          name,
+          description: desc,
+          weight,
+          isExpanded: false,
+          levels,
+        },
+      });
     });
 
     if (errors.length > 0) {
-      toast.error("Validation Failed", errors.slice(0, 3).join("<br>") + (errors.length > 3 ? `<br>...and ${errors.length - 3} more errors.` : ""));
+      toast.error(
+        "Validation Failed",
+        errors.slice(0, 3).join("<br>") +
+          (errors.length > 3
+            ? `<br>...and ${errors.length - 3} more errors.`
+            : ""),
+      );
       return;
     }
 
     if (Math.abs(totalWeight - 100) > 0.1) {
-      toast.error("Weight Error", `Total weight in Excel is ${totalWeight}%. It must be exactly 100%.`);
+      toast.error(
+        "Weight Error",
+        `Total weight in Excel is ${totalWeight}%. It must be exactly 100%.`,
+      );
       return;
     }
 
     // Reset and Populate
-    this.rubricAreas.forEach(a => { a.criteria = []; a.weight = 0; });
-    newCriteria.forEach(item => {
-      const area = this.rubricAreas.find(a => a.type === item.areaType);
+    this.rubricAreas.forEach((a) => {
+      a.criteria = [];
+      a.weight = 0;
+    });
+    newCriteria.forEach((item) => {
+      const area = this.rubricAreas.find((a) => a.type === item.areaType);
       if (area) area.criteria.push(item.data);
     });
 
-    this.rubricMode = 'platform';
+    this.rubricMode = "platform";
     this._recalculateWeights();
     this._rerenderRubricSection();
-    toast.success("Import Successful", `Processed ${newCriteria.length} criteria successfully.`);
+    toast.success(
+      "Import Successful",
+      `Processed ${newCriteria.length} criteria successfully.`,
+    );
   }
 
   _mapArea(val) {
@@ -584,20 +666,21 @@ export default class CreateEvent {
                     <span class="badge bg-white text-dark border me-2">Areas: 3</span>
                     <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
                   </div>
-                  ${!isWeightOk
-        ? `
+                  ${
+                    !isWeightOk
+                      ? `
                     <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Total weight must be 100%
                     </div>
                   `
-        : `
+                      : `
                      <div class="text-success small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Weight correctly assigned
                     </div>
                   `
-      }
+                  }
                </div>
             </div>
           </div>
@@ -632,21 +715,23 @@ export default class CreateEvent {
               </div>
            </div>
            
-           ${area.isExpanded
-        ? `
+           ${
+             area.isExpanded
+               ? `
              <div class="card-body bg-light border-top">
-                ${!hasCrit
-          ? `
+                ${
+                  !hasCrit
+                    ? `
                    <div class="text-center py-3">
                      <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
                    </div>
                 `
-          : `
+                    : `
                    <div class="criteria-list">
                       ${area.criteria.map((crit) => this._renderCriteriaItem(area, crit)).join("")}
                    </div>
                 `
-        }
+                }
                 <div class="mt-3">
                   <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -655,8 +740,8 @@ export default class CreateEvent {
                 </div>
              </div>
            `
-        : ""
-      }
+               : ""
+           }
         </div>
      `;
   }
@@ -687,8 +772,8 @@ export default class CreateEvent {
 
             <div class="ce-levels-grid pt-3 border-top">
                 ${crit.levels
-        .map(
-          (lvl, index) => `
+                  .map(
+                    (lvl, index) => `
                         <div class="level-card h-100 p-3 border rounded-3 bg-light-soft" style="border-top: 4px solid ${lvl.color} !important; transition: all 0.2s ease;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="badge rounded-pill" style="background-color: ${lvl.color}20; color: ${lvl.color}; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; padding: 4px 10px;">
@@ -702,13 +787,12 @@ export default class CreateEvent {
                             <input type="hidden" class="lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
                         </div>
                     `,
-        )
-        .join("")}
+                  )
+                  .join("")}
             </div>
         </div>
     `;
   }
-
 
   _attachRubricHandlers() {
     const saveInputs = () => {
@@ -768,12 +852,14 @@ export default class CreateEvent {
       this._rerenderRubricSection();
     });
 
-    document.getElementById('excel-upload-input')?.addEventListener('change', (e) => {
-      this._handleFileUpload(e);
-    });
+    document
+      .getElementById("excel-upload-input")
+      ?.addEventListener("change", (e) => {
+        this._handleFileUpload(e);
+      });
 
-    document.querySelectorAll('.area-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll(".area-toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
         saveInputs();
         const a = this.rubricAreas.find((area) => area.id === btn.dataset.area);
         if (a) {
@@ -883,7 +969,7 @@ export default class CreateEvent {
                 </div>
                 <div class="col-12" id="github-org-section">
                   <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.githubOrganization")} <span class="text-danger">*</span></label>
-                  <div id="github-org-picker">
+                  <div id="ce-github-org-picker">
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
                       <span class="spinner-border spinner-border-sm"></span> ${t("createEvent.verifyingGithub")}
                     </div>
@@ -979,7 +1065,7 @@ export default class CreateEvent {
       try {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
-      } catch (_) { }
+      } catch (_) {}
 
       toast.warning(
         "GitHub required",
@@ -1003,7 +1089,7 @@ export default class CreateEvent {
       : (t("createEvent.createBtn") ?? "Create Event");
   }
 
-  _clearFeedback() { }
+  _clearFeedback() {}
   _showError(msg) {
     toast.error(t("common.errorTitle"), msg);
   }
