@@ -219,9 +219,16 @@ export default class CreateEvent {
       let totalWeight = this._getTotalWeight();
       for (const a of this.rubricAreas) {
         for (const c of a.criteria) {
-          if (!c.name) return `A criteria for ${a.title} has no name.`;
+          if (!c.name?.trim()) return `A criteria for ${a.title} has no name.`;
+          if (!c.description?.trim()) return `The criteria "${c.name}" requires a description.`;
           if (c.levels.length === 0)
             return `The criteria "${c.name}" has no performance levels.`;
+          
+          for (let i = 0; i < c.levels.length; i++) {
+            if (!c.levels[i].description?.trim()) {
+              return `Level ${i + 1} description is missing for criteria "${c.name}".`;
+            }
+          }
         }
       }
       if (Math.abs(totalWeight - 100) > 0.1 && totalWeight > 0) {
@@ -618,58 +625,52 @@ export default class CreateEvent {
 
   _renderCriteriaItem(area, crit) {
     return `
-        <div class="criteria-item p-3 mb-3 border rounded bg-white shadow-sm">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1 pe-3">
-                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="${t("createEvent.critName")}" value="${crit.name}">
-                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
+        <div class="criteria-item p-4 mb-4 border rounded-3 bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="flex-grow-1 pe-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.critName")} <span class="text-danger">*</span></label>
+                    <input type="text" id="name-${crit.id}" class="form-control fw-bold bg-light px-3 py-2 crit-input" style="font-size: 1.1rem; border-radius: 8px; border: 1.5px solid #e2e8f0;" placeholder="${t("createEvent.critName")}" value="${crit.name}">
+                    
+                    <label class="form-label text-muted small fw-bold text-uppercase mt-3 mb-1" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.critDesc")} <span class="text-danger">*</span></label>
+                    <input type="text" id="desc-${crit.id}" class="form-control bg-light px-3 py-2 text-muted crit-input" style="border-radius: 8px; border: 1.5px solid #e2e8f0;" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <div class="input-group input-group-sm" style="width: 100px;">
-                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end" placeholder="0" value="${crit.weight}">
-                        <span class="input-group-text bg-white">%</span>
+                <div class="d-flex flex-column align-items-end gap-2">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.weight")} <span class="text-danger">*</span></label>
+                    <div class="input-group" style="width: 110px;">
+                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end fw-bold" style="border-radius: 8px 0 0 8px; border: 1.5px solid #e2e8f0; background: #f8fafc;" placeholder="0" value="${crit.weight}">
+                        <span class="input-group-text bg-light border" style="border-radius: 0 8px 8px 0; border-color: #e2e8f0; font-weight: 700; color: #64748b;">%</span>
                     </div>
-                    <button class="btn btn-sm btn-light text-danger btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    <button class="btn btn-sm btn-outline-danger border-0 mt-2 btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}" title="Remove Criteria">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        <span class="ms-1 small fw-bold">${t("common.delete") ?? "Delete"}</span>
                     </button>
                 </div>
             </div>
 
-            <div class="levels-container mt-3">
-                <div class="row g-2">
-                    ${crit.levels
+            <div class="ce-levels-grid pt-3 border-top">
+                ${crit.levels
         .map(
           (lvl, index) => `
-                        <div class="col-md-4">
-                            <div class="level-card h-100 p-2 border rounded" style="border-top: 3px solid ${lvl.color} !important; background: white;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge" style="background-color: ${lvl.color}15; color: ${lvl.color}; font-size: 0.7rem;">LEVEL ${index + 1} - ${lvl.score}%</span>
-                                    <button class="btn btn-sm p-0 text-muted btn-rm-lvl" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                    </button>
-                                </div>
-                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
-                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="2">${lvl.description}</textarea>
-                                <div class="mt-2 d-flex align-items-center gap-2">
-                                    <label class="small text-muted mb-0">Pts %:</label>
-                                    <input type="number" class="form-control form-control-sm px-1 lvl-input" style="width: 50px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
-                                    <input type="color" class="form-control form-control-color form-control-sm p-0 border-0 ms-auto lvl-input" style="width:20px;height:20px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}">
-                                </div>
+                        <div class="level-card h-100 p-3 border rounded-3 bg-light-soft" style="border-top: 4px solid ${lvl.color} !important; transition: all 0.2s ease;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge rounded-pill" style="background-color: ${lvl.color}20; color: ${lvl.color}; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; padding: 4px 10px;">
+                                    LVL ${index + 1} • ${lvl.score} PTS
+                                </span>
+                                <input type="color" class="form-control form-control-color p-0 border-0 bg-transparent lvl-input" style="width:20px;height:20px; cursor: pointer;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}" title="Customize Color">
                             </div>
+                            <input type="text" class="form-control form-control-sm fw-bold bg-white mb-2 lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 mt-2" style="font-size: 0.6rem;">Performance Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-sm bg-white lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; font-size: 0.8rem; min-height: 80px; resize: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="3">${lvl.description}</textarea>
+                            <input type="hidden" class="lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
                         </div>
                     `,
         )
         .join("")}
-                    <div class="col-md-12 mt-2">
-                        <button class="btn btn-sm btn-light w-100 border border-dashed text-primary btn-add-lvl" data-area="${area.id}" data-crit="${crit.id}">
-                            + Add Level
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     `;
   }
+
 
   _attachRubricHandlers() {
     const saveInputs = () => {
@@ -758,24 +759,6 @@ export default class CreateEvent {
       });
     });
 
-    document.querySelectorAll(".btn-add-lvl").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        saveInputs();
-        this._addLevel(btn.dataset.area, btn.dataset.crit);
-      });
-    });
-
-    document.querySelectorAll(".btn-rm-lvl").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        saveInputs();
-        this._removeLevel(
-          btn.dataset.area,
-          btn.dataset.crit,
-          parseInt(btn.dataset.index),
-        );
-      });
-    });
-
     document.querySelectorAll('.crit-input[id^="weight-"]').forEach((input) => {
       input.addEventListener("change", () => {
         saveInputs();
@@ -821,7 +804,7 @@ export default class CreateEvent {
 
               <div class="row g-4">
                 <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")}</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")} <span class="text-danger">*</span></label>
                   <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
                 </div>
                 <div class="col-12">
@@ -834,7 +817,7 @@ export default class CreateEvent {
                   <select id="ev-type" class="form-select app-input">
                     <option value="CAPSTONE">${t("createEvent.capstone")}</option>
                     <option value="WORKSHOP">${t("createEvent.workshop")}</option>
-                    <option value="EVENT">${t("createEvent.social")}</option>
+                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
@@ -849,7 +832,7 @@ export default class CreateEvent {
                   <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")}</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")} <span class="text-danger">*</span></label>
                   <input id="ev-start-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
@@ -865,56 +848,6 @@ export default class CreateEvent {
                   <div id="github-org-picker">
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
                       <span class="spinner-border spinner-border-sm"></span> ${t("createEvent.verifyingGithub")}
-                    </div>
-                  </div>
-                </div>
-
-              <div class="row g-4">
-                <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Title *</label>
-                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
-                </div>
-                <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelDescription")}</label>
-                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
-                </div>
-                
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelType")}</label>
-                  <select id="ev-type" class="form-select app-input">
-                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
-                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
-                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelRoute")}</label>
-                  <select id="ev-route" class="form-select app-input">
-                    <option value="BASIC">${t("createEvent.basic") ?? "Basic"}</option>
-                    <option value="ADVANCED">${t("createEvent.advanced") ?? "Advanced"}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelCohort")}</label>
-                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Start date *</label>
-                  <input id="ev-start-date" type="date" class="form-control app-input" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelFinalDelivery")}</label>
-                  <input id="ev-end-date" type="date" class="form-control app-input" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelMaxTeamSize")}</label>
-                  <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
-                </div>
-                <div class="col-12" id="github-org-section">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelGithubOrg")} <span class="text-danger">*</span></label>
-                  <div id="github-org-picker">
-                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
-                      <span class="spinner-border spinner-border-sm"></span> Verifying GitHub...
                     </div>
                   </div>
                 </div>
