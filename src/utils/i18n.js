@@ -517,6 +517,7 @@ const resources = {
         voteBtn: "Votar",
         voteSuccess: "¡Voto registrado correctamente!",
         voteError: "Error al registrar el voto",
+        noTeams: "Aún no hay equipos disponibles para votar.",
       },
 
       common: {
@@ -1041,6 +1042,7 @@ const resources = {
         voteBtn: "Vote",
         voteSuccess: "Vote registered successfully!",
         voteError: "Error submitting vote",
+        noTeams: "No teams available to vote for yet.",
       },
 
       common: {
