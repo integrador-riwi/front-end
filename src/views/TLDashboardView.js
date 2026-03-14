@@ -2,6 +2,7 @@
 //import "../assets/styles/coderTeam.css";
 import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
+import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
@@ -20,6 +21,7 @@ export default class TLDashboardView {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
+    this.header = new Header(router);
 
     this.selectedEvent = router?.currentParams?.selectedEvent ?? null;
     if (!this.selectedEvent) {
@@ -56,7 +58,7 @@ export default class TLDashboardView {
 
     try {
       const res = await apiFetch(
-        `/teams?idEvent=${this.selectedEvent.id}&limit=100`,
+        `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
         { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
@@ -95,8 +97,9 @@ export default class TLDashboardView {
     if (!app) return;
 
     app.innerHTML = `
-      <div class="layout">
-        ${this.navbar.render()}
+      ${this.navbar.render()}
+      <div style="display:flex;flex-direction:column;width:100%">
+        ${this.header.render()}
         <main class="coder-home-main flex-grow-1">
           <div id="tl-content"></div>
         </main>
@@ -104,6 +107,8 @@ export default class TLDashboardView {
     `;
 
     this.navbar.attachEventHandlers();
+    this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
     this._renderList();
     if (!this._offLangChange) {
       this._offLangChange = onLangChange(() => this.render());
@@ -152,21 +157,19 @@ export default class TLDashboardView {
                 <span class="tld-stat-label">${t("tl.coders")}</span>
               </div>
             </div>
-          </div>
 
-          <!-- Search -->
-          <div class="tld-search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              id="tldSearch"
-              type="text"
-              class="tld-search-input"
-              placeholder="${t("tl.searchTeams")}"
-              value="${this.searchQuery}" />
+            <div class="tld-search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                id="tldSearch"
+                type="text"
+                class="tld-search-input"
+                placeholder="${t("tl.searchTeams")}"
+                value="${this.searchQuery}" />
+            </div>
           </div>
-        </header>
 
         <!-- Grid -->
         <div class="tld-grid" id="tldGrid">
@@ -377,10 +380,6 @@ export default class TLDashboardView {
 
   // ── Event handlers ────────────────────────────────────────────────────────
   _attachListHandlers() {
-    document.getElementById("tldBackBtn")?.addEventListener("click", () => {
-      this.router.navigate("coderEventSelect");
-    });
-
     const searchInput = document.getElementById("tldSearch");
     if (searchInput) {
       searchInput.value = this.searchQuery;

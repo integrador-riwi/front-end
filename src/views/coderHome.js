@@ -1,6 +1,7 @@
 import "../assets/styles/coderHome.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar";
+import Header from "../components/header/header-config.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import {
@@ -42,6 +43,7 @@ export default class CoderHome {
   constructor(router, { user, team } = {}) {
     this.router = router;
     this.navbar = new Navbar(router);
+    this.header = new Header(router);
     this.user = getUser();
     this.team = team || null;
     this.isLeader = false;
@@ -286,7 +288,7 @@ export default class CoderHome {
       const response = await apiFetch("/teams/my-teams", { method: "GET" });
       const data = response?.data ?? response;
       this.pendingInvitations = data?.pendingInvitations ?? [];
-      // Banner now via Socket - this._updateInvitationsBanner();
+      this._updateInvitationsBanner();
     });
   }
 
@@ -315,10 +317,7 @@ export default class CoderHome {
           const eventId = this.team?.id_event ?? this.selectedEvent?.id ?? null;
           setTimeout(() => {
             loadProjectBrief();
-            if (projectId) {
-              if (this.commentsCleanup) this.commentsCleanup();
-              this.commentsCleanup = loadComments(projectId, this.user);
-            }
+            if (projectId) loadComments(projectId, this.user);
             if (projectId) initDeliverables(projectId);
             if (
               projectId &&
@@ -358,17 +357,27 @@ export default class CoderHome {
           selectedEvent: this.selectedEvent ?? null,
         });
 
-    // Banners now handled via Socket notifications - keeping code for fallback if needed
-    const pendingBanner = "";
+    const pendingBanner =
+      !this.team &&
+      (this.pendingInvitations.length > 0 ||
+        this.pendingJoinRequests.length > 0)
+        ? this._renderPendingInvitationsBanner() +
+          this._renderPendingJoinRequestsBanner()
+        : "";
 
     app.innerHTML = `
       ${this.navbar.render()}
-      <main class="coder-home-main">
-        ${pendingBanner}
-        ${content}
-        ${this._renderInviteModal()}
-      </main>
+      <div style="display:flex;flex-direction:column;width:100%">
+        ${this.header.render()}
+        <main class="coder-home-main">
+          ${this.team ? "" : pendingBanner}
+          ${content}
+          ${this._renderInviteModal()}
+        </main>
+      </div>
     `;
+    this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
 
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
@@ -397,31 +406,40 @@ export default class CoderHome {
   // Helpers
   // ─────────────────────────────────────────
   _mapTeams(rawTeams) {
-    return rawTeams.map((t) => {
-      const memberCount = parseInt(t.member_count) || 0;
-      const maxMembers =
-        t.max_team_size ?? this.selectedEvent?.max_team_size ?? 5;
-      const isFull = memberCount >= maxMembers;
-      const isPending =
-        !isFull &&
-        (this.pendingInvitations.some((inv) => inv.id_team === t.id_team) ||
-          this.pendingJoinRequests.some((req) => req.id_team === t.id_team));
-      return {
-        id: t.id_team,
-        name: t.name,
-        description: t.description ?? null,
-        leaderName: t.leader_name ?? null,
-        leaderEmail: t.leader_email ?? null,
-        leaderId: t.leader_id ?? null,
-        leaderAvatarUrl: t.leader_avatar_url ?? null,
-        members: t.members ?? [],
-        memberCount,
-        maxMembers,
-        slotsLeft: Math.max(0, maxMembers - memberCount),
-        status: isFull ? "full" : isPending ? "pending" : "open",
-        createdAt: t.created_at ?? null,
-      };
-    });
+    return (
+      rawTeams
+        // Safety net: never show teams whose project was already submitted,
+        // even if the backend somehow returns them (e.g. stale cache, other endpoints).
+        // The primary filter lives in teams.repository.js → findAll().
+        .filter((t) => !t.submitted_at)
+        .map((t) => {
+          const memberCount = parseInt(t.member_count) || 0;
+          const maxMembers =
+            t.max_team_size ?? this.selectedEvent?.max_team_size ?? 5;
+          const isFull = memberCount >= maxMembers;
+          const isPending =
+            !isFull &&
+            (this.pendingInvitations.some((inv) => inv.id_team === t.id_team) ||
+              this.pendingJoinRequests.some(
+                (req) => req.id_team === t.id_team,
+              ));
+          return {
+            id: t.id_team,
+            name: t.name,
+            description: t.description ?? null,
+            leaderName: t.leader_name ?? null,
+            leaderEmail: t.leader_email ?? null,
+            leaderId: t.leader_id ?? null,
+            leaderAvatarUrl: t.leader_avatar_url ?? null,
+            members: t.members ?? [],
+            memberCount,
+            maxMembers,
+            slotsLeft: Math.max(0, maxMembers - memberCount),
+            status: isFull ? "full" : isPending ? "pending" : "open",
+            createdAt: t.created_at ?? null,
+          };
+        })
+    );
   }
 
   async _loadMoreTeams() {
@@ -433,9 +451,15 @@ export default class CoderHome {
 
     try {
       const nextPage = this._teamsPage + 1;
-      const teamsRes = await apiFetch(`/teams?limit=10&page=${nextPage}`, {
-        method: "GET",
-      });
+      const eventIdParam = this.selectedEvent?.id
+        ? `&idEvent=${this.selectedEvent.id}`
+        : "";
+      const teamsRes = await apiFetch(
+        `/teams?limit=10&page=${nextPage}${eventIdParam}`,
+        {
+          method: "GET",
+        },
+      );
       const teamsData = teamsRes?.data ?? teamsRes;
       const rawTeams = teamsData?.teams ?? [];
       this._teamsTotalPages =
@@ -625,8 +649,7 @@ export default class CoderHome {
     if (this._pollingInterval) {
       clearInterval(this._pollingInterval);
       this._pollingInterval = null;
-      this.commentsCleanup = null;
-    }
+    this._stopPolling();
     this._destroyScrollObserver();
   }
 
@@ -682,7 +705,6 @@ export default class CoderHome {
           );
           this.pendingInvitations = newInvitations;
           // Banner now via Socket - no need to update
-          // this._updateInvitationsBanner();
           trulyNew.forEach((inv) => {
             toast.info(
               t("invite.newInvitation"),
@@ -725,8 +747,6 @@ export default class CoderHome {
     if (!main) return;
     const existing = main.querySelector(".pending-invitations-banner");
     if (existing) existing.remove();
-    // Banner removed - notifications now via Socket
-    /*
     if (this.pendingInvitations.length > 0) {
       main.insertAdjacentHTML(
         "afterbegin",
@@ -743,7 +763,6 @@ export default class CoderHome {
         );
       });
     }
-    */
   }
 
   _showInvitationsToast(invitations) {

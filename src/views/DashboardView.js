@@ -29,7 +29,7 @@ export default class DashboardView {
     const app = document.getElementById("app");
     app.innerHTML = `
       ${this.navbar.render()}
-      <div class="container p-0">
+      <div class="container p-0 mx-0 mw-100">
         ${this.header.render()}
         <main class="dashboard-main">
           <div id="db-root"></div>

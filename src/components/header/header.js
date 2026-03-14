@@ -1,6 +1,5 @@
 import { t } from "../../utils/i18n.js";
 
-// Arrow functions so t() is evaluated fresh on every call (picks up current language)
 const HEADER_LINKS_BY_VIEW = () => ({
   dashboard: [
     { label: t("nav.events"), route: "events" },
@@ -11,11 +10,24 @@ const HEADER_LINKS_BY_VIEW = () => ({
     { label: t("nav.management"), route: "settings" },
     { label: t("nav.createNew"), route: "events/create" },
   ],
+  tlDashboard: [
+    { label: t("nav.events"), route: "coderEventSelect" },
+    { label: t("nav.teams"), route: null },
+  ],
   projects: [
     { label: t("nav.dashboard"), route: "dashboard" },
     { label: t("nav.teamsProjects"), route: "projects" },
   ],
   teamDetail: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.teamDetails"), route: null },
+  ],
+  qr: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.qrVoting"), route: null },
+  ],
+  coderHome: [
     { label: t("nav.events"), route: "events" },
     { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: t("nav.teamDetails"), route: null },
@@ -31,9 +43,21 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
     variant: "details",
     title: t("nav.dashboard"),
   },
+  coderHome: {
+    variant: "details",
+    title: t("nav.teamDetails"),
+  },
   "events/create": {
     variant: "create-event",
     title: t("nav.createNewEvent"),
+  },
+  tlDashboard: {
+    variant: "details",
+    title: t("nav.teams"),
+  },
+  qr: {
+    variant: "details",
+    title: t("nav.qrVoting"),
   },
   projects: {
     variant: "teams",

@@ -45,7 +45,7 @@ export async function loginUser(email, password) {
   });
 }
 
-export async function createQR(id_event, expires_at) {
+export async function createQR(id_event, expires_at, url) {
   return apiFetch("/qr-votes", {
     method: "POST",
     body: { id_event, expires_at },
@@ -90,6 +90,20 @@ export async function getTeamsByEvent(eventId) {
   });
 
   return response.data ?? response;
+}
+
+export async function getEventById(eventId) {
+  const response = await apiFetch(`/events/${eventId}`, 
+    {method: 'GET'});
+
+    return response.data
+} 
+
+export async function submitVote(data) {
+  return apiFetch("/api/votes", {
+    method: "POST",
+    body: { data },
+  });
 }
 
 export async function createTeam(teamData) {

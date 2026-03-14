@@ -17,6 +17,7 @@ import TLDashboardView from "../views/TLDashboardView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyProfile, getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
+import PublicVotingPage from "../views/PublicVotingPage.js";
 import {
   i18nReady,
   t,
@@ -97,6 +98,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
+  vote: "PUBLIC",
 };
 
 class App {
@@ -137,6 +139,15 @@ class App {
   }
 
   init() {
+    const path = window.location.pathname;
+
+    // Detect QR public voting route
+    if (path.startsWith("/vote/")) {
+      const eventId = path.split("/")[2];
+      this.navigate("vote", { eventId });
+      return;
+    }
+
     const user = getCurrentUser();
     this.user = user;
 
@@ -287,7 +298,9 @@ class App {
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
-
+      case "vote":
+        this.currentView = new PublicVotingPage(this, params);
+        break;
       default:
         this.currentView = new NotFoundView(this);
         break;

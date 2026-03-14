@@ -17,9 +17,7 @@
           >
             <div>
               <strong>Voting Status:</strong>
-              <span id="qr-status-pill" class="badge">
-                Inactive
-              </span>
+              <span id="qr-status-pill" class="badge"> Inactive </span>
             </div>
           </div>
 
@@ -32,6 +30,14 @@
               style="border-color: var(--primary)"
             >
               <img id="qr" src="./../src/assets/logo.svg" class="img-fluid" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">QR Expiration Date</label>
+              <input
+                type="datetime-local"
+                id="qr-expiration"
+                class="form-control"
+              />
             </div>
 
             <button
@@ -53,7 +59,7 @@
         <!-- RIGHT COLUMN (8) -->
         <div class="col-lg-8 d-flex flex-column gap-4">
           <!-- FINALISTS -->
-          <div class="card-custom p-3 ranking-container">
+          <div id="ranking-container" class="card-custom p-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h5 class="fw-bold mb-0">Finalist Selection</h5>
@@ -64,24 +70,6 @@
 
             <div id="finalists-container" class="row g-3 mt-3"></div>
           </div>
-
-          <!-- AUDIENCE PREVIEW -->
-          <div class="card-custom p-4">
-            <h6 class="text-uppercase text-muted fw-bold mb-3">
-              Audience View Preview
-            </h6>
-
-            <div
-              id="ranking-slots"
-              class="row text-center g-3 align-items-end"
-            ></div>
-            <div id="available-teams" class="row g-3 mt-3"></div>
-          </div>
-
-          <!-- LAUNCH -->
-          <button class="btn btn-primary-custom w-100 py-3 fs-5 shadow">
-            Launch Voting Session
-          </button>
         </div>
       </div>
     </div>
