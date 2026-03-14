@@ -318,7 +318,7 @@ export default class CoderHome {
           setTimeout(() => {
             loadProjectBrief();
             if (projectId) loadComments(projectId, this.user);
-            if (projectId) initDeliverables(projectId);
+            if (projectId) initDeliverables(projectId, this);
             if (
               projectId &&
               eventId &&
