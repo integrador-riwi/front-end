@@ -111,13 +111,12 @@ export default class QRVoting {
         `;
 
         const eventId = getSelectedEvent();
-        const voteUrl = `https://team-up.crudzaso.com/vote/${eventId}`;
 
         let qrSrc = await getQR(eventId);
 
         if (!qrSrc) {
 
-          qrSrc = await createQR(eventId, expirationDate, voteUrl, this.finalists);
+          qrSrc = await createQR(eventId, expirationDate, this.finalists);
         }
 
         qrImg.src     = qrSrc;
