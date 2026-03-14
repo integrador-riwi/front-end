@@ -3,7 +3,7 @@ import Header from "../components/header/header.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/ranking.css";
@@ -45,6 +45,7 @@ export default class Ranking {
     this.header.mountBreadcrumb?.();
     this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
+    this._offLangChange = onLangChange(() => this.render());
 
     if (!this.eventId) {
       this.error = t("ranking.noEvent") ?? "No event selected.";
@@ -168,7 +169,7 @@ export default class Ranking {
 
   _renderMain() {
     if (this.loadingRanking) {
-      return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>Loading...</p></div>`;
+      return `<div class="rk-loading"><span class="rk-spinner rk-spinner--lg"></span><p>${t("ranking.loading")}</p></div>`;
     }
 
     return `
@@ -193,21 +194,21 @@ export default class Ranking {
         warn: !s.isDeadlinePassed,
         label: s.isDeadlinePassed
           ? (t("ranking.deadlinePassed") ?? "Delivery deadline passed")
-          : `Delivery closes on ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString("en-US") : "—"}`,
+          : `${t("ranking.deliveryCloses")} ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString("en-US") : "—"}`,
       },
       {
         ok: s.allProjectsEvaluated,
         warn: !s.allProjectsEvaluated,
         label: s.allProjectsEvaluated
-          ? `All projects evaluated (${s.totalProjects}/${s.totalProjects})`
-          : `Partial evaluation: ${s.fullyEvaluatedProjects} of ${s.totalProjects} projects complete`,
+          ? `${t("ranking.allEvaluated")} (${s.totalProjects}/${s.totalProjects})`
+          : `${t("ranking.partialEvaluation")} ${s.fullyEvaluatedProjects} ${t("ranking.projectsComplete")}`,
       },
     ];
 
     return `
       <div class="rk-status-panel app-section">
         <div class="rk-status-header">
-          <h6 class="rk-status-title">Estado del ranking</h6>
+          <h6 class="rk-status-title">${t("ranking.status")}</h6>
           ${
             s.requiredAreas?.length
               ? `<div class="rk-areas-badges">
@@ -234,14 +235,14 @@ export default class Ranking {
           incompleteProjects.length > 0
             ? `
           <details class="rk-pending-details" ${this.confirmPublish ? "open" : ""}>
-            <summary>View projects with incomplete evaluation (${incompleteProjects.length})</summary>
+            <summary>${t("ranking.viewIncomplete")} (${incompleteProjects.length})</summary>
             <ul class="rk-pending-list">
               ${incompleteProjects
                 .map(
                   (p) => `
                 <li>
                   <strong>${p.team}</strong>
-                  <span class="rk-areas-progress rk-areas-progress--warn">${p.evaluatedAreaCount}/${p.requiredAreaCount} areas</span>
+                  <span class="rk-areas-progress rk-areas-progress--warn">${p.evaluatedAreaCount}/${p.requiredAreaCount} ${t("ranking.areas")}</span>
                 </li>
               `,
                 )
@@ -256,7 +257,7 @@ export default class Ranking {
           this.publishWarnings.length > 0
             ? `
           <div class="rk-alert rk-alert--warn">
-            <strong>Ranking published with warnings:</strong>
+            <strong>${t("ranking.rankingPublished")}</strong>
             <ul style="margin:6px 0 0 0;padding-left:18px">
               ${this.publishWarnings.map((w) => `<li>${w.message}</li>`).join("")}
             </ul>
@@ -265,26 +266,26 @@ export default class Ranking {
             : ""
         }
 
-        ${
-          this.confirmPublish
-            ? `<div class="rk-confirm-panel">
+          ${
+            this.confirmPublish
+              ? `<div class="rk-confirm-panel">
                 <div class="rk-confirm-icon">${warnIcon}</div>
                 <div class="rk-confirm-body">
-                  <p class="rk-confirm-title">¿Publicar con evaluaciones incompletas?</p>
+                  <p class="rk-confirm-title">${t("ranking.warnPublish")}</p>
                   <p class="rk-confirm-desc">
-                    ${incompleteProjects.length} proyecto${incompleteProjects.length !== 1 ? "s" : ""}
-                    no ha${incompleteProjects.length !== 1 ? "n" : ""} sido evaluado${incompleteProjects.length !== 1 ? "s" : ""} en todas las áreas.
+                    ${incompleteProjects.length} ${t("ranking.project")}${incompleteProjects.length !== 1 ? "s" : ""}
+                    ${incompleteProjects.length !== 1 ? "no han" : "no ha"} sido evaluado${incompleteProjects.length !== 1 ? "s" : ""} en todas las áreas.
                     Los scores se calcularán solo con las áreas que sí tienen evaluación.
                   </p>
                   <div class="rk-confirm-actions">
-                    <button class="rk-btn rk-btn--ghost" id="rk-cancel-confirm-btn" type="button">Cancelar</button>
+                    <button class="rk-btn rk-btn--ghost" id="rk-cancel-confirm-btn" type="button">${t("ranking.cancel")}</button>
                     <button class="rk-btn rk-btn--danger" id="rk-publish-btn" type="button">
-                      Sí, publicar de todos modos
+                      ${t("ranking.confirmPublishYes")}
                     </button>
                   </div>
                 </div>
               </div>`
-            : `<button
+              : `<button
                 class="rk-publish-btn ${this.publishing ? "rk-publish-btn--loading" : ""} ${s.hasIncompleteEvaluations ? "rk-publish-btn--warn" : ""}"
                 id="rk-publish-btn"
                 type="button"
@@ -292,13 +293,13 @@ export default class Ranking {
               >
                 ${
                   this.publishing
-                    ? `<span class="rk-spinner"></span> ${t("common.loading") ?? "Calculando..."}`
+                    ? `<span class="rk-spinner"></span> ${t("ranking.calculating")}`
                     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     ${this.rankingData ? (t("ranking.recalculate") ?? "Recalculate ranking") : (t("ranking.publish") ?? "Publish ranking")}
                     ${s.hasIncompleteEvaluations ? warnIcon : ""}`
                 }
               </button>`
-        }
+          }
       </div>
     `;
   }
@@ -335,8 +336,8 @@ export default class Ranking {
     return `
       <div class="rk-content">
         <div class="rk-content-header">
-          <h5 class="app-section-header mb-0">Final Ranking</h5>
-          ${calcDate ? `<span class="rk-calc-date">Calculated: ${calcDate}</span>` : ""}
+          <h5 class="app-section-header mb-0">${t("ranking.final")}</h5>
+          ${calcDate ? `<span class="rk-calc-date">${t("ranking.calculated")} ${calcDate}</span>` : ""}
         </div>
 
         <!-- Podium top 3 -->
@@ -350,7 +351,7 @@ export default class Ranking {
               <div class="rk-podium-name">${team.team_name}</div>
               <div class="rk-podium-project">${team.project_name}</div>
               <div class="rk-podium-score">${team.team_score}</div>
-              <div class="rk-podium-label">points</div>
+              <div class="rk-podium-label">${t("ranking.pointsLabel")}</div>
             </div>
           `,
             )
@@ -363,9 +364,9 @@ export default class Ranking {
             <thead>
               <tr>
                 <th style="width:48px">#</th>
-                <th>Team</th>
-                <th>Project</th>
-                <th class="rk-th-score">Score</th>
+                <th>${t("ranking.team")}</th>
+                <th>${t("ranking.project")}</th>
+                <th class="rk-th-score">${t("ranking.score")}</th>
               </tr>
             </thead>
             <tbody>
@@ -382,7 +383,7 @@ export default class Ranking {
                   </td>
                   <td>
                     <strong>${team.team_name}</strong>
-                    <div class="rk-member-count">${team.member_count} member${team.member_count != 1 ? "s" : ""}</div>
+                    <div class="rk-member-count">${team.member_count} ${t("ranking.members")}</div>
                   </td>
                   <td>
                     <span class="rk-project-name">${team.project_name}</span>
@@ -390,7 +391,7 @@ export default class Ranking {
                       team.repo_url
                         ? `<a href="${team.repo_url}" target="_blank" class="rk-repo-link">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-                          repo
+                          ${t("ranking.repo")}
                         </a>`
                         : ""
                     }
@@ -463,5 +464,9 @@ export default class Ranking {
         }
       });
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

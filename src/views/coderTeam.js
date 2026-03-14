@@ -69,28 +69,28 @@ export function renderCoderTeam({
 
               <!-- Due date -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Due Date</span>
+                <span class="ct-stat-label">${t("team.dueDate")}</span>
                 <span class="ct-stat-value">Mon, Mar 9 2026</span>
               </div>
 
               <!-- Repo Link -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Repo Link</span>
+                <span class="ct-stat-label">${t("team.repoLink")}</span>
                 ${
                   repoUrl
                     ? `<a href="${repoUrl}" target="_blank" rel="noopener" class="ct-stat-value ct-repo-link" style="color: var(--color-primary); text-decoration: none;">
                         <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-right:4px;">
                           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                         </svg>
-                        View Repo
+                        ${t("team.viewRepo")}
                        </a>`
-                    : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
+                    : `<span class="ct-stat-value" style="opacity: 0.5;">${t("team.noLink")}</span>`
                 }
               </div>
 
               <!-- Team -->
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Team</span>
+                <span class="ct-stat-label">${t("team.team")}</span>
                 <div class="ct-mini-avatars mt-1">
                   ${members
                     .slice(0, 3)
@@ -146,7 +146,7 @@ export function renderCoderTeam({
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Deliverables</h2>
+                <h2 class="ct-section-title mb-0">${t("team.deliverables")}</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
                 ${deliverableCount(deliverables, repoUrl)}/4 submitted
               </span>
@@ -160,7 +160,7 @@ export function renderCoderTeam({
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
-                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("team.submitted")}</span>
               </div>
             `
                 : canEdit
@@ -169,7 +169,7 @@ export function renderCoderTeam({
                 class="btn w-100 mt-3"
                 style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
                 disabled>
-                Submit Project
+                ${t("team.submitProject")}
               </button>
             `
                   : ""
@@ -177,14 +177,14 @@ export function renderCoderTeam({
           </div>
 
 
-          <!-- Comments -->
+            <!-- Comments -->
           <div class="bg-white rounded-4 p-4 ct-card-shadow">
             <h2 class="ct-section-title d-flex align-items-center gap-2 mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
                    style="width:16px;height:16px;flex-shrink:0">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              Comments
+              ${t("team.comments")}
             </h2>
 
             <div class="d-flex gap-3 align-items-start mb-2">
@@ -197,7 +197,7 @@ export function renderCoderTeam({
                         placeholder="${t("team.commentPlaceholder") ?? "Share your thoughts..."}"></textarea>
             </div>
             <div class="d-flex justify-content-end mb-4 ps-5">
-              <button class="ct-btn-post" id="postCommentBtn">Post Comment</button>
+              <button class="ct-btn-post" id="postCommentBtn">${t("team.postComment")}</button>
             </div>
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
@@ -208,7 +208,7 @@ export function renderCoderTeam({
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
+              <h2 class="ct-section-title mb-0">${t("team.evaluate")}</h2>
             </div>
             <div id="tl-rubrics-container">
               <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
@@ -217,7 +217,7 @@ export function renderCoderTeam({
               id="submitEvaluationsBtn"
               class="btn w-100 mt-3 d-none"
               style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
-              Submit Evaluations
+              ${t("team.submitEvaluations")}
             </button>
             <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
           </div>
@@ -229,7 +229,7 @@ export function renderCoderTeam({
           <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
-                <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
+                <h2 class="ct-section-title mb-0">${t("team.settings")}</h2>
                 ${
                   isLeader
                     ? `
@@ -238,14 +238,14 @@ export function renderCoderTeam({
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    Settings
+                    ${t("team.settingsBtn")}
                 </button>
                 `
                     : ""
                 }
             </div>
 
-            <h2 class="ct-section-title mb-3">Project Team</h2>
+            <h2 class="ct-section-title mb-3">${t("team.projectTeam")}</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
                 .map(
@@ -258,7 +258,7 @@ export function renderCoderTeam({
                   }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0">${m.name}</p>
-                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
+                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? (i === 0 ? t("team.lead") : t("team.member"))}</p>
                   </div>
                 </li>
               `,
@@ -278,7 +278,7 @@ export function renderCoderTeam({
                 <line x1="19" y1="8" x2="19" y2="14"/>
                 <line x1="22" y1="11" x2="16" y2="11"/>
               </svg>
-              Add Member
+              ${t("team.addMember")}
             </button>
             `
                 : ""
@@ -295,7 +295,7 @@ export function renderCoderTeam({
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Leave Team
+              ${t("team.leaveTeam")}
             </button>
             `
                 : ""
@@ -391,7 +391,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             ${
               item.url
                 ? `
-              <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+              <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">${t("team.open")}</a>
               ${
                 canEdit && item.key !== "repo_url"
                   ? `
@@ -520,7 +520,7 @@ function _renderComment(comment, currentUserId) {
             <div class="d-flex align-items-center gap-2">
               <button class="ct-btn-reply" data-comment-id="${comment.id_comment}"
                 style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;font-weight:600;padding:2px 6px;border-radius:6px;transition:background 0.15s;">
-                Reply
+                ${t("team.reply")}
               </button>
               ${
                 isOwner
@@ -541,9 +541,9 @@ function _renderComment(comment, currentUserId) {
                         placeholder="${t("team.replyPlaceholder") ?? "Write a reply..."}" id="reply-input-${comment.id_comment}"></textarea>
               <div class="d-flex flex-column gap-1">
                 <button class="ct-btn-post ct-btn-post-reply" style="padding:7px 14px;font-size:0.8rem;"
-                        data-parent-id="${comment.id_comment}">Send</button>
+                        data-parent-id="${comment.id_comment}">${t("team.send")}</button>
                 <button class="ct-btn-cancel-reply" data-comment-id="${comment.id_comment}"
-                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">Cancel</button>
+                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">${t("common.cancel")}</button>
               </div>
             </div>
           </div>
@@ -646,7 +646,7 @@ export async function loadComments(projectId, user) {
   // ── Render helpers ──────────────────────────────────────────
   function renderAll(comments) {
     if (comments.length === 0) {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">No comments yet. Be the first!</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">${t("team.noComments")}</p>`;
       return;
     }
     list.innerHTML = comments
@@ -667,7 +667,7 @@ export async function loadComments(projectId, user) {
       const comments = await getComments(projectId);
       renderAll(Array.isArray(comments) ? comments : []);
     } catch {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">Could not load comments.</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">${t("team.errorLoadingComments")}</p>`;
     }
   }
 
@@ -895,7 +895,7 @@ export async function loadEvaluationPanel({
       getMyEvaluationsForProject(projectId),
     ]);
   } catch (err) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">Could not load rubrics.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.errorLoadingRubrics")}</p>`;
     return;
   }
 
@@ -905,7 +905,7 @@ export async function loadEvaluationPanel({
   }
 
   if (!rubrics.length) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">No rubrics configured for this event.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.noRubricsConfigured")}</p>`;
     return;
   }
 
@@ -929,7 +929,7 @@ export async function loadEvaluationPanel({
     container.innerHTML = `
       <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:0.75rem;color:#15803d;font-size:0.875rem;font-weight:500;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.
+        ${t("team.evalAlreadySent")}
       </div>
     `;
     submitBtn.classList.add("d-none");
@@ -965,14 +965,14 @@ export async function loadEvaluationPanel({
                 data-rubric-id="${rubric.id_rubric}"
                 data-member-id="${member.id_user}"
                 style="font-size:0.82rem;border-radius:8px;">
-                <option value="">-- Puntaje --</option>
+                <option value="">-- ${t("team.score")} --</option>
                 ${optionsHtml}
               </select>
               <textarea
                 class="form-control mt-1 eval-feedback-input"
                 data-rubric-id="${rubric.id_rubric}"
                 data-member-id="${member.id_user}"
-                placeholder="Feedback (opcional)"
+                placeholder="${t("team.feedbackOptional")}"
                 rows="2"
                 style="font-size:0.78rem;border-radius:8px;resize:none;">${existing?.feedback ?? ""}</textarea>
             </div>
@@ -997,7 +997,7 @@ export async function loadEvaluationPanel({
 
   container.innerHTML =
     membersHtml ||
-    `<p style="color:var(--text-muted);font-size:0.85rem;">No hay miembros para evaluar.</p>`;
+    `<p style="color:var(--text-muted);font-size:0.85rem;">${t("team.noMembersToEvaluate")}</p>`;
   submitBtn.classList.remove("d-none");
 
   submitBtn.onclick = async () => {
@@ -1044,8 +1044,8 @@ export async function loadEvaluationPanel({
       );
       submitBtn.textContent = t("team.updateEval") ?? "Actualizar Evaluaciones";
     } catch (err) {
-      toast.error("Error", err?.message ?? "Error sending evaluations.");
-      submitBtn.textContent = "Enviar Evaluaciones";
+      toast.error("Error", err?.message ?? t("common.error"));
+      submitBtn.textContent = t("team.submitEvaluations");
     } finally {
       submitBtn.disabled = false;
     }
@@ -1092,14 +1092,14 @@ export function initDeliverables(projectId) {
           const statusEl = row.querySelector(".ct-del-status");
           if (statusEl) {
             statusEl.className = "ct-del-status ct-status-done";
-            statusEl.textContent = "Submitted";
+            statusEl.textContent = t("team.submitted");
           }
 
           // Replace the entire actions div with the post-submit state
           const actionsDiv = row.querySelector(".ct-deliverable-actions");
           if (actionsDiv) {
             actionsDiv.innerHTML = `
-              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">${t("team.open")}</a>
               <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1167,7 +1167,7 @@ export function initDeliverables(projectId) {
         return;
 
       btn.disabled = true;
-      btn.textContent = "Submitting…";
+      btn.textContent = t("team.sending");
 
       try {
         const { submitProject } = await import("../services/api.js");
@@ -1181,7 +1181,7 @@ export function initDeliverables(projectId) {
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("team.submitted")}</span>
           </div>
         `,
         );
@@ -1200,9 +1200,9 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error("Error", err?.message ?? "Could not submit project.");
+        toast.error("Error", err?.message ?? t("common.error"));
         btn.disabled = false;
-        btn.textContent = "Submit Project";
+        btn.textContent = t("team.submitProject");
       }
     });
   }

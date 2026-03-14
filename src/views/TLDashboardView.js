@@ -3,7 +3,7 @@
 import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getUser } from "../utils/auth.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import {
@@ -105,6 +105,9 @@ export default class TLDashboardView {
 
     this.navbar.attachEventHandlers();
     this._renderList();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
+    }
   }
 
   // ── Teams list ─────────────────────────────────────────────────────────────
@@ -121,7 +124,7 @@ export default class TLDashboardView {
             this.selectedEvent
               ? `<button class="tld-back-btn" id="tldBackBtn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  Back to events
+                  ${t("tl.backToEvents")}
                 </button>`
               : ""
           }
@@ -138,15 +141,15 @@ export default class TLDashboardView {
             <div class="tld-stat-pills">
               <div class="tld-stat-pill">
                 <span class="tld-stat-num">${this.teams.length}</span>
-                <span class="tld-stat-label">Teams</span>
+                <span class="tld-stat-label">${t("tl.teams")}</span>
               </div>
               <div class="tld-stat-pill">
                 <span class="tld-stat-num">${this.teams.filter((t) => t.project).length}</span>
-                <span class="tld-stat-label">With Project</span>
+                <span class="tld-stat-label">${t("tl.withProject")}</span>
               </div>
               <div class="tld-stat-pill">
                 <span class="tld-stat-num">${this.teams.reduce((sum, t) => sum + (t.members?.length ?? 0), 0)}</span>
-                <span class="tld-stat-label">Coders</span>
+                <span class="tld-stat-label">${t("tl.coders")}</span>
               </div>
             </div>
           </div>
@@ -160,7 +163,7 @@ export default class TLDashboardView {
               id="tldSearch"
               type="text"
               class="tld-search-input"
-              placeholder="Search teams or projects…"
+              placeholder="${t("tl.searchTeams")}"
               value="${this.searchQuery}" />
           </div>
         </header>
@@ -197,7 +200,7 @@ export default class TLDashboardView {
             <circle cx="9" cy="7" r="4"/>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <p>No teams found.</p>
+          <p>${t("tl.noTeamsFound")}</p>
         </div>
       `;
     }
@@ -247,29 +250,29 @@ export default class TLDashboardView {
     // Button state
     let evalBtnContent, evalBtnDisabled, evalBtnClass;
     if (isSubmitted) {
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Evaluate`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> ${t("team.evaluate")}`;
       evalBtnDisabled = "";
       evalBtnClass = "tld-eval-btn tld-eval-btn--ready";
     } else if (hasProject) {
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Not submitted yet`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.notSubmitted")}`;
       evalBtnDisabled = "disabled";
       evalBtnClass = "tld-eval-btn";
     } else {
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No project`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.noProject")}`;
       evalBtnDisabled = "disabled";
       evalBtnClass = "tld-eval-btn";
     }
 
     return `
       <article class="tld-card${isSubmitted ? " tld-card--submitted" : ""}" data-team-id="${team.id_team}" style="animation-delay:${index * 40}ms">
-        <div class="tld-card-top">
+          <div class="tld-card-top">
           <div class="tld-card-name-row">
             ${statusDot}
             <h3 class="tld-card-team-name">${team.name}</h3>
-            ${isSubmitted ? `<span class="tld-submitted-badge">Ready</span>` : ""}
+            ${isSubmitted ? `<span class="tld-submitted-badge">${t("tl.ready")}</span>` : ""}
           </div>
           <div class="tld-card-project-name">
-            ${hasProject ? project.name : '<span style="opacity:.45;font-style:italic;">No project yet</span>'}
+            ${hasProject ? project.name : `<span style="opacity:.45;font-style:italic;">${t("tl.noProject")}</span>`}
           </div>
         </div>
 
@@ -283,14 +286,14 @@ export default class TLDashboardView {
             <span class="tld-progress-label">${isSubmitted ? (t("tl.submittedReview") ?? "Submitted for review") : `${deliverables}/${totalDeliverables} deliverables`}</span>
           </div>
         `
-            : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">No deliverables</span></div>`
+            : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
         }
 
         <div class="tld-card-members">
           <div class="tld-avatars-row">
             ${avatarsHtml}${extraMembers}
           </div>
-          <span class="tld-member-count">${members.length} member${members.length !== 1 ? "s" : ""}</span>
+          <span class="tld-member-count">${members.length} ${t("tl.membersCount")}</span>
         </div>
 
         <button
@@ -316,7 +319,7 @@ export default class TLDashboardView {
       <div class="tld-detail-back-bar">
         <button class="tld-back-btn" id="tldDetailBack">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to ${this.selectedEvent?.title ?? "teams"}
+          ${t("common.back")} ${this.selectedEvent ? this.selectedEvent.title : t("tl.teams")}
         </button>
       </div>
       ${renderCoderTeam({ user: this.user, team, isLeader: false, isTL })}
@@ -402,5 +405,9 @@ export default class TLDashboardView {
         this._renderDetail(team);
       });
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

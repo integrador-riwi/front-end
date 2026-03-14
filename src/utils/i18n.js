@@ -71,17 +71,6 @@ const resources = {
         untitled: "Evento sin título",
       },
 
-      // ── Dashboard ─────────────────────────────────────────
-      dashboard: {
-        teams: "Equipos",
-        projects: "Proyectos",
-        coders: "Coders",
-        votes: "Votos",
-        evaluated: "Evaluados",
-        areas: "Áreas",
-        loading: "Cargando métricas...",
-      },
-
       // ── Ranking ───────────────────────────────────────────
       ranking: {
         title: "Ranking Final",
@@ -98,15 +87,32 @@ const resources = {
         publish: "Publicar ranking",
         notPublished: "El ranking aún no ha sido publicado.",
         notAvailable: "El ranking no está disponible aún.",
+        loading: "Cargando...",
+        final: "Ranking Final",
+        pointsLabel: "puntos",
+        team: "Equipo",
+        project: "Proyecto",
+        confirmPublishYes: "Sí, publicar de todos modos",
+        deliveryCloses: "La entrega cierra el",
+        allEvaluated: "proyectos evaluados",
+        partialEvaluation: "Evaluación parcial:",
+        projectsComplete: "proyectos completos",
+        viewIncomplete: "Ver proyectos con evaluación incompleta",
+        rankingPublished: "Ranking publicado con advertencias:",
+        calculating: "Calculando...",
+        members: "miembro(s)",
+        repo: "repo",
       },
 
       // ── Coder Event Select ────────────────────────────────
       ces: {
         title: "Elige tu evento.",
+        welcome: "Bienvenido, {{name}}.",
         subtitleTL: "Selecciona el evento que quieres revisar y evaluar.",
         subtitleCoder:
           "Selecciona el evento en el que participas para comenzar.",
         noEvents: "No hay eventos activos en este momento.",
+        noEventsHint: "Vuelve más tarde o contacta a tu administrador.",
         loading: "Cargando eventos...",
         error: "No se pudieron cargar los eventos. Intenta de nuevo.",
         select: "Seleccionar",
@@ -145,6 +151,9 @@ const resources = {
         aiConfigKey: "Configura tu API key de OpenAI en el backend.",
         allTeamsSeen: "Ya viste todos los equipos",
         teamCreated: "¡Equipo creado!",
+        filterOpen: "Abierto",
+        filterPending: "Pendiente",
+        filterFull: "Completo",
       },
 
       // ── Coder Team ────────────────────────────────────────
@@ -181,6 +190,32 @@ const resources = {
           "Por favor califica todas las rúbricas de cada miembro.",
         updateEval: "Actualizar Evaluaciones",
         leaveConfirm: "¿Estás seguro de que quieres abandonar el equipo?",
+        viewRepo: "Ver repositorio",
+        addMember: "Agregar miembro",
+        leaveTeam: "Abandonar equipo",
+        reply: "Responder",
+        noComments: "No hay comentarios aún. ¡Sé el primero!",
+        submitProject: "Enviar proyecto",
+        comments: "Comentarios",
+        projectTeam: "Equipo del Proyecto",
+        settingsBtn: "Configuración",
+        member: "Miembro",
+        lead: "Líder",
+        you: "Tú",
+        submitEvaluations: "Enviar Evaluaciones",
+        notSubmitted: "No enviado",
+        noProject: "Sin proyecto",
+        deliverablesCount: "entregables",
+        searchTeams: "Buscar equipos o proyectos...",
+        noTeamsFound: "No se encontraron equipos",
+        errorLoadingComments: "Error al cargar comentarios",
+        errorLoadingRubrics: "Error al cargar rúbricas",
+        noRubricsConfigured: "No hay rúbricas configuradas para este evento",
+        noMembersToEvaluate: "No hay miembros para evaluar",
+        evalAlreadySent:
+          "Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.",
+        score: "Puntaje",
+        feedbackOptional: "Feedback (opcional)",
       },
 
       // ── Invitations ───────────────────────────────────────
@@ -213,6 +248,15 @@ const resources = {
         namePlaceholder: "Ingresa el nombre del proyecto",
         savedOk: "Cambios guardados correctamente.",
         deleteConfirm: "¿Estás seguro? Esta acción no se puede deshacer.",
+        generalInfo: "Información General",
+        saveChanges: "Guardar Cambios",
+        teamManagement: "Gestión de Equipo",
+        inviteMember: "Invitar Miembro",
+        copyInviteLink: "Copiar Enlace de Invitación",
+        remove: "Eliminar",
+        copied: "¡Copiado!",
+        repoAutoAssigned:
+          "El repositorio se creó automáticamente y no se puede editar aquí.",
       },
 
       // ── Profile ───────────────────────────────────────────
@@ -251,6 +295,11 @@ const resources = {
         areaEnglish: "Inglés",
         areaAdmin: "Admin",
         teamLead: "Líder de Equipo",
+        backToEvents: "Volver a eventos",
+        searchTeams: "Buscar equipos...",
+        noTeamsFound: "No se encontraron equipos",
+        membersCount: "miembro(s)",
+        notSubmitted: "No enviado",
       },
 
       // ── Teams & Projects ──────────────────────────────────
@@ -278,8 +327,8 @@ const resources = {
         bronze: "BRONCE",
         noTeams: "No hay equipos disponibles",
         allRanked: "Todos los equipos han sido clasificados",
-        active: "Active",
-        inactive: "Inactive",
+        active: "Activo",
+        inactive: "Inactivo",
         select3: "Selecciona 1er, 2do y 3er lugar antes de iniciar.",
         launch: "Iniciar Sesión de Votación",
         launching: "Iniciando...",
@@ -293,7 +342,7 @@ const resources = {
         title: "¡Ups! Página No Encontrada",
         subtitle: "La página que buscas no existe o ha sido movida.",
         lostMsg:
-          "¿Perdido? No te preocupes,-nos pasa a los mejores. Volvamos a enfocarnos.",
+          "¿Perdido? No te preocupes, nos pasa a los mejores. Volvamos a enfocarnos.",
         backHome: "Volver al Inicio",
       },
 
@@ -346,9 +395,26 @@ const resources = {
         successMsg: "El evento fue creado exitosamente.",
         createBtn: "Crear Evento",
         connectGithub: "Conecta GitHub primero",
+        finalDeliveryDate: "Fecha de Entrega Final",
+        maxTeamSize: "Tamaño Máximo del Equipo",
+        githubOrganization: "Organización GitHub",
+        verifyingGithub: "Verificando GitHub...",
+        noOrgsFound:
+          "No se encontraron organizaciones. Únete a una o crea una primero.",
+        connectedAs: "Conectado como",
+        reposWillBeCreated:
+          "Los repositorios del equipo se crearán en esta organización.",
+        cancel: "Cancelar",
+        placeholderTitle: "Ej: Capstone 2025-1",
+        placeholderDesc: "Describe el evento…",
+        placeholderCohort: "Ej: 2025-1",
+        critName: "Nombre del criterio",
+        critDesc: "Descripción opcional",
+        critWeight: "0",
+        levelName: "Nombre del nivel",
+        levelPerf: "Desempeño esperado…",
+        untitledCriteria: "Criterio sin título",
       },
-
-      // ── Event Details ─────────────────────────────────────
       eventDetails: {
         completed: "● Completado",
         upcoming: "● Próximo",
@@ -359,6 +425,7 @@ const resources = {
         cohort: "Cohorte",
         route: "Ruta",
         loading: "Cargando...",
+        na: "N/D",
       },
 
       common: {
@@ -442,16 +509,6 @@ const resources = {
         untitled: "Untitled Event",
       },
 
-      dashboard: {
-        teams: "Teams",
-        projects: "Projects",
-        coders: "Coders",
-        votes: "Votes",
-        evaluated: "Evaluated",
-        areas: "Areas",
-        loading: "Loading metrics...",
-      },
-
       ranking: {
         title: "Final Ranking",
         status: "Ranking status",
@@ -467,14 +524,31 @@ const resources = {
         publish: "Publish ranking",
         notPublished: "The ranking has not been published yet.",
         notAvailable: "The ranking is not available yet.",
+        loading: "Loading...",
+        final: "Final Ranking",
+        pointsLabel: "points",
+        team: "Team",
+        project: "Project",
+        confirmPublishYes: "Yes, publish anyway",
+        deliveryCloses: "Delivery closes on",
+        allEvaluated: "projects evaluated",
+        partialEvaluation: "Partial evaluation:",
+        projectsComplete: "projects complete",
+        viewIncomplete: "View projects with incomplete evaluation",
+        rankingPublished: "Ranking published with warnings:",
+        calculating: "Calculating...",
+        members: "member(s)",
+        repo: "repo",
       },
 
       ces: {
         title: "Choose your event.",
+        welcome: "Welcome, {{name}}.",
         subtitleTL: "Select the event you want to review and evaluate.",
         subtitleCoder:
           "Select the event you're participating in to get started.",
         noEvents: "No active events at this time.",
+        noEventsHint: "Check back later or contact your administrator.",
         loading: "Loading events...",
         error: "Could not load events. Please try again.",
         select: "Join this event",
@@ -512,6 +586,9 @@ const resources = {
         aiConfigKey: "Configure your OpenAI API key in the backend.",
         allTeamsSeen: "You've seen all teams",
         teamCreated: "Team created!",
+        filterOpen: "Open",
+        filterPending: "Pending",
+        filterFull: "Full",
       },
 
       team: {
@@ -546,6 +623,31 @@ const resources = {
         evalIncomplete: "Please rate all rubrics for each member.",
         updateEval: "Update Evaluations",
         leaveConfirm: "Are you sure you want to leave the team?",
+        viewRepo: "View repo",
+        addMember: "Add member",
+        leaveTeam: "Leave team",
+        reply: "Reply",
+        noComments: "No comments yet. Be the first!",
+        submitProject: "Submit project",
+        comments: "Comments",
+        projectTeam: "Project Team",
+        settingsBtn: "Settings",
+        member: "Member",
+        lead: "Lead",
+        you: "You",
+        submitEvaluations: "Submit Evaluations",
+        notSubmitted: "Not submitted yet",
+        deliverablesCount: "deliverables",
+        searchTeams: "Search teams or projects...",
+        noTeamsFound: "No teams found",
+        errorLoadingComments: "Could not load comments",
+        errorLoadingRubrics: "Could not load rubrics",
+        noRubricsConfigured: "No rubrics configured for this event",
+        noMembersToEvaluate: "No members to evaluate",
+        evalAlreadySent:
+          "You have already submitted your evaluations for this project. They cannot be modified.",
+        score: "Score",
+        feedbackOptional: "Feedback (optional)",
       },
 
       invite: {
@@ -576,6 +678,15 @@ const resources = {
         namePlaceholder: "Enter project name",
         savedOk: "Changes saved successfully.",
         deleteConfirm: "Are you sure? This action cannot be undone.",
+        generalInfo: "General Information",
+        saveChanges: "Save Changes",
+        teamManagement: "Team Management",
+        inviteMember: "Invite member",
+        copyInviteLink: "Copy Invite Link",
+        remove: "Remove",
+        copied: "Copied!",
+        repoAutoAssigned:
+          "The repository was created automatically and cannot be edited here.",
       },
 
       profile: {
@@ -612,6 +723,11 @@ const resources = {
         areaEnglish: "English",
         areaAdmin: "Admin",
         teamLead: "Team Lead",
+        backToEvents: "Back to events",
+        searchTeams: "Search teams...",
+        noTeamsFound: "No teams found",
+        membersCount: "member(s)",
+        notSubmitted: "Not submitted yet",
       },
 
       teamsProjects: {
@@ -703,6 +819,24 @@ const resources = {
         successMsg: "The event has been created successfully.",
         createBtn: "Create Event",
         connectGithub: "Connect GitHub first",
+        finalDeliveryDate: "Final Delivery Date",
+        maxTeamSize: "Max Team Size",
+        githubOrganization: "GitHub Organization",
+        verifyingGithub: "Verifying GitHub...",
+        noOrgsFound: "No organizations found. Join one or create one first.",
+        connectedAs: "Connected as",
+        reposWillBeCreated:
+          "Team repositories will be created in this organization.",
+        cancel: "Cancel",
+        placeholderTitle: "Ex: Capstone 2025-1",
+        placeholderDesc: "Describe the event…",
+        placeholderCohort: "Ex: 2025-1",
+        critName: "Criteria name",
+        critDesc: "Optional description",
+        critWeight: "0",
+        levelName: "Level Name",
+        levelPerf: "Expected performance…",
+        untitledCriteria: "Untitled Criteria",
       },
 
       eventDetails: {
@@ -715,6 +849,7 @@ const resources = {
         cohort: "Cohort",
         route: "Route",
         loading: "Loading...",
+        na: "N/A",
       },
 
       common: {

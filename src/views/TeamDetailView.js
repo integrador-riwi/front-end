@@ -64,18 +64,18 @@ export default class TeamDetailView {
       const data = res?.data ?? res;
 
       const team = {
-        id_team:  data.id_team,
-        name:     data.name,
+        id_team: data.id_team,
+        name: data.name,
         id_event: data.id_event,
-        members:  data.members ?? [],
-        project:  data.project ?? null,
+        members: data.members ?? [],
+        project: data.project ?? null,
       };
 
       const html = renderCoderTeam({
-        user:          this.user,
+        user: this.user,
         team,
-        isLeader:      false,
-        isTL:          false,
+        isLeader: false,
+        isTL: false,
         selectedEvent: null,
       });
 
@@ -93,14 +93,13 @@ export default class TeamDetailView {
           initDeliverables(projectId);
         }
       }, 0);
-
     } catch (err) {
       console.error("TeamDetailView error:", err);
       main.innerHTML = `
         <div class="container-xl px-3 px-md-4 py-4">
           <div class="bg-white rounded-4 p-5 ct-card-shadow text-center">
             <span class="material-icons-round" style="font-size:2.5rem;color:var(--text-muted);">error_outline</span>
-            <p class="mt-3" style="color:var(--text-muted);">${t('teamsProjects.loadError')}</p>
+            <p class="mt-3" style="color:var(--text-muted);">${t("teamsProjects.loadError")}</p>
           </div>
         </div>`;
     }
@@ -117,5 +116,9 @@ export default class TeamDetailView {
       }
     `;
     document.head.appendChild(s);
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

@@ -3,7 +3,7 @@ import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getInitials, getCurrentUser } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import {
   getMyProfile,
   getGithubStatus,
@@ -209,6 +209,9 @@ export default class ProfileView {
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
     if (this.errorMessage || this.successMessage) this._showBanner();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
+    }
   }
 
   attachEventHandlers() {
@@ -283,6 +286,10 @@ export default class ProfileView {
     } else if (this.successMessage) {
       toast.success("Success", this.successMessage);
     }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }
 

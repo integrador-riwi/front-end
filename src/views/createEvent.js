@@ -1,5 +1,5 @@
 import "../assets/styles/dashboard.css";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/components.css";
 import "../assets/styles/eventCreated.css";
 import "../assets/styles/rubricBuilder.css";
@@ -144,7 +144,7 @@ export default class CreateEvent {
     const allSelected = this.targetClans.length === 0;
     return `
       <button class="ce-clan-chip ${allSelected ? "ce-clan-chip--active" : ""}" data-clan="ALL" type="button">
-        All clans
+        ${t("createEvent.allClans")}
       </button>
       ${ALL_CLANS.map((clan) => {
         const active = this.targetClans.includes(clan);
@@ -191,7 +191,7 @@ export default class CreateEvent {
       for (const crit of area.criteria) {
         payload.push({
           area: area.type,
-          name: crit.name || "Untitled Criteria",
+          name: crit.name || t("createEvent.untitledCriteria"),
           description: crit.description || null,
           weight: crit.weight / 100, // convert percentage to 0-1
           grades: crit.levels.map((l) => ({
@@ -537,8 +537,8 @@ export default class CreateEvent {
         <div class="criteria-item p-3 mb-3 border rounded bg-white shadow-sm">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="flex-grow-1 pe-3">
-                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="Criteria name" value="${crit.name}">
-                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="Optional description" value="${crit.description}">
+                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="${t("createEvent.critName")}" value="${crit.name}">
+                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
                 </div>
                 <div class="d-flex gap-2 align-items-center">
                     <div class="input-group input-group-sm" style="width: 100px;">
@@ -564,8 +564,8 @@ export default class CreateEvent {
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                     </button>
                                 </div>
-                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="Level Name">
-                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="Expected performance..." rows="2">${lvl.description}</textarea>
+                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
+                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="2">${lvl.description}</textarea>
                                 <div class="mt-2 d-flex align-items-center gap-2">
                                     <label class="small text-muted mb-0">Pts %:</label>
                                     <input type="number" class="form-control form-control-sm px-1 lvl-input" style="width: 50px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
@@ -727,18 +727,68 @@ export default class CreateEvent {
             <!-- Event details card -->
             <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0">Event Details</h5>
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">Draft Mode</span>
+                <h5 class="fw-bold mb-0">${t("createEvent.title")}</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">${t("createEvent.draftMode")}</span>
               </div>
 
               <div class="row g-4">
                 <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")}</label>
+                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.desc")}</label>
+                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
+                </div>
+                
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.type")}</label>
+                  <select id="ev-type" class="form-select app-input">
+                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
+                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
+                    <option value="EVENT">${t("createEvent.social")}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.route")}</label>
+                  <select id="ev-route" class="form-select app-input">
+                    <option value="BASIC">${t("createEvent.basic")}</option>
+                    <option value="ADVANCED">${t("createEvent.advanced")}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.cohort")}</label>
+                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")}</label>
+                  <input id="ev-start-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.finalDeliveryDate")}</label>
+                  <input id="ev-end-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.maxTeamSize")}</label>
+                  <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
+                </div>
+                <div class="col-12" id="github-org-section">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.githubOrganization")} <span class="text-danger">*</span></label>
+                  <div id="github-org-picker">
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
+                      <span class="spinner-border spinner-border-sm"></span> ${t("createEvent.verifyingGithub")}
+                    </div>
+                  </div>
+                </div>
+
+              <div class="row g-4">
+                <div class="col-12">
                   <label class="form-label fw-semibold text-muted small text-uppercase">Title *</label>
-                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="Ex: Capstone 2025-1" />
+                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
                 </div>
                 <div class="col-12">
                   <label class="form-label fw-semibold text-muted small text-uppercase">Description</label>
-                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="Describe the event…"></textarea>
+                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
                 </div>
                 
                 <div class="col-12 col-md-4">
@@ -758,7 +808,7 @@ export default class CreateEvent {
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label fw-semibold text-muted small text-uppercase">Cohort</label>
-                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="Ex: 2025-1" />
+                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label fw-semibold text-muted small text-uppercase">Start date *</label>
@@ -795,9 +845,9 @@ export default class CreateEvent {
 
             <!-- Submit row -->
             <div class="d-flex justify-content-end gap-3 mt-4">
-              <button id="ce-back-btn" class="btn btn-light px-4 py-2 bg-white border fw-semibold cursor-pointer" type="button">Cancel</button>
+              <button id="ce-back-btn" class="btn btn-light px-4 py-2 bg-white border fw-semibold cursor-pointer" type="button">${t("createEvent.cancel")}</button>
               <button id="ce-submit-btn" class="btn btn-primary px-5 py-2 fw-semibold cursor-pointer" type="button" style="background:#5548e2;border:none;">
-                Create Event
+                ${t("createEvent.createBtn")}
               </button>
             </div>
           </div>
@@ -808,6 +858,9 @@ export default class CreateEvent {
     this.header.mountBreadcrumb?.();
     this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
+    }
 
     // Setup listeners
     document
@@ -838,7 +891,7 @@ export default class CreateEvent {
       if (!picker) return;
 
       if (this.githubOrgs.length === 0) {
-        picker.innerHTML = `<p class="text-danger small">No organizations found. Join one or create one first.</p>`;
+        picker.innerHTML = `<p class="text-danger small">${t("createEvent.noOrgsFound")}</p>`;
         return;
       }
 
@@ -846,13 +899,13 @@ export default class CreateEvent {
       picker.innerHTML = `
         <div class="d-flex align-items-center gap-2 mb-2" style="font-size:0.85rem;color:var(--color-text-muted);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          Connected as <strong>@${data.username}</strong>
+          ${t("createEvent.connectedAs")} <strong>@${data.username}</strong>
         </div>
         <select id="ev-github-org" class="form-select app-input">
           ${this.githubOrgs.map((org) => `<option value="${org.login}">${org.login}</option>`).join("")}
         </select>
         <div class="mt-1" style="font-size:0.8rem;color:var(--color-text-muted);">
-          Team repositories will be created in this organization.
+          ${t("createEvent.reposWillBeCreated")}
         </div>`;
 
       document
@@ -897,5 +950,9 @@ export default class CreateEvent {
   }
   _showSuccess(msg) {
     toast.success("Success", msg);
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

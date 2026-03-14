@@ -2,7 +2,7 @@ import { saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/login.css";
 
 export default class LoginView {
@@ -74,7 +74,7 @@ export default class LoginView {
               <!-- Password -->
               <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label for="password" class="form-label field-label mb-0">Password</label>
+                  <label for="password" class="form-label field-label mb-0">${t("login.password")}</label>
                 </div>
                 <div class="input-wrap">
                   <input id="password" type="password" class="form-control custom-input"
@@ -113,6 +113,7 @@ export default class LoginView {
     `;
 
     this.attachEventHandlers();
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventHandlers() {
@@ -146,5 +147,9 @@ export default class LoginView {
       this.loading = false;
       this.render();
     }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

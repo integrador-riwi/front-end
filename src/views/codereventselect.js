@@ -7,7 +7,7 @@ import {
 } from "../services/api.js";
 import Navbar from "../components/navbar/navbar.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 
 export default class CoderEventSelect {
   constructor(app) {
@@ -89,6 +89,9 @@ export default class CoderEventSelect {
     this.render();
     this._attachHandlers();
     this.navbar.attachEventHandlers();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
+    }
   }
 
   render() {
@@ -117,7 +120,7 @@ export default class CoderEventSelect {
             </div>
             <h1 class="ces-title">${t("ces.title")}</h1>
             <p class="ces-subtitle">
-              Welcome, <strong>${this.user?.name?.split(" ")[0] ?? "there"}</strong>.
+              ${t("ces.welcome", { name: this.user?.name?.split(" ")[0] ?? "there" })}
               ${isTL ? t("ces.subtitleTL") : t("ces.subtitleCoder")}
             </p>
           </header>
@@ -280,5 +283,9 @@ export default class CoderEventSelect {
         this.app.navigate(destination, { selectedEvent: event });
       });
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

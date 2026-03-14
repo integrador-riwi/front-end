@@ -3,7 +3,7 @@ import Header from "../components/header/header.js";
 import { getEvents } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
-import { t } from "../utils/i18n.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import { icons } from "./../utils/icons.js";
@@ -238,6 +238,8 @@ export default class EventsView {
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
 
+    this._offLangChange = onLangChange(() => this.render());
+
     await this.fetchEvents();
 
     const container = document.getElementById("events-container");
@@ -270,5 +272,9 @@ export default class EventsView {
     newEventBtn?.addEventListener("click", () => {
       this.router.navigate("events/create");
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

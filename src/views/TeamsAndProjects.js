@@ -16,7 +16,7 @@ export default class Teams {
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
-    this.eventId = getSelectedEvent() 
+    this.eventId = getSelectedEvent();
     this.isAdmin = this.user?.role === "ADMIN";
   }
 
@@ -47,9 +47,9 @@ export default class Teams {
     <div class="col-12">
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3">
         <div class="spinner-border" role="status" style="width:2.5rem;height:2.5rem;color:var(--color-primary);">
-          <span class="visually-hidden">${t('common.loading')}</span>
+          <span class="visually-hidden">${t("common.loading")}</span>
         </div>
-        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">${t('teamsProjects.loading')}</p>
+        <p class="app-page-subtitle mb-0" style="font-size:0.95rem;">${t("teamsProjects.loading")}</p>
       </div>
     </div>`;
   }
@@ -60,8 +60,8 @@ export default class Teams {
       <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3 text-center">
         <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span>
         <div>
-          <p class="app-page-title mb-1" style="font-size:1rem;">${t('teamsProjects.noTeams')}</p>
-          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">${t('teamsProjects.noTeamsMsg')}</p>
+          <p class="app-page-title mb-1" style="font-size:1rem;">${t("teamsProjects.noTeams")}</p>
+          <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">${t("teamsProjects.noTeamsMsg")}</p>
         </div>
       </div>
     </div>`;
@@ -89,24 +89,22 @@ export default class Teams {
   }
 
   async loadTeams() {
-  try {
+    try {
+      const event = getSelectedEvent();
 
-    const event = getSelectedEvent();
+      if (!event) {
+        console.warn("No selected event found");
+        return;
+      }
 
-    if (!event) {
-      console.warn("No selected event found");
-      return;
+      const teams = await getTeamsByEvent(event.id);
+
+      this.teams = teams;
+      await this.renderTeamsGrid();
+    } catch (error) {
+      console.error("Error loading teams:", error);
     }
-
-    const teams = await getTeamsByEvent(event.id);
-
-    this.teams = teams;
-    await this.renderTeamsGrid()
-
-  } catch (error) {
-    console.error("Error loading teams:", error);
   }
-}
 
   async renderTeamsGrid() {
     const teamsContainer = document.getElementById("teamsContainer");
@@ -117,11 +115,10 @@ export default class Teams {
 
     this.showLoading(teamsContainer);
 
-    const fetchTeams = await apiFetch(
-        `/teams?limit=50`,
-        { method: "GET" },
+    const fetchTeams = await apiFetch(`/teams?limit=50`, { method: "GET" });
+    const totalTeams = fetchTeams.data.teams.filter(
+      (team) => team.id_event === this.eventId,
     );
-    const totalTeams = fetchTeams.data.teams.filter(team => team.id_event === this.eventId);
 
     if (!totalTeams || totalTeams.length === 0) {
       this.showEmpty(teamsContainer);
@@ -136,8 +133,10 @@ export default class Teams {
       const membersIcons = this.renderAvatars(members);
 
       const clickableClass = this.isAdmin ? "td-clickable" : "";
-      const dataAttr      = this.isAdmin ? `data-team-id="${team.id_team}"` : "";
-      const adminHint     = this.isAdmin ? `title="${t('teamsProjects.viewDetail')}"` : "";
+      const dataAttr = this.isAdmin ? `data-team-id="${team.id_team}"` : "";
+      const adminHint = this.isAdmin
+        ? `title="${t("teamsProjects.viewDetail")}"`
+        : "";
 
       const card = `
         <div class="col-12 col-md-6 col-lg-4">
@@ -160,12 +159,14 @@ export default class Teams {
                 <div class="app-avatar-group">
                   ${membersIcons}
                 </div>
-                ${this.isAdmin
-           ? `<span class="td-view-detail-hint">
+                ${
+                  this.isAdmin
+                    ? `<span class="td-view-detail-hint">
                        <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
-                       ${t('teamsProjects.viewDetail')}
+                       ${t("teamsProjects.viewDetail")}
                      </span>`
-           : ""}
+                    : ""
+                }
               </div>
             </div>
           </div>
@@ -205,8 +206,8 @@ export default class Teams {
     this.showLoading(teamsContainer);
 
     const fetchTeams = await apiFetch(
-        `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
-        { method: "GET" },
+      `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
+      { method: "GET" },
     );
     const totalTeams = fetchTeams.data.teams;
 
@@ -221,10 +222,10 @@ export default class Teams {
           <table class="table table-striped table-hover" style="width:100%;">
             <thead>
               <tr>
-                <th style="width:20%;">${t('teamsProjects.leader')}</th>
-                <th style="width:20%;">${t('teamsProjects.team')}</th>
-                <th style="width:45%;">${t('teamsProjects.desc')}</th>
-                <th style="width:15%;">${t('teamsProjects.members')}</th>
+                <th style="width:20%;">${t("teamsProjects.leader")}</th>
+                <th style="width:20%;">${t("teamsProjects.team")}</th>
+                <th style="width:45%;">${t("teamsProjects.desc")}</th>
+                <th style="width:15%;">${t("teamsProjects.members")}</th>
                 ${this.isAdmin ? `<th style="width:10%;"></th>` : ""}
               </tr>
             </thead>
@@ -237,25 +238,29 @@ export default class Teams {
     const tbody = document.getElementById("teamsTableBody");
 
     totalTeams.forEach((team) => {
-      const members     = team.members ?? [];
+      const members = team.members ?? [];
       const membersIcons = this.renderAvatars(members);
 
       const row = `
-        <tr ${this.isAdmin
-          ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t('teamsProjects.viewDetail')}"`
-          : ""}>
+        <tr ${
+          this.isAdmin
+            ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"`
+            : ""
+        }>
           <td><span style="font-size:0.85rem;">${team.leader_name ?? "—"}</span></td>
           <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
           <td><p class="app-card-text text-break">${team.description ?? ""}</p></td>
           <td><div class="app-avatar-group">${membersIcons}</div></td>
-          ${this.isAdmin
-          ? `<td>
+          ${
+            this.isAdmin
+              ? `<td>
                  <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
                          data-team-id="${team.id_team}">
                    <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">visibility</span>
                  </button>
                </td>`
-          : ""}
+              : ""
+          }
         </tr>
       `;
 
@@ -320,5 +325,9 @@ export default class Teams {
       }
     `;
     document.head.appendChild(style);
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

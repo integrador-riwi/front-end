@@ -45,11 +45,11 @@ export default class QRVoting {
     if (!pill) return;
 
     if (this.qrActive) {
-      pill.textContent = t('voting.active');
+      pill.textContent = t("voting.active");
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
     } else {
-      pill.textContent = t('voting.inactive');
+      pill.textContent = t("voting.inactive");
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
     }
@@ -101,10 +101,10 @@ export default class QRVoting {
 
     <div class="d-flex justify-content-between align-items-center mb-3">
 
-      <h5>${t('nav.ranking')}</h5>
+      <h5>${t("nav.ranking")}</h5>
 
       <div>
-        ${t('events.finalists')}:
+        ${t("events.finalists")}:
         <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
 
           <option value="3">Top 3</option>
@@ -143,7 +143,7 @@ export default class QRVoting {
 
             ${
               this.finalists.find((t) => t.id === team.id)
-                ? `<span class="badge bg-success mt-2">${t('events.finalists')}</span>`
+                ? `<span class="badge bg-success mt-2">${t("events.finalists")}</span>`
                 : ""
             }
 
@@ -160,7 +160,7 @@ export default class QRVoting {
     <div class="text-end mt-4">
 
       <button class="btn btn-success" id="approve-finalists-btn">
-        ${t('events.finalists')}
+        ${t("events.finalists")}
       </button>
 
     </div>
@@ -209,7 +209,7 @@ export default class QRVoting {
     return `
       <div class="d-flex justify-content-center align-items-center py-5">
         <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">${t('common.loading')}</span>
+          <span class="visually-hidden">${t("common.loading")}</span>
         </div>
       </div>
     `;
@@ -225,7 +225,7 @@ export default class QRVoting {
 
   renderFinalistsSection(finalists = []) {
     if (!finalists.length) {
-      return `<div class="text-muted">${t('voting.noTeams')}</div>`;
+      return `<div class="text-muted">${t("voting.noTeams")}</div>`;
     }
 
     return finalists.map((team) => this.renderTeamCard(team)).join("");
@@ -265,7 +265,7 @@ export default class QRVoting {
 
   renderAvailableTeams(finalists = []) {
     if (!finalists.length) {
-      return `<div class="text-muted">${t('voting.noTeams')}</div>`;
+      return `<div class="text-muted">${t("voting.noTeams")}</div>`;
     }
 
     const rankedIds = this.ranking.filter(Boolean).map((team) => team.id);
@@ -273,7 +273,7 @@ export default class QRVoting {
     const available = finalists.filter((team) => !rankedIds.includes(team.id));
 
     if (!available.length) {
-      return `<div class="text-muted">${t('voting.allRanked')}</div>`;
+      return `<div class="text-muted">${t("voting.allRanked")}</div>`;
     }
 
     return available
@@ -307,7 +307,7 @@ export default class QRVoting {
           this.ranking[emptyIndex] = team;
           this.renderVotingView();
         } else {
-          alert(t('voting.select3'));
+          alert(t("voting.select3"));
         }
       });
     });
@@ -317,18 +317,18 @@ export default class QRVoting {
       launchBtn.addEventListener("click", () => {
         const selectedTeams = this.ranking.filter(Boolean);
         if (selectedTeams.length < 3) {
-          alert(t('voting.select3'));
+          alert(t("voting.select3"));
           return;
         }
 
         launchBtn.disabled = true;
-        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${t('voting.launching')}`;
+        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${t("voting.launching")}`;
 
         setTimeout(() => {
           alert(
-            `${t('voting.launched')}: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
+            `${t("voting.launched")}: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
           );
-          launchBtn.innerHTML = t('voting.launched');
+          launchBtn.innerHTML = t("voting.launched");
           launchBtn.classList.remove("btn-primary-custom");
           launchBtn.classList.add("btn-success");
         }, 1500);
@@ -412,7 +412,7 @@ export default class QRVoting {
           this.qrActive = false;
 
           qrImg.src = "../src/assets/logo.svg";
-          generateQrBtn.innerText = t('voting.generateQR');
+          generateQrBtn.innerText = t("voting.generateQR");
           generateQrBtn.classList.remove("btn-primary-disabled");
           generateQrBtn.classList.add("btn-primary-custom");
 
@@ -423,7 +423,7 @@ export default class QRVoting {
         generateQrBtn.disabled = true;
         generateQrBtn.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
-        ${t('common.loading')}
+        ${t("common.loading")}
       `;
 
         let qrSrc = await getQR(getSelectedEvent());
@@ -439,16 +439,20 @@ export default class QRVoting {
 
         this.qrActive = true;
 
-        generateQrBtn.innerText = t('voting.disableQR');
+        generateQrBtn.innerText = t("voting.disableQR");
         generateQrBtn.classList.remove("btn-primary-custom");
         generateQrBtn.classList.add("btn-primary-disabled");
         this.updateQrStatusPill();
       } catch (err) {
         console.error("QR error:", err);
-        alert(t('common.error'));
+        alert(t("common.error"));
       } finally {
         generateQrBtn.disabled = false;
       }
     });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }
