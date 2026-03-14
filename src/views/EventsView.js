@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getEvents } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";

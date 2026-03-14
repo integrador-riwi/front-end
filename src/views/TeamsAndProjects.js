@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getUser, clearSession } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";

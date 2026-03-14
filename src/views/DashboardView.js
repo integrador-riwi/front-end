@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { icons } from "../utils/icons.js";
@@ -14,7 +14,7 @@ export default class DashboardView {
     this.user = getUser();
     this.eventId = params?.id || localStorage.getItem("currentEventId");
     this.eventName =
-      params?.name || localStorage.getItem("currentEventName") || "Dashboard";
+        params?.name || localStorage.getItem("currentEventName") || "Dashboard";
     this.navbar = new Navbar(router);
     this.header = new Header(router, { eventName: this.eventName });
 
@@ -186,6 +186,7 @@ export default class DashboardView {
                       (area, idx) => `
                     <div class="col">
                        <div class="p-3 rounded-4 border bg-white shadow-sm">
+                          ${this._renderProgressArea(
                           ${this._renderProgressArea(
                             area,
                             this.metrics?.evaluatedProjectsByArea?.[area] ??
