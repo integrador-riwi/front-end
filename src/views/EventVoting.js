@@ -29,8 +29,8 @@ export default class QRVoting {
       const qrSection = document.getElementById("qr");
 
       const qrUrl = await createQR(
-        getSelectedEvent(),
-        "2026-03-27T24:00:00.000Z",
+          getSelectedEvent(),
+          "2026-03-27T24:00:00.000Z",
       );
 
       qrSection.src = qrUrl;
@@ -119,7 +119,7 @@ export default class QRVoting {
 
       ${this.ranking
         .map(
-          (team, index) => `
+            (team, index) => `
       
         <div class="col-md-4">
 
@@ -141,9 +141,9 @@ export default class QRVoting {
             </div>
 
             ${
-              this.finalists.find((t) => t.id === team.id)
-                ? `<span class="badge bg-success mt-2">Finalist</span>`
-                : ""
+                this.finalists.find((t) => t.id === team.id)
+                    ? `<span class="badge bg-success mt-2">Finalist</span>`
+                    : ""
             }
 
           </div>
@@ -234,11 +234,11 @@ export default class QRVoting {
     if (!team) return "";
 
     const initials = (team.team_name || "NA")
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
 
     return `
     <div class="col-md-6 col-lg-4">
@@ -276,8 +276,8 @@ export default class QRVoting {
     }
 
     return available
-      .map((team) => this.renderTeamCard(team, { selectable: true }))
-      .join("");
+        .map((team) => this.renderTeamCard(team, { selectable: true }))
+        .join("");
   }
 
   attachTeamSelection() {
@@ -299,7 +299,7 @@ export default class QRVoting {
         // Add logic: fill first available slot in 2-1-3 order
         const fillOrder = [1, 0, 2];
         const emptyIndex = fillOrder.find(
-          (index) => this.ranking[index] === null,
+            (index) => this.ranking[index] === null,
         );
 
         if (emptyIndex !== undefined) {
@@ -308,7 +308,7 @@ export default class QRVoting {
         } else {
           // Show subtle alert if all slots filled
           alert(
-            "You have already selected 3 finalists. Remove one to add another.",
+              "You have already selected 3 finalists. Remove one to add another.",
           );
         }
       });
@@ -328,7 +328,7 @@ export default class QRVoting {
 
         setTimeout(() => {
           alert(
-            `Voting session launched successfully for: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
+              `Voting session launched successfully for: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
           );
           launchBtn.innerHTML = "Voting Session Active";
           launchBtn.classList.remove("btn-primary-custom");
@@ -342,15 +342,17 @@ export default class QRVoting {
     const app = document.getElementById("app");
 
     const template = await fetch("../../pages/admin_qr.html").then((r) =>
-      r.text(),
+        r.text(),
     );
 
     app.innerHTML = `
     ${this.navbar.render()}
-    ${this.header.render()}
-    <main class="dashboard-main">
-      ${template}
-    </main>
+    <div style="display:flex;flex-direction:column;width:100%">
+      ${this.header.render()}
+      <main class="dashboard-main">
+        ${template}
+      </main>
+    </div>
   `;
 
     this.header.mountBreadcrumb();
@@ -380,7 +382,7 @@ export default class QRVoting {
     }
 
     availableTeamsContainer.innerHTML = this.renderAvailableTeams(
-      this.event?.finalists || [],
+        this.event?.finalists || [],
     );
 
     this.attachTeamSelection(); // Re-attach handlers after full render
@@ -428,8 +430,8 @@ export default class QRVoting {
 
         if (!qrSrc) {
           qrSrc = await createQR(
-            getSelectedEvent(),
-            "2026-03-27T24:00:00.000Z",
+              getSelectedEvent(),
+              "2026-03-27T24:00:00.000Z",
           );
         }
 
