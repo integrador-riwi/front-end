@@ -293,8 +293,8 @@ export default class CreateEvent {
 
   _downloadTemplate() {
     const link = document.createElement("a");
-    link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
-    link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    link.href = "/plantilla_rubrica.xlsx";
+    link.download = "plantilla_rubrica.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -395,49 +395,87 @@ export default class CreateEvent {
 
   _parseExcelRubric(headerRow, rows) {
     const colIdx = (key) => headerRow.indexOf(key.toLowerCase());
+    const requiredCols = ['area', 'criterio', 'descripcion_criterio', 'peso_criterio', 'insatisfactorio', 'necesitas_mejorar', 'bueno', 'satisfactorio', 'excelente'];
+    
+    // Check for missing columns
+    const missingCols = requiredCols.filter(c => colIdx(c) === -1);
+    if (missingCols.length > 0) {
+      toast.error("Format Error", `Missing columns: ${missingCols.join(", ")}`);
+      return;
+    }
+
     const idxArea = colIdx('area');
     const idxName = colIdx('criterio');
     const idxDesc = colIdx('descripcion_criterio');
     const idxWeight = colIdx('peso_criterio');
-
-    // Level description columns
     const idxL1 = colIdx('insatisfactorio');
     const idxL2 = colIdx('necesitas_mejorar');
     const idxL3 = colIdx('bueno');
     const idxL4 = colIdx('satisfactorio');
     const idxL5 = colIdx('excelente');
 
-    // Reset areas
-    this.rubricAreas.forEach(a => { a.criteria = []; a.weight = 0; });
+    let totalWeight = 0;
+    const errors = [];
+    const newCriteria = [];
 
-    rows.forEach(row => {
-      const areaType = this._mapArea(String(row[idxArea] || ""));
+    rows.forEach((row, rowIndex) => {
+      const areaVal = String(row[idxArea] || "").trim();
       const name = String(row[idxName] || "").trim();
-      if (!name) return;
+      const desc = String(row[idxDesc] || "").trim();
+      const weight = parseFloat(row[idxWeight]) || 0;
+      
+      if (!areaVal && !name) return; // Skip empty rows
 
-      const area = this.rubricAreas.find(a => a.type === areaType);
-      if (area) {
-        area.criteria.push({
-          id: this._generateId(),
-          name: name,
-          description: String(row[idxDesc] || "").trim(),
-          weight: parseFloat(row[idxWeight]) || 0,
-          isExpanded: false,
-          levels: [
-            { score: 0, name: 'Insatisfactorio', description: String(row[idxL1] || ""), color: '#ff4d4f' },
-            { score: 25, name: 'Necesitas Mejorar', description: String(row[idxL2] || ""), color: '#ff7a45' },
-            { score: 50, name: 'Bueno', description: String(row[idxL3] || ""), color: '#faad14' },
-            { score: 75, name: 'Satisfactorio', description: String(row[idxL4] || ""), color: '#7cb305' },
-            { score: 100, name: 'Excelente', description: String(row[idxL5] || ""), color: '#52c41a' }
-          ]
-        });
-      }
+      const areaType = this._mapArea(areaVal);
+      const rowNum = rowIndex + 2; // +1 for header, +1 for 1-based index
+
+      if (!name) errors.push(`Row ${rowNum}: Missing 'Criterio' name.`);
+      if (!desc) errors.push(`Row ${rowNum}: Missing 'Descripcion_Criterio'.`);
+      
+      const levels = [
+        { score: 0, name: 'Insatisfactorio', description: String(row[idxL1] || "").trim(), color: '#ff4d4f' },
+        { score: 25, name: 'Necesitas Mejorar', description: String(row[idxL2] || "").trim(), color: '#ff7a45' },
+        { score: 50, name: 'Bueno', description: String(row[idxL3] || "").trim(), color: '#faad14' },
+        { score: 75, name: 'Satisfactorio', description: String(row[idxL4] || "").trim(), color: '#7cb305' },
+        { score: 100, name: 'Excelente', description: String(row[idxL5] || "").trim(), color: '#52c41a' }
+      ];
+
+      levels.forEach(lvl => {
+        if (!lvl.description) errors.push(`Row ${rowNum}: Missing description for level '${lvl.name}'.`);
+      });
+
+      totalWeight += weight;
+      newCriteria.push({ areaType, data: {
+        id: this._generateId(),
+        name,
+        description: desc,
+        weight,
+        isExpanded: false,
+        levels
+      }});
+    });
+
+    if (errors.length > 0) {
+      toast.error("Validation Failed", errors.slice(0, 3).join("<br>") + (errors.length > 3 ? `<br>...and ${errors.length - 3} more errors.` : ""));
+      return;
+    }
+
+    if (Math.abs(totalWeight - 100) > 0.1) {
+      toast.error("Weight Error", `Total weight in Excel is ${totalWeight}%. It must be exactly 100%.`);
+      return;
+    }
+
+    // Reset and Populate
+    this.rubricAreas.forEach(a => { a.criteria = []; a.weight = 0; });
+    newCriteria.forEach(item => {
+      const area = this.rubricAreas.find(a => a.type === item.areaType);
+      if (area) area.criteria.push(item.data);
     });
 
     this.rubricMode = 'platform';
     this._recalculateWeights();
     this._rerenderRubricSection();
-    toast.success("Import Successful", "Rubric populated from Excel.");
+    toast.success("Import Successful", `Processed ${newCriteria.length} criteria successfully.`);
   }
 
   _mapArea(val) {
