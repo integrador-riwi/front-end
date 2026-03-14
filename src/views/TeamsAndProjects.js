@@ -97,9 +97,7 @@ export default class Teams {
         return;
       }
 
-      const teams = await getTeamsByEvent(event.id);
-
-      this.teams = teams;
+      this.teams = await getTeamsByEvent(event.id);
       await this.renderTeamsGrid();
     } catch (error) {
       console.error("Error loading teams:", error);
@@ -119,7 +117,7 @@ export default class Teams {
     const totalTeams = fetchTeams.data.teams.filter(
       (team) => team.id_event === this.eventId,
     );
-
+    console.log("awo",totalTeams)
     if (!totalTeams || totalTeams.length === 0) {
       this.showEmpty(teamsContainer);
       return;
@@ -210,7 +208,7 @@ export default class Teams {
       { method: "GET" },
     );
     const totalTeams = fetchTeams.data.teams;
-
+    console.log("awita", totalTeams)
     if (!totalTeams || totalTeams.length === 0) {
       this.showEmpty(teamsContainer);
       return;
