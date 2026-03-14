@@ -338,7 +338,7 @@ export default class QRVoting {
 
     await this.fetchRanking();
     this.renderRankingPanel();
-    this.handleQRButton();
+    await this.handleQRButton();
     this.updateQrStatusPill();
     this.updateQrButtonState();
     await this.loadExistingQR();
