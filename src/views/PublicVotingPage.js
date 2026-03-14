@@ -46,9 +46,7 @@ export default class PublicVotingPage {
   async handleVote(projectId) {
     try {
         const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"))
-        console.log(qrVoteId)
-        console.log(projectId)
-        console.log({ qr_vote_id:qrVoteId, project_id: Number(projectId)})
+
       await submitVote(qrVoteId, Number(projectId));
 
       sessionStorage.setItem(`voted_event_${this.projectId}`, "true");

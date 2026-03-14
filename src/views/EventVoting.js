@@ -3,7 +3,6 @@ import Header from "../components/header/header-config.js";
 import { getEventRanking } from "../services/api-events.js";
 import { createQR, getQR } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
-import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
@@ -49,11 +48,11 @@ export default class QRVoting {
     if (!pill) return;
 
     if (this.qrActive) {
-      pill.textContent = t("voting.active");
+      pill.textContent = "Active";
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
     } else {
-      pill.textContent = t("voting.inactive");
+      pill.textContent = "Inactive";
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
     }
@@ -61,9 +60,13 @@ export default class QRVoting {
 
   updateQrButtonState() {
     const btn = document.getElementById("generate-qr-btn");
+    const expirationInput = document.getElementById("qr-expiration");
     if (!btn) return;
 
-    if (this.finalistsApproved) {
+    const hasDate = !!expirationInput?.value;
+    const canGenerate = this.finalistsApproved && hasDate;
+
+    if (canGenerate) {
       btn.disabled = false;
       btn.classList.remove("btn-secondary");
       btn.classList.add("btn-primary-custom");
@@ -72,7 +75,79 @@ export default class QRVoting {
       btn.disabled = true;
       btn.classList.remove("btn-primary-custom");
       btn.classList.add("btn-secondary");
-      btn.title = "Approve finalists first";
+      btn.title = !this.finalistsApproved
+        ? "Approve finalists first"
+        : "Select an expiration date first";
+    }
+  }
+
+  async loadExistingQR() {
+    try {
+      const eventId = getSelectedEvent();
+      const cached = localStorage.getItem(`qr_event_${eventId}`);
+      const qrSrc = cached || null;
+
+    const qrImg = document.getElementById("qr");
+
+    if (qrSrc) {
+      qrImg.src     = qrSrc;
+      this.qrActive = true;
+
+      const btn = document.getElementById("generate-qr-btn");
+      if (btn) {
+        btn.innerText = "Disable QR";
+        btn.classList.remove("btn-primary-custom");
+        btn.classList.add("btn-primary-disabled");
+      }
+
+      this.updateDownloadButton(qrSrc);
+      this.updateQrStatusPill();
+    } else {
+      this.updateDownloadButton(null);
+    }
+    } catch (err) {
+      console.error("Failed to load existing QR:", err);
+      this.updateDownloadButton(null);
+    }
+  }
+
+  updateDownloadButton(qrSrc) {
+    const downloadBtn = document.getElementById("download-qr-btn");
+    if (!downloadBtn) return;
+
+    if (qrSrc) {
+      downloadBtn.disabled = false;
+      downloadBtn.classList.remove("btn-secondary");
+      downloadBtn.classList.add("btn-primary-custom");
+
+      downloadBtn.onclick = () => {
+        const SIZE = 512;
+        const img = new Image();
+        img.src = qrSrc;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+
+          const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = false;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, SIZE, SIZE);
+
+          ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = `qr-event-${getSelectedEvent()}.png`;
+          link.click();
+        };
+      };
+    } else {
+      downloadBtn.disabled = true;
+      downloadBtn.classList.remove("btn-primary-custom");
+      downloadBtn.classList.add("btn-secondary");
+      downloadBtn.title = "Generate a QR first";
+      downloadBtn.onclick = null;
     }
   }
 
@@ -81,6 +156,10 @@ export default class QRVoting {
     const qrImg = document.getElementById("qr");
     const expirationInput = document.getElementById("qr-expiration");
 
+    expirationInput?.addEventListener("change", () => {
+      this.updateQrButtonState();
+    });
+
     if (!btn) return;
 
     btn.addEventListener("click", async () => {
@@ -88,18 +167,20 @@ export default class QRVoting {
         if (this.qrActive) {
           this.qrActive = false;
           qrImg.src = "../src/assets/logo.svg";
+           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
 
-          btn.innerText = t("voting.generateQR");
+          btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
           btn.classList.add("btn-primary-custom");
 
           this.updateQrStatusPill();
+          this.updateDownloadButton(null);
           return;
         }
 
         const expirationValue = expirationInput?.value;
         if (!expirationValue) {
-          alert(t("voting.selectExpiration"));
+          alert("Please select a QR expiration date.");
           return;
         }
 
@@ -108,7 +189,7 @@ export default class QRVoting {
         btn.disabled = true;
         btn.innerHTML = `
           <span class="spinner-border spinner-border-sm me-2"></span>
-          ${t("common.loading")}
+          Generating QR...
         `;
 
         const eventId = getSelectedEvent();
@@ -125,20 +206,23 @@ export default class QRVoting {
             expirationDate,
             this.finalists,
           );
-          qrSrc = response?.qrImage; // 👈 extrae el base64
+          qrSrc = response?.qrImage;
         }
 
         qrImg.src = qrSrc;
         this.qrActive = true;
 
-        btn.innerText = t("voting.disableQR");
+        localStorage.setItem(`qr_event_${eventId}`, qrSrc);
+
+        btn.innerText = "Disable QR";
         btn.classList.remove("btn-primary-custom");
         btn.classList.add("btn-primary-disabled");
 
         this.updateQrStatusPill();
+        this.updateDownloadButton(qrSrc);
       } catch (err) {
         console.error("QR error:", err);
-        alert(t("common.error"));
+        alert("Error generating QR");
       } finally {
         btn.disabled = false;
       }
@@ -153,11 +237,9 @@ export default class QRVoting {
 
     container.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-3">
-
-        <h5>${t("nav.ranking")}</h5>
-
+        <h5>Event Ranking</h5>
         <div>
-          ${t("events.finalists")}:
+          Finalists:
           <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
             <option value="3">Top 3</option>
             <option value="6">Top 6</option>
@@ -185,13 +267,6 @@ export default class QRVoting {
                   : ""
               }
             </div>
-
-            ${
-              this.finalists.find((t) => t.id === team.id)
-                ? `<span class="badge bg-success mt-2">${t("events.finalists")}</span>`
-                : ""
-            }
-
           </div>
         `,
           )
@@ -200,7 +275,7 @@ export default class QRVoting {
 
       <div class="text-end mt-4">
         <button class="btn btn-success" id="approve-finalists-btn">
-          ${t("events.approveFinalists")}
+          Approve Finalists
         </button>
       </div>
     `;
@@ -230,156 +305,12 @@ export default class QRVoting {
       approveBtn.addEventListener("click", () => {
         this.finalistsApproved = true;
 
-        alert(t("events.approveFinalistsSuccess"));
-      });
-    }
-  }
-
-  renderVotingView() {
-    const slotsContainer = document.getElementById("ranking-slots");
-    const teamsContainer = document.getElementById("available-teams");
-
-    if (!slotsContainer || !teamsContainer || !this.event) return;
-
-    teamsContainer.innerHTML = this.renderAvailableTeams(this.event.finalists);
-
-    this.attachTeamSelection();
-  }
-
-  renderLoading() {
-    return `
-      <div class="d-flex justify-content-center align-items-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">${t("common.loading")}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  renderError(message) {
-    return `
-      <div class="alert alert-danger rounded-4 mt-4" role="alert">
-        ${message}
-      </div>
-    `;
-  }
-
-  renderFinalistsSection(finalists = []) {
-    if (!finalists.length) {
-      return `<div class="text-muted">${t("voting.noTeams")}</div>`;
-    }
-
-    return finalists.map((team) => this.renderTeamCard(team)).join("");
-  }
-
-  renderTeamCard(team, { selectable = false } = {}) {
-    if (!team) return "";
-
-    const initials = (team.team_name || "NA")
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    return `
-    <div class="col-md-6 col-lg-4">
-      <div class="teamF-card ${selectable ? "selectable-team" : ""} 
-           d-flex flex-column align-items-center"
-           ${selectable ? `data-id="${team.id}"` : ""}>
-           
-        <div class="team-avatar">
-          ${initials}
-        </div>
-
-        <div class="mt-2 text-center">
-          <strong>${team.team_name || "Unnamed Team"}</strong><br>
-          <small class="text-muted">
-            ${team.project_name || "Project"}
-          </small>
-        </div>
-
-      </div>
-    </div>
-  `;
-  }
-
-  renderAvailableTeams(finalists = []) {
-    if (!finalists.length) {
-      return `<div class="text-muted">${t("voting.noTeams")}</div>`;
-    }
-
-    const rankedIds = this.ranking.filter(Boolean).map((team) => team.id);
-
-    const available = finalists.filter((team) => !rankedIds.includes(team.id));
-
-    if (!available.length) {
-      return `<div class="text-muted">${t("voting.allRanked")}</div>`;
-    }
-
-    return available
-      .map((team) => this.renderTeamCard(team, { selectable: true }))
-      .join("");
-  }
-
-  attachTeamSelection() {
-    document.querySelectorAll(".selectable-team").forEach((card) => {
-      card.addEventListener("click", (e) => {
-        const id = e.currentTarget.dataset.id;
-        const team = this.event.finalists.find((t) => t.id == id);
-
-        if (!team) return;
-
-        // Toggle logic: if already ranked, remove it
-        const rankedIndex = this.ranking.findIndex((t) => t?.id === team.id);
-        if (rankedIndex !== -1) {
-          this.ranking[rankedIndex] = null;
-          this.renderVotingView();
-          return;
-        }
-
-        // Add logic: fill first available slot in 2-1-3 order
-        const fillOrder = [1, 0, 2];
-        const emptyIndex = fillOrder.find(
-          (index) => this.ranking[index] === null,
-        );
-
-        if (emptyIndex !== undefined) {
-          this.ranking[emptyIndex] = team;
-          this.renderVotingView();
-        } else {
-          alert(t("voting.select3"));
-        }
-      });
-    });
-
-    const launchBtn = document.querySelector(".btn-primary-custom.shadow");
-    if (launchBtn) {
-      launchBtn.addEventListener("click", () => {
-        const selectedTeams = this.ranking.filter(Boolean);
-        if (selectedTeams.length < 3) {
-          alert(t("voting.select3"));
-          return;
-        }
-
-        launchBtn.disabled = true;
-        launchBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${t("voting.launching")}`;
-
-        setTimeout(() => {
-          alert(
-            `${t("voting.launched")}: \n1st: ${this.ranking[1].team_name}\n2nd: ${this.ranking[0].team_name}\n3rd: ${this.ranking[2].team_name}`,
-          );
-          launchBtn.innerHTML = t("voting.launched");
-          launchBtn.classList.remove("btn-primary-custom");
-          launchBtn.classList.add("btn-success");
-        }, 1500);
-
         approveBtn.disabled = true;
         approveBtn.innerHTML = `Finalists Approved`;
         approveBtn.classList.remove("btn-success");
         approveBtn.classList.add("btn-secondary");
 
-        this.updateQrButtonState();
+        this.updateQrButtonState(); //
 
         console.log("Finalists approved:", this.finalists);
       });
@@ -411,101 +342,8 @@ export default class QRVoting {
     await this.fetchRanking();
     this.renderRankingPanel();
     this.handleQRButton();
-
-    const finalistsContainer = document.getElementById("finalists-container");
-
-    if (!finalistsContainer) {
-      console.error("Finalists container not found");
-      return;
-    }
-
-    this.renderVotingView();
-
-    const availableTeamsContainer = document.getElementById("available-teams");
-
-    if (!availableTeamsContainer) {
-      console.error("Available teams container not found");
-      return;
-    }
-
-    availableTeamsContainer.innerHTML = this.renderAvailableTeams(
-      this.event?.finalists || [],
-    );
-
-    this.attachTeamSelection(); // Re-attach handlers after full render
-
-    this._offLangChange = onLangChange(() => {
-      this.updateQrStatusPill();
-      this.renderRankingPanel();
-      this.renderVotingView();
-    });
-  }
-
-  attachEventHandlers() {
-    const generateQrBtn = document.getElementById("generate-qr-btn");
-    const qrImg = document.getElementById("qr");
-
-    document.querySelectorAll(".view-project-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const id = e.currentTarget.dataset.id;
-
-        if (id) {
-          this.router.navigate(`/projects/${id}`);
-        }
-      });
-    });
-
-    if (!generateQrBtn) return;
-
-    generateQrBtn.addEventListener("click", async () => {
-      try {
-        if (this.qrActive) {
-          this.qrActive = false;
-
-          qrImg.src = "../src/assets/logo.svg";
-          generateQrBtn.innerText = t("voting.generateQR");
-          generateQrBtn.classList.remove("btn-primary-disabled");
-          generateQrBtn.classList.add("btn-primary-custom");
-
-          this.updateQrStatusPill();
-          return;
-        }
-
-        generateQrBtn.disabled = true;
-        generateQrBtn.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        ${t("common.loading")}
-      `;
-
-        let qrSrc = await getQR(getSelectedEvent());
-
-        if (!qrSrc) {
-          qrSrc = await createQR(
-            getSelectedEvent(),
-            "2026-03-27T24:00:00.000Z",
-          );
-        }
-
-        qrImg.src = qrSrc;
-
-        this.qrActive = true;
-
-        generateQrBtn.innerText = t("voting.disableQR");
-        generateQrBtn.classList.remove("btn-primary-custom");
-        generateQrBtn.classList.add("btn-primary-disabled");
-        this.updateQrStatusPill();
-      } catch (err) {
-        console.error("QR error:", err);
-        alert(t("common.error"));
-      } finally {
-        generateQrBtn.disabled = false;
-      }
-    });
-  }
-
-  destroy() {
-    if (this._offLangChange) this._offLangChange();
     this.updateQrStatusPill();
     this.updateQrButtonState();
+    await this.loadExistingQR();
   }
 }

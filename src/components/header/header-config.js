@@ -17,47 +17,48 @@ export default class Header {
       params.eventName || localStorage.getItem("currentEventName") || "Event";
   }
 
-  mountBreadcrumb() {
-    const eventId = getEventIdFromUrl();
-    const section = getEventSectionFromUrl();
+  mountBreadcrumb(customLinks) {
+    let links = customLinks || [];
 
-    let links = [];
+    if (!customLinks) {
+      const eventId = getEventIdFromUrl();
+      const section = getEventSectionFromUrl();
 
-    if (eventId) {
-      const sectionLabels = {
-        projects: t("nav.projects"),
-        ranking: t("nav.ranking"),
-        voting: t("nav.voting"),
-        finalists: t("nav.finalists"),
-        metrics: t("nav.metrics"),
-      };
+      if (eventId) {
+        const sectionLabels = {
+          projects: t("nav.projects"),
+          ranking: t("nav.ranking"),
+          voting: t("nav.voting"),
+          finalists: t("nav.finalists"),
+          metrics: t("nav.metrics"),
+        };
 
-      links = [
-        { label: t("nav.events"), route: "events" },
-        {
-          label: this.eventName || `Event ${eventId}`,
-          route: `events/${eventId}`,
-        },
-      ];
+        links = [
+          { label: t("nav.events"), route: "events" },
+          {
+            label: this.eventName || `Event ${eventId}`,
+            route: `events/${eventId}`,
+          },
+        ];
 
-      if (section) {
-        links.push({
-          label: sectionLabels[section] || section,
-          route: null,
-        });
+        if (section) {
+          links.push({
+            label: sectionLabels[section] || section,
+            route: null,
+          });
+        }
+      } else {
+        const route = this.router.currentRoute;
+        links = getHeaderLinks(route);
       }
-    } else {
-      const route = this.router.currentRoute;
-
-      links = getHeaderLinks(route);
     }
 
     const breadcrumbHTML = this.renderBreadcrumb({ links });
-
     const container = document.getElementById("breadcrumb");
 
     if (container) {
       container.innerHTML = breadcrumbHTML;
+      this.attachEventHandlers();
     }
   }
 
@@ -149,6 +150,10 @@ export default class Header {
         if (link.dataset.route === "events") {
           localStorage.removeItem("currentEventId");
           localStorage.removeItem("currentEventName");
+        }
+
+        if (link.dataset.route === "coderEventSelect") {
+          sessionStorage.removeItem("selectedEvent");
         }
         this.router.navigate(route);
       });

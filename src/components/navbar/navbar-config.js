@@ -55,7 +55,13 @@ export const getNavLinks = (role, hasTeam) => {
   }
 
   if (["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"].includes(role)) {
-    return TL_BASE_LINKS();
+    const links = TL_BASE_LINKS();
+    const eventSelected = sessionStorage.getItem("selectedEvent");
+
+    if (!eventSelected) {
+      return links.filter((l) => l.route !== "tlDashboard");
+    }
+    return links;
   }
 
   if (role === "STAFF") {

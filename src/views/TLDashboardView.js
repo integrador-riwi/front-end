@@ -71,13 +71,32 @@ export default class TLDashboardView {
               method: "GET",
             });
             const full = detail?.data ?? detail;
+
+            // Check if this TL already evaluated this team's project
+            let _alreadyEvaluated = false;
+            const projectId = full.project?.id_project ?? null;
+            if (projectId) {
+              try {
+                const { getMyEvaluationsForProject } =
+                  await import("../services/api.js");
+                const evals = await getMyEvaluationsForProject(projectId);
+                _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
+              } catch (_) {}
+            }
+
             return {
               ...t,
               members: full.members ?? [],
               project: full.project ?? null,
+              _alreadyEvaluated,
             };
           } catch {
-            return { ...t, members: [], project: null };
+            return {
+              ...t,
+              members: [],
+              project: null,
+              _alreadyEvaluated: false,
+            };
           }
         }),
       );
@@ -111,7 +130,13 @@ export default class TLDashboardView {
     this.header.attachEventHandlers();
     this._renderList();
     if (!this._offLangChange) {
-      this._offLangChange = onLangChange(() => this.render());
+      this._offLangChange = onLangChange(() => {
+        if (this.detailTeam) {
+          this._renderDetail(this.detailTeam);
+        } else {
+          this.render();
+        }
+      });
     }
   }
 
@@ -123,16 +148,7 @@ export default class TLDashboardView {
     content.innerHTML = `
       <div class="tld-page">
 
-        <!-- Header -->
         <header class="tld-header">
-          ${
-            this.selectedEvent
-              ? `<button class="tld-back-btn" id="tldBackBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  ${t("tl.backToEvents")}
-                </button>`
-              : ""
-          }
           <div class="tld-header-top">
             <div>
               <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
@@ -252,7 +268,11 @@ export default class TLDashboardView {
 
     // Button state
     let evalBtnContent, evalBtnDisabled, evalBtnClass;
-    if (isSubmitted) {
+    if (isSubmitted && team._alreadyEvaluated) {
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${t("team.reviewEval")}`;
+      evalBtnDisabled = "";
+      evalBtnClass = "tld-eval-btn tld-eval-btn--reviewed";
+    } else if (isSubmitted) {
       evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> ${t("team.evaluate")}`;
       evalBtnDisabled = "";
       evalBtnClass = "tld-eval-btn tld-eval-btn--ready";
@@ -309,24 +329,33 @@ export default class TLDashboardView {
     `;
   }
 
-  // ── Detail view (coderTeam template reused) ───────────────────────────────
   _renderDetail(team) {
     const content = document.getElementById("tl-content");
     if (!content) return;
+
+    // Track which team is open so onLangChange can re-render the right view
+    this.detailTeam = team;
 
     const isTL = TL_ROLES.includes(this.user?.role);
     const eventId = team.id_event ?? this.selectedEvent?.id ?? null;
     const projectId = team.project?.id_project ?? null;
 
-    content.innerHTML = `
-      <div class="tld-detail-back-bar">
-        <button class="tld-back-btn" id="tldDetailBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          ${t("common.back")} ${this.selectedEvent ? this.selectedEvent.title : t("tl.teams")}
-        </button>
-      </div>
-      ${renderCoderTeam({ user: this.user, team, isLeader: false, isTL })}
-    `;
+    // Update breadcrumbs for detail view
+    this.header.mountBreadcrumb([
+      { label: t("nav.events"), route: "coderEventSelect" },
+      {
+        label: this.selectedEvent?.title ?? t("tl.teams"),
+        route: "tlDashboard",
+      },
+      { label: team.name, route: null },
+    ]);
+
+    content.innerHTML = renderCoderTeam({
+      user: this.user,
+      team,
+      isLeader: false,
+      isTL,
+    });
 
     setTimeout(() => {
       loadProjectBrief();
@@ -343,11 +372,6 @@ export default class TLDashboardView {
         });
       }
     }, 0);
-
-    document.getElementById("tldDetailBack")?.addEventListener("click", () => {
-      this._renderList();
-      this._attachListHandlers();
-    });
 
     // Hide coder-only buttons that don't make sense for a TL viewer
     setTimeout(() => {

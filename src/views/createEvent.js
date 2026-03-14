@@ -147,9 +147,9 @@ export default class CreateEvent {
         ${t("createEvent.allClans")}
       </button>
       ${ALL_CLANS.map((clan) => {
-        const active = this.targetClans.includes(clan);
-        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
-      }).join("")}
+      const active = this.targetClans.includes(clan);
+      return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+    }).join("")}
     `;
   }
 
@@ -219,9 +219,16 @@ export default class CreateEvent {
       let totalWeight = this._getTotalWeight();
       for (const a of this.rubricAreas) {
         for (const c of a.criteria) {
-          if (!c.name) return `A criteria for ${a.title} has no name.`;
+          if (!c.name?.trim()) return `A criteria for ${a.title} has no name.`;
+          if (!c.description?.trim()) return `The criteria "${c.name}" requires a description.`;
           if (c.levels.length === 0)
             return `The criteria "${c.name}" has no performance levels.`;
+          
+          for (let i = 0; i < c.levels.length; i++) {
+            if (!c.levels[i].description?.trim()) {
+              return `Level ${i + 1} description is missing for criteria "${c.name}".`;
+            }
+          }
         }
       }
       if (Math.abs(totalWeight - 100) > 0.1 && totalWeight > 0) {
@@ -257,7 +264,7 @@ export default class CreateEvent {
       toast.success(
         t("createEvent.successTitle") ?? "Event Created!",
         t("createEvent.successMsg") ??
-          "The event has been created successfully.",
+        "The event has been created successfully.",
       );
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
@@ -286,8 +293,8 @@ export default class CreateEvent {
 
   _downloadTemplate() {
     const link = document.createElement("a");
-    link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
-    link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    link.href = "/plantilla_rubrica.xlsx";
+    link.download = "plantilla_rubrica.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -308,15 +315,12 @@ export default class CreateEvent {
         weight: 0,
         isExpanded: true,
         levels: [
-          {
-            score: 0,
-            name: "Unsatisfactory",
-            description: "",
-            color: "#ff4d4f",
-          },
-          { score: 50, name: "Good", description: "", color: "#faad14" },
-          { score: 100, name: "Excellent", description: "", color: "#52c41a" },
-        ],
+          { score: 0, name: 'Insatisfactorio', description: '', color: '#ff4d4f' },
+          { score: 25, name: 'Necesitas Mejorar', description: '', color: '#ff7a45' },
+          { score: 50, name: 'Bueno', description: '', color: '#faad14' },
+          { score: 75, name: 'Satisfactorio', description: '', color: '#7cb305' },
+          { score: 100, name: 'Excelente', description: '', color: '#52c41a' }
+        ]
       });
       area.isExpanded = true;
       this._recalculateWeights();
@@ -358,6 +362,128 @@ export default class CreateEvent {
         this._rerenderRubricSection();
       }
     }
+  }
+
+  _handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        let sheetData = [];
+
+        for (const sn of workbook.SheetNames) {
+          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], { header: 1, defval: '' });
+          for (let i = 0; i < Math.min(rows.length, 15); i++) {
+            const row = rows[i].map(c => String(c || "").trim().toLowerCase());
+            if (row.includes('area') && row.includes('criterio')) {
+              this._parseExcelRubric(row, rows.slice(i + 1));
+              return;
+            }
+          }
+        }
+        toast.error("Format Error", "Could not find 'Area' and 'Criterio' columns.");
+      } catch (err) {
+        toast.error("Import Error", "Failed to process file.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  _parseExcelRubric(headerRow, rows) {
+    const colIdx = (key) => headerRow.indexOf(key.toLowerCase());
+    const requiredCols = ['area', 'criterio', 'descripcion_criterio', 'peso_criterio', 'insatisfactorio', 'necesitas_mejorar', 'bueno', 'satisfactorio', 'excelente'];
+    
+    // Check for missing columns
+    const missingCols = requiredCols.filter(c => colIdx(c) === -1);
+    if (missingCols.length > 0) {
+      toast.error("Format Error", `Missing columns: ${missingCols.join(", ")}`);
+      return;
+    }
+
+    const idxArea = colIdx('area');
+    const idxName = colIdx('criterio');
+    const idxDesc = colIdx('descripcion_criterio');
+    const idxWeight = colIdx('peso_criterio');
+    const idxL1 = colIdx('insatisfactorio');
+    const idxL2 = colIdx('necesitas_mejorar');
+    const idxL3 = colIdx('bueno');
+    const idxL4 = colIdx('satisfactorio');
+    const idxL5 = colIdx('excelente');
+
+    let totalWeight = 0;
+    const errors = [];
+    const newCriteria = [];
+
+    rows.forEach((row, rowIndex) => {
+      const areaVal = String(row[idxArea] || "").trim();
+      const name = String(row[idxName] || "").trim();
+      const desc = String(row[idxDesc] || "").trim();
+      const weight = parseFloat(row[idxWeight]) || 0;
+      
+      if (!areaVal && !name) return; // Skip empty rows
+
+      const areaType = this._mapArea(areaVal);
+      const rowNum = rowIndex + 2; // +1 for header, +1 for 1-based index
+
+      if (!name) errors.push(`Row ${rowNum}: Missing 'Criterio' name.`);
+      if (!desc) errors.push(`Row ${rowNum}: Missing 'Descripcion_Criterio'.`);
+      
+      const levels = [
+        { score: 0, name: 'Insatisfactorio', description: String(row[idxL1] || "").trim(), color: '#ff4d4f' },
+        { score: 25, name: 'Necesitas Mejorar', description: String(row[idxL2] || "").trim(), color: '#ff7a45' },
+        { score: 50, name: 'Bueno', description: String(row[idxL3] || "").trim(), color: '#faad14' },
+        { score: 75, name: 'Satisfactorio', description: String(row[idxL4] || "").trim(), color: '#7cb305' },
+        { score: 100, name: 'Excelente', description: String(row[idxL5] || "").trim(), color: '#52c41a' }
+      ];
+
+      levels.forEach(lvl => {
+        if (!lvl.description) errors.push(`Row ${rowNum}: Missing description for level '${lvl.name}'.`);
+      });
+
+      totalWeight += weight;
+      newCriteria.push({ areaType, data: {
+        id: this._generateId(),
+        name,
+        description: desc,
+        weight,
+        isExpanded: false,
+        levels
+      }});
+    });
+
+    if (errors.length > 0) {
+      toast.error("Validation Failed", errors.slice(0, 3).join("<br>") + (errors.length > 3 ? `<br>...and ${errors.length - 3} more errors.` : ""));
+      return;
+    }
+
+    if (Math.abs(totalWeight - 100) > 0.1) {
+      toast.error("Weight Error", `Total weight in Excel is ${totalWeight}%. It must be exactly 100%.`);
+      return;
+    }
+
+    // Reset and Populate
+    this.rubricAreas.forEach(a => { a.criteria = []; a.weight = 0; });
+    newCriteria.forEach(item => {
+      const area = this.rubricAreas.find(a => a.type === item.areaType);
+      if (area) area.criteria.push(item.data);
+    });
+
+    this.rubricMode = 'platform';
+    this._recalculateWeights();
+    this._rerenderRubricSection();
+    toast.success("Import Successful", `Processed ${newCriteria.length} criteria successfully.`);
+  }
+
+  _mapArea(val) {
+    const v = val.toUpperCase();
+    if (v.includes("DEV") || v.includes("DESARROLLO")) return "DEVELOPMENT";
+    if (v.includes("SOFT") || v.includes("HABILIDADES")) return "SOFT_SKILLS";
+    if (v.includes("ENGLISH") || v.includes("INGLES")) return "ENGLISH";
+    return "DEVELOPMENT";
   }
 
   _recalculateWeights() {
@@ -416,7 +542,10 @@ export default class CreateEvent {
               <p class="text-muted small mb-4">Download the template, complete it and drag it here.</p>
               <div class="d-flex justify-content-center gap-3">
                 <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
-                <button class="btn btn-primary" type="button">${t("createEvent.selectFile")}</button>
+                <label class="btn btn-primary" style="cursor: pointer;">
+                  Select File
+                  <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;">
+                </label>
               </div>
             </div>
           </div>
@@ -455,21 +584,20 @@ export default class CreateEvent {
                     <span class="badge bg-white text-dark border me-2">Areas: 3</span>
                     <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
                   </div>
-                  ${
-                    !isWeightOk
-                      ? `
+                  ${!isWeightOk
+        ? `
                     <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Total weight must be 100%
                     </div>
                   `
-                      : `
+        : `
                      <div class="text-success small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Weight correctly assigned
                     </div>
                   `
-                  }
+      }
                </div>
             </div>
           </div>
@@ -504,23 +632,21 @@ export default class CreateEvent {
               </div>
            </div>
            
-           ${
-             area.isExpanded
-               ? `
+           ${area.isExpanded
+        ? `
              <div class="card-body bg-light border-top">
-                ${
-                  !hasCrit
-                    ? `
+                ${!hasCrit
+          ? `
                    <div class="text-center py-3">
                      <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
                    </div>
                 `
-                    : `
+          : `
                    <div class="criteria-list">
                       ${area.criteria.map((crit) => this._renderCriteriaItem(area, crit)).join("")}
                    </div>
                 `
-                }
+        }
                 <div class="mt-3">
                   <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -529,66 +655,60 @@ export default class CreateEvent {
                 </div>
              </div>
            `
-               : ""
-           }
+        : ""
+      }
         </div>
      `;
   }
 
   _renderCriteriaItem(area, crit) {
     return `
-        <div class="criteria-item p-3 mb-3 border rounded bg-white shadow-sm">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1 pe-3">
-                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="${t("createEvent.critName")}" value="${crit.name}">
-                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
+        <div class="criteria-item p-4 mb-4 border rounded-3 bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="flex-grow-1 pe-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.critName")} <span class="text-danger">*</span></label>
+                    <input type="text" id="name-${crit.id}" class="form-control fw-bold bg-light px-3 py-2 crit-input" style="font-size: 1.1rem; border-radius: 8px; border: 1.5px solid #e2e8f0;" placeholder="${t("createEvent.critName")}" value="${crit.name}">
+                    
+                    <label class="form-label text-muted small fw-bold text-uppercase mt-3 mb-1" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.critDesc")} <span class="text-danger">*</span></label>
+                    <input type="text" id="desc-${crit.id}" class="form-control bg-light px-3 py-2 text-muted crit-input" style="border-radius: 8px; border: 1.5px solid #e2e8f0;" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <div class="input-group input-group-sm" style="width: 100px;">
-                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end" placeholder="0" value="${crit.weight}">
-                        <span class="input-group-text bg-white">%</span>
+                <div class="d-flex flex-column align-items-end gap-2">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("createEvent.weight")} <span class="text-danger">*</span></label>
+                    <div class="input-group" style="width: 110px;">
+                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end fw-bold" style="border-radius: 8px 0 0 8px; border: 1.5px solid #e2e8f0; background: #f8fafc;" placeholder="0" value="${crit.weight}">
+                        <span class="input-group-text bg-light border" style="border-radius: 0 8px 8px 0; border-color: #e2e8f0; font-weight: 700; color: #64748b;">%</span>
                     </div>
-                    <button class="btn btn-sm btn-light text-danger btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    <button class="btn btn-sm btn-outline-danger border-0 mt-2 btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}" title="Remove Criteria">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        <span class="ms-1 small fw-bold">${t("common.delete") ?? "Delete"}</span>
                     </button>
                 </div>
             </div>
 
-            <div class="levels-container mt-3">
-                <div class="row g-2">
-                    ${crit.levels
-                      .map(
-                        (lvl, index) => `
-                        <div class="col-md-4">
-                            <div class="level-card h-100 p-2 border rounded" style="border-top: 3px solid ${lvl.color} !important; background: white;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge" style="background-color: ${lvl.color}15; color: ${lvl.color}; font-size: 0.7rem;">LEVEL ${index + 1} - ${lvl.score}%</span>
-                                    <button class="btn btn-sm p-0 text-muted btn-rm-lvl" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                    </button>
-                                </div>
-                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
-                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="2">${lvl.description}</textarea>
-                                <div class="mt-2 d-flex align-items-center gap-2">
-                                    <label class="small text-muted mb-0">Pts %:</label>
-                                    <input type="number" class="form-control form-control-sm px-1 lvl-input" style="width: 50px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
-                                    <input type="color" class="form-control form-control-color form-control-sm p-0 border-0 ms-auto lvl-input" style="width:20px;height:20px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}">
-                                </div>
+            <div class="ce-levels-grid pt-3 border-top">
+                ${crit.levels
+        .map(
+          (lvl, index) => `
+                        <div class="level-card h-100 p-3 border rounded-3 bg-light-soft" style="border-top: 4px solid ${lvl.color} !important; transition: all 0.2s ease;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge rounded-pill" style="background-color: ${lvl.color}20; color: ${lvl.color}; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; padding: 4px 10px;">
+                                    LVL ${index + 1} • ${lvl.score} PTS
+                                </span>
+                                <input type="color" class="form-control form-control-color p-0 border-0 bg-transparent lvl-input" style="width:20px;height:20px; cursor: pointer;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}" title="Customize Color">
                             </div>
+                            <input type="text" class="form-control form-control-sm fw-bold bg-white mb-2 lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 mt-2" style="font-size: 0.6rem;">Performance Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-sm bg-white lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; font-size: 0.8rem; min-height: 80px; resize: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="3">${lvl.description}</textarea>
+                            <input type="hidden" class="lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
                         </div>
                     `,
-                      )
-                      .join("")}
-                    <div class="col-md-12 mt-2">
-                        <button class="btn btn-sm btn-light w-100 border border-dashed text-primary btn-add-lvl" data-area="${area.id}" data-crit="${crit.id}">
-                            + Add Level
-                        </button>
-                    </div>
-                </div>
+        )
+        .join("")}
             </div>
         </div>
     `;
   }
+
 
   _attachRubricHandlers() {
     const saveInputs = () => {
@@ -648,8 +768,12 @@ export default class CreateEvent {
       this._rerenderRubricSection();
     });
 
-    document.querySelectorAll(".area-toggle-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
+    document.getElementById('excel-upload-input')?.addEventListener('change', (e) => {
+      this._handleFileUpload(e);
+    });
+
+    document.querySelectorAll('.area-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
         saveInputs();
         const a = this.rubricAreas.find((area) => area.id === btn.dataset.area);
         if (a) {
@@ -670,24 +794,6 @@ export default class CreateEvent {
       btn.addEventListener("click", () => {
         saveInputs();
         this._removeCriteria(btn.dataset.area, btn.dataset.crit);
-      });
-    });
-
-    document.querySelectorAll(".btn-add-lvl").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        saveInputs();
-        this._addLevel(btn.dataset.area, btn.dataset.crit);
-      });
-    });
-
-    document.querySelectorAll(".btn-rm-lvl").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        saveInputs();
-        this._removeLevel(
-          btn.dataset.area,
-          btn.dataset.crit,
-          parseInt(btn.dataset.index),
-        );
       });
     });
 
@@ -736,7 +842,7 @@ export default class CreateEvent {
 
               <div class="row g-4">
                 <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")}</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")} <span class="text-danger">*</span></label>
                   <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
                 </div>
                 <div class="col-12">
@@ -749,7 +855,7 @@ export default class CreateEvent {
                   <select id="ev-type" class="form-select app-input">
                     <option value="CAPSTONE">${t("createEvent.capstone")}</option>
                     <option value="WORKSHOP">${t("createEvent.workshop")}</option>
-                    <option value="EVENT">${t("createEvent.social")}</option>
+                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
@@ -764,7 +870,7 @@ export default class CreateEvent {
                   <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")}</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")} <span class="text-danger">*</span></label>
                   <input id="ev-start-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
@@ -780,56 +886,6 @@ export default class CreateEvent {
                   <div id="github-org-picker">
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
                       <span class="spinner-border spinner-border-sm"></span> ${t("createEvent.verifyingGithub")}
-                    </div>
-                  </div>
-                </div>
-
-              <div class="row g-4">
-                <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Title *</label>
-                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
-                </div>
-                <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelDescription")}</label>
-                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
-                </div>
-                
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelType")}</label>
-                  <select id="ev-type" class="form-select app-input">
-                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
-                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
-                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelRoute")}</label>
-                  <select id="ev-route" class="form-select app-input">
-                    <option value="BASIC">${t("createEvent.basic") ?? "Basic"}</option>
-                    <option value="ADVANCED">${t("createEvent.advanced") ?? "Advanced"}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelCohort")}</label>
-                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Start date *</label>
-                  <input id="ev-start-date" type="date" class="form-control app-input" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelFinalDelivery")}</label>
-                  <input id="ev-end-date" type="date" class="form-control app-input" />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelMaxTeamSize")}</label>
-                  <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
-                </div>
-                <div class="col-12" id="github-org-section">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelGithubOrg")} <span class="text-danger">*</span></label>
-                  <div id="github-org-picker">
-                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
-                      <span class="spinner-border spinner-border-sm"></span> Verifying GitHub...
                     </div>
                   </div>
                 </div>
@@ -923,7 +979,7 @@ export default class CreateEvent {
       try {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
-      } catch (_) {}
+      } catch (_) { }
 
       toast.warning(
         "GitHub required",
@@ -947,7 +1003,7 @@ export default class CreateEvent {
       : (t("createEvent.createBtn") ?? "Create Event");
   }
 
-  _clearFeedback() {}
+  _clearFeedback() { }
   _showError(msg) {
     toast.error(t("common.errorTitle"), msg);
   }
