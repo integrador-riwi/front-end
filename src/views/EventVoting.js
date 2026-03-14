@@ -81,6 +81,76 @@ export default class QRVoting {
     }
   }
 
+  async loadExistingQR() {
+    try {
+      const eventId = getSelectedEvent();
+      const cached = localStorage.getItem(`qr_event_${eventId}`);
+      const qrSrc = cached || null;
+
+    const qrImg = document.getElementById("qr");
+
+    if (qrSrc) {
+      qrImg.src     = qrSrc;
+      this.qrActive = true;
+
+      const btn = document.getElementById("generate-qr-btn");
+      if (btn) {
+        btn.innerText = "Disable QR";
+        btn.classList.remove("btn-primary-custom");
+        btn.classList.add("btn-primary-disabled");
+      }
+
+      this.updateDownloadButton(qrSrc);
+      this.updateQrStatusPill();
+    } else {
+      this.updateDownloadButton(null);
+    }
+    } catch (err) {
+      console.error("Failed to load existing QR:", err);
+      this.updateDownloadButton(null);
+    }
+  }
+
+  updateDownloadButton(qrSrc) {
+    const downloadBtn = document.getElementById("download-qr-btn");
+    if (!downloadBtn) return;
+
+    if (qrSrc) {
+      downloadBtn.disabled = false;
+      downloadBtn.classList.remove("btn-secondary");
+      downloadBtn.classList.add("btn-primary-custom");
+
+      downloadBtn.onclick = () => {
+        const SIZE = 512;
+        const img = new Image();
+        img.src = qrSrc;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+
+          const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = false;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, SIZE, SIZE);
+
+          ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = `qr-event-${getSelectedEvent()}.png`;
+          link.click();
+        };
+      };
+    } else {
+      downloadBtn.disabled = true;
+      downloadBtn.classList.remove("btn-primary-custom");
+      downloadBtn.classList.add("btn-secondary");
+      downloadBtn.title = "Generate a QR first";
+      downloadBtn.onclick = null;
+    }
+  }
+
   async handleQRButton() {
     const btn = document.getElementById("generate-qr-btn");
     const qrImg = document.getElementById("qr");
@@ -97,12 +167,14 @@ export default class QRVoting {
         if (this.qrActive) {
           this.qrActive = false;
           qrImg.src = "../src/assets/logo.svg";
+           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
 
           btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
           btn.classList.add("btn-primary-custom");
 
           this.updateQrStatusPill();
+          this.updateDownloadButton(null);
           return;
         }
 
@@ -134,17 +206,20 @@ export default class QRVoting {
             expirationDate,
             this.finalists,
           );
-          qrSrc = response?.qrImage; // 👈 extrae el base64
+          qrSrc = response?.qrImage;
         }
 
         qrImg.src = qrSrc;
         this.qrActive = true;
+
+        localStorage.setItem(`qr_event_${eventId}`, qrSrc);
 
         btn.innerText = "Disable QR";
         btn.classList.remove("btn-primary-custom");
         btn.classList.add("btn-primary-disabled");
 
         this.updateQrStatusPill();
+        this.updateDownloadButton(qrSrc);
       } catch (err) {
         console.error("QR error:", err);
         alert("Error generating QR");
@@ -269,5 +344,6 @@ export default class QRVoting {
     this.handleQRButton();
     this.updateQrStatusPill();
     this.updateQrButtonState();
+    await this.loadExistingQR();
   }
 }
