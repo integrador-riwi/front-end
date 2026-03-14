@@ -1,47 +1,60 @@
-export const HEADER_LINKS_BY_VIEW = {
-  "dashboard": [
+// Returns breadcrumb links for a given view.
+// Each entry is a function so localStorage is read at call time,
+// not at module-load time — prevents the "null" label bug when the
+// module is imported before currentEventName is saved.
+const HEADER_LINKS_FACTORIES = {
+  dashboard: () => [
     { label: "Events", route: "events" },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    {
+      label: localStorage.getItem("currentEventName") || "Event",
+      route: "dashboard",
+    },
   ],
-  "events/create": [
-    { label: "Events",            route: "events"           },
-    { label: "Management",        route: "settings"         },
-    { label: "Create New",        route: "events/create"    },
+  "events/create": () => [
+    { label: "Events", route: "events" },
+    { label: "Management", route: "settings" },
+    { label: "Create New", route: "events/create" },
   ],
-  "tlDashboard": [
+  tlDashboard: () => [
     { label: "Events", route: "coderEventSelect" },
-    { label: "Teams",  route: null               },
+    { label: "Teams", route: null },
   ],
-  "projects": [
-    { label: "Dashboard",         route: "dashboard",      },
-    { label: "Teams & Projects",  route: "projects",       },
+  projects: () => [
+    { label: "Dashboard", route: "dashboard" },
+    { label: "Teams & Projects", route: "projects" },
   ],
-  "teamDetail": [
-    { label: "Events",         route: "events",      },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
-    { label: "Team Details",       route: null,       },
+  teamDetail: () => [
+    { label: "Events", route: "events" },
+    {
+      label: localStorage.getItem("currentEventName") || "Event",
+      route: "dashboard",
+    },
+    { label: "Team Details", route: null },
   ],
-  "qr": [
-    { label: "Events",  route: "events" },
-    { label: "QR Voting", route: null   },
+  qr: () => [
+    { label: "Events", route: "events" },
+    { label: "QR Voting", route: null },
   ],
-  "coderHome": [
-    { label: "Events",         route: "events",      },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
-    { label: "Team Details",       route: null,       },
+  coderHome: () => [
+    { label: "Events", route: "events" },
+    {
+      label: localStorage.getItem("currentEventName") || "Event",
+      route: "dashboard",
+    },
+    { label: "Team Details", route: null },
   ],
-  "ranking": [
-    { label: "Event",         route: "events",      },
-    { label: "Ranking",       route: "ranking",       },
-  ]
+  ranking: () => [
+    { label: "Event", route: "events" },
+    { label: "Ranking", route: "ranking" },
+  ],
 };
 
 export const HEADER_LAYOUT_BY_ROUTE = {
-  "dashboard": {
+  dashboard: {
     variant: "details",
     title: "Dashboard",
   },
-  "coderHome": {
+  coderHome: {
     variant: "details",
     title: "Details",
   },
@@ -49,34 +62,34 @@ export const HEADER_LAYOUT_BY_ROUTE = {
     variant: "create-event",
     title: "Create New Event",
   },
-  "tlDashboard": {
+  tlDashboard: {
     variant: "details",
     title: "Teams",
   },
-  "qr": {
+  qr: {
     variant: "details",
     title: "QR Voting",
   },
-  "projects": {
+  projects: {
     variant: "teams",
     title: "Projects Overview",
   },
-  "teamDetail": {
+  teamDetail: {
     variant: "details",
     title: "Details",
   },
-  "ranking": {
+  ranking: {
     variant: "ranking",
     title: "Ranking",
   },
-  "details": {
+  details: {
     variant: "details",
     title: "Event Details",
   },
 };
 
 export const getHeaderLinks = (view) => {
-  return HEADER_LINKS_BY_VIEW[view] ?? [];
+  return HEADER_LINKS_FACTORIES[view]?.() ?? [];
 };
 
 export const getHeaderLayout = (route) => {
