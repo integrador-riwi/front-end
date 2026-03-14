@@ -13,7 +13,7 @@ import CoderEventSelect from "../views/codereventselect.js";
 import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
-
+import TLDashboardView from "../views/TLDashboardView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyProfile, getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
@@ -54,9 +54,25 @@ function mountLangToggle() {
     box-shadow: 0 4px 14px rgba(0,0,0,0.18);
     transition: opacity 0.2s;
   `;
-  btn.addEventListener("mouseenter", () => (btn.style.opacity = "0.85"));
-  btn.addEventListener("mouseleave", () => (btn.style.opacity = "1"));
-  btn.addEventListener("click", () => toggleLang());
+  btn.addEventListener("mouseenter", () => {
+    if (!btn.disabled) btn.style.opacity = "0.85";
+  });
+  btn.addEventListener("mouseleave", () => {
+    if (!btn.disabled) btn.style.opacity = "1";
+  });
+  btn.addEventListener("click", async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
+    try {
+      await toggleLang();
+    } finally {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    }
+  });
   document.body.appendChild(btn);
 }
 
