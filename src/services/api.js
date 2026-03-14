@@ -45,16 +45,23 @@ export async function loginUser(email, password) {
   });
 }
 
-export async function createQR(id_event, expires_at, url) {
+export async function createQR(id_event, expires_at, finalists) {
   return apiFetch("/qr-votes", {
     method: "POST",
-    body: { id_event, expires_at },
+    body: { id_event, expires_at, top_n: finalists.length },
   });
 }
 
 export async function getQR(id_event) {
   return apiFetch(`/qr-votes/event/${id_event}`, {
     method: "GET",
+  });
+}
+
+export async function getPublicEvent(id) {
+  return apiFetch(`/event/${id}`, {
+    method: "GET",
+    auth: false
   });
 }
 
@@ -100,7 +107,7 @@ export async function getEventById(eventId) {
 } 
 
 export async function submitVote(data) {
-  return apiFetch("/api/votes", {
+  return apiFetch("/votes", {
     method: "POST",
     body: { data },
   });

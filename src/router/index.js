@@ -300,7 +300,8 @@ class App {
         return;
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
-        break;
+        this.currentView.render(this.app);
+        return;
       default:
         this.currentView = new NotFoundView(this);
         break;
