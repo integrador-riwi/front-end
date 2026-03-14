@@ -241,7 +241,6 @@ export default class QRVoting {
     }
   }
 
-<<<<<<< HEAD
   renderVotingView() {
     const slotsContainer = document.getElementById("ranking-slots");
     const teamsContainer = document.getElementById("available-teams");
@@ -410,7 +409,6 @@ export default class QRVoting {
 
     this.handleQRButton();
 
-<<<<<<< HEAD
     const finalistsContainer = document.getElementById("finalists-container");
 
     if (!finalistsContainer) {

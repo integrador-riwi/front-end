@@ -649,7 +649,7 @@ export default class CoderHome {
     if (this._pollingInterval) {
       clearInterval(this._pollingInterval);
       this._pollingInterval = null;
-    this._stopPolling();
+    }
     this._destroyScrollObserver();
   }
 
