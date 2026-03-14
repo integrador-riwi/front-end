@@ -46,7 +46,7 @@ export async function loginUser(email, password) {
   });
 }
 
-export async function createQR(id_event, expires_at) {
+export async function createQR(id_event, expires_at, url) {
   return apiFetch("/qr-votes", {
     method: "POST",
     body: { id_event, expires_at },

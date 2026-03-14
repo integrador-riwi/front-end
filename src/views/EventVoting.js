@@ -35,7 +35,6 @@ export default class QRVoting {
       this.ranking = response?.data?.ranking || [];
       console.log("Ranking array:", this.ranking);
 
-
       this.updateFinalists();
     } catch (err) {
       console.error("Failed to fetch ranking:", err);
@@ -66,6 +65,7 @@ export default class QRVoting {
   async handleQRButton() {
     const btn = document.getElementById("generate-qr-btn");
     const qrImg = document.getElementById("qr");
+    const expirationInput = document.getElementById("qr-expiration");
 
     if (!btn) return;
 
@@ -84,19 +84,29 @@ export default class QRVoting {
           return;
         }
 
+        const expirationValue = expirationInput?.value;
+
+        if (!expirationValue) {
+          alert("Please select a QR expiration date.");
+          return;
+        }
+
+        const expirationDate = new Date(expirationValue).toISOString();
+
         btn.disabled = true;
         btn.innerHTML = `
-          <span class="spinner-border spinner-border-sm me-2"></span>
-          Generating QR...
-        `;
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Generating QR...
+      `;
 
-        let qrSrc = await getQR(getSelectedEvent());
+        const eventId = getSelectedEvent();
+
+        const voteUrl = `https://team-up.crudzaso.com/vote/${eventId}`;
+
+        let qrSrc = await getQR(eventId);
 
         if (!qrSrc) {
-          qrSrc = await createQR(
-            getSelectedEvent(),
-            "2026-03-27T24:00:00.000Z"
-          );
+          qrSrc = await createQR(eventId, expirationDate, voteUrl);
         }
 
         qrImg.src = qrSrc;
@@ -135,8 +145,8 @@ export default class QRVoting {
           <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
 
             <option value="3">Top 3</option>
-            <option value="5">Top 5</option>
-            <option value="8">Top 8</option>
+            <option value="6">Top 6</option>
+            <option value="10">Top 10</option>
 
           </select>
         </div>
@@ -180,7 +190,7 @@ export default class QRVoting {
             </div>
 
           </div>
-        `
+        `,
           )
           .join("")}
 
@@ -230,7 +240,7 @@ export default class QRVoting {
     const app = document.getElementById("app");
 
     const template = await fetch("../../pages/admin_qr.html").then((r) =>
-      r.text()
+      r.text(),
     );
 
     app.innerHTML = `

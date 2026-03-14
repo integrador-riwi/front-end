@@ -131,6 +131,15 @@ class App {
   }
 
   init() {
+    const path = window.location.pathname;
+
+    // Detect QR public voting route
+    if (path.startsWith("/vote/")) {
+      const eventId = path.split("/")[2];
+      this.navigate("vote", { eventId });
+      return;
+    }
+
     const user = getCurrentUser();
     this.user = user;
 
@@ -284,7 +293,6 @@ class App {
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
         break;
-
       default:
         this.currentView = new NotFoundView(this);
         break;
