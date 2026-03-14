@@ -8,6 +8,10 @@ export const HEADER_LINKS_BY_VIEW = {
     { label: "Management",        route: "settings"         },
     { label: "Create New",        route: "events/create"    },
   ],
+  "tlDashboard": [
+    { label: "Events", route: "coderEventSelect" },
+    { label: "Teams",  route: null               },
+  ],
   "projects": [
     { label: "Dashboard",         route: "dashboard",      },
     { label: "Teams & Projects",  route: "projects",       },
@@ -40,6 +44,10 @@ export const HEADER_LAYOUT_BY_ROUTE = {
   "events/create": {
     variant: "create-event",
     title: "Create New Event",
+  },
+  "tlDashboard": {
+    variant: "details",
+    title: "Teams",
   },
   "projects": {
     variant: "teams",

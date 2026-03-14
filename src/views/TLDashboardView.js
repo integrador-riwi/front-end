@@ -2,6 +2,7 @@
 //import "../assets/styles/coderTeam.css";
 import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
+import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { t } from "../utils/i18n.js";
 import { apiFetch } from "../services/api.js";
@@ -20,6 +21,7 @@ export default class TLDashboardView {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
+    this.header = new Header(router);
 
     this.selectedEvent = router?.currentParams?.selectedEvent ?? null;
     if (!this.selectedEvent) {
@@ -56,28 +58,28 @@ export default class TLDashboardView {
 
     try {
       const res = await apiFetch(
-        `/teams?idEvent=${this.selectedEvent.id}&limit=100`,
-        { method: "GET" },
+          `/teams?idEvent=${this.selectedEvent.id}&limit=100`,
+          { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
 
       // Enrich each team with project + member count
       this.teams = await Promise.all(
-        raw.map(async (t) => {
-          try {
-            const detail = await apiFetch(`/teams/${t.id_team}`, {
-              method: "GET",
-            });
-            const full = detail?.data ?? detail;
-            return {
-              ...t,
-              members: full.members ?? [],
-              project: full.project ?? null,
-            };
-          } catch {
-            return { ...t, members: [], project: null };
-          }
-        }),
+          raw.map(async (t) => {
+            try {
+              const detail = await apiFetch(`/teams/${t.id_team}`, {
+                method: "GET",
+              });
+              const full = detail?.data ?? detail;
+              return {
+                ...t,
+                members: full.members ?? [],
+                project: full.project ?? null,
+              };
+            } catch {
+              return { ...t, members: [], project: null };
+            }
+          }),
       );
     } catch (err) {
       this.error = t("tl.loadError") ?? "Could not load teams.";
@@ -95,8 +97,9 @@ export default class TLDashboardView {
     if (!app) return;
 
     app.innerHTML = `
-      <div class="layout">
-        ${this.navbar.render()}
+      ${this.navbar.render()}
+      <div style="display:flex;flex-direction:column;width:100%">
+        ${this.header.render()}
         <main class="coder-home-main flex-grow-1">
           <div id="tl-content"></div>
         </main>
@@ -104,6 +107,8 @@ export default class TLDashboardView {
     `;
 
     this.navbar.attachEventHandlers();
+    this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
     this._renderList();
   }
 
@@ -115,43 +120,23 @@ export default class TLDashboardView {
     content.innerHTML = `
       <div class="tld-page">
 
-        <!-- Header -->
-        <header class="tld-header">
-          ${
-            this.selectedEvent
-              ? `<button class="tld-back-btn" id="tldBackBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  Back to events
-                </button>`
-              : ""
-          }
-          <div class="tld-header-top">
-            <div>
-              <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
-              <h1 class="tld-title">${this.selectedEvent?.title ?? "Teams"}</h1>
-              ${
-                this.selectedEvent?.cohort
-                  ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
-                  : ""
-              }
+        <!-- Stats + Search -->
+        <div class="tld-subheader">
+          <div class="tld-stat-pills">
+            <div class="tld-stat-pill">
+              <span class="tld-stat-num">${this.teams.length}</span>
+              <span class="tld-stat-label">Teams</span>
             </div>
-            <div class="tld-stat-pills">
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.length}</span>
-                <span class="tld-stat-label">Teams</span>
-              </div>
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.filter((t) => t.project).length}</span>
-                <span class="tld-stat-label">With Project</span>
-              </div>
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.reduce((sum, t) => sum + (t.members?.length ?? 0), 0)}</span>
-                <span class="tld-stat-label">Coders</span>
-              </div>
+            <div class="tld-stat-pill">
+              <span class="tld-stat-num">${this.teams.filter((t) => t.project).length}</span>
+              <span class="tld-stat-label">With Project</span>
+            </div>
+            <div class="tld-stat-pill">
+              <span class="tld-stat-num">${this.teams.reduce((sum, t) => sum + (t.members?.length ?? 0), 0)}</span>
+              <span class="tld-stat-label">Coders</span>
             </div>
           </div>
 
-          <!-- Search -->
           <div class="tld-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -163,7 +148,7 @@ export default class TLDashboardView {
               placeholder="Search teams or projects…"
               value="${this.searchQuery}" />
           </div>
-        </header>
+        </div>
 
         <!-- Grid -->
         <div class="tld-grid" id="tldGrid">
@@ -178,8 +163,8 @@ export default class TLDashboardView {
   _renderGrid() {
     if (this.isLoading) {
       return Array.from(
-        { length: 6 },
-        () => `<div class="tld-card tld-card-skeleton"></div>`,
+          { length: 6 },
+          () => `<div class="tld-card tld-card-skeleton"></div>`,
       ).join("");
     }
 
@@ -219,30 +204,30 @@ export default class TLDashboardView {
 
     const totalDeliverables = 3;
     const progress = hasProject
-      ? Math.round((deliverables / totalDeliverables) * 100)
-      : 0;
+        ? Math.round((deliverables / totalDeliverables) * 100)
+        : 0;
 
     const avatarsHtml = members
-      .slice(0, 4)
-      .map((m, i) =>
-        m.github_avatar_url
-          ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
-          : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
-      )
-      .join("");
+        .slice(0, 4)
+        .map((m, i) =>
+            m.github_avatar_url
+                ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
+                : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
+        )
+        .join("");
 
     const extraMembers =
-      members.length > 4
-        ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
-        : "";
+        members.length > 4
+            ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
+            : "";
 
     const statusDot = isSubmitted
-      ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
-      : hasProject
-        ? deliverables === totalDeliverables
-          ? `<span class="tld-status-dot tld-dot-complete" title=t("tl.allDeliverables") ?? "All deliverables submitted"></span>`
-          : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-        : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
+        ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
+        : hasProject
+            ? deliverables === totalDeliverables
+                ? `<span class="tld-status-dot tld-dot-complete" title=t("tl.allDeliverables") ?? "All deliverables submitted"></span>`
+                : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
+            : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
 
     // Button state
     let evalBtnContent, evalBtnDisabled, evalBtnClass;
@@ -274,7 +259,7 @@ export default class TLDashboardView {
         </div>
 
         ${
-          hasProject
+        hasProject
             ? `
           <div class="tld-progress-wrap">
             <div class="tld-progress-bar">
@@ -284,7 +269,7 @@ export default class TLDashboardView {
           </div>
         `
             : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">No deliverables</span></div>`
-        }
+    }
 
         <div class="tld-card-members">
           <div class="tld-avatars-row">
@@ -313,12 +298,6 @@ export default class TLDashboardView {
     const projectId = team.project?.id_project ?? null;
 
     content.innerHTML = `
-      <div class="tld-detail-back-bar">
-        <button class="tld-back-btn" id="tldDetailBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to ${this.selectedEvent?.title ?? "teams"}
-        </button>
-      </div>
       ${renderCoderTeam({ user: this.user, team, isLeader: false, isTL })}
     `;
 
@@ -356,9 +335,9 @@ export default class TLDashboardView {
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) return this.teams;
     return this.teams.filter(
-      (t) =>
-        t.name?.toLowerCase().includes(q) ||
-        t.project?.name?.toLowerCase().includes(q),
+        (t) =>
+            t.name?.toLowerCase().includes(q) ||
+            t.project?.name?.toLowerCase().includes(q),
     );
   }
 
@@ -374,10 +353,6 @@ export default class TLDashboardView {
 
   // ── Event handlers ────────────────────────────────────────────────────────
   _attachListHandlers() {
-    document.getElementById("tldBackBtn")?.addEventListener("click", () => {
-      this.router.navigate("coderEventSelect");
-    });
-
     const searchInput = document.getElementById("tldSearch");
     if (searchInput) {
       searchInput.value = this.searchQuery;
