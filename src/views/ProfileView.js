@@ -185,7 +185,7 @@ export default class ProfileView {
                   <div class="profile-form-field">
                     <label class="profile-label" for="description">${t("profile.description")}</label>
                     <textarea id="description" name="description" rows="4" class="profile-input"
-                      placeholder="Tell us about your experience...">${escapeHtml(this.profileForm.description)}</textarea>
+                      placeholder="${t("profile.placeholderDescription")}">${escapeHtml(this.profileForm.description)}</textarea>
                   </div>
                   <div class="profile-form-field">
                     <label class="profile-label" for="clan">${t("profile.clan")}</label>
@@ -282,9 +282,9 @@ export default class ProfileView {
 
   _showBanner() {
     if (this.errorMessage) {
-      toast.error("Error", this.errorMessage);
+      toast.error(t("common.errorTitle"), this.errorMessage);
     } else if (this.successMessage) {
-      toast.success("Success", this.successMessage);
+      toast.success(t("common.successTitle"), this.successMessage);
     }
   }
 

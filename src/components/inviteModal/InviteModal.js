@@ -6,6 +6,7 @@ import {
   rejectJoinRequest,
 } from "../../services/api.js";
 import { toast } from "../Toast/index.js";
+import { t } from "../../utils/i18n.js";
 
 /**
  * Reusable invite-member modal.
@@ -65,8 +66,8 @@ export default class InviteModal {
       <div id="inviteModalBackdrop" class="invite-modal-backdrop" style="display:none;">
         <div class="invite-modal" role="dialog" aria-modal="true">
           <div class="invite-modal-header">
-            <h3 class="invite-modal-title">Invite member</h3>
-            <button id="inviteModalClose" class="invite-modal-close" aria-label="Cerrar">✕</button>
+            <h3 class="invite-modal-title">${t("invite.inviteMemberHeading")}</h3>
+            <button id="inviteModalClose" class="invite-modal-close" aria-label="${t("invite.closeModal")}">✕</button>
           </div>
           <div class="invite-modal-body">
             <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
@@ -75,7 +76,7 @@ export default class InviteModal {
               <hr style="margin:1rem 0;" />
             </div>
             <input id="inviteSearchInput" type="text" class="invite-search-input"
-                   placeholder="Search coder by name or email…" />
+                   placeholder="${t("invite.searchPlaceholder")}" />
             <div id="inviteCodersList" class="invite-coders-list">
               <p class="invite-hint">Escribe para buscar coders disponibles.</p>
             </div>
@@ -234,8 +235,8 @@ export default class InviteModal {
           </div>
           ${
             c.hasPendingInvitation
-              ? `<span class="invite-status-pending">Invitado</span>`
-              : `<button class="invite-btn-send" data-user-id="${c.id_user}">Invite</button>`
+              ? `<span class="invite-status-pending">${t("invite.invitedBadge")}</span>`
+              : `<button class="invite-btn-send" data-user-id="${c.id_user}">${t("invite.inviteBtn")}</button>`
           }
         </div>
       `,
@@ -246,7 +247,7 @@ export default class InviteModal {
         btn.addEventListener("click", () => this._sendInvite(btn));
       });
     } catch (err) {
-      toast.error('Error', err?.message ?? "Error searching.");
+      toast.error("Error", err?.message ?? t("invite.errorSearching"));
     }
   }
 

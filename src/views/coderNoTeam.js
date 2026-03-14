@@ -45,8 +45,8 @@ export function renderCoderNoTeam({
         }
         <h1 class="team-selection-title">${t("noTeam.heading")}</h1>
         <p class="team-selection-subtitle">
-          Welcome, ${user?.name ?? "Coder"}. To start the Capstone Project, you need to
-          ${t("noTeam.subtitle") ?? "Establish a new team or join an existing group of peers."}
+          ${t("ces.welcome", { name: user?.name?.split(" ")[0] ?? "Coder" })}
+          ${t("noTeam.subtitle")}
         </p>
       </header>
 
@@ -71,14 +71,14 @@ export function renderCoderNoTeam({
             <div class="form-group">
               <label class="form-label" for="teamName">${t("noTeam.teamName")}</label>
               <input type="text" id="teamName" class="form-input"
-                     placeholder="e.g., The Code Wizards" 
+                     placeholder="${t("noTeam.placeholderTeamName")}" 
                       value="${formData?.teamName || ""}" 
                      required />
             </div>
             <div class="form-group">
               <label class="form-label" for="projectTopic">${t("noTeam.projectDesc")}</label>
               <textarea id="projectTopic" class="form-textarea"
-                        placeholder="Briefly describe what your team wants to work on...">${formData?.projectTopic || ""}</textarea>
+                        placeholder="${t("noTeam.placeholderProjectDesc")}">${formData?.projectTopic || ""}</textarea>
               
               <!-- AI Analysis Result -->
               <div id="aiAnalysisResult" class="ai-analysis-box" style="display: ${analyzeSimilarity ? "block" : "none"};">
@@ -141,13 +141,13 @@ export function renderCoderNoTeam({
           <div class="team-filters">
             <button class="filter-btn ${!activeFilter || activeFilter === "all" ? "active" : ""}" data-filter="all">${t("noTeam.all")}</button>
             <button class="filter-btn ${activeFilter === "open" ? "active" : ""}" data-filter="open">
-              <span class="filter-dot open"></span> Open
+              <span class="filter-dot open"></span> ${t("noTeam.filterOpen")}
             </button>
             <button class="filter-btn ${activeFilter === "pending" ? "active" : ""}" data-filter="pending">
-              <span class="filter-dot pending"></span> Pending
+              <span class="filter-dot pending"></span> ${t("noTeam.filterPending")}
             </button>
             <button class="filter-btn ${activeFilter === "full" ? "active" : ""}" data-filter="full">
-              <span class="filter-dot full"></span> Full
+              <span class="filter-dot full"></span> ${t("noTeam.filterFull")}
             </button>
           </div>
 

@@ -156,7 +156,7 @@ export default class CreateEvent {
   _renderClanSection() {
     return `
       <div class="ce-clan-section">
-        <label class="form-label fw-semibold">Participating clans</label>
+        <label class="form-label fw-semibold">${t("createEvent.participatingClans")}</label>
         <p class="ce-section-subtitle" style="margin-bottom: 10px;">
           Select the clans that will see this event, or leave it as "${t("createEvent.allClans") ?? "All clans"}".
         </p>
@@ -242,7 +242,7 @@ export default class CreateEvent {
   async _handleSubmit() {
     const err = this._validate();
     if (err) {
-      toast.error("Error de Validación", err);
+      toast.error(t("createEvent.validationError"), err);
       return;
     }
 
@@ -261,7 +261,10 @@ export default class CreateEvent {
       );
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      toast.error("Error", e.message ?? "Error creating the event.");
+      toast.error(
+        t("common.errorTitle"),
+        e.message ?? t("createEvent.errorCreating"),
+      );
     } finally {
       this._setLoading(false);
     }
@@ -377,21 +380,21 @@ export default class CreateEvent {
     if (!this.rubricMode) {
       return `
          <div class="rubric-onboarding text-center py-5">
-            <h4 class="fw-bold mb-2">Create New Rubric</h4>
+            <h4 class="fw-bold mb-2">${t("createEvent.createNewRubric")}</h4>
             <p class="text-muted mb-4">Select how you want to build your evaluation framework.</p>
             <div class="d-flex justify-content-center gap-4">
               <div class="rubric-opt-card" id="btn-mode-platform">
                 <div class="rubric-opt-icon flex-center bg-primary-soft text-primary mb-3">
                   <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                 </div>
-                <h5 class="fw-bold mb-2">Create in Platform</h5>
+                <h5 class="fw-bold mb-2">${t("createEvent.createInPlatform")}</h5>
                 <p class="text-muted small mb-0">Build your rubric step by step using our interactive editor.</p>
               </div>
               <div class="rubric-opt-card" id="btn-mode-template">
                 <div class="rubric-opt-icon flex-center bg-secondary-soft text-secondary mb-3">
                   <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
-                <h5 class="fw-bold mb-2">Upload Excel Template</h5>
+                <h5 class="fw-bold mb-2">${t("createEvent.uploadExcel")}</h5>
                 <p class="text-muted small mb-0">Download our template, complete it and upload it to generate your rubric instantly.</p>
               </div>
             </div>
@@ -403,7 +406,7 @@ export default class CreateEvent {
       return `
           <div class="rubric-builder fade-in">
             <div class="d-flex justify-content-between align-items-center mb-4">
-              <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2" id="btn-mode-back">←</button> Use Template</h5>
+              <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2" id="btn-mode-back">←</button> ${t("createEvent.useTemplate")}</h5>
             </div>
             <div class="card p-4 shadow-sm text-center bg-light">
               <div class="mb-4">
@@ -413,7 +416,7 @@ export default class CreateEvent {
               <p class="text-muted small mb-4">Download the template, complete it and drag it here.</p>
               <div class="d-flex justify-content-center gap-3">
                 <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
-                <button class="btn btn-primary" type="button">Select File</button>
+                <button class="btn btn-primary" type="button">${t("createEvent.selectFile")}</button>
               </div>
             </div>
           </div>
@@ -432,10 +435,10 @@ export default class CreateEvent {
     return `
        <div class="rubric-builder fade-in">
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2 cursor-pointer" id="btn-mode-back">←</button> Model Rubric</h5>
+            <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2 cursor-pointer" id="btn-mode-back">←</button> ${t("createEvent.modelRubric")}</h5>
             <div class="d-flex align-items-center gap-3">
                <div class="text-end">
-                 <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">TOTAL WEIGHT</div>
+                 <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">${t("createEvent.totalWeight")}</div>
                  <div class="fw-bold ${isWeightOk ? "text-success" : "text-primary"}">${totalW}% / 100%</div>
                </div>
                <div class="progress" style="width: 150px; height: 8px; border-radius: 4px;">
@@ -448,7 +451,7 @@ export default class CreateEvent {
             <div class="col-12">
                <div class="bg-light p-3 rounded d-flex justify-content-between align-items-center border">
                   <div>
-                    <span class="text-muted small fw-bold text-uppercase d-block mb-1">Rubric Progress</span>
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-1">${t("createEvent.rubricProgress")}</span>
                     <span class="badge bg-white text-dark border me-2">Areas: 3</span>
                     <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
                   </div>
@@ -787,27 +790,27 @@ export default class CreateEvent {
                   <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
                 </div>
                 <div class="col-12">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Description</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelDescription")}</label>
                   <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
                 </div>
                 
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Type</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelType")}</label>
                   <select id="ev-type" class="form-select app-input">
-                    <option value="CAPSTONE">Capstone / Integrator</option>
-                    <option value="WORKSHOP">Workshop</option>
+                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
+                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
                     <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Route</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelRoute")}</label>
                   <select id="ev-route" class="form-select app-input">
                     <option value="BASIC">${t("createEvent.basic") ?? "Basic"}</option>
                     <option value="ADVANCED">${t("createEvent.advanced") ?? "Advanced"}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Cohort</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelCohort")}</label>
                   <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
                 </div>
                 <div class="col-12 col-md-4">
@@ -815,15 +818,15 @@ export default class CreateEvent {
                   <input id="ev-start-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Final delivery date</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelFinalDelivery")}</label>
                   <input id="ev-end-date" type="date" class="form-control app-input" />
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">Max team size</label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelMaxTeamSize")}</label>
                   <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
                 </div>
                 <div class="col-12" id="github-org-section">
-                  <label class="form-label fw-semibold text-muted small text-uppercase">GitHub Organization <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelGithubOrg")} <span class="text-danger">*</span></label>
                   <div id="github-org-picker">
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
                       <span class="spinner-border spinner-border-sm"></span> Verifying GitHub...
@@ -946,10 +949,10 @@ export default class CreateEvent {
 
   _clearFeedback() {}
   _showError(msg) {
-    toast.error("Error", msg);
+    toast.error(t("common.errorTitle"), msg);
   }
   _showSuccess(msg) {
-    toast.success("Success", msg);
+    toast.success(t("common.successTitle"), msg);
   }
 
   destroy() {

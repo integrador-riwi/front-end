@@ -14,7 +14,7 @@ export default class DashboardView {
     this.user = getUser();
     this.eventId = params?.id || localStorage.getItem("currentEventId");
     this.eventName =
-        params?.name || localStorage.getItem("currentEventName") || "Dashboard";
+      params?.name || localStorage.getItem("currentEventName") || "Dashboard";
     this.navbar = new Navbar(router);
     this.header = new Header(router, { eventName: this.eventName });
 
@@ -187,7 +187,6 @@ export default class DashboardView {
                     <div class="col">
                        <div class="p-3 rounded-4 border bg-white shadow-sm">
                           ${this._renderProgressArea(
-                          ${this._renderProgressArea(
                             area,
                             this.metrics?.evaluatedProjectsByArea?.[area] ??
                               Math.floor(
@@ -298,7 +297,7 @@ export default class DashboardView {
   _renderDeadline(title, time, urgent) {
     return `
       <div class="db-deadline-item ${urgent ? "db-deadline-urgent" : ""}">
-        ${urgent ? '<span class="db-urgent-badge">Urgent</span>' : ""}
+        ${urgent ? '<span class="db-urgent-badge">${t("common.urgent")}</span>' : ""}
         <span class="db-deadline-title">${title}</span>
         <span class="db-deadline-time">${time}</span>
       </div>

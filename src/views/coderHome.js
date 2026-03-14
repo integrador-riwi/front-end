@@ -1071,9 +1071,9 @@ export default class CoderHome {
               <span>Team: <strong>${inv.team_name ?? inv.id_team}</strong></span>
               <div class="pib-actions">
                 <button class="btn-accept-invitation pib-btn pib-accept"
-                        data-invitation-id="${inv.id_invitation}">Accept</button>
+                        data-invitation-id="${inv.id_invitation}">${t("invite.accept")}</button>
                 <button class="btn-reject-invitation pib-btn pib-reject"
-                        data-invitation-id="${inv.id_invitation}">Reject</button>
+                        data-invitation-id="${inv.id_invitation}">${t("invite.reject")}</button>
               </div>
             </div>
           `,
@@ -1097,7 +1097,7 @@ export default class CoderHome {
               <span>Team: <strong>${req.team_name ?? req.id_team}</strong></span>
               <div class="pib-actions">
                 <button class="btn-cancel-join-request pib-btn pib-reject"
-                        data-request-id="${req.id_request}">Cancel</button>
+                        data-request-id="${req.id_request}">${t("invite.cancel")}</button>
               </div>
             </div>
           `,

@@ -1,7 +1,6 @@
 //const API_BASE_URL = "http://localhost:3010/api";
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://back-end-production-7f2c.up.railway.app/api";
+  import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -50,12 +49,13 @@ export async function createQR(id_event, expires_at) {
   return apiFetch("/qr-votes", {
     method: "POST",
     body: { id_event, expires_at },
-  })
+  });
 }
 
 export async function getQR(id_event) {
   return apiFetch(`/qr-votes/event/${id_event}`, {
-    method: "GET"})
+    method: "GET",
+  });
 }
 
 export async function logoutUser() {

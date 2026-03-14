@@ -27,8 +27,7 @@ export default class LoginView {
           <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
-            From idea to <strong>winner</strong> — organize <strong>events</strong>, 
-            showcase <strong>projects</strong>, and <strong>vote</strong> in real time.
+            ${t("login.leftDesc")}
             </p>
             <div class="left-tags d-flex flex-wrap justify-content-center gap-2 mt-4">
               <span class="tag tag-lilac">${t("login.collaborate")}</span>

@@ -33,7 +33,7 @@ export default class EventDetails {
     } catch (err) {
       console.error("Failed to fetch event:", err);
       this.error = err.message || t("common.error");
-      toast.error("Error", this.error);
+      toast.error(t("common.errorTitle"), this.error);
     } finally {
       this.loading = false;
     }

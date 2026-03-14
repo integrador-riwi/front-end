@@ -22,9 +22,13 @@ const resources = {
         teamsProjects: "Equipos & Proyectos",
         dashboard: "Panel",
         finalResults: "Resultados Finales",
+        management: "Gestión",
+        createNew: "Crear Nuevo",
+        teamDetails: "Detalles del Equipo",
+        projectsOverview: "Vista de Proyectos",
+        createNewEvent: "Crear Nuevo Evento",
+        eventDetails: "Detalles del Evento",
       },
-
-      // ── Roles ─────────────────────────────────────────────
       role: {
         ADMIN: "Admin Manager",
         TL_DEVELOPMENT: "Líder Dev",
@@ -37,6 +41,8 @@ const resources = {
       // ── Login ─────────────────────────────────────────────
       login: {
         tagline: "Colabora. Crece. Triunfa.",
+        leftDesc:
+          "De la idea al <strong>ganador</strong> — organiza <strong>eventos</strong>, presenta <strong>proyectos</strong> y <strong>vota</strong> en tiempo real.",
         collaborate: "Colaborar",
         track: "Seguir Progreso",
         grow: "Crecer Juntos",
@@ -107,7 +113,7 @@ const resources = {
       // ── Coder Event Select ────────────────────────────────
       ces: {
         title: "Elige tu evento.",
-        welcome: "Bienvenido, {{name}}.",
+        welcome: "Bienvenido, <strong>{{name}}</strong>.",
         subtitleTL: "Selecciona el evento que quieres revisar y evaluar.",
         subtitleCoder:
           "Selecciona el evento en el que participas para comenzar.",
@@ -154,6 +160,9 @@ const resources = {
         filterOpen: "Abierto",
         filterPending: "Pendiente",
         filterFull: "Completo",
+        placeholderTeamName: "Ej: Los Code Wizards",
+        placeholderProjectDesc:
+          "Describe brevemente en qué quiere trabajar tu equipo…",
       },
 
       // ── Coder Team ────────────────────────────────────────
@@ -216,6 +225,15 @@ const resources = {
           "Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.",
         score: "Puntaje",
         feedbackOptional: "Feedback (opcional)",
+        titleEdit: "Editar",
+        placeholderPasteUrl: "Pegar URL…",
+        placeholderNewUrl: "Nueva URL…",
+        titleDeleteReply: "Eliminar respuesta",
+        titleDeleteComment: "Eliminar comentario",
+        errorPostComment: "No se pudo publicar el comentario.",
+        errorPostReply: "No se pudo publicar la respuesta.",
+        errorDeleteComment: "No se pudo eliminar el comentario.",
+        errorSaveDeliverable: "No se pudo guardar el entregable.",
       },
 
       // ── Invitations ───────────────────────────────────────
@@ -231,6 +249,12 @@ const resources = {
         joinedTeam: "Te uniste al equipo.",
         rejected: "Rechazaste la invitación.",
         viewTeam: "Ver equipo",
+        inviteMemberHeading: "Invitar miembro",
+        closeModal: "Cerrar",
+        searchPlaceholder: "Buscar coder por nombre o correo…",
+        invitedBadge: "Invitado",
+        inviteBtn: "Invitar",
+        errorSearching: "Error al buscar.",
       },
 
       // ── Project Settings ──────────────────────────────────
@@ -255,6 +279,8 @@ const resources = {
         copyInviteLink: "Copiar Enlace de Invitación",
         remove: "Eliminar",
         copied: "¡Copiado!",
+        placeholderDesc: "Describe tu proyecto…",
+        placeholderRepo: "https://github.com/equipo/repo",
         repoAutoAssigned:
           "El repositorio se creó automáticamente y no se puede editar aquí.",
       },
@@ -276,6 +302,7 @@ const resources = {
         githubConnect: "Conectar con GitHub",
         githubReconnect: "Reconectar con GitHub",
         defaultName: "Nombre de usuario",
+        placeholderDescription: "Cuéntanos sobre tu experiencia…",
       },
 
       // ── TL Dashboard ──────────────────────────────────────
@@ -405,6 +432,24 @@ const resources = {
         reposWillBeCreated:
           "Los repositorios del equipo se crearán en esta organización.",
         cancel: "Cancelar",
+        participatingClans: "Clanes participantes",
+        createNewRubric: "Crear Nueva Rúbrica",
+        createInPlatform: "Crear en Plataforma",
+        uploadExcel: "Subir Plantilla Excel",
+        useTemplate: "Usar Plantilla",
+        selectFile: "Seleccionar Archivo",
+        modelRubric: "Rúbrica Modelo",
+        totalWeight: "PESO TOTAL",
+        rubricProgress: "Progreso de Rúbrica",
+        labelDescription: "Descripción",
+        labelType: "Tipo",
+        labelRoute: "Ruta",
+        labelCohort: "Cohorte",
+        labelFinalDelivery: "Fecha de entrega final",
+        labelMaxTeamSize: "Tamaño máximo del equipo",
+        labelGithubOrg: "Organización GitHub",
+        validationError: "Error de Validación",
+        errorCreating: "Error al crear el evento.",
         placeholderTitle: "Ej: Capstone 2025-1",
         placeholderDesc: "Describe el evento…",
         placeholderCohort: "Ej: 2025-1",
@@ -441,6 +486,9 @@ const resources = {
         team: "Equipo",
         event: "Evento",
         someone: "Alguien",
+        errorTitle: "Error",
+        successTitle: "Éxito",
+        urgent: "Urgente",
       },
     },
   },
@@ -463,6 +511,12 @@ const resources = {
         teamsProjects: "Teams & Projects",
         dashboard: "Dashboard",
         finalResults: "Final Results",
+        management: "Management",
+        createNew: "Create New",
+        teamDetails: "Team Details",
+        projectsOverview: "Projects Overview",
+        createNewEvent: "Create New Event",
+        eventDetails: "Event Details",
       },
 
       role: {
@@ -476,6 +530,8 @@ const resources = {
 
       login: {
         tagline: "Collaborate. Grow. Succeed.",
+        leftDesc:
+          "From idea to <strong>winner</strong> — organize <strong>events</strong>, showcase <strong>projects</strong>, and <strong>vote</strong> in real time.",
         collaborate: "Collaborate",
         track: "Track Progress",
         grow: "Grow Together",
@@ -543,7 +599,7 @@ const resources = {
 
       ces: {
         title: "Choose your event.",
-        welcome: "Welcome, {{name}}.",
+        welcome: "Welcome, <strong>{{name}}</strong>.",
         subtitleTL: "Select the event you want to review and evaluate.",
         subtitleCoder:
           "Select the event you're participating in to get started.",
@@ -589,6 +645,9 @@ const resources = {
         filterOpen: "Open",
         filterPending: "Pending",
         filterFull: "Full",
+        placeholderTeamName: "e.g., The Code Wizards",
+        placeholderProjectDesc:
+          "Briefly describe what your team wants to work on…",
       },
 
       team: {
@@ -648,6 +707,15 @@ const resources = {
           "You have already submitted your evaluations for this project. They cannot be modified.",
         score: "Score",
         feedbackOptional: "Feedback (optional)",
+        titleEdit: "Edit",
+        placeholderPasteUrl: "Paste URL…",
+        placeholderNewUrl: "New URL…",
+        titleDeleteReply: "Delete reply",
+        titleDeleteComment: "Delete comment",
+        errorPostComment: "Could not post comment.",
+        errorPostReply: "Could not post reply.",
+        errorDeleteComment: "Could not delete comment.",
+        errorSaveDeliverable: "Could not save deliverable.",
       },
 
       invite: {
@@ -662,6 +730,12 @@ const resources = {
         joinedTeam: "You joined the team.",
         rejected: "You rejected the invitation.",
         viewTeam: "View team",
+        inviteMemberHeading: "Invite member",
+        closeModal: "Close",
+        searchPlaceholder: "Search coder by name or email…",
+        invitedBadge: "Invited",
+        inviteBtn: "Invite",
+        errorSearching: "Error searching.",
       },
 
       settings: {
@@ -685,6 +759,8 @@ const resources = {
         copyInviteLink: "Copy Invite Link",
         remove: "Remove",
         copied: "Copied!",
+        placeholderDesc: "Describe your project...",
+        placeholderRepo: "https://github.com/team/repo",
         repoAutoAssigned:
           "The repository was created automatically and cannot be edited here.",
       },
@@ -705,6 +781,7 @@ const resources = {
         githubConnect: "Connect with GitHub",
         githubReconnect: "Reconnect with GitHub",
         defaultName: "User Name",
+        placeholderDescription: "Tell us about your experience...",
       },
 
       tl: {
@@ -828,6 +905,24 @@ const resources = {
         reposWillBeCreated:
           "Team repositories will be created in this organization.",
         cancel: "Cancel",
+        participatingClans: "Participating clans",
+        createNewRubric: "Create New Rubric",
+        createInPlatform: "Create in Platform",
+        uploadExcel: "Upload Excel Template",
+        useTemplate: "Use Template",
+        selectFile: "Select File",
+        modelRubric: "Model Rubric",
+        totalWeight: "TOTAL WEIGHT",
+        rubricProgress: "Rubric Progress",
+        labelDescription: "Description",
+        labelType: "Type",
+        labelRoute: "Route",
+        labelCohort: "Cohort",
+        labelFinalDelivery: "Final delivery date",
+        labelMaxTeamSize: "Max team size",
+        labelGithubOrg: "GitHub Organization",
+        validationError: "Validation Error",
+        errorCreating: "Error creating the event.",
         placeholderTitle: "Ex: Capstone 2025-1",
         placeholderDesc: "Describe the event…",
         placeholderCohort: "Ex: 2025-1",
@@ -865,6 +960,9 @@ const resources = {
         team: "Team",
         event: "Event",
         someone: "Someone",
+        errorTitle: "Error",
+        successTitle: "Success",
+        urgent: "Urgent",
       },
     },
   },

@@ -122,7 +122,7 @@ export function renderCoderTeam({
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                <h2 class="ct-section-title mb-0">Activity</h2>
+                <h2 class="ct-section-title mb-0">${t("team.activity")}</h2>
               </div>
               <a id="downloadBriefBtn" href="#" download="crudactivity-supcrud.md"
                  class="ct-btn-download d-flex align-items-center gap-2">
@@ -395,7 +395,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               ${
                 canEdit && item.key !== "repo_url"
                   ? `
-                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
+                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="${t("team.titleEdit")}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -408,7 +408,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                 : canEdit
                   ? `
               <div class="d-flex align-items-center gap-2">
-                <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+                <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="${t("team.placeholderPasteUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="5" y1="12" x2="19" y2="12"/>
@@ -426,7 +426,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                 ? `
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-                       value="${item.url ?? ""}" placeholder="New URL…" />
+                       value="${item.url ?? ""}" placeholder="${t("team.placeholderNewUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${item.key}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
@@ -486,7 +486,7 @@ function _renderReply(reply, currentUserId) {
           ${
             isOwner
               ? `
-            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="Delete reply"
+            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="${t("team.titleDeleteReply")}"
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
               : ""
@@ -525,7 +525,7 @@ function _renderComment(comment, currentUserId) {
               ${
                 isOwner
                   ? `
-                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="Delete comment"
+                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="${t("team.titleDeleteComment")}"
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
                   : ""
@@ -694,7 +694,10 @@ export async function loadComments(projectId, user) {
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not post comment.");
+      toast.error(
+        t("common.errorTitle"),
+        err?.message ?? t("team.errorPostComment"),
+      );
     } finally {
       activeBtn.disabled = false;
       activeBtn.textContent = t("team.postComment") ?? "Post Comment";
@@ -753,7 +756,10 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          toast.error("Error", err?.message ?? "Could not post reply.");
+          toast.error(
+            t("common.errorTitle"),
+            err?.message ?? t("team.errorPostReply"),
+          );
           btn.disabled = false;
           btn.textContent = t("team.send") ?? "Send";
         }
@@ -771,7 +777,10 @@ export async function loadComments(projectId, user) {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          toast.error("Error", err?.message ?? "Could not delete comment.");
+          toast.error(
+            t("common.errorTitle"),
+            err?.message ?? t("team.errorDeleteComment"),
+          );
           btn.disabled = false;
         }
       });
@@ -1026,7 +1035,7 @@ export async function loadEvaluationPanel({
 
     if (!valid) {
       toast.error(
-        "Error",
+        t("common.errorTitle"),
         t("team.evalIncomplete") ?? "Please rate all rubrics for each member.",
       );
       return;
@@ -1044,7 +1053,7 @@ export async function loadEvaluationPanel({
       );
       submitBtn.textContent = t("team.updateEval") ?? "Actualizar Evaluaciones";
     } catch (err) {
-      toast.error("Error", err?.message ?? t("common.error"));
+      toast.error(t("common.errorTitle"), err?.message ?? t("common.error"));
       submitBtn.textContent = t("team.submitEvaluations");
     } finally {
       submitBtn.disabled = false;
@@ -1100,7 +1109,7 @@ export function initDeliverables(projectId) {
           if (actionsDiv) {
             actionsDiv.innerHTML = `
               <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">${t("team.open")}</a>
-              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="${t("team.titleEdit")}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -1108,7 +1117,7 @@ export function initDeliverables(projectId) {
               </button>
               <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${field}">
                 <input type="url" class="ct-url-input ct-edit-input" data-field="${field}"
-                       value="${url}" placeholder="New URL…" />
+                       value="${url}" placeholder="${t("team.placeholderNewUrl")}" />
                 <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${field}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"/>
@@ -1127,7 +1136,10 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not save deliverable.");
+      toast.error(
+        t("common.errorTitle"),
+        err?.message ?? t("team.errorSaveDeliverable"),
+      );
       btnEl.innerHTML = original;
     } finally {
       btnEl.disabled = false;
@@ -1200,7 +1212,7 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error("Error", err?.message ?? t("common.error"));
+        toast.error(t("common.errorTitle"), err?.message ?? t("common.error"));
         btn.disabled = false;
         btn.textContent = t("team.submitProject");
       }

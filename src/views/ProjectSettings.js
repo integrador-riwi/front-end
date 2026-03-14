@@ -155,7 +155,7 @@ export default class ProjectSettings {
                   <div>
                     <label class="cs-label">${t("settings.desc")}</label>
                     <textarea class="cs-input cs-textarea" id="settingProjectDesc"
-                              placeholder="Describe your project...">${escHtml(projectDesc)}</textarea>
+                              placeholder="${t("settings.placeholderDesc")}">${escHtml(projectDesc)}</textarea>
                   </div>
                   <div>
                     <label class="cs-label">${t("settings.repo")}</label>
@@ -165,7 +165,7 @@ export default class ProjectSettings {
                         <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
                       </svg>
                       <input type="url" class="cs-input cs-input-with-icon" id="settingRepoUrl"
-                             value="${escHtml(repoUrl)}" placeholder="https://github.com/team/repo"
+                             value="${escHtml(repoUrl)}" placeholder="${t("settings.placeholderRepo")}"
                              ${repoUrl ? "readonly title='The repository is assigned automatically when the project is created'" : ""} />
                     </div>
                     ${repoUrl ? `<p class="cs-hint mt-1">${t("settings.repoAutoAssigned")}</p>` : ""}
@@ -415,9 +415,9 @@ export default class ProjectSettings {
   // ─────────────────────────────────────────
   _showFeedback(message, type = "success") {
     if (type === "success") {
-      toast.success("Success", message);
+      toast.success(t("common.successTitle"), message);
     } else {
-      toast.error("Error", message);
+      toast.error(t("common.errorTitle"), message);
     }
   }
 

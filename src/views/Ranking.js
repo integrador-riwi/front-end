@@ -49,7 +49,7 @@ export default class Ranking {
 
     if (!this.eventId) {
       this.error = t("ranking.noEvent") ?? "No event selected.";
-      toast.error("Error", this.error);
+      toast.error(t("common.errorTitle"), this.error);
       this._paint();
       return;
     }
@@ -77,7 +77,7 @@ export default class Ranking {
           this.rankingStatus = statusRes.value?.data ?? null;
         } else {
           this.error = statusRes.reason?.message ?? t("common.error");
-          toast.error("Error", this.error);
+          toast.error(t("common.errorTitle"), this.error);
         }
         if (rankingRes.status === "fulfilled") {
           this.rankingData = rankingRes.value?.data ?? null;
@@ -93,7 +93,7 @@ export default class Ranking {
       const is404 = e.response?.status === 404 || e.message?.includes("404");
       if (!is404) {
         this.error = e.message ?? t("common.error");
-        toast.error("Error", this.error);
+        toast.error(t("common.errorTitle"), this.error);
       }
     }
 
@@ -141,7 +141,7 @@ export default class Ranking {
       this.rankingStatus = statusRes?.data ?? null;
     } catch (e) {
       this.error = e.message ?? t("common.error");
-      toast.error("Error", this.error);
+      toast.error(t("common.errorTitle"), this.error);
     }
 
     this.publishing = false;

@@ -26,7 +26,7 @@ export default class CoderEventSelect {
       this.events = res?.data ?? res ?? [];
     } catch (e) {
       this.error = t("ces.error");
-      toast.error("Error", this.error);
+      toast.error(t("common.errorTitle"), this.error);
     }
 
     try {
@@ -62,7 +62,10 @@ export default class CoderEventSelect {
                   );
                   window.location.hash = "#/coder";
                 } catch (err) {
-                  toast.error("Error", err?.message ?? t("common.error"));
+                  toast.error(
+                    t("common.errorTitle"),
+                    err?.message ?? t("common.error"),
+                  );
                 }
               },
               onDeny: async (item) => {
@@ -74,7 +77,10 @@ export default class CoderEventSelect {
                     t("invite.rejected") ?? "You rejected the invitation.",
                   );
                 } catch (err) {
-                  toast.error("Error", err?.message ?? t("common.error"));
+                  toast.error(
+                    t("common.errorTitle"),
+                    err?.message ?? t("common.error"),
+                  );
                 }
               },
             },

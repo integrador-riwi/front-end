@@ -1,59 +1,62 @@
-export const HEADER_LINKS_BY_VIEW = {
-  "dashboard": [
-    { label: "Events", route: "events" },
+import { t } from "../../utils/i18n.js";
+
+// Arrow functions so t() is evaluated fresh on every call (picks up current language)
+const HEADER_LINKS_BY_VIEW = () => ({
+  dashboard: [
+    { label: t("nav.events"), route: "events" },
     { label: localStorage.getItem("currentEventName"), route: "dashboard" },
   ],
   "events/create": [
-    { label: "Events",            route: "events"           },
-    { label: "Management",        route: "settings"         },
-    { label: "Create New",        route: "events/create"    },
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.management"), route: "settings" },
+    { label: t("nav.createNew"), route: "events/create" },
   ],
-  "projects": [
-    { label: "Dashboard",         route: "dashboard",      },
-    { label: "Teams & Projects",  route: "projects",       },
+  projects: [
+    { label: t("nav.dashboard"), route: "dashboard" },
+    { label: t("nav.teamsProjects"), route: "projects" },
   ],
-  "teamDetail": [
-    { label: "Events",         route: "events",      },
+  teamDetail: [
+    { label: t("nav.events"), route: "events" },
     { label: localStorage.getItem("currentEventName"), route: "dashboard" },
-    { label: "Team Details",       route: null,       },
+    { label: t("nav.teamDetails"), route: null },
   ],
-  "ranking": [
-    { label: "Event",         route: "events",      },
-    { label: "Ranking",       route: "ranking",       },
-  ]
-};
+  ranking: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.ranking"), route: "ranking" },
+  ],
+});
 
-export const HEADER_LAYOUT_BY_ROUTE = {
-  "dashboard": {
+const HEADER_LAYOUT_BY_ROUTE = () => ({
+  dashboard: {
     variant: "details",
-    title: "Dashboard",
+    title: t("nav.dashboard"),
   },
   "events/create": {
     variant: "create-event",
-    title: "Create New Event",
+    title: t("nav.createNewEvent"),
   },
-  "projects": {
+  projects: {
     variant: "teams",
-    title: "Projects Overview",
+    title: t("nav.projectsOverview"),
   },
-  "teamDetail": {
+  teamDetail: {
     variant: "details",
-    title: "Details",
+    title: t("nav.teamDetails"),
   },
-  "ranking": {
+  ranking: {
     variant: "ranking",
-    title: "Ranking",
+    title: t("nav.ranking"),
   },
-  "details": {
+  details: {
     variant: "details",
-    title: "Event Details",
+    title: t("nav.eventDetails"),
   },
-};
+});
 
 export const getHeaderLinks = (view) => {
-  return HEADER_LINKS_BY_VIEW[view] ?? [];
+  return HEADER_LINKS_BY_VIEW()[view] ?? [];
 };
 
 export const getHeaderLayout = (route) => {
-  return HEADER_LAYOUT_BY_ROUTE[route] ?? null;
+  return HEADER_LAYOUT_BY_ROUTE()[route] ?? null;
 };

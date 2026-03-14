@@ -1,5 +1,6 @@
 import "../../assets/styles/header.css";
 import { getHeaderLinks, getHeaderLayout } from "./header.js";
+import { t } from "../../utils/i18n.js";
 import {
   getCurrentUser,
   logout,
@@ -13,7 +14,7 @@ export default class Header {
     this.router = router;
     this.user = getCurrentUser();
     this.eventName =
-        params.eventName || localStorage.getItem("currentEventName") || "Event";
+      params.eventName || localStorage.getItem("currentEventName") || "Event";
   }
 
   mountBreadcrumb() {
@@ -24,15 +25,15 @@ export default class Header {
 
     if (eventId) {
       const sectionLabels = {
-        projects: "Projects",
-        ranking: "Ranking",
-        voting: "Voting",
-        finalists: "Finalists",
-        metrics: "Metrics",
+        projects: t("nav.projects"),
+        ranking: t("nav.ranking"),
+        voting: t("nav.voting"),
+        finalists: t("nav.finalists"),
+        metrics: t("nav.metrics"),
       };
 
       links = [
-        { label: "Events", route: "events" },
+        { label: t("nav.events"), route: "events" },
         {
           label: this.eventName || `Event ${eventId}`,
           route: `events/${eventId}`,
@@ -64,26 +65,26 @@ export default class Header {
     if (!links || links.length === 0) return "";
 
     return links
-        .map((item, index) => {
-          const isLast = index === links.length - 1;
+      .map((item, index) => {
+        const isLast = index === links.length - 1;
 
-          if (isLast) {
-            return `
+        if (isLast) {
+          return `
           <li class="breadcrumb-item active" aria-current="page">
             ${item.label}
           </li>
         `;
-          }
+        }
 
-          return `
+        return `
         <li class="breadcrumb-item">
           <a href="#" data-route="${item.route}" class="breadcrumb-link">
             ${item.label}
           </a>
         </li>
       `;
-        })
-        .join("");
+      })
+      .join("");
   }
 
   render() {

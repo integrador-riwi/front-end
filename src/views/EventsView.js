@@ -39,7 +39,7 @@ export default class EventsView {
     } catch (err) {
       console.error("Failed to fetch events:", err);
       this.error = err.message || t("events.error");
-      toast.error("Error", this.error);
+      toast.error(t("common.errorTitle"), this.error);
     } finally {
       this.loading = false;
     }
