@@ -148,16 +148,7 @@ export default class TLDashboardView {
     content.innerHTML = `
       <div class="tld-page">
 
-        <!-- Header -->
         <header class="tld-header">
-          ${
-            this.selectedEvent
-              ? `<button class="tld-back-btn" id="tldBackBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  ${t("tl.backToEvents")}
-                </button>`
-              : ""
-          }
           <div class="tld-header-top">
             <div>
               <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
@@ -338,7 +329,6 @@ export default class TLDashboardView {
     `;
   }
 
-  // ── Detail view (coderTeam template reused) ───────────────────────────────
   _renderDetail(team) {
     const content = document.getElementById("tl-content");
     if (!content) return;
@@ -350,15 +340,22 @@ export default class TLDashboardView {
     const eventId = team.id_event ?? this.selectedEvent?.id ?? null;
     const projectId = team.project?.id_project ?? null;
 
-    content.innerHTML = `
-      <div class="tld-detail-back-bar">
-        <button class="tld-back-btn" id="tldDetailBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          ${t("common.back")} ${this.selectedEvent ? this.selectedEvent.title : t("tl.teams")}
-        </button>
-      </div>
-      ${renderCoderTeam({ user: this.user, team, isLeader: false, isTL })}
-    `;
+    // Update breadcrumbs for detail view
+    this.header.mountBreadcrumb([
+      { label: t("nav.events"), route: "coderEventSelect" },
+      {
+        label: this.selectedEvent?.title ?? t("tl.teams"),
+        route: "tlDashboard",
+      },
+      { label: team.name, route: null },
+    ]);
+
+    content.innerHTML = renderCoderTeam({
+      user: this.user,
+      team,
+      isLeader: false,
+      isTL,
+    });
 
     setTimeout(() => {
       loadProjectBrief();
@@ -375,12 +372,6 @@ export default class TLDashboardView {
         });
       }
     }, 0);
-
-    document.getElementById("tldDetailBack")?.addEventListener("click", () => {
-      this.detailTeam = null; // clear detail state before going back
-      this._renderList();
-      this._attachListHandlers();
-    });
 
     // Hide coder-only buttons that don't make sense for a TL viewer
     setTimeout(() => {

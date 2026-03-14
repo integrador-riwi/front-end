@@ -12,13 +12,13 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .rubric-opt-card:hover {
   border-color: var(--primary, #5548e2);
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
 .rubric-opt-icon {
@@ -28,36 +28,17 @@
   margin: 0 auto;
 }
 
-.bg-primary-soft {
-  background: rgba(85, 72, 226, 0.1);
-  color: #5548e2;
-}
-
-.bg-secondary-soft {
-  background: rgba(108, 117, 125, 0.1);
-  color: #6c757d;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.bg-primary-soft { background: rgba(85, 72, 226, 0.1); color: #5548e2; }
+.bg-secondary-soft { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
 
 .rubric-builder {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .rubric-area-card {
@@ -72,7 +53,6 @@
 .crit-input {
   box-shadow: none !important;
 }
-
 .crit-input:focus {
   background: #f8f9fa !important;
 }
@@ -81,10 +61,9 @@
   background: #fff;
   transition: transform 0.2s;
 }
-
 .level-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .lvl-input:focus {
@@ -92,18 +71,8 @@
   box-shadow: none !important;
 }
 
-.cursor-pointer {
-  cursor: pointer;
-}
+.cursor-pointer { cursor: pointer; }
+.cursor-grab { cursor: grab; }
+.cursor-grab:active { cursor: grabbing; }
 
-.cursor-grab {
-  cursor: grab;
-}
-
-.cursor-grab:active {
-  cursor: grabbing;
-}
-
-.min-w-0 {
-  min-width: 0;
-}
+.min-w-0 { min-width: 0; }
