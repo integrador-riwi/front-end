@@ -28,6 +28,8 @@ const resources = {
         projectsOverview: "Vista de Proyectos",
         createNewEvent: "Crear Nuevo Evento",
         eventDetails: "Detalles del Evento",
+        qrVoting: "Votación QR",
+        teams: "Equipos",
       },
       role: {
         ADMIN: "Admin Manager",
@@ -75,6 +77,8 @@ const resources = {
         tbd: "Por definir",
         notFound: "Evento no encontrado",
         untitled: "Evento sin título",
+        approveFinalists: "Aprobar Finalistas",
+        approveFinalistsSuccess: "¡Finalistas aprobados correctamente!",
       },
 
       // ── Ranking ───────────────────────────────────────────
@@ -255,6 +259,37 @@ const resources = {
         invitedBadge: "Invitado",
         inviteBtn: "Invitar",
         errorSearching: "Error al buscar.",
+        pendingJoinRequests: "Solicitudes de unión pendientes",
+        searchHint: "Escribe para buscar coders disponibles.",
+        noCodersFound: "No se encontraron coders disponibles.",
+        invitedSuccess: "✓ Invitado",
+        errorAcceptRequest: "No se pudo aceptar la solicitud.",
+        errorRejectRequest: "No se pudo rechazar la solicitud.",
+        errorSendInvite: "No se pudo enviar la invitación.",
+        errorAcceptInvitation: "No se pudo aceptar la invitación.",
+        errorRejectInvitation: "No se pudo rechazar la invitación.",
+        newInvitationMsg: '{{name}} te invitó a unirte a "{{team}}"',
+        invitationAcceptedTitle: "¡Invitación aceptada!",
+        invitationAcceptedMsg: "Te uniste al equipo.",
+        invitationDeclinedTitle: "Invitación rechazada",
+        invitationDeclinedMsg: "Rechazaste la invitación.",
+        invitationAcceptedByTitle: "Invitación aceptada",
+        invitationAcceptedByMsg: '{{name}} se unió a tu equipo "{{team}}"',
+        invitationRejectedByTitle: "Invitación rechazada",
+        invitationRejectedByMsg: '{{name}} rechazó la invitación a "{{team}}"',
+        newJoinRequestTitle: "Nueva solicitud de unión",
+        newJoinRequestMsg: "{{name}} quiere unirse a tu equipo",
+        joinRequestSubtitle: "Equipo: {{team}}",
+        requestAcceptedTitle: "¡Solicitud aceptada!",
+        requestAcceptedMsg: "El coder ya es parte de tu equipo.",
+        requestAcceptedNotifyTitle: "¡Solicitud aceptada!",
+        requestAcceptedNotifyMsg:
+          'Tu solicitud para unirte a "{{team}}" fue aceptada.',
+        requestDeclinedTitle: "Solicitud rechazada",
+        requestDeclinedMsg:
+          'Tu solicitud para unirte a "{{team}}" fue rechazada.',
+        eventLabel: "Evento",
+        viewTeam: "Ver equipo",
       },
 
       // ── Project Settings ──────────────────────────────────
@@ -283,6 +318,7 @@ const resources = {
         placeholderRepo: "https://github.com/equipo/repo",
         repoAutoAssigned:
           "El repositorio se creó automáticamente y no se puede editar aquí.",
+        removeMemberConfirm: "¿Eliminar a {{name}} del equipo?",
       },
 
       // ── Profile ───────────────────────────────────────────
@@ -362,6 +398,8 @@ const resources = {
         launched: "Sesión de Votación Iniciada",
         generateQR: "Generar QR",
         disableQR: "Desactivar QR",
+        selectExpiration:
+          "Por favor selecciona una fecha de expiración para el QR.",
       },
 
       // ── Not Found ─────────────────────────────────────────
@@ -473,6 +511,14 @@ const resources = {
         na: "N/D",
       },
 
+      // ── Public Voting Page ────────────────────────────────
+      publicVoting: {
+        voteForBest: "Vota por el mejor proyecto",
+        voteBtn: "Votar",
+        voteSuccess: "¡Voto registrado correctamente!",
+        voteError: "Error al registrar el voto",
+      },
+
       common: {
         loading: "Cargando...",
         error: "Ocurrió un error. Intenta de nuevo.",
@@ -489,6 +535,10 @@ const resources = {
         errorTitle: "Error",
         successTitle: "Éxito",
         urgent: "Urgente",
+        newCommentTitle: "Nuevo comentario",
+        newCommentMsg: "{{name}} comentó en tu proyecto",
+        removedFromTeamTitle: "Eliminado del equipo",
+        removedFromTeamMsg: 'Fuiste eliminado del equipo "{{team}}"',
       },
     },
   },
@@ -517,6 +567,8 @@ const resources = {
         projectsOverview: "Projects Overview",
         createNewEvent: "Create New Event",
         eventDetails: "Event Details",
+        qrVoting: "QR Voting",
+        teams: "Teams",
       },
 
       role: {
@@ -563,6 +615,8 @@ const resources = {
         tbd: "TBD",
         notFound: "Event not found",
         untitled: "Untitled Event",
+        approveFinalists: "Approve Finalists",
+        approveFinalistsSuccess: "Finalists approved successfully!",
       },
 
       ranking: {
@@ -696,6 +750,7 @@ const resources = {
         you: "You",
         submitEvaluations: "Submit Evaluations",
         notSubmitted: "Not submitted yet",
+        noProject: "No project",
         deliverablesCount: "deliverables",
         searchTeams: "Search teams or projects...",
         noTeamsFound: "No teams found",
@@ -736,6 +791,37 @@ const resources = {
         invitedBadge: "Invited",
         inviteBtn: "Invite",
         errorSearching: "Error searching.",
+        pendingJoinRequests: "Pending join requests",
+        searchHint: "Type to search available coders.",
+        noCodersFound: "No available coders found.",
+        invitedSuccess: "✓ Invited",
+        errorAcceptRequest: "Could not accept the request.",
+        errorRejectRequest: "Could not reject the request.",
+        errorSendInvite: "Could not send the invitation.",
+        errorAcceptInvitation: "Could not accept the invitation.",
+        errorRejectInvitation: "Could not reject the invitation.",
+        newInvitationMsg: '{{name}} invited you to join "{{team}}"',
+        invitationAcceptedTitle: "Invitation accepted!",
+        invitationAcceptedMsg: "You joined the team.",
+        invitationDeclinedTitle: "Invitation declined",
+        invitationDeclinedMsg: "You rejected the invitation.",
+        invitationAcceptedByTitle: "Invitation accepted",
+        invitationAcceptedByMsg: '{{name}} joined your team "{{team}}"',
+        invitationRejectedByTitle: "Invitation declined",
+        invitationRejectedByMsg:
+          '{{name}} declined the invitation to "{{team}}"',
+        newJoinRequestTitle: "New join request",
+        newJoinRequestMsg: "{{name}} wants to join your team",
+        joinRequestSubtitle: "Team: {{team}}",
+        requestAcceptedTitle: "Request accepted!",
+        requestAcceptedMsg: "The coder is now part of your team.",
+        requestAcceptedNotifyTitle: "Request accepted!",
+        requestAcceptedNotifyMsg:
+          'Your request to join "{{team}}" has been accepted!',
+        requestDeclinedTitle: "Request declined",
+        requestDeclinedMsg: 'Your request to join "{{team}}" was declined.',
+        eventLabel: "Event",
+        viewTeam: "View team",
       },
 
       settings: {
@@ -763,6 +849,7 @@ const resources = {
         placeholderRepo: "https://github.com/team/repo",
         repoAutoAssigned:
           "The repository was created automatically and cannot be edited here.",
+        removeMemberConfirm: "Remove {{name}} from the team?",
       },
 
       profile: {
@@ -838,6 +925,7 @@ const resources = {
         launched: "Voting Session Active",
         generateQR: "Generate QR",
         disableQR: "Disable QR",
+        selectExpiration: "Please select a QR expiration date.",
       },
 
       notFound: {
@@ -947,6 +1035,14 @@ const resources = {
         na: "N/A",
       },
 
+      // ── Public Voting Page ────────────────────────────────
+      publicVoting: {
+        voteForBest: "Vote for the best project",
+        voteBtn: "Vote",
+        voteSuccess: "Vote registered successfully!",
+        voteError: "Error submitting vote",
+      },
+
       common: {
         loading: "Loading...",
         error: "Something went wrong. Please try again.",
@@ -963,6 +1059,10 @@ const resources = {
         errorTitle: "Error",
         successTitle: "Success",
         urgent: "Urgent",
+        newCommentTitle: "New comment",
+        newCommentMsg: "{{name}} commented on your project",
+        removedFromTeamTitle: "Removed from team",
+        removedFromTeamMsg: 'You have been removed from "{{team}}"',
       },
     },
   },

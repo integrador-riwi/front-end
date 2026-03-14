@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 import { getToken, getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
+import { t } from "../utils/i18n.js";
 import {
   acceptInvitation,
   rejectInvitation,
@@ -18,27 +19,17 @@ const SOCKET_URL =
 export function initSocket() {
   const token = getToken();
   const user = getUser();
-  
-  if (!token) {
-    return null;
-  }
+
+  if (!token) return null;
 
   if (!user || !user.id_user) {
     setTimeout(() => initSocket(), 500);
     return null;
   }
 
-  // Already connected — nothing to do
-  if (socket?.connected) {
-    return socket;
-  }
+  if (socket?.connected) return socket;
+  if (socket?.active) return socket;
 
-  // Socket exists and is actively trying to connect — don't create a new one
-  if (socket?.active) {
-    return socket;
-  }
-
-  // Clean up any existing disconnected socket before creating a new one
   if (socket) {
     socket.removeAllListeners();
     socket.disconnect();
@@ -53,38 +44,35 @@ export function initSocket() {
     reconnectionDelay: 1000,
   });
 
-  socket.on("connect", () => {
-    console.log("[Socket] Connected:", socket.id);
-  });
-
-  socket.on("disconnect", (reason) => {
-    // Silent disconnect
-  });
-
-  socket.on("connect_error", (error) => {
-    console.error("[Socket] Connection error:", error.message);
-  });
+  socket.on("connect", () => console.log("[Socket] Connected:", socket.id));
+  socket.on("disconnect", () => {});
+  socket.on("connect_error", (error) =>
+    console.error("[Socket] Connection error:", error.message),
+  );
 
   setupEventListeners();
-
   return socket;
 }
 
 function setupEventListeners() {
   if (!socket) return;
 
+  // invitation:new
   socket.on("invitation:new", (data) => {
     let toastId = null;
     toastId = toast.info(
-      "New invitation",
-      `${data.invitedByName} invited you to join "${data.teamName}"`,
+      t("invite.newInvitation"),
+      t("invite.newInvitationMsg", {
+        name: data.invitedByName,
+        team: data.teamName,
+      }),
       {
         duration: 0,
         dropdown: {
           items: [
             {
               title: data.teamName,
-              subtitle: data.eventName || "Event",
+              subtitle: data.eventName || t("common.event"),
               accept: true,
               deny: true,
               id: data.id,
@@ -95,42 +83,54 @@ function setupEventListeners() {
             toast.remove(toastId);
             try {
               await acceptInvitation(item.id);
-              toast.success("Invitation accepted!", "You joined the team.");
+              toast.success(
+                t("invite.invitationAcceptedTitle"),
+                t("invite.invitationAcceptedMsg"),
+              );
               window.location.hash = "#/coder";
             } catch (err) {
-              toast.error("Error", err?.message ?? "Could not accept the invitation.");
+              toast.error(
+                t("common.errorTitle"),
+                err?.message ?? t("invite.errorAcceptInvitation"),
+              );
             }
           },
           onDeny: async (item) => {
             toast.remove(toastId);
             try {
               await rejectInvitation(item.id);
-              toast.info("Invitation declined", "You rejected the invitation.");
+              toast.info(
+                t("invite.invitationDeclinedTitle"),
+                t("invite.invitationDeclinedMsg"),
+              );
             } catch (err) {
-              toast.error("Error", err?.message ?? "Could not reject the invitation.");
+              toast.error(
+                t("common.errorTitle"),
+                err?.message ?? t("invite.errorRejectInvitation"),
+              );
             }
           },
         },
       },
     );
-
-    if (eventHandlers["invitation:new"]) {
-      eventHandlers["invitation:new"](data);
-    }
+    if (eventHandlers["invitation:new"]) eventHandlers["invitation:new"](data);
   });
 
+  // join_request:new
   socket.on("join_request:new", (data) => {
     let toastId = null;
     toastId = toast.info(
-      "New join request",
-      `${data.coderName} wants to join your team`,
+      t("invite.newJoinRequestTitle"),
+      t("invite.newJoinRequestMsg", { name: data.coderName }),
       {
         duration: 0,
         dropdown: {
           items: [
             {
               title: data.coderName,
-              subtitle: `Team: ${data.teamName}`,
+              subtitle: t("invite.joinRequestSubtitle", {
+                team: data.teamName,
+              }),
               accept: true,
               deny: true,
               id: data.id,
@@ -141,12 +141,18 @@ function setupEventListeners() {
             toast.remove(toastId);
             try {
               await acceptJoinRequest(item.id);
-              toast.success("Request accepted!", "The coder is now part of your team.");
+              toast.success(
+                t("invite.requestAcceptedTitle"),
+                t("invite.requestAcceptedMsg"),
+              );
             } catch (err) {
               if (eventHandlers["join_request:new:accept"]) {
                 await eventHandlers["join_request:new:accept"](item);
               } else {
-                toast.error("Error", err?.message ?? "Could not accept the request.");
+                toast.error(
+                  t("common.errorTitle"),
+                  err?.message ?? t("invite.errorAcceptRequest"),
+                );
               }
             }
           },
@@ -154,60 +160,65 @@ function setupEventListeners() {
             toast.remove(toastId);
             try {
               await rejectJoinRequest(item.id);
-              toast.info("Request declined", "The request was rejected.");
+              toast.info(
+                t("invite.requestDeclinedTitle"),
+                t("invite.requestDeclinedMsg", { team: data.teamName }),
+              );
             } catch (err) {
               if (eventHandlers["join_request:new:deny"]) {
                 await eventHandlers["join_request:new:deny"](item);
               } else {
-                toast.error("Error", err?.message ?? "Could not reject the request.");
+                toast.error(
+                  t("common.errorTitle"),
+                  err?.message ?? t("invite.errorRejectRequest"),
+                );
               }
             }
           },
         },
       },
     );
-
-    if (eventHandlers["join_request:new"]) {
+    if (eventHandlers["join_request:new"])
       eventHandlers["join_request:new"](data);
-    }
   });
 
+  // invitation:accepted
   socket.on("invitation:accepted", (data) => {
     toast.success(
-      "Invitation accepted",
-      `${data.userName} joined your team "${data.teamName}"`,
-      {
-        duration: 5000,
-      },
+      t("invite.invitationAcceptedByTitle"),
+      t("invite.invitationAcceptedByMsg", {
+        name: data.userName,
+        team: data.teamName,
+      }),
+      { duration: 5000 },
     );
-
-    if (eventHandlers["invitation:accepted"]) {
+    if (eventHandlers["invitation:accepted"])
       eventHandlers["invitation:accepted"](data);
-    }
   });
 
+  // invitation:rejected
   socket.on("invitation:rejected", (data) => {
     toast.info(
-      "Invitation declined",
-      `${data.userName} declined the invitation to "${data.teamName}"`,
-      {
-        duration: 5000,
-      },
+      t("invite.invitationRejectedByTitle"),
+      t("invite.invitationRejectedByMsg", {
+        name: data.userName,
+        team: data.teamName,
+      }),
+      { duration: 5000 },
     );
-
-    if (eventHandlers["invitation:rejected"]) {
+    if (eventHandlers["invitation:rejected"])
       eventHandlers["invitation:rejected"](data);
-    }
   });
 
+  // join_request:accepted
   socket.on("join_request:accepted", (data) => {
     toast.success(
-      "Request accepted!",
-      `Your request to join "${data.teamName}" has been accepted!`,
+      t("invite.requestAcceptedNotifyTitle"),
+      t("invite.requestAcceptedNotifyMsg", { team: data.teamName }),
       {
         duration: 5000,
         action: {
-          label: "View team",
+          label: t("invite.viewTeam"),
           onClick: () => {
             window.location.hash = "#/coder";
           },
@@ -215,85 +226,63 @@ function setupEventListeners() {
         },
       },
     );
-
-    if (eventHandlers["join_request:accepted"]) {
+    if (eventHandlers["join_request:accepted"])
       eventHandlers["join_request:accepted"](data);
-    }
   });
 
+  // join_request:rejected
   socket.on("join_request:rejected", (data) => {
     toast.info(
-      "Request declined",
-      `Your request to join "${data.teamName}" was declined`,
-      {
-        duration: 5000,
-      },
+      t("invite.requestDeclinedTitle"),
+      t("invite.requestDeclinedMsg", { team: data.teamName }),
+      { duration: 5000 },
     );
-
-    // Redirect to event selection after a short delay
     setTimeout(() => {
       window.location.hash = "#/coderEventSelect";
     }, 2000);
-
-    if (eventHandlers["join_request:rejected"]) {
+    if (eventHandlers["join_request:rejected"])
       eventHandlers["join_request:rejected"](data);
-    }
   });
 
+  // comment:new
   socket.on("comment:new", (data) => {
     toast.info(
-      "New comment",
-      `${data.author_name || 'Someone'} commented on your project`,
-      {
-        duration: 5000,
-      },
+      t("common.newCommentTitle"),
+      t("common.newCommentMsg", {
+        name: data.author_name || t("common.someone"),
+      }),
+      { duration: 5000 },
     );
-
-    if (eventHandlers["comment:new"]) {
-      eventHandlers["comment:new"](data);
-    }
+    if (eventHandlers["comment:new"]) eventHandlers["comment:new"](data);
   });
 
+  // team:member_removed
   socket.on("team:member_removed", (data) => {
     toast.error(
-      "Removed from team",
-      `You have been removed from "${data.teamName}"`,
-      {
-        duration: 3000,
-      },
+      t("common.removedFromTeamTitle"),
+      t("common.removedFromTeamMsg", { team: data.teamName }),
+      { duration: 3000 },
     );
-
-    // Redirect to event selection after delay
     setTimeout(() => {
       window.location.hash = "#/coderEventSelect";
-      // Force reload to refresh team data
       setTimeout(() => window.location.reload(), 100);
     }, 2500);
-
-    if (eventHandlers["team:member_removed"]) {
+    if (eventHandlers["team:member_removed"])
       eventHandlers["team:member_removed"](data);
-    }
   });
 }
 
 export function on(event, callback) {
   eventHandlers[event] = callback;
 }
-
 export function off(event) {
   delete eventHandlers[event];
 }
-
 export function joinProject(projectId) {
-  if (socket?.connected) {
-    socket.emit("join_project", projectId);
-  }
+  if (socket?.connected) socket.emit("join_project", projectId);
 }
-
 export function leaveProject(projectId) {
-  if (socket?.connected) {
-    socket.emit("leave_project", projectId);
-  }
+  if (socket?.connected) socket.emit("leave_project", projectId);
 }
 
 export function disconnectSocket() {
@@ -302,7 +291,6 @@ export function disconnectSocket() {
     socket.disconnect();
     socket = null;
   }
-  // Clear all view-level handlers so stale callbacks don't accumulate
   eventHandlers = {};
 }
 

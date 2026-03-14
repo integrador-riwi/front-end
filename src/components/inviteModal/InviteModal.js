@@ -51,7 +51,7 @@ export default class InviteModal {
     if (input) input.value = "";
     const listEl = this._el.querySelector("#inviteCodersList");
     if (listEl)
-      listEl.innerHTML = `<p class="invite-hint">Escribe para buscar coders disponibles.</p>`;
+      listEl.innerHTML = `<p class="invite-hint">${t("invite.searchHint")}</p>`;
   }
 
   /** Call this if the team reference changes after construction */
@@ -71,14 +71,14 @@ export default class InviteModal {
           </div>
           <div class="invite-modal-body">
             <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
-              <h4 style="font-size:0.9rem;margin-bottom:0.5rem;color:#6366f1;">📥 Pending join requests</h4>
+              <h4 style="font-size:0.9rem;margin-bottom:0.5rem;color:#6366f1;">📥 ${t("invite.pendingJoinRequests")}</h4>
               <div id="joinRequestsList" class="join-requests-list"></div>
               <hr style="margin:1rem 0;" />
             </div>
             <input id="inviteSearchInput" type="text" class="invite-search-input"
                    placeholder="${t("invite.searchPlaceholder")}" />
             <div id="inviteCodersList" class="invite-coders-list">
-              <p class="invite-hint">Escribe para buscar coders disponibles.</p>
+              <p class="invite-hint">${t("invite.searchHint")}</p>
             </div>
           </div>
         </div>
@@ -143,11 +143,11 @@ export default class InviteModal {
           <div class="pib-actions">
             <button class="btn-accept-join-request pib-btn pib-accept"
                     data-request-id="${req.id_request}">
-              Aceptar
+              ${t("invite.accept")}
             </button>
             <button class="btn-reject-join-request pib-btn pib-reject"
                     data-request-id="${req.id_request}">
-              Rechazar
+              ${t("invite.reject")}
             </button>
           </div>
         </div>
@@ -176,8 +176,8 @@ export default class InviteModal {
       this._checkEmptyRequests();
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Accept";
-      this._showError(err?.message ?? "Could not accept the request.");
+      btn.textContent = t("invite.accept");
+      this._showError(err?.message ?? t("invite.errorAcceptRequest"));
     }
   }
 
@@ -190,8 +190,8 @@ export default class InviteModal {
       this._checkEmptyRequests();
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Reject";
-      this._showError(err?.message ?? "Could not reject the request.");
+      btn.textContent = t("invite.reject");
+      this._showError(err?.message ?? t("invite.errorRejectRequest"));
     }
   }
 
@@ -220,7 +220,7 @@ export default class InviteModal {
       const coders = data?.coders ?? [];
 
       if (coders.length === 0) {
-        listEl.innerHTML = `<p class="invite-hint">No se encontraron coders disponibles.</p>`;
+        listEl.innerHTML = `<p class="invite-hint">${t("invite.noCodersFound")}</p>`;
         return;
       }
 
@@ -247,7 +247,10 @@ export default class InviteModal {
         btn.addEventListener("click", () => this._sendInvite(btn));
       });
     } catch (err) {
-      toast.error("Error", err?.message ?? t("invite.errorSearching"));
+      toast.error(
+        t("common.errorTitle"),
+        err?.message ?? t("invite.errorSearching"),
+      );
     }
   }
 
@@ -260,12 +263,12 @@ export default class InviteModal {
 
     try {
       await inviteMember(this.team.id_team, Number(userId));
-      btn.textContent = "✓ Invitado";
+      btn.textContent = t("invite.invitedSuccess");
       btn.classList.add("invite-status-pending");
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = "Invite";
-      this._showError(err?.message ?? "Could not send the invitation.");
+      btn.textContent = t("invite.inviteBtn");
+      this._showError(err?.message ?? t("invite.errorSendInvite"));
     }
   }
 

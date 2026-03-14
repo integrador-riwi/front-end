@@ -77,7 +77,7 @@ export default class QRVoting {
 
           qrImg.src = "../src/assets/logo.svg";
 
-          btn.innerText = "Generate QR";
+          btn.innerText = t("voting.generateQR");
           btn.classList.remove("btn-primary-disabled");
           btn.classList.add("btn-primary-custom");
 
@@ -88,7 +88,7 @@ export default class QRVoting {
         const expirationValue = expirationInput?.value;
 
         if (!expirationValue) {
-          alert("Please select a QR expiration date.");
+          alert(t("voting.selectExpiration"));
           return;
         }
 
@@ -97,7 +97,7 @@ export default class QRVoting {
         btn.disabled = true;
         btn.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
-        Generating QR...
+        ${t("common.loading")}
       `;
 
         const eventId = getSelectedEvent();
@@ -114,14 +114,14 @@ export default class QRVoting {
 
         this.qrActive = true;
 
-        btn.innerText = "Disable QR";
+        btn.innerText = t("voting.disableQR");
         btn.classList.remove("btn-primary-custom");
         btn.classList.add("btn-primary-disabled");
 
         this.updateQrStatusPill();
       } catch (err) {
         console.error("QR error:", err);
-        alert("Error generating QR");
+        alert(t("common.error"));
       } finally {
         btn.disabled = false;
       }
@@ -236,7 +236,7 @@ export default class QRVoting {
       approveBtn.addEventListener("click", () => {
         console.log("Finalists approved:", this.finalists);
 
-        alert("Finalists approved successfully!");
+        alert(t("events.approveFinalistsSuccess"));
       });
     }
   }
@@ -389,7 +389,7 @@ export default class QRVoting {
     const app = document.getElementById("app");
 
     const template = await fetch("../../pages/admin_qr.html").then((r) =>
-        r.text(),
+      r.text(),
     );
 
     app.innerHTML = `

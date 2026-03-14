@@ -378,7 +378,9 @@ export default class ProjectSettings {
   }
 
   async handleRemoveMember(memberId, memberName) {
-    const confirmed = confirm(`Remove ${memberName} from the team?`);
+    const confirmed = confirm(
+      t("settings.removeMemberConfirm", { name: memberName }),
+    );
     if (!confirmed) return;
 
     try {

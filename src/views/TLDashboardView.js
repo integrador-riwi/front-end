@@ -49,7 +49,7 @@ export default class TLDashboardView {
 
   async _loadTeams() {
     if (!this.selectedEvent?.id) {
-      this.error = "No event selected."; // t("tl.noEventSelected");
+      this.error = t("tl.noEventSelected");
       toast.error(t("common.errorTitle"), this.error);
       this.isLoading = false;
       this._renderList();
@@ -82,7 +82,7 @@ export default class TLDashboardView {
         }),
       );
     } catch (err) {
-      this.error = t("tl.loadError") ?? "Could not load teams.";
+      this.error = t("tl.loadError");
       toast.error(t("common.errorTitle"), this.error);
     }
 

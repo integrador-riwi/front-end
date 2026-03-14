@@ -1,12 +1,14 @@
 import "../assets/styles/voting.css";
 import { getEventById, submitVote } from "../services/api.js";
 import { getEventRanking } from "../services/api-events.js";
+import { t, onLangChange } from "../utils/i18n.js";
 
 export default class PublicVotingPage {
-constructor(app, params) {
-  this.app = app;
-  this.eventId = params.eventId;
-}
+  constructor(app, params) {
+    this.app = app;
+    this.eventId = params.eventId;
+    this._offLangChange = null;
+  }
 
   async fetchEvent() {
     const res = await getEventById(this.eventId);
@@ -22,42 +24,45 @@ constructor(app, params) {
     try {
       await submitVote({
         eventId: this.eventId,
-        teamId
+        teamId,
       });
 
       localStorage.setItem(`voted_event_${this.eventId}`, "true");
 
-      alert("Vote registered successfully!");
+      alert(t("publicVoting.voteSuccess"));
       this.disableVoting();
-
     } catch (error) {
       console.error("Vote error:", error);
-      alert("Error submitting vote");
+      alert(t("publicVoting.voteError"));
     }
   }
 
   disableVoting() {
     const buttons = document.querySelectorAll(".vote-btn");
-    buttons.forEach(btn => btn.disabled = true);
+    buttons.forEach((btn) => (btn.disabled = true));
   }
 
   renderFinalists() {
-    return this.ranking.map(team => `
+    return this.ranking
+      .map(
+        (team) => `
       <div class="team-card">
         <h3>${team.team_name}</h3>
         <p>${team.project_name || ""}</p>
 
         <button class="vote-btn" data-team="${team.id_team}">
-          Vote
+          ${t("publicVoting.voteBtn")}
         </button>
       </div>
-    `).join("");
+    `,
+      )
+      .join("");
   }
 
   attachEvents() {
     const buttons = document.querySelectorAll(".vote-btn");
 
-    buttons.forEach(btn => {
+    buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const teamId = btn.dataset.team;
         this.handleVote(teamId);
@@ -66,7 +71,6 @@ constructor(app, params) {
   }
 
   async render(container) {
-
     await this.fetchEvent();
     await this.fetchRanking();
 
@@ -75,7 +79,7 @@ constructor(app, params) {
 
         <header class="vote-header">
           <h1>${this.event.name}</h1>
-          <p>Vote for the best project</p>
+          <p>${t("publicVoting.voteForBest")}</p>
         </header>
 
         <section class="finalists-list">
@@ -90,5 +94,10 @@ constructor(app, params) {
     }
 
     this.attachEvents();
+    this._offLangChange = onLangChange(() => this.render(container));
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

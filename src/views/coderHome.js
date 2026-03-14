@@ -619,7 +619,7 @@ export default class CoderHome {
       }
     }
     if (countEl) {
-      countEl.textContent = `${this.getAvailableCount()} Available`;
+      countEl.textContent = `${this.getAvailableCount()} ${t("noTeam.available")}`;
     }
   }
 
@@ -805,7 +805,10 @@ export default class CoderHome {
                 (i) => i.id_invitation !== item.id,
               );
             } catch (err) {
-              toast.error("Error", err?.message || t("common.error"));
+              toast.error(
+                t("common.errorTitle"),
+                err?.message || t("common.error"),
+              );
             }
           },
           onDeny: async (item) => {
@@ -819,7 +822,10 @@ export default class CoderHome {
                 (i) => i.id_invitation !== item.id,
               );
             } catch (err) {
-              toast.error("Error", err?.message || t("common.error"));
+              toast.error(
+                t("common.errorTitle"),
+                err?.message || t("common.error"),
+              );
             }
           },
         },
@@ -910,7 +916,10 @@ export default class CoderHome {
           this.isLeader = false;
           await this.init();
         } catch (err) {
-          toast.error("Error", err?.message ?? t("common.error"));
+          toast.error(
+            t("common.errorTitle"),
+            err?.message ?? t("common.error"),
+          );
         }
       });
   }
