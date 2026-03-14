@@ -18,6 +18,8 @@ export default class Teams {
     this.header = new Header(router);
     this.eventId = getSelectedEvent();
     this.isAdmin = this.user?.role === "ADMIN";
+    this.allTeams = [];
+    this.activeClans = new Set();
   }
 
   renderAvatars(users) {
@@ -115,23 +117,41 @@ export default class Teams {
 
     const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true`, { method: "GET"});
     const totalTeams = fetchTeams.data.teams;
+
     if (!totalTeams || totalTeams.length === 0) {
       this.showEmpty(teamsContainer);
+      this.renderClanFilters([]);
       return;
     }
 
-    teamsContainer.innerHTML = "";
+    this.allTeams = totalTeams;
+    this.activeClans = new Set();
+    this._gridListenersAttached = false;
 
-    totalTeams.forEach((team) => {
-      // Los miembros ya vienen en el response del listado — no hace falta otra llamada
+    this.renderClanFilters(totalTeams);
+    this._paintTeamsGrid(totalTeams, teamsContainer);
+  }
+
+  _paintTeamsGrid(teams, container) {
+    if (!container) container = document.getElementById("teamsContainer");
+    if (!container) return;
+
+    if (!teams || teams.length === 0) {
+      this.showEmpty(container);
+      return;
+    }
+
+    container.innerHTML = "";
+
+    teams.forEach((team) => {
       const members = team.members ?? [];
       const membersIcons = this.renderAvatars(members);
 
       const clickableClass = this.isAdmin ? "td-clickable" : "";
       const dataAttr = this.isAdmin ? `data-team-id="${team.id_team}"` : "";
       const adminHint = this.isAdmin
-        ? `title="${t("teamsProjects.viewDetail")}"`
-        : "";
+          ? `title="${t("teamsProjects.viewDetail")}"`
+          : "";
 
       const card = `
         <div class="col-12 col-md-6 col-lg-4">
@@ -155,40 +175,114 @@ export default class Teams {
                   ${membersIcons}
                 </div>
                 ${
-                  this.isAdmin
-                    ? `<span class="td-view-detail-hint">
+          this.isAdmin
+              ? `<span class="td-view-detail-hint">
                        <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
                        ${t("teamsProjects.viewDetail")}
                      </span>`
-                    : ""
-                }
+              : ""
+      }
               </div>
             </div>
           </div>
         </div>
       `;
 
-      teamsContainer.insertAdjacentHTML("beforeend", card);
+      container.insertAdjacentHTML("beforeend", card);
     });
 
-    // Delegación de eventos — solo ADMIN
-    if (this.isAdmin) {
-      teamsContainer.addEventListener("click", (e) => {
+    // Delegación de eventos — solo ADMIN, solo se adjunta una vez
+    if (this.isAdmin && !this._gridListenersAttached) {
+      this._gridListenersAttached = true;
+
+      container.addEventListener("click", (e) => {
         const card = e.target.closest("[data-team-id]");
         if (!card) return;
-        const teamId = card.dataset.teamId;
-        this.router.navigate("teamDetail", { teamId });
+        this.router.navigate("teamDetail", { teamId: card.dataset.teamId });
       });
 
-      teamsContainer.addEventListener("keydown", (e) => {
+      container.addEventListener("keydown", (e) => {
         if (e.key !== "Enter" && e.key !== " ") return;
         const card = e.target.closest("[data-team-id]");
         if (!card) return;
         e.preventDefault();
-        const teamId = card.dataset.teamId;
-        this.router.navigate("teamDetail", { teamId });
+        this.router.navigate("teamDetail", { teamId: card.dataset.teamId });
       });
     }
+  }
+
+  renderClanFilters(teams) {
+    const container = document.getElementById("clanFiltersContainer");
+    if (!container) return;
+
+    // Extraer clanes únicos de los miembros (campo clan ya viene en el response)
+    const clansSet = new Set();
+    teams.forEach((team) => {
+      (team.members ?? []).forEach((member) => {
+        if (member.clan) clansSet.add(member.clan);
+      });
+    });
+
+    const clans = [...clansSet].sort();
+
+    container.innerHTML = `
+      <button class="app-filter-btn active" data-clan="ALL">Todos</button>
+      ${clans.map((clan) => `
+        <button class="app-filter-btn" data-clan="${clan}">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;
+            background:var(--color-primary);opacity:0.7;flex-shrink:0;"></span>
+          ${clan}
+        </button>
+      `).join("")}
+    `;
+
+    if (this._clanFilterHandler) {
+      container.removeEventListener("click", this._clanFilterHandler);
+    }
+
+    this._clanFilterHandler = (e) => {
+      const btn = e.target.closest("[data-clan]");
+      if (!btn) return;
+
+      const clan = btn.dataset.clan;
+
+      if (clan === "ALL") {
+        this.activeClans.clear();
+        container.querySelectorAll(".app-filter-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      } else {
+        container.querySelector("[data-clan='ALL']")?.classList.remove("active");
+
+        if (this.activeClans.has(clan)) {
+          this.activeClans.delete(clan);
+          btn.classList.remove("active");
+        } else {
+          this.activeClans.add(clan);
+          btn.classList.add("active");
+        }
+
+        if (this.activeClans.size === 0) {
+          container.querySelector("[data-clan='ALL']")?.classList.add("active");
+        }
+      }
+
+      this._applyFilters();
+    };
+
+    container.addEventListener("click", this._clanFilterHandler);
+  }
+
+  _applyFilters() {
+    if (this.activeClans.size === 0) {
+      this._paintTeamsGrid(this.allTeams);
+      return;
+    }
+
+    const filtered = this.allTeams.filter((team) =>
+        (team.members ?? []).some((member) => this.activeClans.has(member.clan))
+    );
+
+    this._paintTeamsGrid(filtered);
   }
 
   async renderTeamsList() {
@@ -201,8 +295,8 @@ export default class Teams {
     this.showLoading(teamsContainer);
 
     const fetchTeams = await apiFetch(
-      `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
-      { method: "GET" },
+        `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
+        { method: "GET" },
     );
     const totalTeams = fetchTeams.data.teams;
     console.log("awita", totalTeams)
@@ -239,15 +333,15 @@ export default class Teams {
       const row = `
         <tr ${
           this.isAdmin
-            ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"`
-            : ""
-        }>
+              ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"`
+              : ""
+      }>
           <td><span style="font-size:0.85rem;">${team.leader_name ?? "—"}</span></td>
           <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
           <td><p class="app-card-text text-break">${team.description ?? ""}</p></td>
           <td><div class="app-avatar-group">${membersIcons}</div></td>
           ${
-            this.isAdmin
+          this.isAdmin
               ? `<td>
                  <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
                          data-team-id="${team.id_team}">
@@ -255,7 +349,7 @@ export default class Teams {
                  </button>
                </td>`
               : ""
-          }
+      }
         </tr>
       `;
 
