@@ -6,6 +6,7 @@ import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
+import template from '../../pages/admin_qr.html?raw';
 import { getSelectedEvent } from "../utils/helpers.js";
 
 export default class QRVoting {
@@ -321,13 +322,6 @@ export default class QRVoting {
 
   async render() {
     const app = document.getElementById("app");
-    let template = ''
-    await fetch('../pages/admin_qr.html')
-        .then(response => response.text())
-        .then(data => template = data)
-
-    // Cargar contenido HTML crudo
-
 
     app.innerHTML = `
     ${this.navbar.render()}
