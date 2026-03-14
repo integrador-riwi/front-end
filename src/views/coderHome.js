@@ -382,13 +382,6 @@ export default class CoderHome {
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
 
-    // Event badge back navigation
-    const eventBadge = document.getElementById("eventBadgeBack");
-    if (eventBadge) {
-      eventBadge.addEventListener("click", () => {
-        this.router.navigate("coderEventSelect");
-      });
-    }
 
     // Mount shared invite modal into the DOM (once per render cycle)
     if (!document.getElementById("inviteModalBackdrop")) {
