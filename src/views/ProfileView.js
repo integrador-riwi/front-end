@@ -2,250 +2,303 @@ import "../assets/styles/profile.css";
 import "../assets/styles/coderTeam.css";
 import Navbar from "../components/navbar/navbar.js";
 import { getInitials, getCurrentUser } from "../utils/helpers.js";
+import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import {
-    getMyProfile,
-    getGithubStatus,
-    getGithubAuthUrl,
-    updateProfile,
+  getMyProfile,
+  getGithubStatus,
+  getGithubAuthUrl,
+  updateProfile,
 } from "../services/api.js";
 import { updateUser } from "../utils/auth.js";
 
 export default class ProfileView {
-    constructor(router) {
-        this.router = router;
+  constructor(router) {
+    this.router = router;
+    this.user = getCurrentUser();
+    this.navbar = new Navbar(router);
+    this.navbar.setActiveRoute("profile");
+
+    this.profileDetails = null;
+    this.profileForm = { description: "", clan: this.user?.clan ?? "" };
+    this.isLoading = true;
+    this.isSaving = false;
+    this.errorMessage = "";
+    this.successMessage = "";
+    this.githubStatus = null;
+
+    const params = router.currentParams ?? {};
+    if (params.githubSuccess) {
+      this.successMessage = `Github connected correctly${params.githubUsername ? ` as @${params.githubUsername}` : ""}.`;
+    }
+    if (params.githubError) {
+      this.errorMessage = `Github connection error: ${params.githubError}`;
+    }
+
+    this.loadProfile();
+  }
+
+  async loadProfile() {
+    try {
+      if (!this.user) this.user = getCurrentUser();
+
+      const [data] = await Promise.all([
+        getMyProfile(),
+        this.loadGithubStatus(),
+      ]);
+
+      const profile = data?.profile ?? {};
+      const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
+
+      this.profileDetails = { ...profile, clan: clanValue };
+      this.profileForm = {
+        description: profile.description ?? "",
+        clan: clanValue,
+      };
+
+      this.user =
+        updateUser({
+          id_user: data?.id_user ?? this.user?.id_user,
+          name: data?.name ?? this.user?.name,
+          email: data?.email ?? this.user?.email,
+          role: data?.role ?? this.user?.role,
+          clan: data?.clan ?? clanValue,
+          github_avatar_url:
+            data?.github_avatar_url ?? this.user?.github_avatar_url ?? null,
+        }) || this.user;
+
+      this.errorMessage = "";
+    } catch (error) {
+      console.error("Failed to load profile", error);
+      this.errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        t("profile.loading");
+      this.profileDetails = this.profileDetails || {
+        github_url: "",
+        description: "",
+        clan: this.profileForm.clan,
+      };
+    } finally {
+      this.isLoading = false;
+      this.render();
+    }
+  }
+
+  async loadGithubStatus() {
+    try {
+      this.githubStatus = await getGithubStatus();
+      if (this.githubStatus?.github?.avatarUrl) {
+        updateUser({ github_avatar_url: this.githubStatus.github.avatarUrl });
         this.user = getCurrentUser();
-        this.navbar = new Navbar(router);
-        this.navbar.setActiveRoute("profile");
+      }
+    } catch (error) {
+      console.warn("Github status is not available", error);
+      this.githubStatus = null;
+    }
+  }
 
-        this.profileDetails = null;
-        this.profileForm = {
-            description: "",
-            clan: this.user?.clan ?? "",
-        };
-        this.isLoading = true;
-        this.isSaving = false;
-        this.errorMessage = "";
-        this.successMessage = "";
-        this.githubStatus = null;
+  render() {
+    const app = document.getElementById("app");
 
-        this.loadProfile();
+    if (this.isLoading) {
+      app.innerHTML = `
+        ${this.navbar.render()}
+        <main class="coder-home-main d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">${t("common.loading")}</span>
+          </div>
+        </main>
+      `;
+      this.navbar.attachEventHandlers();
+      return;
     }
 
-    async loadProfile() {
-        try {
-            if (!this.user) {
-                this.user = getCurrentUser();
-            }
+    const githubUsername = this.githubStatus?.github?.username ?? null;
+    const githubConnected = this.githubStatus?.connected === true;
+    const githubExpired = this.githubStatus?.expired === true;
+    const githubAvatarUrl = this.githubStatus?.github?.avatarUrl ?? null;
+    const githubProfileUrl = githubUsername
+      ? `https://github.com/${githubUsername}`
+      : this.profileDetails?.github_url || null;
 
-            const data = await getMyProfile();
-            const profile = data?.profile ?? {};
-            const clanValue = profile.clan ?? data?.clan ?? this.user?.clan ?? "";
+    const statusLabel = githubConnected
+      ? githubExpired
+        ? (t("profile.githubExpired") ?? "Expired")
+        : (t("profile.githubConnected") ?? "Connected")
+      : t("profile.notConnected");
 
-            this.profileDetails = {
-                ...profile,
-                clan: clanValue,
-            };
+    const showGithubLink =
+      githubConnected && (githubUsername || githubProfileUrl);
+    const showConnectBtn = !githubConnected || githubExpired;
 
-            this.profileForm = {
-                description: profile.description ?? "",
-                clan: clanValue,
-            };
-
-            this.user = updateUser({
-                id_user: data?.id_user ?? this.user?.id_user,
-                name: data?.name ?? this.user?.name,
-                email: data?.email ?? this.user?.email,
-                role: data?.role ?? this.user?.role,
-                clan: data?.clan ?? clanValue,
-            }) || this.user;
-
-            this.errorMessage = "";
-        } catch (error) {
-            console.error("Failed to load profile", error);
-            this.errorMessage = error?.response?.data?.message || error?.message || "No se pudo cargar tu perfil.";
-            this.profileDetails = this.profileDetails || {
-                github_url: "",
-                description: "",
-                clan: this.profileForm.clan,
-            };
-        } finally {
-            await this.loadGithubStatus();
-            this.isLoading = false;
-            this.render();
-        }
-    }
-
-    async loadGithubStatus() {
-        try {
-            this.githubStatus = await getGithubStatus();
-        } catch (error) {
-            console.warn("No se pudo obtener el estado de GitHub", error);
-            this.githubStatus = null;
-        }
-    }
-
-    render() {
-        const app = document.getElementById("app");
-
-        if (this.isLoading) {
-            app.innerHTML = `
-              ${this.navbar.render()}
-              <main class="coder-home-main d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-                  <div class="spinner-border text-primary" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                  </div>
-              </main>
-           `;
-            this.navbar.attachEventHandlers();
-            return;
-        }
-
-        const githubLink = this.profileDetails?.github_url;
-        const statusLabel = this.githubStatus?.connected
-            ? this.githubStatus.expired
-                ? "Conexión expirada"
-                : "Conectado"
-            : "No conectado";
-        app.innerHTML = `
+    app.innerHTML = `
       ${this.navbar.render()}
       <main class="coder-home-main profile-viewport">
         <div class="container-xl px-3 px-md-4 py-5">
-            <div class="row g-4 justify-content-center">
-                <div class="col-12 col-md-5 col-lg-4">
-                   <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
-                     <div class="profile-card-topbar"></div>
-                     <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
-                       <span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>
-                     </div>
-                     <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? "User Name")}</h2>
-                     <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
-                     <div class="clan-badge mx-auto d-inline-block">
-                       Clan: ${escapeHtml(this.profileForm.clan || "N/A")}
-                     </div>
-                     <div class="mt-4 profile-card-details text-start">
-                       <p class="profile-label mb-1">Email</p>
-                       <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
-                        <div class="mt-3">
-                          <p class="profile-label mb-1">GitHub actual</p>
-                          ${githubLink ? `<a class="profile-link" href="${escapeHtml(githubLink)}" target="_blank">${escapeHtml(githubLink)}</a>` : `<p class="profile-value">Sin conexión</p>`}
-                          <div class="profile-github-status">
-                            <span class="status-pill ${this.githubStatus?.connected ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                            <button type="button" class="profile-github-btn" id="connectGithubBtn">Conectar GitHub</button>
-                          </div>
-                        </div>
-                      </div>
-                   </div>
-                </div>
+          <div class="row g-4 justify-content-center">
 
-                <div class="col-12 col-md-7 col-lg-8">
-                   <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
-                     <h2 class="profile-section-title mb-3">Editar perfil</h2>
-                     ${this.errorMessage ? `<div class="profile-alert profile-alert-error mb-3">${escapeHtml(this.errorMessage)}</div>` : ""}
-                     ${this.successMessage ? `<div class="profile-alert profile-alert-success mb-3">${escapeHtml(this.successMessage)}</div>` : ""}
-                      <form id="profileForm" class="profile-form">
-                        <div class="profile-form-field">
-                          <label class="profile-label" for="description">Descripción</label>
-                          <textarea id="description" name="description" rows="4" class="profile-input" placeholder="Háblanos de tu experiencia">${escapeHtml(this.profileForm.description)}</textarea>
-                        </div>
-                        <div class="profile-form-field">
-                          <label class="profile-label" for="clan">Clan</label>
-                          <input id="clan" name="clan" type="text" class="profile-input" placeholder="Nombre del clan" value="${escapeHtml(this.profileForm.clan)}" />
-                        </div>
-                       <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
-                         ${this.isSaving ? "Guardando..." : "Guardar cambios"}
-                       </button>
-                     </form>
-                   </div>
+            <div class="col-12 col-lg-5">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-center position-relative overflow-hidden">
+                <div class="profile-card-topbar"></div>
+                <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center mx-auto mt-2">
+                  ${
+                    githubAvatarUrl
+                      ? `<img src="${escapeHtml(githubAvatarUrl)}" alt="GitHub avatar" class="profile-avatar-img" />`
+                      : `<span class="profile-initials">${getInitials(this.user?.name ?? "User")}</span>`
+                  }
                 </div>
+                <h2 class="profile-name mb-1">${escapeHtml(this.user?.name ?? t("profile.defaultName") ?? "User Name")}</h2>
+                <p class="profile-role mb-3">${escapeHtml(this.user?.role ?? "CODER")}</p>
+                <div class="clan-badge mx-auto d-inline-block">
+                  ${t("profile.clan")}: ${escapeHtml(this.profileForm.clan || "N/A")}
+                </div>
+                <div class="mt-4 profile-card-details text-start">
+                  <p class="profile-label mb-1">${t("profile.email")}</p>
+                  <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
+                  <div class="mt-3">
+                    <p class="profile-label mb-1">${t("profile.github")}</p>
+                    <div class="container align-items-center px-0 d-flex justify-content-between">
+                      ${
+                        showGithubLink
+                          ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
+                          : `<p class="profile-value">${t("profile.notConnected")}</p>`
+                      }
+                      <div class="profile-github-status">
+                        <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
+                        ${
+                          showConnectBtn
+                            ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? (t("profile.githubReconnect") ?? "Reconnect with GitHub") : (t("profile.githubConnect") ?? "Connect with GitHub")}</button>`
+                            : ""
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <div class="col-12 col-lg-7">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
+                <h2 class="profile-section-title mb-3">${t("profile.edit")}</h2>
+                <form id="profileForm" class="profile-form">
+                  <div class="profile-form-field">
+                    <label class="profile-label" for="description">${t("profile.description")}</label>
+                    <textarea id="description" name="description" rows="4" class="profile-input"
+                      placeholder="${t("profile.placeholderDescription")}">${escapeHtml(this.profileForm.description)}</textarea>
+                  </div>
+                  <div class="profile-form-field">
+                    <label class="profile-label" for="clan">${t("profile.clan")}</label>
+                    <input id="clan" name="clan" type="text" class="profile-input"
+                      value="${escapeHtml(this.profileForm.clan || "N/A")}"
+                      readonly style="opacity:0.6;cursor:not-allowed;background:var(--color-bg,#f3f4f8);" />
+                    <p class="cs-hint mt-1" style="font-size:0.78rem;color:var(--text-muted);">${t("profile.clanHint")}</p>
+                  </div>
+                  <button type="submit" class="profile-btn" ${this.isSaving ? "disabled" : ""}>
+                    ${this.isSaving ? t("common.loading") : t("common.save")}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
         </div>
       </main>
     `;
 
-        this.navbar.attachEventHandlers();
-        this.attachEventHandlers();
+    this.navbar.attachEventHandlers();
+    this.attachEventHandlers();
+    if (this.errorMessage || this.successMessage) this._showBanner();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
     }
+  }
 
-    attachEventHandlers() {
-        const form = document.getElementById("profileForm");
-        form?.addEventListener("submit", (e) => this.handleSave(e));
+  attachEventHandlers() {
+    const form = document.getElementById("profileForm");
+    form?.addEventListener("submit", (e) => this.handleSave(e));
 
-        form?.querySelectorAll("input, textarea").forEach((input) => {
-            input.addEventListener("input", (event) => {
-                const { name, value } = event.target;
-                if (!name) return;
-                this.profileForm = {
-                    ...this.profileForm,
-                    [name]: value,
-                };
-                this.errorMessage = "";
-                this.successMessage = "";
-            });
-        });
-
-        const githubBtn = document.getElementById("connectGithubBtn");
-        githubBtn?.addEventListener("click", async () => {
-            try {
-                const url = await getGithubAuthUrl();
-                if (!url) {
-                    throw new Error("No se pudo obtener la URL de GitHub");
-                }
-                window.open(url, "_blank");
-                this.successMessage = "Se abrirá GitHub para conectar. Recarga la página cuando termines.";
-                this.render();
-            } catch (error) {
-                console.error("Error al obtener URL de GitHub", error);
-                this.errorMessage = error?.message || "No se pudo iniciar la conexión con GitHub.";
-                this.render();
-            }
-        });
-    }
-
-    async handleSave(event) {
-        event.preventDefault();
-
-        if (this.isSaving) return;
-
-        this.isSaving = true;
+    form?.querySelectorAll("input, textarea").forEach((input) => {
+      input.addEventListener("input", (event) => {
+        const { name, value } = event.target;
+        if (!name) return;
+        this.profileForm = { ...this.profileForm, [name]: value };
         this.errorMessage = "";
         this.successMessage = "";
+      });
+    });
+
+    const githubBtn = document.getElementById("connectGithubBtn");
+    githubBtn?.addEventListener("click", async () => {
+      try {
+        const url = await getGithubAuthUrl();
+        if (!url) throw new Error("No se pudo obtener la URL de GitHub");
+        window.location.href = url;
+      } catch (error) {
+        console.error("Error al obtener URL de GitHub", error);
+        this.errorMessage = error?.message || t("common.error");
         this.render();
+      }
+    });
+  }
 
-        try {
-            const updatedProfile = await updateProfile({
-                description: this.profileForm.description,
-                clan: this.profileForm.clan,
-            });
+  async handleSave(event) {
+    event.preventDefault();
+    if (this.isSaving) return;
 
-            this.profileDetails = {
-                ...this.profileDetails,
-                ...updatedProfile,
-            };
+    this.isSaving = true;
+    this.errorMessage = "";
+    this.successMessage = "";
+    this._setSaveBtn(true);
 
-            const clanValue = updatedProfile.clan ?? this.profileForm.clan;
-            this.profileForm = {
-                description: updatedProfile.description ?? this.profileForm.description,
-                clan: clanValue,
-            };
-
-            this.user = updateUser({ clan: clanValue }) || this.user;
-            this.successMessage = "Perfil actualizado correctamente.";
-        } catch (error) {
-            console.error("Error updating profile", error);
-            this.errorMessage = error?.response?.data?.message || error?.message || "No se pudo guardar el perfil.";
-        } finally {
-            this.isSaving = false;
-            this.render();
-        }
+    try {
+      const updatedProfile = await updateProfile({
+        description: this.profileForm.description,
+      });
+      this.profileDetails = { ...this.profileDetails, ...updatedProfile };
+      this.profileForm = {
+        description: updatedProfile.description ?? this.profileForm.description,
+        clan: this.profileForm.clan,
+      };
+      this.successMessage =
+        t("profile.savedOk") ?? "Profile updated correctly.";
+    } catch (error) {
+      console.error("Error updating profile", error);
+      this.errorMessage =
+        error?.response?.data?.message || error?.message || t("common.error");
+    } finally {
+      this.isSaving = false;
+      this._setSaveBtn(false);
+      this._showBanner();
     }
+  }
+
+  _setSaveBtn(loading) {
+    const btn = document.querySelector(".profile-btn[type='submit']");
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? t("common.loading") : t("common.save");
+  }
+
+  _showBanner() {
+    if (this.errorMessage) {
+      toast.error(t("common.errorTitle"), this.errorMessage);
+    } else if (this.successMessage) {
+      toast.success(t("common.successTitle"), this.successMessage);
+    }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
+  }
 }
 
 function escapeHtml(value) {
-    if (value === null || value === undefined) return "";
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

@@ -1,14 +1,61 @@
 /* ── Sidebar shell ── */
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 224px; /* w-56 */
+  width: 240px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  z-index: 50;
   background-color: #1c2333;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.hamburger {
+  display: none;
+  /* position: fixed; */
+  top: 15px;
+  left: 15px;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 190px;
+  }
+  .sidebar-user-info .sidebar-user-name {
+    white-space: initial;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 768px) {
+  .sidebar {
+    position: relative;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .sidebar-brand {
+    padding: 0px !important;
+    border-bottom: none !important;
+  }
+
+    .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .burger {
+    display: block;
+  }
 }
 
 /* ── Logo area ── */
@@ -40,13 +87,21 @@
   white-space: nowrap;
 }
 
+.return-home{
+  border-radius: 10px;
+}
+
+.return-home:hover{
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* ── Nav area ── */
 .sidebar-nav {
   flex: 1;
   padding: 20px 12px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -56,7 +111,7 @@
   background: transparent;
 }
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 99px;
 }
 
@@ -80,12 +135,14 @@
   border: none;
   background: transparent;
   color: #8892a4;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: "Ubuntu", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
@@ -174,12 +231,14 @@
   border: none;
   background: transparent;
   color: #6b7a99;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: "Ubuntu", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .sidebar-logout svg {
@@ -193,7 +252,42 @@
   color: #f87171;
 }
 
-/* ── Main content offset ── */
-.sidebar-offset {
-  margin-left: 224px;
+/* Mobile top navbar */
+.mobile-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--sidebar-bg); /* match your sidebar color */
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.mobile-nav-links {
+  scrollbar-width: none; /* hide scrollbar on Firefox */
+}
+.mobile-nav-links::-webkit-scrollbar {
+  display: none;
+} /* hide scrollbar on Chrome */
+
+.mobile-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mobile-nav-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-logout svg {
+    width: 30px;
+    height: 30px;
+  }
 }

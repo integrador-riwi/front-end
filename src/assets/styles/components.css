@@ -12,11 +12,10 @@
 .app-header {
   background-color: var(--bg-panel);
   color: var(--color-text-header);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 20;
-  margin-left: 224px;
 }
 
 .app-header-inner {
@@ -127,4 +126,22 @@
 
 .timeline-dot-success {
   background-color: var(--color-success);
+}
+
+/* Spinner botón create event */
+.ce-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: ce-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes ce-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

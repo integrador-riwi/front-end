@@ -1,170 +1,86 @@
-import "../../assets/styles/header.css";
-import { getHeaderLinks, getHeaderLayout } from "./header-config.js";
-import { getCurrentUser, logout } from "../../utils/helpers.js";
-import { icons } from "../../utils/icons.js";
+import { t } from "../../utils/i18n.js";
 
-export default class Header {
-  constructor(router) {
-    this.router = router;
-    this.user = getCurrentUser();
-  }
+const HEADER_LINKS_BY_VIEW = () => ({
+  dashboard: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+  ],
+  "events/create": [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.management"), route: "settings" },
+    { label: t("nav.createNew"), route: "events/create" },
+  ],
+  tlDashboard: [
+    { label: t("nav.events"), route: "coderEventSelect" },
+    { label: t("nav.teams"), route: null },
+  ],
+  projects: [
+    { label: t("nav.dashboard"), route: "dashboard" },
+    { label: t("nav.teamsProjects"), route: "projects" },
+  ],
+  teamDetail: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.teamDetails"), route: null },
+  ],
+  qr: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.qrVoting"), route: null },
+  ],
+  coderHome: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.teamDetails"), route: null },
+  ],
+  ranking: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.ranking"), route: "ranking" },
+  ],
+});
 
-  mountBreadcrumb() {
-    const route = this.router.currentRoute;
+const HEADER_LAYOUT_BY_ROUTE = () => ({
+  dashboard: {
+    variant: "details",
+    title: t("nav.dashboard"),
+  },
+  coderHome: {
+    variant: "details",
+    title: t("nav.teamDetails"),
+  },
+  "events/create": {
+    variant: "create-event",
+    title: t("nav.createNewEvent"),
+  },
+  tlDashboard: {
+    variant: "details",
+    title: t("nav.teams"),
+  },
+  qr: {
+    variant: "details",
+    title: t("nav.qrVoting"),
+  },
+  projects: {
+    variant: "teams",
+    title: t("nav.projectsOverview"),
+  },
+  teamDetail: {
+    variant: "details",
+    title: t("nav.teamDetails"),
+  },
+  ranking: {
+    variant: "ranking",
+    title: t("nav.ranking"),
+  },
+  details: {
+    variant: "details",
+    title: t("nav.eventDetails"),
+  },
+});
 
-    const links = getHeaderLinks(route);
+export const getHeaderLinks = (view) => {
+  return HEADER_LINKS_BY_VIEW()[view] ?? [];
+};
 
-    const breadcrumbHTML = this.renderBreadcrumb({
-      links,
-      currentRoute: route,
-      icons,
-    });
-
-    const container = document.getElementById("breadcrumb");
-
-    if (container) {
-      container.innerHTML = breadcrumbHTML;
-    }
-  }
-
-  renderBreadcrumb({ links }) {
-    if (!links || links.length === 0) return "";
-
-    return links
-      .map((item, index) => {
-        const isLast = index === links.length - 1;
-
-        if (isLast) {
-          return `
-          <li class="breadcrumb-item active" aria-current="page">
-            ${item.label}
-          </li>
-        `;
-        }
-
-        return `
-        <li class="breadcrumb-item">
-          <a href="#" data-route="${item.route}" class="breadcrumb-link">
-            ${item.label}
-          </a>
-        </li>
-      `;
-      })
-      .join("");
-  }
-
-  render() {
-    const route = this.router.currentRoute;
-    const layout = getHeaderLayout(route);
-
-    if (!layout) return "";
-
-    if (layout.variant === "create-event") {
-      return this.renderCreateEventHeader(layout);
-    }
-
-    if (layout.variant === "teams") {
-      return this.renderHeader(layout);
-    }
-
-    if (layout.variant === "ranking") {
-      return this.renderHeader(layout);
-    }
-
-    if (layout.variant === "details") {
-      return this.renderHeader(layout);
-    }
-
-    return "";
-  }
-
-  renderCreateEventHeader(layout) {
-    return `
-    <header class="app-header">
-      <div class="container app-header-inner">
-        
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-          
-          <div>
-            <nav class="app-breadcrumb">
-              <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
-            </nav>
-            <h1 class="app-page-title mb-0">
-              ${layout.title}
-            </h1>
-          </div>
-
-          <div class="d-flex align-items-center gap-2">
-  
-            <button class="app-btn-primary d-flex align-items-center gap-2">
-              ${icons.save()}
-              Publish Event
-            </button>
-          </div>
-
-        </div>
-
-      </div>
-    </header>
-  `;
-  }
-
-  renderHeader(layout) {
-    return `
-    <header class="app-header">
-      
-      <div class="container app-header-inner">
-        
-        <nav class="app-breadcrumb">
-          <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
-        </nav>
-          <h1 class="app-page-title mb-0">
-              ${layout.title}
-          </h1>
-      </div>
-    </header>
-  `;
-  }
-
-    renderHeader(layout) {
-    return `
-    <header class="app-header">
-      
-      <div class="container app-header-inner">
-        
-        <nav class="app-breadcrumb">
-          <ol id="breadcrumb" class="breadcrumb mb-2"></ol>
-        </nav>
-          <h1 class="app-page-title mb-0">
-              ${layout.title}
-          </h1>
-      </div>
-    </header>
-  `;
-  }
-
-  attachEventHandlers() {
-    document.querySelectorAll(".nav-link").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document
-          .querySelectorAll(".nav-link")
-          .forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        this.router.navigate(btn.dataset.route);
-      });
-    });
-
-    document.querySelectorAll(".breadcrumb-link").forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const route = link.dataset.route;
-        this.router.navigate(route);
-      });
-    });
-
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
-      logout();
-      this.router.navigate("login");
-    });
-  }
-}
+export const getHeaderLayout = (route) => {
+  return HEADER_LAYOUT_BY_ROUTE()[route] ?? null;
+};

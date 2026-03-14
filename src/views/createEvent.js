@@ -1,9 +1,40 @@
-import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
-import { getUser } from "../utils/auth.js";
-import { createEvent } from "../services/api-events.js";
 import "../assets/styles/dashboard.css";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/components.css";
+import "../assets/styles/eventCreated.css";
+import "../assets/styles/rubricBuilder.css";
+import Navbar from "../components/navbar/navbar.js";
+import Header from "../components/header/header-config.js";
+import { getUser } from "../utils/auth.js";
+import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
+import * as XLSX from "xlsx";
+
+const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
+const AREA_LABELS = {
+  DEVELOPMENT: "Development (TL Dev)",
+  SOFT_SKILLS: "Soft Skills (TL Soft Skills)",
+  ENGLISH: "English (TL English)",
+};
+const AREA_COLOR = {
+  DEVELOPMENT: "#6b5cff",
+  SOFT_SKILLS: "#5acca4",
+  ENGLISH: "#eaa2fc",
+  INACTIVE: "#d1d5db",
+};
+
+const ALL_CLANS = [
+  "Magdalena",
+  "Esthercita",
+  "Garabato",
+  "Micaela",
+  "Cayena",
+  "Malecón",
+  "Cortissoz",
+  "Turing",
+  "Tesla",
+  "McCarthy",
+];
 
 export default class CreateEvent {
   constructor(router) {
@@ -12,169 +43,919 @@ export default class CreateEvent {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.loading = false;
-    this.error = null;
+    this.targetClans = [];
+    this.githubOrgs = [];
+    this.githubConnected = false;
+    this.githubUsername = null;
+
+    // Rubric Builder state
+    this.rubricMode = null; // 'platform' or 'template'
+    this.templateFile = null;
+    this.rubricAreas = [
+      {
+        id: "dev",
+        type: "DEVELOPMENT",
+        title: AREA_LABELS["DEVELOPMENT"],
+        weight: 0,
+        criteria: [],
+        isExpanded: true,
+      },
+      {
+        id: "soft",
+        type: "SOFT_SKILLS",
+        title: AREA_LABELS["SOFT_SKILLS"],
+        weight: 0,
+        criteria: [],
+        isExpanded: false,
+      },
+      {
+        id: "eng",
+        type: "ENGLISH",
+        title: AREA_LABELS["ENGLISH"],
+        weight: 0,
+        criteria: [],
+        isExpanded: false,
+      },
+    ];
   }
 
-  getFormData() {
-    const inputs = document.querySelectorAll('.app-input');
-    const titleInput = inputs[0];
-    const descriptionInput = inputs[1];
-    const categorySelect = inputs[2];
-    const visibilitySelect = inputs[3];
-    
-    const dates = document.querySelectorAll('input[type="date"]');
-    
+  // ── Event Data ──────────────────────────────────────────────────────────────
+
+  _getEventData() {
     return {
-      title: titleInput?.value || '',
-      description: descriptionInput?.value || '',
-      eventType: this.mapCategoryToEventType(categorySelect?.value || ''),
-      cohort: '',
-      route: this.mapVisibilityToRoute(visibilitySelect?.value || ''),
-      eventDate: dates[0]?.value ? `${dates[0].value}T10:00:00` : null,
-      endDate: dates[3]?.value ? `${dates[3].value}T18:00:00` : null,
-      status: 'UPCOMING'
+      title: document.getElementById("ev-title")?.value?.trim() ?? "",
+      description:
+        document.getElementById("ev-description")?.value?.trim() ?? "",
+      eventType: document.getElementById("ev-type")?.value ?? "CAPSTONE",
+      route: document.getElementById("ev-route")?.value ?? "BASIC",
+      cohort: document.getElementById("ev-cohort")?.value?.trim() ?? "",
+      githubOrg:
+        document.getElementById("ev-github-org")?.value?.trim() ||
+        this.selectedGithubOrg ||
+        null,
+      maxTeamSize: parseInt(
+        document.getElementById("ev-max-team")?.value ?? "5",
+      ),
+      eventDate: document.getElementById("ev-start-date")?.value
+        ? `${document.getElementById("ev-start-date").value}T10:00:00`
+        : null,
+      endDate: document.getElementById("ev-end-date")?.value
+        ? `${document.getElementById("ev-end-date").value}T18:00:00`
+        : null,
+      status: "UPCOMING",
+      targetClans: this.targetClans.length > 0 ? this.targetClans : null,
     };
   }
 
-  mapCategoryToEventType(category) {
-    const map = {
-      'Academic Project': 'CAPSTONE',
-      'Social Event': 'EVENT',
-      'Workshop': 'WORKSHOP'
-    };
-    return map[category] || 'CAPSTONE';
-  }
-
-  mapVisibilityToRoute(visibility) {
-    const map = {
-      'Public': 'BASIC',
-      'Private': 'ADVANCED',
-      'Internal Only': 'BASIC'
-    };
-    return map[visibility] || 'BASIC';
-  }
-
-  validateForm() {
-    const data = this.getFormData();
-    if (!data.title.trim()) {
-      return 'Event title is required';
+  _toggleClan(clan) {
+    if (this.targetClans.includes(clan)) {
+      this.targetClans = this.targetClans.filter((c) => c !== clan);
+    } else {
+      this.targetClans.push(clan);
     }
-    if (!data.description.trim()) {
-      return 'Description is required';
+    this._rerenderClanPicker();
+  }
+
+  _selectAllClans() {
+    this.targetClans = [];
+    this._rerenderClanPicker();
+  }
+
+  _rerenderClanPicker() {
+    const container = document.getElementById("clan-picker-body");
+    if (container) container.innerHTML = this._renderClanPickerBody();
+    this._attachClanHandlers();
+    this._updateClanSummary();
+  }
+
+  _updateClanSummary() {
+    const summary = document.getElementById("clan-summary");
+    if (!summary) return;
+    if (this.targetClans.length === 0) {
+      summary.textContent = t("createEvent.allClans") ?? "All clans";
+      summary.className = "ce-clan-summary ce-clan-summary--all";
+    } else {
+      summary.textContent = this.targetClans.join(", ");
+      summary.className = "ce-clan-summary ce-clan-summary--partial";
     }
+  }
+
+  _renderClanPickerBody() {
+    const allSelected = this.targetClans.length === 0;
+    return `
+      <button class="ce-clan-chip ${allSelected ? "ce-clan-chip--active" : ""}" data-clan="ALL" type="button">
+        ${t("createEvent.allClans")}
+      </button>
+      ${ALL_CLANS.map((clan) => {
+        const active = this.targetClans.includes(clan);
+        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+      }).join("")}
+    `;
+  }
+
+  _renderClanSection() {
+    return `
+      <div class="ce-clan-section">
+        <label class="form-label fw-semibold">${t("createEvent.participatingClans")}</label>
+        <p class="ce-section-subtitle" style="margin-bottom: 10px;">
+          Select the clans that will see this event, or leave it as "${t("createEvent.allClans") ?? "All clans"}".
+        </p>
+        <div class="ce-clan-picker" id="clan-picker-body">
+          ${this._renderClanPickerBody()}
+        </div>
+        <div class="ce-clan-footer">
+          <span>Scope: </span>
+          <span id="clan-summary" class="ce-clan-summary ce-clan-summary--all">${t("createEvent.allClans") ?? "All clans"}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _attachClanHandlers() {
+    document.querySelectorAll(".ce-clan-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.clan === "ALL") {
+          this._selectAllClans();
+        } else {
+          this._toggleClan(btn.dataset.clan);
+        }
+      });
+    });
+  }
+
+  _buildRubricsPayload() {
+    const payload = [];
+    if (this.rubricMode !== "platform") return payload;
+
+    for (const area of this.rubricAreas) {
+      for (const crit of area.criteria) {
+        payload.push({
+          area: area.type,
+          name: crit.name || t("createEvent.untitledCriteria"),
+          description: crit.description || null,
+          weight: crit.weight / 100, // convert percentage to 0-1
+          grades: crit.levels.map((l) => ({
+            score: l.score,
+            description: l.description,
+            name: l.name,
+          })),
+        });
+      }
+    }
+    return payload;
+  }
+
+  // ── Validation ─────────────────────────────────────────────────────────────
+
+  _validate() {
+    const ev = this._getEventData();
+    if (!ev.title)
+      return t("createEvent.validTitle") ?? "Event title is required.";
+    if (!ev.eventDate)
+      return t("createEvent.validDate") ?? "Start date is required.";
+
+    if (this.rubricMode === "platform") {
+      this._recalculateWeights();
+      let totalWeight = this._getTotalWeight();
+      for (const a of this.rubricAreas) {
+        for (const c of a.criteria) {
+          if (!c.name) return `A criteria for ${a.title} has no name.`;
+          if (c.levels.length === 0)
+            return `The criteria "${c.name}" has no performance levels.`;
+        }
+      }
+      if (Math.abs(totalWeight - 100) > 0.1 && totalWeight > 0) {
+        return `Total rubric weight is ${totalWeight}%. It must be exactly 100%.`;
+      }
+      if (totalWeight === 0) {
+        return `You must define at least one criteria with weight greater than 0%.`;
+      }
+    } else if (this.rubricMode === "template" && !this.templateFile) {
+      return `Please upload a template file.`;
+    }
+
     return null;
   }
 
-  showError(message) {
-    const container = document.querySelector('.container.py-3');
-    const existingAlert = container?.querySelector('.alert');
-    if (existingAlert) existingAlert.remove();
-    
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-danger rounded-4 mb-4';
-    alert.textContent = message;
-    container?.insertBefore(alert, container.firstChild);
-  }
+  // ── Submit ─────────────────────────────────────────────────────────────────
 
-  showSuccess(message) {
-    const container = document.querySelector('.container.py-3');
-    const existingAlert = container?.querySelector('.alert');
-    if (existingAlert) existingAlert.remove();
-    
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success rounded-4 mb-4';
-    alert.textContent = message;
-    container?.insertBefore(alert, container.firstChild);
-  }
-
-  setLoading(isLoading) {
-    const submitBtn = document.getElementById('submit-event-btn');
-    if (submitBtn) {
-      submitBtn.disabled = isLoading;
-      submitBtn.textContent = isLoading ? 'Creating...' : 'Create Event';
-    }
-  }
-
-  clearForm() {
-    const inputs = document.querySelectorAll('.app-input');
-    inputs.forEach(input => input.value = '');
-    const dates = document.querySelectorAll('input[type="date"]');
-    dates.forEach(input => input.value = '');
-  }
-
-  async handleSubmit(e) {
-    e.preventDefault();
-    
-    const validationError = this.validateForm();
-    if (validationError) {
-      this.showError(validationError);
+  async _handleSubmit() {
+    const err = this._validate();
+    if (err) {
+      toast.error(t("createEvent.validationError"), err);
       return;
     }
 
-    this.setLoading(true);
-    this.error = null;
-
+    this._setLoading(true);
     try {
-      const data = this.getFormData();
-      await createEvent(data);
-      
-      this.showSuccess('Event created successfully!');
-      this.clearForm();
-      
-      setTimeout(() => {
-        this.router.navigate('events');
-      }, 1500);
-      
-    } catch (err) {
-      console.error('Failed to create event:', err);
-      this.showError(err.message || 'Failed to create event. Please try again.');
+      const body = {
+        ...this._getEventData(),
+        rubrics:
+          this.rubricMode === "platform" ? this._buildRubricsPayload() : [],
+      };
+      await apiFetch("/events", { method: "POST", body });
+      toast.success(
+        t("createEvent.successTitle") ?? "Event Created!",
+        t("createEvent.successMsg") ??
+          "The event has been created successfully.",
+      );
+      setTimeout(() => this.router.navigate("events"), 1600);
+    } catch (e) {
+      toast.error(
+        t("common.errorTitle"),
+        e.message ?? t("createEvent.errorCreating"),
+      );
     } finally {
-      this.setLoading(false);
+      this._setLoading(false);
     }
   }
+
+  _generateId() {
+    return Math.random().toString(36).substr(2, 9);
+  }
+
+  _rerenderRubricSection() {
+    const container = document.getElementById("ce-rubrics-container");
+    if (container) {
+      container.innerHTML = this._renderRubricState();
+      this._attachRubricHandlers();
+    }
+  }
+
+  // ── Template Download ──────────────────────────────────────────────────────
+
+  _downloadTemplate() {
+    const link = document.createElement("a");
+    link.href = "/templates/Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    link.download = "Plantilla_Carga_Rubricas_Proyectos.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success(
+      "Descarga iniciada",
+      "La plantilla se descargó correctamente.",
+    );
+  }
+
+  _addCriteria(areaId) {
+    const area = this.rubricAreas.find((a) => a.id === areaId);
+    if (area) {
+      area.criteria.push({
+        id: this._generateId(),
+        name: "",
+        description: "",
+        weight: 0,
+        isExpanded: true,
+        levels: [
+          {
+            score: 0,
+            name: "Unsatisfactory",
+            description: "",
+            color: "#ff4d4f",
+          },
+          { score: 50, name: "Good", description: "", color: "#faad14" },
+          { score: 100, name: "Excellent", description: "", color: "#52c41a" },
+        ],
+      });
+      area.isExpanded = true;
+      this._recalculateWeights();
+      this._rerenderRubricSection();
+    }
+  }
+
+  _removeCriteria(areaId, critId) {
+    const area = this.rubricAreas.find((a) => a.id === areaId);
+    if (area) {
+      area.criteria = area.criteria.filter((c) => c.id !== critId);
+      this._recalculateWeights();
+      this._rerenderRubricSection();
+    }
+  }
+
+  _addLevel(areaId, critId) {
+    const area = this.rubricAreas.find((a) => a.id === areaId);
+    if (area) {
+      const crit = area.criteria.find((c) => c.id === critId);
+      if (crit) {
+        crit.levels.push({
+          score: 0,
+          name: "New Level",
+          description: "",
+          color: "#1890ff",
+        });
+        this._rerenderRubricSection();
+      }
+    }
+  }
+
+  _removeLevel(areaId, critId, levelIndex) {
+    const area = this.rubricAreas.find((a) => a.id === areaId);
+    if (area) {
+      const crit = area.criteria.find((c) => c.id === critId);
+      if (crit) {
+        crit.levels.splice(levelIndex, 1);
+        this._rerenderRubricSection();
+      }
+    }
+  }
+
+  _recalculateWeights() {
+    this.rubricAreas.forEach((area) => {
+      let areaW = 0;
+      area.criteria.forEach((crit) => {
+        const wInput = document.getElementById(`weight-${crit.id}`);
+        if (wInput) crit.weight = parseFloat(wInput.value) || 0;
+        areaW += crit.weight;
+      });
+      area.weight = areaW;
+    });
+  }
+
+  _getTotalWeight() {
+    return this.rubricAreas.reduce((sum, a) => sum + a.weight, 0);
+  }
+
+  _renderRubricState() {
+    if (!this.rubricMode) {
+      return `
+         <div class="rubric-onboarding text-center py-5">
+            <h4 class="fw-bold mb-2">${t("createEvent.createNewRubric")}</h4>
+            <p class="text-muted mb-4">Select how you want to build your evaluation framework.</p>
+            <div class="d-flex justify-content-center gap-4">
+              <div class="rubric-opt-card" id="btn-mode-platform">
+                <div class="rubric-opt-icon flex-center bg-primary-soft text-primary mb-3">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </div>
+                <h5 class="fw-bold mb-2">${t("createEvent.createInPlatform")}</h5>
+                <p class="text-muted small mb-0">Build your rubric step by step using our interactive editor.</p>
+              </div>
+              <div class="rubric-opt-card" id="btn-mode-template">
+                <div class="rubric-opt-icon flex-center bg-secondary-soft text-secondary mb-3">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <h5 class="fw-bold mb-2">${t("createEvent.uploadExcel")}</h5>
+                <p class="text-muted small mb-0">Download our template, complete it and upload it to generate your rubric instantly.</p>
+              </div>
+            </div>
+         </div>
+       `;
+    }
+
+    if (this.rubricMode === "template") {
+      return `
+          <div class="rubric-builder fade-in">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2" id="btn-mode-back">←</button> ${t("createEvent.useTemplate")}</h5>
+            </div>
+            <div class="card p-4 shadow-sm text-center bg-light">
+              <div class="mb-4">
+                <svg width="48" height="48" fill="none" stroke="#6c757d" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <h6 class="fw-bold">Upload your .xlsx file</h6>
+              <p class="text-muted small mb-4">Download the template, complete it and drag it here.</p>
+              <div class="d-flex justify-content-center gap-3">
+                <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
+                <button class="btn btn-primary" type="button">${t("createEvent.selectFile")}</button>
+              </div>
+            </div>
+          </div>
+       `;
+    }
+
+    // Platform mode
+    this._recalculateWeights();
+    const totalW = this._getTotalWeight();
+    const isWeightOk = Math.abs(totalW - 100) < 0.1;
+    const compCriteria = this.rubricAreas.reduce(
+      (s, a) => s + a.criteria.length,
+      0,
+    );
+
+    return `
+       <div class="rubric-builder fade-in">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0"><button class="btn btn-sm btn-light me-2 cursor-pointer" id="btn-mode-back">←</button> ${t("createEvent.modelRubric")}</h5>
+            <div class="d-flex align-items-center gap-3">
+               <div class="text-end">
+                 <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">${t("createEvent.totalWeight")}</div>
+                 <div class="fw-bold ${isWeightOk ? "text-success" : "text-primary"}">${totalW}% / 100%</div>
+               </div>
+               <div class="progress" style="width: 150px; height: 8px; border-radius: 4px;">
+                 <div class="progress-bar ${isWeightOk ? "bg-success" : "bg-primary"}" role="progressbar" style="width: ${Math.min(totalW, 100)}%;"></div>
+               </div>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-12">
+               <div class="bg-light p-3 rounded d-flex justify-content-between align-items-center border">
+                  <div>
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-1">${t("createEvent.rubricProgress")}</span>
+                    <span class="badge bg-white text-dark border me-2">Areas: 3</span>
+                    <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
+                  </div>
+                  ${
+                    !isWeightOk
+                      ? `
+                    <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Total weight must be 100%
+                    </div>
+                  `
+                      : `
+                     <div class="text-success small fw-semibold d-flex align-items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      Weight correctly assigned
+                    </div>
+                  `
+                  }
+               </div>
+            </div>
+          </div>
+
+          <div class="rubric-areas">
+            ${this.rubricAreas.map((area) => this._renderAreaItem(area)).join("")}
+          </div>
+       </div>
+     `;
+  }
+
+  _renderAreaItem(area) {
+    const hasCrit = area.criteria.length > 0;
+    const isActivated = area.weight > 0;
+    const badgeColor = isActivated
+      ? AREA_COLOR[area.type] || "#6c63ff"
+      : AREA_COLOR.INACTIVE;
+
+    return `
+        <div class="card shadow-sm mb-3 rubric-area-card ${!isActivated ? "area-inactive" : ""}" style="border-left: 4px solid ${badgeColor}; border-radius: 8px; overflow:hidden;">
+           <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+              <div class="d-flex align-items-center gap-3 cursor-pointer area-toggle-btn" data-area="${area.id}">
+                 <div class="text-muted">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="${area.isExpanded ? "6 9 12 15 18 9" : "9 18 15 12 9 6"}"/></svg>
+                 </div>
+                 <div>
+                   <h6 class="mb-0 fw-bold" style="${!isActivated ? "color: #8898aa;" : ""}">${area.title} ${!isActivated ? '<span class="ms-2 fw-normal small">(Inactive)</span>' : ""}</h6>
+                 </div>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                 <span class="badge ${isActivated ? "bg-light text-dark" : "bg-transparent text-muted"} border">WEIGHT: ${area.weight}%</span>
+              </div>
+           </div>
+           
+           ${
+             area.isExpanded
+               ? `
+             <div class="card-body bg-light border-top">
+                ${
+                  !hasCrit
+                    ? `
+                   <div class="text-center py-3">
+                     <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
+                   </div>
+                `
+                    : `
+                   <div class="criteria-list">
+                      ${area.criteria.map((crit) => this._renderCriteriaItem(area, crit)).join("")}
+                   </div>
+                `
+                }
+                <div class="mt-3">
+                  <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Criteria
+                  </button>
+                </div>
+             </div>
+           `
+               : ""
+           }
+        </div>
+     `;
+  }
+
+  _renderCriteriaItem(area, crit) {
+    return `
+        <div class="criteria-item p-3 mb-3 border rounded bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1 pe-3">
+                    <input type="text" id="name-${crit.id}" class="form-control form-control-sm fw-bold border-0 bg-transparent px-1 crit-input" placeholder="${t("createEvent.critName")}" value="${crit.name}">
+                    <input type="text" id="desc-${crit.id}" class="form-control form-control-sm border-0 bg-transparent px-1 text-muted crit-input mt-1" placeholder="${t("createEvent.critDesc")}" value="${crit.description}">
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="input-group input-group-sm" style="width: 100px;">
+                        <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end" placeholder="0" value="${crit.weight}">
+                        <span class="input-group-text bg-white">%</span>
+                    </div>
+                    <button class="btn btn-sm btn-light text-danger btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="levels-container mt-3">
+                <div class="row g-2">
+                    ${crit.levels
+                      .map(
+                        (lvl, index) => `
+                        <div class="col-md-4">
+                            <div class="level-card h-100 p-2 border rounded" style="border-top: 3px solid ${lvl.color} !important; background: white;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge" style="background-color: ${lvl.color}15; color: ${lvl.color}; font-size: 0.7rem;">LEVEL ${index + 1} - ${lvl.score}%</span>
+                                    <button class="btn btn-sm p-0 text-muted btn-rm-lvl" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control form-control-sm fw-bold border-0 px-1 mb-1 lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
+                                <textarea class="form-control form-control-sm border-0 px-1 text-muted lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="2">${lvl.description}</textarea>
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    <label class="small text-muted mb-0">Pts %:</label>
+                                    <input type="number" class="form-control form-control-sm px-1 lvl-input" style="width: 50px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
+                                    <input type="color" class="form-control form-control-color form-control-sm p-0 border-0 ms-auto lvl-input" style="width:20px;height:20px;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}">
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                      )
+                      .join("")}
+                    <div class="col-md-12 mt-2">
+                        <button class="btn btn-sm btn-light w-100 border border-dashed text-primary btn-add-lvl" data-area="${area.id}" data-crit="${crit.id}">
+                            + Add Level
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+  }
+
+  _attachRubricHandlers() {
+    const saveInputs = () => {
+      document.querySelectorAll(".crit-input").forEach((el) => {
+        const id = el.id.split("-")[1];
+        const field = el.id.split("-")[0];
+        this.rubricAreas.forEach((a) => {
+          const c = a.criteria.find((crit) => crit.id === id);
+          if (c) {
+            if (field === "weight") c.weight = parseFloat(el.value) || 0;
+            if (field === "name") c.name = el.value;
+            if (field === "desc") c.description = el.value;
+          }
+        });
+      });
+      document.querySelectorAll(".lvl-input").forEach((el) => {
+        const aId = el.dataset.area;
+        const cId = el.dataset.crit;
+        const index = parseInt(el.dataset.index);
+        const field = el.dataset.field;
+        const a = this.rubricAreas.find((area) => area.id === aId);
+        if (a) {
+          const c = a.criteria.find((crit) => crit.id === cId);
+          if (c && c.levels[index]) {
+            if (field === "score")
+              c.levels[index].score = parseFloat(el.value) || 0;
+            if (field === "name") c.levels[index].name = el.value;
+            if (field === "description") c.levels[index].description = el.value;
+            if (field === "color") c.levels[index].color = el.value;
+          }
+        }
+      });
+    };
+
+    document
+      .getElementById("btn-mode-platform")
+      ?.addEventListener("click", () => {
+        this.rubricMode = "platform";
+        this._rerenderRubricSection();
+      });
+
+    document
+      .getElementById("btn-mode-template")
+      ?.addEventListener("click", () => {
+        this.rubricMode = "template";
+        this._rerenderRubricSection();
+      });
+
+    document
+      .getElementById("btn-download-tpl")
+      ?.addEventListener("click", () => {
+        this._downloadTemplate();
+      });
+
+    document.getElementById("btn-mode-back")?.addEventListener("click", () => {
+      this.rubricMode = null;
+      this._rerenderRubricSection();
+    });
+
+    document.querySelectorAll(".area-toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        saveInputs();
+        const a = this.rubricAreas.find((area) => area.id === btn.dataset.area);
+        if (a) {
+          a.isExpanded = !a.isExpanded;
+          this._rerenderRubricSection();
+        }
+      });
+    });
+
+    document.querySelectorAll(".btn-add-criteria").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        saveInputs();
+        this._addCriteria(btn.dataset.area);
+      });
+    });
+
+    document.querySelectorAll(".btn-rm-crit").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        saveInputs();
+        this._removeCriteria(btn.dataset.area, btn.dataset.crit);
+      });
+    });
+
+    document.querySelectorAll(".btn-add-lvl").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        saveInputs();
+        this._addLevel(btn.dataset.area, btn.dataset.crit);
+      });
+    });
+
+    document.querySelectorAll(".btn-rm-lvl").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        saveInputs();
+        this._removeLevel(
+          btn.dataset.area,
+          btn.dataset.crit,
+          parseInt(btn.dataset.index),
+        );
+      });
+    });
+
+    document.querySelectorAll('.crit-input[id^="weight-"]').forEach((input) => {
+      input.addEventListener("change", () => {
+        saveInputs();
+        this._rerenderRubricSection();
+      });
+    });
+
+    document
+      .querySelectorAll('.lvl-input[data-field="color"]')
+      .forEach((input) => {
+        input.addEventListener("change", () => {
+          saveInputs();
+          this._rerenderRubricSection();
+        });
+      });
+
+    document
+      .querySelectorAll('.lvl-input[data-field="score"]')
+      .forEach((input) => {
+        input.addEventListener("change", () => {
+          saveInputs();
+          this._rerenderRubricSection();
+        });
+      });
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   async render() {
     const app = document.getElementById("app");
-
-    const mainContent = await fetch (`../../pages/create_dashboard.html`).then(r => r.text())
-
     app.innerHTML = `
       ${this.navbar.render()}
-      ${this.header.render()}
-      <main class="dashboard-main">
-        ${mainContent}
-      </main>
+      <div class="container p-0 mx-0 mw-100">
+        ${this.header.render()}
+        <main class="dashboard-main pb-5">
+          <div class="ce-page">
+            <!-- Event details card -->
+            <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">${t("createEvent.title")}</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">${t("createEvent.draftMode")}</span>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.eventTitle")}</label>
+                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.desc")}</label>
+                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
+                </div>
+                
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.type")}</label>
+                  <select id="ev-type" class="form-select app-input">
+                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
+                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
+                    <option value="EVENT">${t("createEvent.social")}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.route")}</label>
+                  <select id="ev-route" class="form-select app-input">
+                    <option value="BASIC">${t("createEvent.basic")}</option>
+                    <option value="ADVANCED">${t("createEvent.advanced")}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.cohort")}</label>
+                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.startDate")}</label>
+                  <input id="ev-start-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.finalDeliveryDate")}</label>
+                  <input id="ev-end-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.maxTeamSize")}</label>
+                  <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
+                </div>
+                <div class="col-12" id="github-org-section">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.githubOrganization")} <span class="text-danger">*</span></label>
+                  <div id="github-org-picker">
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
+                      <span class="spinner-border spinner-border-sm"></span> ${t("createEvent.verifyingGithub")}
+                    </div>
+                  </div>
+                </div>
+
+              <div class="row g-4">
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Title *</label>
+                  <input id="ev-title" type="text" class="form-control form-control-lg app-input" placeholder="${t("createEvent.placeholderTitle")}" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelDescription")}</label>
+                  <textarea id="ev-description" rows="3" class="form-control app-input" placeholder="${t("createEvent.placeholderDesc")}"></textarea>
+                </div>
+                
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelType")}</label>
+                  <select id="ev-type" class="form-select app-input">
+                    <option value="CAPSTONE">${t("createEvent.capstone")}</option>
+                    <option value="WORKSHOP">${t("createEvent.workshop")}</option>
+                    <option value="EVENT">${t("createEvent.social") ?? "Social Event"}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelRoute")}</label>
+                  <select id="ev-route" class="form-select app-input">
+                    <option value="BASIC">${t("createEvent.basic") ?? "Basic"}</option>
+                    <option value="ADVANCED">${t("createEvent.advanced") ?? "Advanced"}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelCohort")}</label>
+                  <input id="ev-cohort" type="text" class="form-control app-input" placeholder="${t("createEvent.placeholderCohort")}" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">Start date *</label>
+                  <input id="ev-start-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelFinalDelivery")}</label>
+                  <input id="ev-end-date" type="date" class="form-control app-input" />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelMaxTeamSize")}</label>
+                  <input id="ev-max-team" type="number" class="form-control app-input" value="5" min="1" max="20" />
+                </div>
+                <div class="col-12" id="github-org-section">
+                  <label class="form-label fw-semibold text-muted small text-uppercase">${t("createEvent.labelGithubOrg")} <span class="text-danger">*</span></label>
+                  <div id="github-org-picker">
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:0.9rem;">
+                      <span class="spinner-border spinner-border-sm"></span> Verifying GitHub...
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  ${this._renderClanSection()}
+                </div>
+              </div>
+            </section>
+
+            <!-- Rubrics section UX/UI Redesign -->
+            <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
+              <div id="ce-rubrics-container">
+                 ${this._renderRubricState()}
+              </div>
+            </section>
+
+            <!-- Submit row -->
+            <div class="d-flex justify-content-end gap-3 mt-4">
+              <button id="ce-back-btn" class="btn btn-light px-4 py-2 bg-white border fw-semibold cursor-pointer" type="button">${t("createEvent.cancel")}</button>
+              <button id="ce-submit-btn" class="btn btn-primary px-5 py-2 fw-semibold cursor-pointer" type="button" style="background:#5548e2;border:none;">
+                ${t("createEvent.createBtn")}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
     `;
-    
-    this.header.mountBreadcrumb();
-    this.header.attachEventHandlers();
+
+    this.header.mountBreadcrumb?.();
+    this.header.attachEventHandlers?.();
     this.navbar.attachEventHandlers();
-    this.attachEventHandlers();
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => this.render());
+    }
+
+    // Setup listeners
+    document
+      .getElementById("ce-submit-btn")
+      ?.addEventListener("click", () => this._handleSubmit());
+    document
+      .getElementById("ce-back-btn")
+      ?.addEventListener("click", () => this.router.navigate("events"));
+    this._attachClanHandlers();
+
+    // Defer rubric handler binding to ensure DOM is ready
+    setTimeout(() => {
+      this._attachRubricHandlers();
+    }, 0);
+
+    this._loadGithubOrgs();
   }
 
-  attachEventHandlers() {
-    const existingForm = document.querySelector('form');
-    if (existingForm) {
-      existingForm.addEventListener('submit', (e) => this.handleSubmit(e));
-      return;
-    }
+  async _loadGithubOrgs() {
+    const picker = document.getElementById("ce-github-org-picker");
+    const submitBtn = document.getElementById("ce-submit-btn");
+    try {
+      const data = await getGithubOrgs();
+      this.githubOrgs = data.orgs || [];
+      this.githubConnected = true;
+      this.githubUsername = data.username;
 
-    const container = document.querySelector('.container.py-3');
-    if (!container) return;
+      if (!picker) return;
 
-    const submitBtn = document.createElement('button');
-    submitBtn.id = 'submit-event-btn';
-    submitBtn.type = 'submit';
-    submitBtn.className = 'btn btn-primary w-100 mt-4 py-3';
-    submitBtn.textContent = 'Create Event';
-    
-    const form = document.createElement('form');
-    form.id = 'create-event-form';
-    
-    const existingSection = container.querySelector('.app-section:last-of-type');
-    if (existingSection) {
-      existingSection.after(submitBtn);
-      submitBtn.addEventListener('click', (e) => this.handleSubmit(e));
+      if (this.githubOrgs.length === 0) {
+        picker.innerHTML = `<p class="text-danger small">${t("createEvent.noOrgsFound")}</p>`;
+        return;
+      }
+
+      this.selectedGithubOrg = this.githubOrgs[0].login;
+      picker.innerHTML = `
+        <div class="d-flex align-items-center gap-2 mb-2" style="font-size:0.85rem;color:var(--color-text-muted);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          ${t("createEvent.connectedAs")} <strong>@${data.username}</strong>
+        </div>
+        <select id="ev-github-org" class="form-select app-input">
+          ${this.githubOrgs.map((org) => `<option value="${org.login}">${org.login}</option>`).join("")}
+        </select>
+        <div class="mt-1" style="font-size:0.8rem;color:var(--color-text-muted);">
+          ${t("createEvent.reposWillBeCreated")}
+        </div>`;
+
+      document
+        .getElementById("ev-github-org")
+        ?.addEventListener("change", (e) => {
+          this.selectedGithubOrg = e.target.value;
+        });
+    } catch (err) {
+      this.githubConnected = false;
+      this.githubOrgs = [];
+      let authUrl = "#";
+      try {
+        const urlData = await getGithubAuthUrl();
+        authUrl = urlData?.url ?? urlData ?? "#";
+      } catch (_) {}
+
+      toast.warning(
+        "GitHub required",
+        "You must connect your GitHub account to create an event.",
+      );
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.title =
+          t("createEvent.connectGithub") ?? "Connect GitHub first";
+      }
     }
+  }
+
+  _setLoading(on) {
+    const btn = document.getElementById("ce-submit-btn");
+    if (!btn) return;
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? `<span class="spinner-border spinner-border-sm me-2"></span> ${t("noTeam.creating") ?? "Creating…"}`
+      : (t("createEvent.createBtn") ?? "Create Event");
+  }
+
+  _clearFeedback() {}
+  _showError(msg) {
+    toast.error(t("common.errorTitle"), msg);
+  }
+  _showSuccess(msg) {
+    toast.success(t("common.successTitle"), msg);
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

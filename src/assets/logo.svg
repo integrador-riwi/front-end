@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="grad_left" x1="100" y1="200" x2="200" y2="100" gradientUnits="userSpaceOnUse">
@@ -18,4 +19,12 @@
         <text x="235" y="330" font-size="64" fill="#6b5cff" letter-spacing="-1">Up</text>
         <circle cx="335" cy="322" r="8" fill="#fe654f"/>
     </g>
+=======
+<svg width="500" height="500" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" rx="40" fill="white"/>
+  <rect x="90" y="230" width="60" height="80" rx="4" fill="#6b5cff"/>
+  <rect x="170" y="180" width="60" height="130" rx="4" fill="#eaa2fc"/>
+  <rect x="250" y="130" width="60" height="180" rx="4" fill="#5acca4"/>
+  <circle cx="280" cy="75" r="30" fill="#fe654f"/>
+>>>>>>> 546233409a67d8757c4ff680f2fe300178164f69
 </svg>

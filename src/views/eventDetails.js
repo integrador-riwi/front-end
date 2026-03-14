@@ -1,11 +1,12 @@
 import Navbar from "../components/navbar/navbar.js";
-import Header from "../components/header/header.js";
+import Header from "../components/header/header-config.js";
 import { getEventById } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
+import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/details.css";
-
 export default class EventDetails {
   constructor(router, params = {}) {
     this.router = router;
@@ -13,6 +14,7 @@ export default class EventDetails {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.eventId = params.eventId || null;
+    this.eventName = params?.name;
     this.event = null;
     this.loading = true;
     this.error = null;
@@ -21,17 +23,17 @@ export default class EventDetails {
   async fetchCurrentEvent() {
     try {
       this.loading = true;
-      
+
       if (!this.eventId) {
-        throw new Error('Event ID not provided');
+        throw new Error("Event ID not provided");
       }
-      
+
       const response = await getEventById(this.eventId);
       this.event = response.data || response;
-      
     } catch (err) {
       console.error("Failed to fetch event:", err);
-      this.error = err.message || "Error loading event. Please try again later.";
+      this.error = err.message || t("common.error");
+      toast.error(t("common.errorTitle"), this.error);
     } finally {
       this.loading = false;
     }
@@ -52,19 +54,19 @@ export default class EventDetails {
   }
 
   getStatusBadge(status) {
-    if (status === 'COMPLETED') {
-      return '<span class="badge-status mb-3 d-inline-block">● Completed</span>';
-    } else if (status === 'UPCOMING') {
-      return '<span class="badge-status mb-3 d-inline-block">● Upcoming</span>';
-    } else if (status === 'IN_PROGRESS') {
-      return '<span class="badge-status mb-3 d-inline-block">● In Progress</span>';
+    if (status === "COMPLETED") {
+      return `<span class="badge-status mb-3 d-inline-block">${t("eventDetails.completed")}</span>`;
+    } else if (status === "UPCOMING") {
+      return `<span class="badge-status mb-3 d-inline-block">${t("eventDetails.upcoming")}</span>`;
+    } else if (status === "IN_PROGRESS") {
+      return `<span class="badge-status mb-3 d-inline-block">${t("eventDetails.inProgress")}</span>`;
     }
-    return '<span class="badge-status mb-3 d-inline-block">● ' + status + '</span>';
+    return `<span class="badge-status mb-3 d-inline-block">${status}</span>`;
   }
 
   renderEvent(event) {
     const title = event.title || event.name || "Untitled Event";
-    const desc = event.description || "No description provided.";
+    const desc = event.description || t("common.noDescription");
 
     return `
         <div class="col-lg-8">
@@ -76,7 +78,7 @@ export default class EventDetails {
             </div>
 
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <button class="btn btn-outline-accent me-2">Edit Event</button>
+            <button class="btn btn-outline-accent me-2">${t("eventDetails.edit")}</button>
         </div>
       `;
   }
@@ -85,21 +87,21 @@ export default class EventDetails {
     const date = event.date || event.start_date || event.createdAt;
 
     return `
-        <small class="text-muted">Date & Time</small>
+        <small class="text-muted">${t("eventDetails.dateTime")}</small>
         <p class="fw-semibold mb-0">${this.formatDate(date)}</p>
       `;
   }
 
   renderEventInfo(event) {
     return `
-        <small class="text-muted">Event Type</small>
-        <p class="fw-semibold mb-0">${event.event_type || 'N/A'}</p>
+        <small class="text-muted">${t("eventDetails.type")}</small>
+        <p class="fw-semibold mb-0">${event.event_type || t("eventDetails.na")}</p>
         
-        <small class="text-muted mt-3 d-block">Cohort</small>
-        <p class="fw-semibold mb-0">${event.cohort || 'N/A'}</p>
+        <small class="text-muted mt-3 d-block">${t("eventDetails.cohort")}</small>
+        <p class="fw-semibold mb-0">${event.cohort || t("eventDetails.na")}</p>
         
-        <small class="text-muted mt-3 d-block">Route</small>
-        <p class="fw-semibold mb-0">${event.route || 'N/A'}</p>
+        <small class="text-muted mt-3 d-block">${t("eventDetails.route")}</small>
+        <p class="fw-semibold mb-0">${event.route || t("eventDetails.na")}</p>
       `;
   }
 
@@ -130,10 +132,12 @@ export default class EventDetails {
 
     app.innerHTML = `
       ${this.navbar.render()}
-      ${this.header.render()}
-        <main class="dashboard-main">
-        ${mainContent}
-      </main>
+      <div class="container p-0">
+        ${this.header.render()}
+          <main class="dashboard-main">
+          ${mainContent}
+        </main>
+      </div>
     `;
 
     this.header.mountBreadcrumb();
@@ -149,7 +153,7 @@ export default class EventDetails {
     }
 
     eventContainer.innerHTML = this.renderLoading();
-    
+
     await this.fetchCurrentEvent();
 
     if (this.error) {
@@ -158,25 +162,32 @@ export default class EventDetails {
     }
 
     if (!this.event) {
-      eventContainer.innerHTML = this.renderError("Event not found");
+      eventContainer.innerHTML = this.renderError(
+        t("events.notFound") ?? t("events.notFound") ?? "Event not found",
+      );
       return;
     }
 
     eventContainer.innerHTML = this.renderEvent(this.event);
     dateContainer.innerHTML = this.renderEventDate(this.event);
     locationContainer.innerHTML = this.renderEventInfo(this.event);
-    
+
     this.attachEventHandlers();
+
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   attachEventHandlers() {
     const viewProjectsBtn = document.getElementById("view-projects-btn");
     viewProjectsBtn?.addEventListener("click", (e) => {
-        const route = e.currentTarget.dataset.route;
-        if (route) {
-          this.router.navigate(route);
-        }
-      });
-    
+      const route = e.currentTarget.dataset.route;
+      if (route) {
+        this.router.navigate(route);
+      }
+    });
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }
