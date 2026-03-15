@@ -1,6 +1,6 @@
-//const API_BASE_URL = "http://localhost:3010/api";
+// const API_BASE_URL = "http://localhost:3010/api";
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3010/api";
+    import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -28,7 +28,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     const error = new Error(
-      data.message || data.error || "Error en la petición",
+        data.message || data.error || "Error en la petición",
     );
     error.response = { data, status: response.status };
     throw error;
@@ -103,11 +103,11 @@ export async function getTeamsByEvent(eventId) {
 }
 
 export async function getEventById(eventId) {
-  const response = await apiFetch(`/events/${eventId}`, 
-    {method: 'GET'});
+  const response = await apiFetch(`/events/${eventId}`,
+      {method: 'GET'});
 
-    return response.data
-} 
+  return response.data
+}
 
 export async function submitVote(qr_vote_id,project_id) {
   return apiFetch("/qr-votes/vote", {
@@ -118,7 +118,7 @@ export async function submitVote(qr_vote_id,project_id) {
 
 export async function createTeam(teamData) {
   const payload =
-    typeof teamData === "string" ? { name: teamData } : { ...teamData };
+      typeof teamData === "string" ? { name: teamData } : { ...teamData };
 
   if (payload.name) {
     payload.name = payload.name.trim();
@@ -239,10 +239,10 @@ export async function getComments(projectId) {
 }
 
 export async function postComment({
-  projectId,
-  comment,
-  parentCommentId = null,
-}) {
+                                    projectId,
+                                    comment,
+                                    parentCommentId = null,
+                                  }) {
   const response = await apiFetch("/comments", {
     method: "POST",
     body: { projectId, comment, parentCommentId },
@@ -272,8 +272,8 @@ export async function submitEvaluations(projectId, evaluations) {
 
 export async function calculateProjectGrades(projectId) {
   const response = await apiFetch(
-    `/evaluations/project/${projectId}/calculate`,
-    { method: "POST" },
+      `/evaluations/project/${projectId}/calculate`,
+      { method: "POST" },
   );
   return response?.data ?? response;
 }
@@ -307,14 +307,20 @@ export async function removeMember(teamId, userId) {
 }
 
 export async function searchSimilarProjects(
-  query,
-  limit = 3,
-  minSimilarity = 0.7,
-  excludeProjectId = null,
+    query,
+    limit = 3,
+    minSimilarity = 0.7,
+    excludeProjectId = null,
 ) {
   let url = `/teams/search?q=${encodeURIComponent(query)}&limit=${limit}&min_similarity=${minSimilarity}`;
   if (excludeProjectId) {
     url += `&exclude_project=${excludeProjectId}`;
   }
+  return apiFetch(url, { method: "GET" });
+}
+
+export async function searchProjectsSemantic(query, eventId = null, limit = 20) {
+  let url = `/projects/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+  if (eventId) url += `&eventId=${eventId}`;
   return apiFetch(url, { method: "GET" });
 }
