@@ -138,7 +138,8 @@ const resources = {
         thSpec: "CLAN",
         thScore: "PUNTAJE",
         thBar: "RENDIMIENTO",
-        calcDesc: "Estamos procesando los puntajes finales y rúbricas. No tomará mucho tiempo.",
+        calcDesc:
+          "Estamos procesando los puntajes finales y rúbricas. No tomará mucho tiempo.",
         evalRate: "TASA DE EVALUACIÓN",
         projectsEvaluated: "PROYECTOS EVALUADOS",
         total: "Total",
@@ -147,8 +148,10 @@ const resources = {
         active: "Activo",
         readyToPublish: "Listo para Publicar",
         incompleteTeams: "Evaluaciones Incompletas",
-        incompleteDesc: "Estos equipos tienen puntajes de rúbrica faltantes por parte de uno o más TLs.",
-        publishWarningDesc: "Algunos equipos no están totalmente evaluados. Esto afectará la precisión del ranking.",
+        incompleteDesc:
+          "Estos equipos tienen puntajes de rúbrica faltantes por parte de uno o más TLs.",
+        publishWarningDesc:
+          "Algunos equipos no están totalmente evaluados. Esto afectará la precisión del ranking.",
       },
 
       // ── Coder Event Select ────────────────────────────────
@@ -712,7 +715,8 @@ const resources = {
         thSpec: "CLAN",
         thScore: "FINAL SCORE",
         thBar: "PERFORMANCE",
-        calcDesc: "We are processing final scores and rubrics. This won't take long.",
+        calcDesc:
+          "We are processing final scores and rubrics. This won't take long.",
         evalRate: "EVALUATION RATE",
         projectsEvaluated: "PROJECTS EVALUATED",
         total: "Total",
@@ -721,8 +725,10 @@ const resources = {
         active: "Active",
         readyToPublish: "Ready to Publish",
         incompleteTeams: "Incomplete Evaluations",
-        incompleteDesc: "These teams have missing rubric scores from one or more TLs.",
-        publishWarningDesc: "Some teams are not fully evaluated. This will affect the accuracy of the ranking.",
+        incompleteDesc:
+          "These teams have missing rubric scores from one or more TLs.",
+        publishWarningDesc:
+          "Some teams are not fully evaluated. This will affect the accuracy of the ranking.",
       },
 
       ces: {
@@ -1162,8 +1168,16 @@ export async function setLang(lang) {
   document.documentElement.lang = lang;
 }
 
-export function toggleLang() {
-  return setLang(i18next.language === "en" ? "es" : "en");
+let _langSwitching = false;
+
+export async function toggleLang() {
+  if (_langSwitching) return;
+  _langSwitching = true;
+  try {
+    await setLang(i18next.language === "en" ? "es" : "en");
+  } finally {
+    _langSwitching = false;
+  }
 }
 
 export function onLangChange(fn) {

@@ -16,9 +16,10 @@ import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
 import BrowseProjects from "../views/BrowseProjects.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
-import { getMyProfile, getMyTeams } from "../services/api.js";
+import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
+import FinalistsView from "../views/Finalists.js";
 import {
   i18nReady,
   t,
@@ -55,14 +56,39 @@ function mountLangToggle() {
     box-shadow: 0 4px 14px rgba(0,0,0,0.18);
     transition: opacity 0.2s;
   `;
-  btn.addEventListener("mouseenter", () => (btn.style.opacity = "0.85"));
-  btn.addEventListener("mouseleave", () => (btn.style.opacity = "1"));
-  btn.addEventListener("click", () => toggleLang());
+  btn.addEventListener("mouseenter", () => {
+    if (!btn.disabled) btn.style.opacity = "0.85";
+  });
+  btn.addEventListener("mouseleave", () => {
+    if (!btn.disabled) btn.style.opacity = "1";
+  });
+  btn.addEventListener("click", async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
+    try {
+      await toggleLang();
+    } finally {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    }
+  });
   document.body.appendChild(btn);
 }
 
 mountLangToggle();
-onLangChange(() => mountLangToggle());
+// Update only the button label on lang change — no full re-mount needed
+onLangChange(() => {
+  const btn = document.getElementById("floatingLangBtn");
+  if (btn) {
+    btn.textContent = t("nav.langToggle");
+    btn.title = t("nav.langLabel");
+  } else {
+    mountLangToggle();
+  }
+});
 
 if (isAuthenticated()) {
   initSocket();
@@ -101,6 +127,7 @@ const ROUTE_PERMISSIONS = {
   ],
   tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
   vote: "PUBLIC",
+  finalists: ["ADMIN", "STAFF"],
 };
 
 class App {
@@ -110,11 +137,13 @@ class App {
     this.user = null;
     this.hasTeam = false;
     this.currentParams = {};
+    this._langUnsubscribe = null;
 
-    // Re-render the current view whenever the language changes
-    onLangChange(() => {
+    // Re-render the current view whenever the language changes.
+    // Guard: register only once and skip auth checks on lang-triggered re-renders.
+    this._langUnsubscribe = onLangChange(() => {
       if (this.currentRoute) {
-        this.navigate(this.currentRoute, this.currentParams);
+        this._renderView(this.currentRoute, this.currentParams);
       }
     });
 
@@ -204,6 +233,18 @@ class App {
     };
   }
 
+  // Internal render without auth checks — used for language-triggered re-renders
+  _renderView(route, params = {}) {
+    if (this.currentView && typeof this.currentView.destroy === "function") {
+      this.currentView.destroy();
+    }
+    this.currentView = null;
+    this.app.innerHTML = "";
+    this.currentRoute = route;
+    this.currentParams = params;
+    this._mountView(route, params);
+  }
+
   navigate(route, params = {}) {
     // Enforcement layer
     const isAuth = isAuthenticated();
@@ -236,15 +277,10 @@ class App {
       }
     }
 
-    if (this.currentView && typeof this.currentView.destroy === "function") {
-      this.currentView.destroy();
-    }
-    this.currentView = null;
+    this._renderView(route, params);
+  }
 
-    this.app.innerHTML = "";
-    this.currentRoute = route;
-    this.currentParams = params;
-
+  _mountView(route, params = {}) {
     switch (route) {
       case "login":
         this.currentView = new LoginView(this);
@@ -275,12 +311,15 @@ class App {
       case "teamDetail": // ← NUEVO
         this.currentView = new TeamDetailView(this, params);
         break;
+
       case "ranking":
         this.currentView = new Ranking(this);
         break;
+
       case "qr":
         this.currentView = new QRVoting(this);
         break;
+
       case "coderEventSelect":
         this.currentView = new CoderEventSelect(this);
         this.currentView.init();
@@ -303,10 +342,15 @@ class App {
         this.currentView = new TLDashboardView(this);
         this.currentView.init();
         return;
+
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
         this.currentView.render(this.app);
         return;
+      case "finalists":
+        this.currentView = new FinalistsView(this);
+        break;
+
       default:
         this.currentView = new NotFoundView(this);
         break;

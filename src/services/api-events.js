@@ -74,6 +74,13 @@ export async function getEventPublicRanking(eventId) {
 }
 
 export const getEventFinalists = async (eventId) => {
-  const res = await apiFetch(`/events/${eventId}/finalists`);
+  const res = await apiFetch(`/finalists/events/${eventId}`);
+  return res.data;
+};
+
+export const calculateFinalists = async (eventId) => {
+  const res = await apiFetch(`/finalists/events/${eventId}/calculate`, {
+    method: 'POST'
+  });
   return res.data;
 };

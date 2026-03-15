@@ -163,7 +163,7 @@
 }
 
 .profile-value {
-  width: 50%;
+  width: 100%;
   font-size: 1.05rem;
   color: var(--color-text-main);
   line-height: 1.6;

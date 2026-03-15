@@ -3,7 +3,7 @@ import { t } from "../../utils/i18n.js";
 const HEADER_LINKS_BY_VIEW = () => ({
   dashboard: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
   ],
   "events/create": [
     { label: t("nav.events"), route: "events" },
@@ -16,7 +16,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
         try {
           const stored = sessionStorage.getItem("selectedEvent");
           if (stored) return JSON.parse(stored).title || t("nav.teams");
-        } catch (_) {}
+        } catch (_) { }
         return t("nav.teams");
       })(),
       route: null,
@@ -32,7 +32,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   teamDetail: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: t("nav.teamDetails"), route: null },
   ],
   qr: [
@@ -41,7 +41,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   coderHome: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: t("nav.teamDetails"), route: null },
   ],
   ranking: [
@@ -90,6 +90,10 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
   details: {
     variant: "details",
     title: t("nav.eventDetails"),
+  },
+  finalists: {
+    variant: "finalists",
+    title: t("nav.finalists"),
   },
 });
 

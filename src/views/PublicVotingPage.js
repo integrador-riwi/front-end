@@ -42,24 +42,21 @@ export default class PublicVotingPage {
   }
 
   /* -------------------------- VOTING -------------------------- */
+async handleVote(projectId) {
+  try {
+    const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
+    await submitVote(qrVoteId, Number(projectId));
 
-  async handleVote(projectId) {
-    try {
-        const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"))
+    sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
+    alert(t("publicVoting.voteSuccess"));
+    this.disableVoting();
 
-      await submitVote(qrVoteId, Number(projectId));
-
-      sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
-      alert("Vote registered successfully!");
-      this.disableVoting();
-
-      alert(t("publicVoting.voteSuccess"));
-      this.disableVoting();
-    } catch (error) {
-      console.error("Vote error:", error);
-      alert(t("publicVoting.voteError"));
-    }
+  } catch (error) {
+    console.error("Vote error:", error);
+    console.log("Vote error details:", error?.response?.data); 
+    alert(t("publicVoting.voteError"));
   }
+}
 
   disableVoting() {
     const buttons = document.querySelectorAll(".vote-btn");
@@ -70,20 +67,38 @@ export default class PublicVotingPage {
 
   renderFinalists() {
     if (!this.ranking.length) {
-      return `<p style="text-align:center;color:#64748b;">${t("publicVoting.noTeams") || "No teams available yet."}</p>`;
+      return `
+        <div class="text-center py-5 text-secondary">
+          <p>${t("publicVoting.noTeams") || "No teams available yet."}</p>
+        </div>`;
     }
 
-    return this.ranking
-      .map(
-        (team) => `
-      <div class="team-card">
-        <h3>${team.team_name}</h3>
-        <p>${team.project_name || ""}</p>
-        <button class="vote-btn" data-team="${team.id_project}">Vote</button>
-      </div>
-    `,
-      )
-      .join("");
+    const colors = [
+      { bg: "#a7f3d0", decorator: "top-0 end-0", decoratorStyle: "transform:translate(25%,-25%)" },
+      { bg: "#fde68a", decorator: "bottom-0 start-0", decoratorStyle: "transform:translate(-25%,25%)" },
+      { bg: "#fda4af", decorator: "top-50 end-0", decoratorStyle: "transform:translate(25%,-50%)" },
+    ];
+
+    return this.ranking.map((team, index) => {
+      const color = colors[index % colors.length];
+      return `
+        <div class="team-card w-100 bg-white rounded-4 p-4 shadow text-center position-relative overflow-hidden mb-4"
+             style="cursor:pointer; border: 3px solid transparent;">
+          <div class="position-absolute rounded-circle opacity-50 ${color.decorator}"
+               style="width:64px;height:64px;background:${color.bg};${color.decoratorStyle};"></div>
+          <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+               style="width:64px;height:64px;background:${color.bg};">
+          </div>
+          <h3 class="fw-bold mb-2" style="color:#1e1b4b;">${team.team_name}</h3>
+          <p class="text-secondary mb-4">${team.project_name || ""}</p>
+          <button class="vote-btn btn w-100 fw-bold py-3 rounded-pill text-white"
+                  style="background:#7c3aed;box-shadow:0 4px 14px rgba(124,58,237,0.3);"
+                  data-team="${team.id_project}">
+            Vote for Me!
+          </button>
+        </div>
+      `;
+    }).join("");
   }
 
   attachEvents() {
@@ -111,7 +126,7 @@ export default class PublicVotingPage {
     }
 
     container.innerHTML = `
-      <div class="vote-page">
+      <div class="vote-page mx-0 ">
         <header class="vote-header">
           <h1>TeamUp Voting</h1>
           <p>Vote for the best project</p>

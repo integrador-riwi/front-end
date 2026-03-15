@@ -25,24 +25,6 @@ export function renderCoderNoTeam({
     <div class="team-selection-container">
 
       <header class="team-selection-header">
-        ${
-          selectedEvent
-            ? `
-          <div class="event-context-badge" id="eventBadgeBack">
-            <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-            <svg class="event-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span>${selectedEvent.title}</span>
-          </div>
-        `
-            : ""
-        }
         <h1 class="team-selection-title">${t("noTeam.heading")}</h1>
         <p class="team-selection-subtitle">
           ${t("ces.welcome", { name: user?.name?.split(" ")[0] ?? "Coder" })}
