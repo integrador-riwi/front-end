@@ -133,3 +133,96 @@
   border-color: var(--gold);
   color: var(--gold);
 }
+
+/* ── Ranking Card ── */
+.ranking-card {
+  min-width: 180px;
+  border: 2px solid rgba(107, 92, 255, 0.3);
+  background: #6b5cff0d;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ranking-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(107, 92, 255, 0.15);
+}
+
+/* ── Accent bar ── */
+.ranking-card-bar {
+  height: 6px;
+  width: 100%;
+}
+
+.ranking-card-bar.finalist { background: #5acca4; }
+.ranking-card-bar.regular  { background: #6b5cff; }
+
+/* ── Avatar ── */
+.ranking-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 1.3rem;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Finalist checkmark ── */
+.ranking-check {
+  width: 26px;
+  height: 26px;
+  background: #5acca4;
+  top: -4px;
+  right: -4px;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(90, 204, 164, 0.4);
+}
+
+/* ── Team name ── */
+.ranking-team-name {
+  color: #181e4b;
+  font-size: 0.85rem;
+}
+
+/* ── Project name ── */
+.ranking-project-name {
+  color: #7b7fa8;
+  font-size: 0.75rem;
+  max-width: 140px;
+}
+
+/* ── Score pill ── */
+.ranking-score {
+  background: rgba(107, 92, 255, 0.1);
+  color: #6b5cff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ranking-score .material-symbols-outlined {
+  font-size: 14px;
+}
+
+/* ── Finalist badge ── */
+.ranking-finalist-badge {
+  background: #dbfff2;
+  color: #5acca4;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── Approve button ── */
+.btn-approve {
+  background: #5acca4;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(90, 204, 164, 0.3);
+}
+
+.btn-approve:hover {
+  background: #45b890;
+  color: white;
+}
+
+.btn-approve .material-symbols-outlined {
+  font-size: 16px;
+}

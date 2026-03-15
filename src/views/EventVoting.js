@@ -6,7 +6,7 @@ import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
-import template from '../../pages/admin_qr.html?raw';
+import template from "../../pages/admin_qr.html?raw";
 import { getSelectedEvent } from "../utils/helpers.js";
 
 export default class QRVoting {
@@ -88,24 +88,24 @@ export default class QRVoting {
       const cached = localStorage.getItem(`qr_event_${eventId}`);
       const qrSrc = cached || null;
 
-    const qrImg = document.getElementById("qr");
+      const qrImg = document.getElementById("qr");
 
-    if (qrSrc) {
-      qrImg.src     = qrSrc;
-      this.qrActive = true;
+      if (qrSrc) {
+        qrImg.src = qrSrc;
+        this.qrActive = true;
 
-      const btn = document.getElementById("generate-qr-btn");
-      if (btn) {
-        btn.innerText = "Disable QR";
-        btn.classList.remove("btn-primary-custom");
-        btn.classList.add("btn-primary-disabled");
+        const btn = document.getElementById("generate-qr-btn");
+        if (btn) {
+          btn.innerText = "Disable QR";
+          btn.classList.remove("btn-primary-custom");
+          btn.classList.add("btn-primary-disabled");
+        }
+
+        this.updateDownloadButton(qrSrc);
+        this.updateQrStatusPill();
+      } else {
+        this.updateDownloadButton(null);
       }
-
-      this.updateDownloadButton(qrSrc);
-      this.updateQrStatusPill();
-    } else {
-      this.updateDownloadButton(null);
-    }
     } catch (err) {
       console.error("Failed to load existing QR:", err);
       this.updateDownloadButton(null);
@@ -168,7 +168,7 @@ export default class QRVoting {
         if (this.qrActive) {
           this.qrActive = false;
           qrImg.src = "../src/assets/logo.svg";
-           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
+          localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
 
           btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
@@ -236,50 +236,108 @@ export default class QRVoting {
     const container = document.getElementById("ranking-container");
     if (!container) return;
 
-    container.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5>Event Ranking</h5>
-        <div>
-          Finalists:
-          <select id="finalists-count" class="form-select form-select-sm d-inline w-auto">
-            <option value="3">Top 3</option>
-            <option value="6">Top 6</option>
-            <option value="10">Top 10</option>
-          </select>
-        </div>
-      </div>
+    const avatarColors = [
+      { bg: "#e0e7ff", color: "#6b5cff" },
+      { bg: "#d1fae5", color: "#059669" },
+      { bg: "#fef3c7", color: "#d97706" },
+      { bg: "#fce7f3", color: "#db2777" },
+      { bg: "#ede9fe", color: "#7c3aed" },
+      { bg: "#dcfce7", color: "#16a34a" },
+    ];
 
-      <div class="row g-3">
-        ${this.ranking
-          .map(
-            (team, index) => `
-          <div class="col-md-4">
-            <div class="card p-3 ranking-card">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <strong>#${index + 1} ${team.team_name}</strong><br>
-                  <small class="text-muted">${team.project_name}</small>
+    container.innerHTML = `
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h2 class="fw-bold mb-1" style="color:#181e4b;font-size:1.1rem;">Event Ranking</h2>
+        <p class="mb-0" style="color:#7b7fa8;font-size:0.85rem;">Top performing teams</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span style="color:#7b7fa8;font-size:0.85rem;">Finalists:</span>
+        <select id="finalists-count" class="form-select form-select-sm"
+                style="width:auto;border-color:rgba(107,92,255,0.3);color:#181e4b;font-size:0.85rem;">
+          <option value="3">Top 3</option>
+          <option value="4">Top 4</option>
+          <option value="5">Top 5</option>
+          <option value="6">Top 6</option>
+          <option value="7">Top 7</option>
+          <option value="8">Top 8</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="d-flex flex-wrap gap-3">
+      ${this.ranking
+        .slice(0,8)
+        .map((team, index) => {
+          const isFinalist = this.finalists.find(
+            (t) => t.id_team === team.id_team,
+          );
+          const av = avatarColors[index % avatarColors.length];
+
+          return `
+          <div class="ranking-card rounded-4 overflow-hidden flex-shrink-0 d-flex flex-column align-items-center">
+
+            <!-- Top accent bar -->
+            <div class="ranking-card-bar ${isFinalist ? "finalist" : "regular"}"></div>
+
+            <div class="p-4 d-flex flex-column align-items-center w-100">
+
+              <!-- Avatar -->
+              <div class="position-relative mb-3">
+                <div class="ranking-avatar rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                     style="background:${av.bg};color:${av.color};">
+                  ${team.team_name?.[0]?.toUpperCase() ?? "?"}
                 </div>
-                <span class="badge bg-primary">${team.score ?? "—"}</span>
+                ${
+                  isFinalist
+                    ? `
+                <div class="ranking-check position-absolute d-flex align-items-center justify-content-center rounded-circle">
+                </div>`
+                    : ""
+                }
               </div>
-              ${
-                this.finalists.find((t) => t.id_team === team.id_team)
-                  ? `<span class="badge bg-success mt-2">Finalist</span>`
-                  : ""
-              }
+
+              <!-- Info -->
+              <div class="text-center w-100">
+                <div class="ranking-team-name fw-bold mb-1">
+                  ${team.team_name}
+                </div>
+ 
+                <!-- Score -->
+                <div class="ranking-score d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 mb-2">
+                  ${team.team_score ?? "—"}
+                </div>
+
+                <!-- Finalist badge -->
+                ${
+                  isFinalist
+                    ? `
+                <div>
+                  <span class="ranking-finalist-badge badge rounded-pill fw-bold text-uppercase">
+                    ✓ Finalist
+                  </span>
+                </div>`
+                    : ""
+                }
+              </div>
+
             </div>
           </div>
-        `,
-          )
-          .join("")}
-      </div>
+        `;
+        })
+        .join("")}
+    </div>
 
-      <div class="text-end mt-4">
-        <button class="btn btn-success" id="approve-finalists-btn">
-          Approve Finalists
-        </button>
-      </div>
-    `;
+    <!-- Approve button -->
+    <div class="text-end mt-4">
+      <button class="btn btn-approve fw-bold px-4 py-2 rounded-3" id="approve-finalists-btn">
+        Approve Finalists
+      </button>
+    </div>
+  `;
 
     this.attachRankingHandlers();
   }

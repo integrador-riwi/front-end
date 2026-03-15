@@ -7,7 +7,6 @@ import {
   getEventIdFromUrl,
   getEventSectionFromUrl,
 } from "../../utils/helpers.js";
-import { icons } from "../../utils/icons.js";
 
 export default class Header {
   constructor(router, params = {}) {
