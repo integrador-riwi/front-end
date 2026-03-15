@@ -20,6 +20,7 @@ export default class Teams {
     this.isAdmin = this.user?.role === "ADMIN";
     this.allTeams = [];
     this.activeClans = new Set();
+    this.currentView = "grid"; // "grid" | "list"
   }
 
   renderAvatars(users) {
@@ -107,29 +108,30 @@ export default class Teams {
   }
 
   async renderTeamsGrid() {
-    const teamsContainer = document.getElementById("teamsContainer");
-    if (!teamsContainer) {
-      console.error("Element #teamsContainer not found");
-      return;
-    }
-
-    this.showLoading(teamsContainer);
-
-    const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true`, { method: "GET"});
-    const totalTeams = fetchTeams.data.teams;
-
-    if (!totalTeams || totalTeams.length === 0) {
-      this.showEmpty(teamsContainer);
-      this.renderClanFilters([]);
-      return;
-    }
-
-    this.allTeams = totalTeams;
-    this.activeClans = new Set();
+    this.currentView = "grid";
     this._gridListenersAttached = false;
 
-    this.renderClanFilters(totalTeams);
-    this._paintTeamsGrid(totalTeams, teamsContainer);
+    const teamsContainer = document.getElementById("teamsContainer");
+    if (!teamsContainer) return;
+
+    // Solo fetchear si aún no tenemos datos
+    if (this.allTeams.length === 0) {
+      this.showLoading(teamsContainer);
+
+      const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true`, { method: "GET" });
+      const totalTeams = fetchTeams.data.teams;
+
+      if (!totalTeams || totalTeams.length === 0) {
+        this.showEmpty(teamsContainer);
+        this.renderClanFilters([]);
+        return;
+      }
+
+      this.allTeams = totalTeams;
+      this.renderClanFilters(totalTeams);
+    }
+
+    this._applyFilters();
   }
 
   _paintTeamsGrid(teams, container) {
@@ -273,34 +275,53 @@ export default class Teams {
   }
 
   _applyFilters() {
-    if (this.activeClans.size === 0) {
-      this._paintTeamsGrid(this.allTeams);
-      return;
+    const teams = this.activeClans.size === 0
+        ? this.allTeams
+        : this.allTeams.filter((team) =>
+            (team.members ?? []).some((member) => this.activeClans.has(member.clan))
+        );
+
+    if (this.currentView === "list") {
+      this._paintTeamsList(teams);
+    } else {
+      this._paintTeamsGrid(teams);
     }
-
-    const filtered = this.allTeams.filter((team) =>
-        (team.members ?? []).some((member) => this.activeClans.has(member.clan))
-    );
-
-    this._paintTeamsGrid(filtered);
   }
 
   async renderTeamsList() {
+    this.currentView = "list";
+
     const teamsContainer = document.getElementById("teamsContainer");
-    if (!teamsContainer) {
-      console.error("Element #teamsContainer not found");
-      return;
+    if (!teamsContainer) return;
+
+    // Si aún no hay datos (caso borde), fetchear
+    if (this.allTeams.length === 0) {
+      this.showLoading(teamsContainer);
+
+      const fetchTeams = await apiFetch(
+          `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}&includeSubmitted=true`,
+          { method: "GET" },
+      );
+      const totalTeams = fetchTeams.data.teams;
+
+      if (!totalTeams || totalTeams.length === 0) {
+        this.showEmpty(teamsContainer);
+        this.renderClanFilters([]);
+        return;
+      }
+
+      this.allTeams = totalTeams;
+      this.renderClanFilters(totalTeams);
     }
 
-    this.showLoading(teamsContainer);
+    this._applyFilters();
+  }
 
-    const fetchTeams = await apiFetch(
-        `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}`,
-        { method: "GET" },
-    );
-    const totalTeams = fetchTeams.data.teams;
-    console.log("awita", totalTeams)
-    if (!totalTeams || totalTeams.length === 0) {
+  _paintTeamsList(teams) {
+    const teamsContainer = document.getElementById("teamsContainer");
+    if (!teamsContainer) return;
+
+    if (!teams || teams.length === 0) {
       this.showEmpty(teamsContainer);
       return;
     }
@@ -326,7 +347,7 @@ export default class Teams {
 
     const tbody = document.getElementById("teamsTableBody");
 
-    totalTeams.forEach((team) => {
+    teams.forEach((team) => {
       const members = team.members ?? [];
       const membersIcons = this.renderAvatars(members);
 
@@ -356,13 +377,12 @@ export default class Teams {
       tbody.insertAdjacentHTML("beforeend", row);
     });
 
-    // Delegación de eventos en tabla — solo ADMIN
-    if (this.isAdmin) {
-      tbody.addEventListener("click", (e) => {
+    if (this.isAdmin && !this._listListenersAttached) {
+      this._listListenersAttached = true;
+      teamsContainer.addEventListener("click", (e) => {
         const row = e.target.closest("[data-team-id]");
         if (!row) return;
-        const teamId = row.dataset.teamId;
-        this.router.navigate("teamDetail", { teamId });
+        this.router.navigate("teamDetail", { teamId: row.dataset.teamId });
       });
     }
   }
@@ -378,12 +398,14 @@ export default class Teams {
     gridViewBtn?.addEventListener("click", async () => {
       gridViewBtn.classList.add("active");
       listViewBtn.classList.remove("active");
+      this._listListenersAttached = false;
       await this.renderTeamsGrid();
     });
 
     listViewBtn?.addEventListener("click", async () => {
       listViewBtn.classList.add("active");
       gridViewBtn.classList.remove("active");
+      this._gridListenersAttached = false;
       await this.renderTeamsList();
     });
   }
