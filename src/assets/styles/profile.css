@@ -281,10 +281,6 @@
 }
 
 .status-pill {
-  padding: 0.35rem 0.9rem;
-  border-radius: 99px;
-  font-size: 0.85rem;
-  font-weight: 600;
   background-color: var(--bg-input);
   border: 1px solid var(--border);
 }
@@ -301,10 +297,6 @@
 
 .profile-github-btn {
   border: none;
-  border-radius: 999px;
-  padding: 0.4rem 1rem;
-  font-weight: 600;
-  font-size: 0.85rem;
   background-color: var(--color-primary);
   color: white;
   cursor: pointer;
@@ -313,15 +305,28 @@
     box-shadow 0.2s ease;
 }
 
+.status-pill,
+.profile-github-btn {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 99px;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .profile-github-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(107, 92, 255, 0.25);
 }
 
-/* @media (max-width: 1024px) {
-  .coder-home-main{
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-} */
+.profile-github-section {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-github-status {
+  flex-wrap: wrap;
+}

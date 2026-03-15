@@ -3,8 +3,8 @@ import { t } from "../../utils/i18n.js";
 
 // Functions so t() is evaluated fresh on every call (picks up current language)
 const TL_BASE_LINKS = () => [
-  { label: t("nav.teamsProjects"), route: "tlDashboard", icon: "edit" },
   { label: t("nav.events"), route: "coderEventSelect", icon: "calendar" },
+  { label: t("nav.teamsProjects"), route: "tlDashboard", icon: "edit" },
 ];
 
 const ADMIN_BASE_LINKS = () => [

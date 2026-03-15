@@ -117,6 +117,7 @@ export default class TLDashboardView {
 
     app.innerHTML = `
       ${this.navbar.render()}
+      <div id="overlay" class="sidebar-overlay"></div>
       <div style="display:flex;flex-direction:column;width:100%">
         ${this.header.render()}
         <main class="coder-home-main flex-grow-1">
@@ -125,7 +126,7 @@ export default class TLDashboardView {
       </div>
     `;
 
-    this.navbar.attachEventHandlers();
+    //this.navbar.attachEventHandlers();
     this.header.mountBreadcrumb();
     this.header.attachEventHandlers();
     this._renderList();
@@ -174,7 +175,7 @@ export default class TLDashboardView {
               </div>
             </div>
 
-            <div class="tld-search-wrap">
+            <div class="w-100 tld-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>

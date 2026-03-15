@@ -158,20 +158,31 @@ export default class ProfileView {
                   <p class="profile-value">${escapeHtml(this.user?.email ?? "user@example.com")}</p>
                   <div class="mt-3">
                     <p class="profile-label mb-1">${t("profile.github")}</p>
-                    <div class="container align-items-center px-0 d-flex justify-content-between">
-                      ${
-                        showGithubLink
-                          ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">@${escapeHtml(githubUsername ?? githubProfileUrl)}</a>`
-                          : `<p class="profile-value">${t("profile.notConnected")}</p>`
+                    <div class="d-flex align-items-center justify-content-between gap-2 profile-github-section">
+
+                      <!-- Left -->
+                      ${showGithubLink
+                        ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">
+                            @${escapeHtml(githubUsername ?? githubProfileUrl)}
+                          </a>`
+                        : `<span class="profile-value mb-0">—</span>`
                       }
-                      <div class="profile-github-status">
-                        <span class="status-pill ${githubConnected && !githubExpired ? "status-ok" : "status-warn"}">${escapeHtml(statusLabel)}</span>
-                        ${
-                          showConnectBtn
-                            ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? (t("profile.githubReconnect") ?? "Reconnect with GitHub") : (t("profile.githubConnect") ?? "Connect with GitHub")}</button>`
-                            : ""
+
+                      <!-- Right -->
+                      <div class="d-flex align-items-center justify-content-between w-100 profile-github-status">
+                        <span class="status-pill ${githubConnected && !githubExpired ? 'status-ok' : 'status-warn'}">
+                          ${escapeHtml(statusLabel)}
+                        </span>
+                        ${showConnectBtn
+                          ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">
+                              ${githubExpired
+                                ? (t("profile.githubReconnect") ?? "Reconnect")
+                                : (t("profile.githubConnect") ?? "Connect")}
+                            </button>`
+                          : ''
                         }
                       </div>
+
                     </div>
                   </div>
                 </div>
