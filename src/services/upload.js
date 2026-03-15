@@ -3,19 +3,21 @@ import { apiFetch } from "./api.js";
 // ─────────────────────────────────────────────────────────────
 // uploadToCloudinary
 //
-// 1. Pide una firma temporal al backend
-// 2. Sube el archivo directo a Cloudinary con esa firma
-// 3. Confirma con el backend que el archivo existe (opcional)
+// 1. Requests a temporary signature from the backend
+// 2. Uploads the file directly to Cloudinary using that signature
+// 3. Confirms with the backend that the file exists (optional)
 //
-// @param {File}     file          - archivo a subir
+// @param {File}     file          - file to upload
 // @param {string}   resourceType  - "image" | "video"
 // @param {Function} onProgress    - callback(percent: number)
-// @returns {Promise<string>}      - secure_url del archivo subido
+// @returns {Promise<string>}      - secure_url of the uploaded file
 // ─────────────────────────────────────────────────────────────
 export async function uploadToCloudinary(file, resourceType = "image", onProgress = null) {
 
     // ── Step 1: get signed params from our backend ────────────
-    const sigData = await apiFetch("/upload/signature", {
+    // apiFetch returns { success: true, data: { ... } }
+    // so we unwrap .data to get the actual signature payload
+    const { data: sigData } = await apiFetch("/upload/signature", {
         method: "POST",
         body: { resource_type: resourceType, folder: "teamup_projects" },
     });
@@ -26,10 +28,10 @@ export async function uploadToCloudinary(file, resourceType = "image", onProgres
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", api_key);
-    formData.append("timestamp", timestamp);
+    formData.append("timestamp", String(timestamp));
     formData.append("signature", signature);
     formData.append("folder", folder);
-    // NOTE: do NOT append resource_type to formData, it goes in the URL
+    // NOTE: resource_type goes in the URL, NOT in the FormData
 
     const secure_url = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -46,7 +48,7 @@ export async function uploadToCloudinary(file, resourceType = "image", onProgres
                 resolve(data.secure_url);
             } else {
                 let msg = "Upload failed";
-                try { msg = JSON.parse(xhr.responseText)?.error?.message ?? msg; } catch (_) { }
+                try { msg = JSON.parse(xhr.responseText)?.error?.message ?? msg; } catch (_) {}
                 reject(new Error(msg));
             }
         });
@@ -63,11 +65,15 @@ export async function uploadToCloudinary(file, resourceType = "image", onProgres
 
     // ── Step 3: confirm with backend (optional but recommended) ─
     // Validates the file actually exists in Cloudinary.
-    // Remove this block if you want a faster upload with less requests.
+    // Remove this block if you want a faster upload with fewer requests.
     try {
+        // Extract public_id from secure_url:
+        // e.g. https://res.cloudinary.com/cloud/video/upload/v123/teamup_projects/abc.mp4
+        //   → teamup_projects/abc
         const publicId = secure_url
-            .split("/upload/")[1]           // strip base URL
-            .replace(/\.[^.]+$/, "");       // strip extension → public_id
+            .split("/upload/")[1]       // strip base URL + version segment
+            .replace(/^v\d+\//, "")     // remove version prefix (v1234567890/)
+            .replace(/\.[^.]+$/, "");   // strip file extension
 
         await apiFetch("/upload/confirm", {
             method: "POST",
