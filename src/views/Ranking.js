@@ -19,6 +19,7 @@ export default class Ranking {
 
     this.eventId = localStorage.getItem("currentEventId");
     this.eventName = localStorage.getItem("currentEventName") ?? "Ranking";
+    this.eventStatus = localStorage.getItem("currentEventStatus") ?? null;
     this.selectedEventId = this.eventId;
     this.rankingStatus = null;
     this.rankingData = null;
@@ -128,16 +129,16 @@ export default class Ranking {
 
     try {
       const res = await apiFetch(
-        `/events/${this.selectedEventId}/ranking/publish`,
-        { method: "POST" },
+          `/events/${this.selectedEventId}/ranking/publish`,
+          { method: "POST" },
       );
       this.rankingData = res?.data ?? null;
       this.publishWarnings = this.rankingData?.warnings ?? [];
 
       // Refresh status after publish
       const statusRes = await apiFetch(
-        `/events/${this.selectedEventId}/ranking/status`,
-        { method: "GET" },
+          `/events/${this.selectedEventId}/ranking/status`,
+          { method: "GET" },
       );
       this.rankingStatus = statusRes?.data ?? null;
     } catch (e) {
@@ -200,7 +201,10 @@ export default class Ranking {
           <div class="rk-view-header-left">
             <h1 class="rk-view-title">${this.eventName}</h1>
             <div class="rk-view-meta">
-              <span class="rk-status-badge rk-status-badge--active">Active</span>
+              ${this.eventStatus === "FINISHED"
+        ? `<span class="rk-status-badge" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">FINISHED</span>`
+        : `<span class="rk-status-badge rk-status-badge--active">ACTIVE</span>`
+    }
               <span class="rk-view-subtitle">${t("ranking.final") ?? "Leaderboard"}</span>
             </div>
           </div>
@@ -221,18 +225,20 @@ export default class Ranking {
   }
 
   _renderAdminActions() {
-    const s = this.rankingStatus;
+    const isFinished = this.eventStatus === "FINISHED";
     return `
       <button
-        class="rk-action-btn rk-action-btn--primary ${this.publishing ? "rk-action-btn--loading" : ""}"
+        class="rk-action-btn rk-action-btn--primary ${this.publishing ? "rk-action-btn--loading" : ""} ${isFinished ? "rk-action-btn--disabled" : ""}"
         id="rk-publish-btn"
         type="button"
-        ${this.publishing ? "disabled" : ""}
+        ${this.publishing || isFinished ? "disabled" : ""}
+        ${isFinished ? `title="${t("ranking.disabledFinished") ?? "El evento está finalizado"}"` : ""}
+        style="${isFinished ? "opacity:0.45;cursor:not-allowed;" : ""}"
       >
         ${this.publishing
         ? `<span class="rk-spinner"></span>`
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`
-      }
+    }
         <span>${this.rankingData ? (t("ranking.recalculate") ?? "Recalculate Ranking") : (t("ranking.publish") ?? "Publish Ranking")}</span>
       </button>
     `;
@@ -367,8 +373,8 @@ export default class Ranking {
     // Apply Search Filter
     if (this.searchTerm) {
       ranking = ranking.filter(t =>
-        t.team_name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        t.project_name.toLowerCase().includes(this.searchTerm.toLowerCase())
+          t.team_name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          t.project_name.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     }
 
