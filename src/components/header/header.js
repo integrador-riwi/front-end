@@ -1,64 +1,54 @@
 import { t } from "../../utils/i18n.js";
 
-const HEADER_LINKS_BY_VIEW = () => {
-  const eventName = localStorage.getItem("currentEventName") 
-    || sessionStorage.getItem("selectedEvent") && JSON.parse(sessionStorage.getItem("selectedEvent"))?.title
-    || "Event";
-
-  return {
-    dashboard: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-    ],
-    "events/create": [
-      { label: t("nav.events"), route: "events" },
-      { label: t("nav.management"), route: "settings" },
-      { label: t("nav.createNew"), route: "events/create" },
-    ],
-    tlDashboard: [
-      { label: t("nav.events"), route: "coderEventSelect" },
-      {
-        label: (() => {
-          try {
-            const stored = sessionStorage.getItem("selectedEvent");
-            if (stored) return JSON.parse(stored).title || t("nav.teams");
-          } catch (_) {}
-          return t("nav.teams");
-        })(),
-        route: null,
-      },
-    ],
-    projects: [
-      { label: t("nav.dashboard"), route: "dashboard" },
-      { label: t("nav.teamsProjects"), route: "projects" },
-    ],
-    teamDetail: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-      { label: t("nav.teamDetails"), route: null },
-    ],
-    qr: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-      { label: t("nav.qrVoting"), route: null },
-    ],
-    coderHome: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-      { label: t("nav.teamDetails"), route: null },
-    ],
-    ranking: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-      { label: t("nav.ranking"), route: "ranking" },
-    ],
-    finalists: [
-      { label: t("nav.events"), route: "events" },
-      { label: eventName, route: "dashboard" },
-      { label: t("nav.finalists"), route: "finalists" },
-    ],
-  };
-};
+const HEADER_LINKS_BY_VIEW = () => ({
+  dashboard: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+  ],
+  "events/create": [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.createNew"), route: "events/create" },
+  ],
+  tlDashboard: [
+    { label: t("nav.events"), route: "coderEventSelect" },
+    {
+      label: (() => {
+        try {
+          const stored = sessionStorage.getItem("selectedEvent");
+          if (stored) return JSON.parse(stored).title || t("nav.teams");
+        } catch (_) { }
+        return t("nav.teams");
+      })(),
+      route: null,
+    },
+  ],
+  projects: [
+    { label: t("nav.dashboard"), route: "dashboard" },
+    { label: t("nav.teamsProjects"), route: "projects" },
+  ],
+  browseProjects: [
+    { label: t("nav.events"), route: "coderEventSelect" },
+    { label: t("nav.browseProjects"), route: "browseProjects" },
+  ],
+  teamDetail: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.teamDetails"), route: null },
+  ],
+  qr: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.qrVoting"), route: null },
+  ],
+  coderHome: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.teamDetails"), route: null },
+  ],
+  ranking: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.ranking"), route: "ranking" },
+  ],
+});
 
 const HEADER_LAYOUT_BY_ROUTE = () => ({
   dashboard: {
@@ -84,6 +74,10 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
   projects: {
     variant: "teams",
     title: t("nav.projectsOverview"),
+  },
+  browseProjects: {
+    variant: "teams",
+    title: t("nav.browseProjects"),
   },
   teamDetail: {
     variant: "details",

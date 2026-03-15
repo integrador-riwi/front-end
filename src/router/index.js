@@ -14,6 +14,7 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
+import BrowseProjects from "../views/BrowseProjects.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
@@ -102,7 +103,8 @@ const ROUTE_PERMISSIONS = {
   events: ["ADMIN", "STAFF"],
   "events/create": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
-  projects: ["ADMIN", "STAFF", "CODER"],
+  projects: ["ADMIN", "STAFF"],
+  browseProjects: ["CODER"],
   teamDetail: ["ADMIN"], // ← NUEVO
   ranking: ["ADMIN", "STAFF"],
   qr: ["ADMIN"],
@@ -303,8 +305,10 @@ class App {
       case "projects":
         this.currentView = new Teams(this);
         break;
-
-      case "teamDetail":
+      case "browseProjects":
+        this.currentView = new BrowseProjects(this);
+        break;
+      case "teamDetail": // ← NUEVO
         this.currentView = new TeamDetailView(this, params);
         break;
 
