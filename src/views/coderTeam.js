@@ -249,7 +249,7 @@ export function renderCoderTeam({
       : ""
     }
 
-            ${!isSubmitted
+            ${!isSubmitted && !isLeader
       ? `
             <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
                     id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
