@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
-import { getEventRanking } from "../services/api-events.js";
-import { createQR, getQR, getVoteResults } from "../services/api.js";
+import { getEventRanking, calculateFinalists } from "../services/api-events.js";
+import { createQR, getQR, getVoteResults, apiFetch } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -9,7 +9,8 @@ import "../assets/styles/qr-voting.css";
 import template from "../../pages/admin_qr.html?raw";
 import { getSelectedEvent } from "../utils/helpers.js";
 import defaultLogo from "../assets/logo.svg";
-import { initSocket, on, off, getSocket } from "../services/socket.js";
+import { initSocket, on, off } from "../services/socket.js";
+import { icons } from "../utils/icons.js";
 
 export default class QRVoting {
   constructor(router) {
@@ -55,10 +56,6 @@ export default class QRVoting {
     const pill = document.getElementById("qr-status-pill");
     const resultsSection = document.getElementById("results-section");
     const votingBanner = document.getElementById("voting-closed-banner");
-      console.log("qrActive:", this.qrActive);
-  console.log("votingBanner element:", votingBanner);
-  console.log("voteResults length:", this.voteResults?.length);
-  console.log("resultsSection:", resultsSection);
 
     if (!pill) return;
 
@@ -66,6 +63,7 @@ export default class QRVoting {
       pill.textContent = "Active";
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
+      this.updateSubmitVotesButton();
 
       if (votingBanner) votingBanner.style.display = "none";
       if (resultsSection) resultsSection.style.display = "block";
@@ -73,6 +71,7 @@ export default class QRVoting {
       pill.textContent = "Inactive";
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
+      this.updateSubmitVotesButton();
 
       if (this.voteResults?.length) {
         if (votingBanner) votingBanner.style.display = "flex";
@@ -264,6 +263,150 @@ export default class QRVoting {
     });
   }
 
+  updateSubmitVotesButton() {
+    const section = document.getElementById("submit-votes-section");
+    if (!section) return;
+
+    // Show only when QR is inactive and there are vote results
+    if (!this.qrActive && this.voteResults?.length) {
+      section.style.display = "block";
+    } else {
+      section.style.display = "none";
+    }
+  }
+
+  async handleSubmitVotes() {
+    const btn = document.getElementById("submit-votes-btn");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+      const confirmed = confirm(
+        "Are you sure you want to close voting and calculate winners? This cannot be undone.",
+      );
+      if (!confirmed) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Calculating winners...
+    `;
+
+      try {
+        const eventId = getSelectedEvent();
+        const result = await calculateFinalists(eventId);
+
+        console.log("Finalists calculated:", result);
+
+        btn.innerHTML = `<span class="icon-md align-items-center">${icons.checked()}</span> Winners calculated!`;
+        btn.classList.remove("btn-approve");
+        btn.classList.add("btn-secondary");
+
+        // Show success message
+        const section = document.getElementById("submit-votes-section");
+        section.innerHTML = `
+        <div class="d-flex align-items-center gap-3 p-2">
+          <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+               style="width:40px;height:40px;background:rgba(90,204,164,0.1);">
+            <span class="material-symbols-outlined" style="color:#5acca4;">check_circle</span>
+          </div>
+          <div>
+            <div class="fw-bold" style="color:#5acca4;">Voting closed successfully!</div>
+            <div style="color:#7b7fa8;font-size:0.85rem;">Winners have been calculated. Go to the Finalists page to see the podium.</div>
+          </div>
+        </div>
+      `;
+      } catch (err) {
+        console.error("Failed to calculate finalists:", err);
+
+        // Check if already calculated
+        if (err?.response?.status === 409 || err?.message?.includes("once")) {
+          btn.innerHTML = `  <span class="d-flex align-items-center gap-2">
+                              <span class="icon-md">${icons.danger()}</span>
+                              <span>Already calculated</span>
+                            </span>`;
+          btn.classList.remove("btn-approve");
+          btn.classList.add("btn-secondary");
+        } else {
+          alert("Error calculating winners: " + err.message);
+          btn.disabled = false;
+          btn.innerHTML = `Submit Votes & Calculate Winners`;
+        }
+      }
+    });
+  }
+
+  handleResetVotes() {
+  // Only show reset section for ADMIN
+  const resetSection = document.getElementById("reset-votes-section");
+  if (!resetSection) return;
+
+  if (this.user?.role === 'ADMIN') {
+    resetSection.style.display = "block";
+  } else {
+    resetSection.style.display = "none";
+    return;
+  }
+
+  const btn = document.getElementById("reset-votes-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const confirmed = confirm(
+      "⚠️ This will permanently delete ALL votes for this event. Are you sure?"
+    );
+    if (!confirmed) return;
+
+    btn.disabled  = true;
+    btn.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Resetting...
+    `;
+
+    try {
+      const eventId = getSelectedEvent();
+
+      // 👇 Ask backend teammate to implement this endpoint
+      // DELETE /api/qr-votes/event/:eventId/reset
+      await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
+
+      // Clear localStorage QR cache
+      localStorage.removeItem(`qr_event_${eventId}`);
+
+      // Reset local state
+      this.voteResults      = [];
+      this.totalVotes       = 0;
+      this.qrActive         = false;
+      this.finalistsApproved = false;
+
+      // Reset QR image
+      const qrImg = document.getElementById("qr");
+      if (qrImg) qrImg.src = defaultLogo;
+
+      // Update UI
+      this.renderResults();
+      this.updateQrStatusPill();
+      this.updateQrButtonState();
+      this.updateDownloadButton(null);
+      this.updateSubmitVotesButton();
+
+      btn.innerHTML = `✅ Votes reset successfully`;
+      btn.disabled  = false;
+
+      // Reload ranking panel to reset approve state
+      this.renderRankingPanel();
+
+    } catch (err) {
+      console.error("Failed to reset votes:", err);
+      alert("Error resetting votes: " + err.message);
+      btn.disabled  = false;
+      btn.innerHTML = `
+        <span class="material-symbols-outlined align-middle me-1" style="font-size:16px;">restart_alt</span>
+        Reset Votes
+      `;
+    }
+  });
+}
+
   /* -------------------------- RENDER RANKING -------------------------- */
 
   renderRankingPanel() {
@@ -399,9 +542,7 @@ export default class QRVoting {
   }
 
   startPolling() {
-    console.log("polling started"); // 👈
     this.pollingInterval = setInterval(async () => {
-      console.log("polling..."); // 👈
       await this.fetchVoteResults();
       this.renderResults();
     }, 5000);
@@ -587,16 +728,25 @@ export default class QRVoting {
     await this.fetchRanking();
     this.renderRankingPanel();
     await this.handleQRButton();
-    //this.updateQrStatusPill();
+    this.handleSubmitVotes();
+    this.handleResetVotes();
     this.updateQrButtonState();
     await this.loadExistingQR();
 
     await this.fetchVoteResults();
     this.renderResults();
     this.updateQrStatusPill();
+    this.updateSubmitVotesButton();
+
     if (this.qrActive) {
       this.subscribeToVotes();
       this.startPolling();
+    } else if (this.voteResults?.length) {
+      
+      this.pollingInterval = setInterval(async () => {
+        await this.fetchVoteResults();
+        this.renderResults();
+      }, 15000); 
     }
   }
 }

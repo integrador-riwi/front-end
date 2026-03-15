@@ -82,3 +82,37 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-main);
 }
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Filled variant */
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Icon sizes ── */
+.icon-sm  { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+.icon-md  { width: 20px; height: 20px; display: inline-block; vertical-align: middle; }
+.icon-lg  { width: 24px; height: 24px; display: inline-block; vertical-align: middle; }
+.icon-xl  { width: 32px; height: 32px; display: inline-block; vertical-align: middle; }
+
+/* ── Icon alignment ── */
+.icon-sm, .icon-md, .icon-lg, .icon-xl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-sm svg, .icon-md svg, .icon-lg svg,
+.icon-xl svg { display: block; }
+
+/* Fix icon + text alignment in buttons */
+.btn .icon-sm, .btn .icon-md,
+.btn .icon-lg, .btn .icon-xl {
+  position: relative;
+  top: -1px;
+}

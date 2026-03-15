@@ -1,3 +1,5 @@
+@import url("./root.css");
+
 /* ── Podium container ── */
 .podium-container {
   max-width: 900px;
@@ -42,18 +44,21 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transform: scale(1.05);
   z-index: 2;
+  margin-top: 32px;
 }
 
 .podium-block-2nd {
   height: 224px;
   background: linear-gradient(to top, rgba(90,204,164,0.4), rgba(90,204,164,0.1));
   border-top: 4px solid #5acca4;
+  margin-top: 24px;
 }
 
 .podium-block-3rd {
   height: 176px;
   background: linear-gradient(to top, rgba(234,162,252,0.4), rgba(234,162,252,0.1));
   border-top: 4px solid #eaa2fc;
+  margin-top: 24px;
 }
 
 /* ── Medal icons ── */
@@ -73,6 +78,8 @@
   top: -32px;
   border: 4px solid white;
   box-shadow: 0 4px 16px rgba(230, 202, 82, 0.5);
+    left: 50%;
+  transform: translateX(-50%);
 }
 
 .podium-medal-2nd {
@@ -81,6 +88,8 @@
   background: #5acca4;
   top: -24px;
   box-shadow: 0 4px 12px rgba(90, 204, 164, 0.4);
+    left: 50%;
+  transform: translateX(-50%);
 }
 
 .podium-medal-3rd {
@@ -89,6 +98,8 @@
   background: #eaa2fc;
   top: -24px;
   box-shadow: 0 4px 12px rgba(234, 162, 252, 0.4);
+    left: 50%;
+  transform: translateX(-50%);
 }
 
 /* ── Podium numbers ── */
@@ -179,4 +190,14 @@
   background: rgba(234,162,252,0.15);
   color: #eaa2fc;
   font-size: 1.8rem;
+}
+
+.podium-stars {
+  position: absolute;
+  top: -16px;
+  right: -8px;
+  transform: rotate(12deg);
+  color: #e6ca52;
+  font-size: 2.2rem;
+  font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
 }

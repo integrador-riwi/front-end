@@ -290,3 +290,46 @@
   color: #7b7fa8;
   font-size: 0.8rem;
 }
+
+/* ── Instructions ── */
+.instruction-step {
+  background: #f4f3ff;
+  border-radius: 14px;
+  padding: 20px 16px;
+  height: 100%;
+  position: relative;
+  border: 1px solid rgba(107, 92, 255, 0.1);
+}
+
+.instruction-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.instruction-step-number {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: rgba(107, 92, 255, 0.08);
+  line-height: 1;
+}
+
+.instruction-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #181e4b;
+  margin-bottom: 6px;
+}
+
+.instruction-desc {
+  font-size: 0.75rem;
+  color: #7b7fa8;
+  line-height: 1.5;
+}

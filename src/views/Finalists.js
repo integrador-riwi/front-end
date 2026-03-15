@@ -6,6 +6,7 @@ import { getSelectedEvent } from "../utils/helpers.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/finalists.css";
+import { icons } from "../utils/icons.js";
 
 export default class FinalistsView {
   constructor(router) {
@@ -22,6 +23,8 @@ export default class FinalistsView {
     try {
       const eventId = getSelectedEvent();
       const response = await getEventFinalists(eventId);
+
+      console.log("raw response:", JSON.stringify(response, null, 2));
       this.finalists = response?.finalists ?? response ?? [];
     } catch (err) {
       console.error("Failed to fetch finalists:", err);
@@ -32,121 +35,105 @@ export default class FinalistsView {
   /* -------------------------- RENDER PODIUM -------------------------- */
 
   renderPodium() {
-    if (!this.finalists.length) {
-      return `
-        <div class="text-center py-5" style="color:#7b7fa8;">
-          <p class="fw-bold mb-0">No finalists yet</p>
-          <p style="font-size:0.85rem;">Finalists will appear here once approved</p>
-        </div>`;
-    }
-
-    const first = this.finalists[0] ?? null;
-    const second = this.finalists[1] ?? null;
-    const third = this.finalists[2] ?? null;
-
-    const avatarEl = (team, position) => {
-      if (!team) return "";
-      const hasPhoto =
-        team.preview_photo_url && !team.preview_photo_url.endsWith("#");
-      return hasPhoto
-        ? `<img src="${team.preview_photo_url}"
-            class="podium-avatar podium-avatar-${position}"
-            alt="${team.team_name}"/>`
-        : `<div class="podium-avatar-initial podium-avatar-initial-${position}">
-         ${team.team_name?.[0]?.toUpperCase() ?? "?"}
-       </div>`;
-    };
-
+  if (!this.finalists.length) {
     return `
-      <div class="podium-container d-flex align-items-end justify-content-center gap-3 gap-md-4 w-100">
-
-    <!-- 2nd Place -->
-    ${
-      second
-        ? `
-    <div class="podium-col podium-col-2nd d-flex flex-column align-items-center">
-      <div class="text-center mb-3">
-        ${avatarEl(second, "2nd")}
-        <h4 class="fw-bold mt-2 mb-0 podium-team-name-2nd">${second.team_name}</h4>
-        <p class="mb-0 podium-project-name">${second.name}</p>
-        <p class="mb-0 podium-description">${second.description}</p>
-      </div>
-      <div class="podium-block podium-block-2nd w-100 position-relative">
-        <div class="podium-medal podium-medal-2nd">
-          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:22px;">military_tech</span>
-        </div>
-        <div class="text-center mt-3">
-          <div class="podium-number podium-number-2nd">2</div>
-          <div class="podium-label podium-label-2nd">Silver</div>
-        </div>
-        <div class="text-center">
-          <div class="podium-sublabel">Finalist</div>
-        </div>
-      </div>
-    </div>`
-        : ""
-    }
-
-    <!-- 1st Place -->
-    ${
-      first
-        ? `
-    <div class="podium-col podium-col-1st d-flex flex-column align-items-center">
-      <div class="text-center mb-4 position-relative">
-        <div class="position-relative d-inline-block">
-          ${avatarEl(first, "1st")}
-          <span class="material-symbols-outlined podium-stars">stars</span>
-        </div>
-        <h4 class="fw-black mt-2 mb-0 podium-team-name-1st">${first.team_name}</h4>
-        <p class="mb-0 podium-description-1st">${first.name}</p>
-        <p class="mb-0 podium-description">${first.description}</p>
-      </div>
-      <div class="podium-block podium-block-1st w-100 position-relative">
-        <div class="podium-medal podium-medal-1st">
-          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:28px;">emoji_events</span>
-        </div>
-        <div class="text-center mt-4">
-          <div class="podium-number podium-number-1st">1</div>
-          <div class="podium-label podium-label-1st">Winner</div>
-        </div>
-        <div class="text-center">
-          <div class="podium-sublabel">🏆 Champion</div>
-        </div>
-      </div>
-    </div>`
-        : ""
-    }
-
-    <!-- 3rd Place -->
-    ${
-      third
-        ? `
-    <div class="podium-col podium-col-3rd d-flex flex-column align-items-center">
-      <div class="text-center mb-3">
-        ${avatarEl(third, "3rd")}
-        <h4 class="fw-bold mt-2 mb-0 podium-team-name-3rd">${third.team_name}</h4>
-        <p class="mb-0 podium-project-name">${third.name}</p>
-        <p class="mb-0 podium-description">${third.description}</p>
-      </div>
-      <div class="podium-block podium-block-3rd w-100 position-relative">
-        <div class="podium-medal podium-medal-3rd">
-          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:22px;">workspace_premium</span>
-        </div>
-        <div class="text-center mt-2">
-          <div class="podium-number podium-number-3rd">3</div>
-          <div class="podium-label podium-label-3rd">Bronze</div>
-        </div>
-        <div class="text-center">
-          <div class="podium-sublabel">Finalist</div>
-        </div>
-      </div>
-    </div>`
-        : ""
-    }
-
-  </div>
-    `;
+      <div class="text-center py-5" style="color:#7b7fa8;">
+        <p class="fw-bold mb-0">No finalists yet</p>
+        <p style="font-size:0.85rem;">Finalists will appear here once approved</p>
+      </div>`;
   }
+
+  const first  = this.finalists[0] ?? null;
+  const second = this.finalists[1] ?? null;
+  const third  = this.finalists[2] ?? null;
+
+  const avatarEl = (team, position) => {
+    if (!team) return "";
+    return `<div class="podium-avatar-initial podium-avatar-initial-${position}">
+      ${team.team_name?.[0]?.toUpperCase() ?? "?"}
+    </div>`;
+  };
+
+  const podiumCard = (team, position, config) => {
+    if (!team) return '';
+    return `
+      <div class="col-12 col-md-4 d-flex flex-column align-items-center
+                  ${position === '1st' ? 'order-md-2' : position === '2nd' ? 'order-md-1' : 'order-md-3'}">
+
+        <!-- Team info above podium -->
+        <div class="text-center mb-3 ${position === '1st' ? 'mb-md-4' : ''}">
+          ${position === '1st' ? `
+          <div class="position-relative d-inline-block">
+            ${avatarEl(team, position)}
+            <span class="material-symbols-outlined podium-stars">stars</span>
+          </div>` : avatarEl(team, position)}
+          <h4 class="mt-2 mb-0 ${config.nameClass}">${team.team_name}</h4>
+          <p class="mb-0 podium-project-name">${team.name ?? ''}</p>
+        </div>
+
+        <!-- Podium block -->
+        <div class="podium-block ${config.blockClass} w-100 position-relative">
+          <div class="podium-medal ${config.medalClass}">
+            <span class="material-symbols-outlined"
+                  style="font-variation-settings:'FILL' 1;font-size:${position === '1st' ? '28' : '22'}px;">
+              ${config.medalIcon}
+            </span>
+          </div>
+          <div class="text-center mt-${position === '1st' ? '4' : '3'}">
+            <div class="podium-number ${config.numberClass}">${config.rank}</div>
+            <div class="podium-label ${config.labelClass}">${config.rankLabel}</div>
+          </div>
+          <div class="text-center mt-2">
+            <div class="podium-sublabel">
+              <span class="icon-md">${position === '1st' ? icons.trophy() : icons.check()}</span>
+              ${position === '1st' ? 'Champion' : 'Finalist'}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  };
+
+  return `
+    <div class="row g-4 align-items-end w-100" style="max-width:900px;margin:0 auto;">
+
+      ${podiumCard(first, '1st', {
+        nameClass:  'fw-black podium-team-name-1st',
+        blockClass: 'podium-block-1st',
+        medalClass: 'podium-medal-1st',
+        medalIcon:  'emoji_events',
+        numberClass:'podium-number-1st',
+        labelClass: 'podium-label-1st',
+        rank:       '1',
+        rankLabel:  'Winner',
+      })}
+
+      ${podiumCard(second, '2nd', {
+        nameClass:  'fw-bold podium-team-name-2nd',
+        blockClass: 'podium-block-2nd',
+        medalClass: 'podium-medal-2nd',
+        medalIcon:  'military_tech',
+        numberClass:'podium-number-2nd',
+        labelClass: 'podium-label-2nd',
+        rank:       '2',
+        rankLabel:  'Silver',
+      })}
+
+      ${podiumCard(third, '3rd', {
+        nameClass:  'fw-bold podium-team-name-3rd',
+        blockClass: 'podium-block-3rd',
+        medalClass: 'podium-medal-3rd',
+        medalIcon:  'workspace_premium',
+        numberClass:'podium-number-3rd',
+        labelClass: 'podium-label-3rd',
+        rank:       '3',
+        rankLabel:  'Bronze',
+      })}
+
+    </div>
+  `;
+}
 
   /* -------------------------- MAIN RENDER -------------------------- */
 

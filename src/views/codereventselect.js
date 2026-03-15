@@ -130,7 +130,7 @@ export default class CoderEventSelect {
               ${isTL ? t("ces.subtitleTL") : t("ces.subtitleCoder")}
             </p>
           </header>
-          <div class="row">
+          <div class="row g-4 align-items-stretch">
             ${this.isLoading ? this._renderSkeletons() : this._renderEvents()}
           </div>
           ${this.error ? `<p class="ces-error">${this.error}</p>` : ""}
@@ -208,7 +208,7 @@ export default class CoderEventSelect {
 
     return `
     <div class="col-12 col-md-6 col-lg-4">
-      <article class="ces-event-card" data-event-id="${event.id}" style="--delay: ${index * 80}ms">
+      <article class="ces-event-card h-100" data-event-id="${event.id}" style="--delay: ${index * 80}ms">
         <div class="ces-event-top">
           <span class="ces-event-type" style="background:${typeStyle.bg};color:${typeStyle.color}">
             ${typeStyle.label}
@@ -227,7 +227,7 @@ export default class CoderEventSelect {
         </div>
         <h2 class="ces-event-name">${event.title}</h2>
         <p class="ces-event-desc">${event.description || t("common.noDescription")}</p>
-        <div class="ces-event-meta">
+        <div class="ces-event-meta mt-auto">
           <div class="ces-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
