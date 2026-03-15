@@ -8,6 +8,7 @@ import "../assets/styles/components.css";
 import "../assets/styles/qr-voting.css";
 import template from "../../pages/admin_qr.html?raw";
 import { getSelectedEvent } from "../utils/helpers.js";
+import defaultLogo from "../assets/logo.svg";
 
 export default class QRVoting {
   constructor(router) {
@@ -170,7 +171,7 @@ export default class QRVoting {
       try {
         if (this.qrActive) {
           this.qrActive = false;
-          qrImg.src = "../src/assets/logo.svg";
+          qrImg.src = defaultLogo;
           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
 
           btn.innerText = "Generate QR";
