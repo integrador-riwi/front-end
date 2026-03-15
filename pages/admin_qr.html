@@ -1,4 +1,3 @@
-<!-- <div  class="container py-3"> -->
 <div class="d-flex">
   <!-- MAIN -->
   <div class="flex-fill p-3 p-lg-4">
@@ -8,55 +7,45 @@
       </p>
 
       <div class="row g-4">
-        <!-- LEFT COLUMN (4) -->
+
+        <!-- LEFT COLUMN -->
         <div class="col-lg-4">
+
           <!-- Voting Status -->
-          <div
-            class="card-custom p-3 mb-4 d-flex justify-content-between align-items-center"
-          >
+          <div class="card-custom p-3 mb-4 d-flex justify-content-between align-items-center">
             <div>
               <strong>Voting Status:</strong>
-              <span id="qr-status-pill" class="badge"> Inactive </span>
+              <span id="qr-status-pill" class="badge">Inactive</span>
             </div>
           </div>
 
+          <!-- QR Card -->
           <div class="card-custom p-4 text-center">
             <h5 class="fw-bold mb-1">Scan to Vote</h5>
             <p class="text-muted small mb-3">Audience access link</p>
 
-            <div
-              class="border border-4 rounded-4 p-3 mb-3"
-              style="border-color: var(--primary)"
-            >
-              <img id="qr" src="./../src/assets/logo.svg" class="img-fluid" />
+            <div class="qr-image-wrapper border border-4 rounded-4 p-3 mb-3">
+              <img id="qr" src="./../src/assets/logo.svg" class="img-fluid"/>
             </div>
+
             <div class="mb-3">
               <label class="form-label">QR Expiration Date</label>
-              <input
-                type="datetime-local"
-                id="qr-expiration"
-                class="form-control"
-              />
+              <input type="datetime-local" id="qr-expiration" class="form-control"/>
             </div>
 
-            <button
-              id="generate-qr-btn"
-              class="qr-image btn btn-primary-custom w-100 mb-2"
-            >
+            <button id="generate-qr-btn" class="btn btn-primary-custom w-100 mb-2">
               Generate QR
             </button>
-
-            <button
-              id="download-qr-btn"
-              class="btn btn-outline-secondary w-100 rounded-3"
-            >
+            <button id="download-qr-btn" class="btn btn-outline-secondary w-100 rounded-3">
               Download
             </button>
           </div>
+
         </div>
 
-        <!-- RIGHT COLUMN (8) -->
+        <!-- RIGHT COLUMN -->
         <div class="col-lg-8 d-flex flex-column gap-4">
+
           <!-- FINALISTS -->
           <div id="ranking-container" class="card-custom p-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -66,12 +55,48 @@
               </div>
               <button class="btn btn-sm btn-light">Manage All Teams</button>
             </div>
-
             <div id="finalists-container" class="row g-3 mt-3"></div>
           </div>
+
+          <!-- LIVE RESULTS -->
+          <div class="card-custom p-4" id="results-section">
+
+            <!-- Header -->
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <!-- Live ping -->
+                  <div class="live-ping-wrapper">
+                    <span class="live-ping-wave"></span>
+                    <span class="live-ping-dot"></span>
+                  </div>
+                  <h2 class="live-results-title fw-bold mb-0">Live Voting Results</h2>
+                </div>
+                <p class="live-results-subtitle mb-0">Real-time audience feedback and rankings</p>
+              </div>
+
+              <!-- Total votes -->
+              <div class="total-votes-box d-flex align-items-center gap-3 rounded-3 px-4 py-3">
+                <div class="text-end">
+                  <p class="total-votes-label mb-0 fw-bold text-uppercase">Total Votes Cast</p>
+                  <p class="total-votes-number mb-0 fw-black" id="total-votes">0</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results list -->
+            <div id="results-container">
+              <div class="text-center py-5 result-empty">
+                <span class="material-symbols-outlined d-block mb-2">how_to_vote</span>
+                <p class="mb-0 fw-bold">No votes yet</p>
+                <p class="mb-0 results-empty-sub">Results will appear here in real time</p>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </div>
   </div>
 </div>
-<!-- </div> -->

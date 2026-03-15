@@ -63,7 +63,6 @@ export async function getVotingProjects(id_event) {
     method: "GET"})
 }
 
-
 export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
 }
@@ -74,6 +73,11 @@ export async function getMe() {
 
 export async function refreshTokens() {
   return apiFetch("/auth/refresh", { method: "POST" });
+}
+
+export async function getVoteResults(eventId) {
+  const response = await apiFetch(`/qr-votes/event/${eventId}/results`, { method: "GET" });
+  return response?.data ?? response;
 }
 
 // Teams

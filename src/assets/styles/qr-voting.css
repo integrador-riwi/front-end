@@ -1,5 +1,6 @@
 @import url("./root.css");
 
+/* ── Cards & Buttons ── */
 .card-custom {
   border-radius: 22px;
   border: 1px solid var(--border);
@@ -18,12 +19,10 @@
   color: white;
 }
 
-.bg-active{
-  background-color: var(--mint);
-}
-
-.bg-inactive{
-  background-color: var(--bg-header);
+.btn-primary-custom:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  color: white;
 }
 
 .btn-primary-disabled {
@@ -35,18 +34,20 @@
   color: white;
 }
 
-#qr {
-  width: 100%;
-  max-width: 400px;
-  height: auto;
+.btn-approve {
+  background: #5acca4;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(90, 204, 164, 0.3);
 }
 
-.btn-primary-custom:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
+.btn-approve:hover {
+  background: #45b890;
   color: white;
 }
 
+/* ── Status badges ── */
 .status-badge {
   padding: 6px 14px;
   border-radius: 999px;
@@ -54,12 +55,22 @@
   font-size: 13px;
 }
 
-.status-active {
-  background: rgba(90,204,164,.15);
-  color: var(--mint);
+.status-active  { background: rgba(90,204,164,.15); color: var(--mint); }
+.bg-active      { background-color: var(--mint); }
+.bg-inactive    { background-color: var(--bg-header); }
+
+/* ── QR ── */
+#qr {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
 }
 
-/* ---------------- Finalist Cards ---------------- */
+.qr-image-wrapper {
+  border-color: var(--primary) !important;
+}
+
+/* ── Finalist Cards ── */
 .teamF-card {
   border-radius: 16px;
   border: 1px solid var(--border-card);
@@ -92,7 +103,7 @@
   flex-shrink: 0;
 }
 
-/* ---------------- Audience Preview ---------------- */
+/* ── Audience Slots ── */
 .slot {
   border-radius: 22px;
   border: 2px dashed;
@@ -104,39 +115,26 @@
   justify-content: end;
 }
 
-.slot:hover {
-  transform: scale(1.05);
+.slot:hover  { transform: scale(1.05); }
+.big-slot    { height: 180px; }
+.small-slot  { height: 130px; }
+
+.slot-1 { background: rgba(234,162,252,0.15); border-color: var(--lilac); color: var(--lilac); }
+.slot-2 { background: rgba(90,204,164,0.15);  border-color: var(--mint);  color: var(--mint);  }
+.slot-3 { background: rgba(230,202,82,0.15);  border-color: var(--gold);  color: var(--gold);  }
+
+/* ── Ranking Cards Grid ── */
+.ranking-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
-.big-slot {
-  height: 180px;
-}
+@media (max-width: 992px) { .ranking-cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px) { .ranking-cards-grid { grid-template-columns: repeat(1, 1fr); } }
 
-.small-slot {
-  height: 130px;
-}
-
-.slot-1 {
-  background: rgba(234,162,252,0.15);
-  border-color: var(--lilac);
-  color: var(--lilac);
-}
-
-.slot-2 {
-  background: rgba(90,204,164,0.15);
-  border-color: var(--mint);
-  color: var(--mint);
-}
-
-.slot-3 {
-  background: rgba(230,202,82,0.15);
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-/* ── Ranking Card ── */
 .ranking-card {
-  min-width: 180px;
+  width: 100%;
   border: 2px solid rgba(107, 92, 255, 0.3);
   background: #6b5cff0d;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -147,16 +145,10 @@
   box-shadow: 0 12px 28px rgba(107, 92, 255, 0.15);
 }
 
-/* ── Accent bar ── */
-.ranking-card-bar {
-  height: 6px;
-  width: 100%;
-}
-
+.ranking-card-bar        { height: 6px; width: 100%; }
 .ranking-card-bar.finalist { background: #5acca4; }
 .ranking-card-bar.regular  { background: #6b5cff; }
 
-/* ── Avatar ── */
 .ranking-avatar {
   width: 72px;
   height: 72px;
@@ -165,7 +157,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* ── Finalist checkmark ── */
 .ranking-check {
   width: 26px;
   height: 26px;
@@ -176,20 +167,9 @@
   box-shadow: 0 2px 6px rgba(90, 204, 164, 0.4);
 }
 
-/* ── Team name ── */
-.ranking-team-name {
-  color: #181e4b;
-  font-size: 0.85rem;
-}
+.ranking-team-name    { color: #181e4b; font-size: 0.85rem; }
+.ranking-project-name { color: #7b7fa8; font-size: 0.75rem; max-width: 140px; }
 
-/* ── Project name ── */
-.ranking-project-name {
-  color: #7b7fa8;
-  font-size: 0.75rem;
-  max-width: 140px;
-}
-
-/* ── Score pill ── */
 .ranking-score {
   background: rgba(107, 92, 255, 0.1);
   color: #6b5cff;
@@ -197,11 +177,6 @@
   font-weight: 700;
 }
 
-.ranking-score .material-symbols-outlined {
-  font-size: 14px;
-}
-
-/* ── Finalist badge ── */
 .ranking-finalist-badge {
   background: #dbfff2;
   color: #5acca4;
@@ -209,20 +184,75 @@
   letter-spacing: 0.05em;
 }
 
-/* ── Approve button ── */
-.btn-approve {
-  background: #5acca4;
-  color: white;
-  border: none;
-  font-size: 0.9rem;
-  box-shadow: 0 4px 12px rgba(90, 204, 164, 0.3);
+/* ── Live Results ── */
+.live-results-title    { color: #181e4b; font-size: 1.1rem; }
+.live-results-subtitle { color: #7b7fa8; font-size: 0.85rem; }
+
+/* ── Live ping ── */
+.live-ping-wrapper {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
-.btn-approve:hover {
-  background: #45b890;
-  color: white;
+.live-ping-wave,
+.live-ping-dot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
 }
 
-.btn-approve .material-symbols-outlined {
-  font-size: 16px;
+.live-ping-wave {
+  background: rgba(254, 101, 79, 0.5);
+  animation: ping 1.2s ease-out infinite;
 }
+
+.live-ping-dot { background: #fe654f; }
+
+@keyframes ping {
+  0%   { transform: scale(1);   opacity: 0.75; }
+  100% { transform: scale(2.2); opacity: 0;    }
+}
+
+/* ── Total votes ── */
+.total-votes-box     { background: #f4f3ff; }
+.total-votes-label   { color: #7b7fa8; font-size: 0.65rem; letter-spacing: 1px; }
+.total-votes-number  { color: #6b5cff; font-size: 1.8rem; line-height: 1; }
+.total-votes-divider { width: 1px; height: 40px; background: rgba(107, 92, 255, 0.2); }
+.total-votes-icon    { width: 40px; height: 40px; background: rgba(107, 92, 255, 0.1); color: #6b5cff; }
+
+/* ── Result list ── */
+.result-list-item { transition: background 0.2s, box-shadow 0.2s; }
+.result-list-item:hover {
+  background: #ede9fe !important;
+  box-shadow: 0 2px 8px rgba(107, 92, 255, 0.1);
+}
+
+.result-avatar {
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.result-team-name    { color: #181e4b; font-size: 0.9rem; }
+.result-project-name { color: #7b7fa8; font-size: 0.75rem; }
+
+.result-progress-track {
+  height: 8px;
+  background: rgba(107, 92, 255, 0.08);
+}
+
+.result-progress-labels {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7b7fa8;
+}
+
+/* ── Empty state ── */
+.result-empty .material-symbols-outlined,
+.result-empty { color: #7b7fa8; }
+.result-empty .material-symbols-outlined { font-size: 40px; }
+.results-empty-sub { font-size: 0.8rem; color: #7b7fa8; }
