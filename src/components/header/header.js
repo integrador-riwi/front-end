@@ -34,6 +34,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   qr: [
     { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: t("nav.qrVoting"), route: null },
   ],
   coderHome: [
@@ -43,6 +44,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   ranking: [
     { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
     { label: t("nav.ranking"), route: "ranking" },
   ],
   finalists: [

@@ -33,7 +33,7 @@
               <input type="datetime-local" id="qr-expiration" class="form-control"/>
             </div>
 
-            <button id="generate-qr-btn" class="btn btn-primary-custom w-100 mb-2">
+            <button id="generate-qr-btn" class="btn btn-primary-custom w-100 mb-2" disabled>
               Generate QR
             </button>
             <button id="download-qr-btn" class="btn btn-outline-secondary w-100 rounded-3">
@@ -59,7 +59,7 @@
           </div>
 
           <!-- LIVE RESULTS -->
-          <div class="card-custom p-4" id="results-section">
+          <div class="card-custom p-4" id="results-section" style="display:none;">
 
             <!-- Header -->
             <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
@@ -81,6 +81,14 @@
                   <p class="total-votes-label mb-0 fw-bold text-uppercase">Total Votes Cast</p>
                   <p class="total-votes-number mb-0 fw-black" id="total-votes">0</p>
                 </div>
+              </div>
+            </div>
+
+            <!-- Voting closed banner -->
+            <div id="voting-closed-banner" class="voting-closed-banner">
+              <div>
+                <div class="voting-closed-title">Voting Closed</div>
+                <div class="voting-closed-subtitle">These are the final results — no more votes can be submitted.</div>
               </div>
             </div>
 

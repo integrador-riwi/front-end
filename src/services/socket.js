@@ -270,6 +270,12 @@ function setupEventListeners() {
     if (eventHandlers["team:member_removed"])
       eventHandlers["team:member_removed"](data);
   });
+
+  // vote:new
+  socket.on("vote:new", (data) => {
+    console.log("[Socket] vote:new received:", data);
+    if (eventHandlers["vote:new"]) eventHandlers["vote:new"](data);
+  });
 }
 
 export function on(event, callback) {

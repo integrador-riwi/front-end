@@ -42,24 +42,21 @@ export default class PublicVotingPage {
   }
 
   /* -------------------------- VOTING -------------------------- */
+async handleVote(projectId) {
+  try {
+    const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
+    await submitVote(qrVoteId, Number(projectId));
 
-  async handleVote(projectId) {
-    try {
-        const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"))
+    sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
+    alert(t("publicVoting.voteSuccess"));
+    this.disableVoting();
 
-      await submitVote(qrVoteId, Number(projectId));
-
-      sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
-      alert("Vote registered successfully!");
-      this.disableVoting();
-
-      alert(t("publicVoting.voteSuccess"));
-      this.disableVoting();
-    } catch (error) {
-      console.error("Vote error:", error);
-      alert(t("publicVoting.voteError"));
-    }
+  } catch (error) {
+    console.error("Vote error:", error);
+    console.log("Vote error details:", error?.response?.data); 
+    alert(t("publicVoting.voteError"));
   }
+}
 
   disableVoting() {
     const buttons = document.querySelectorAll(".vote-btn");

@@ -9,6 +9,7 @@ import "../assets/styles/qr-voting.css";
 import template from "../../pages/admin_qr.html?raw";
 import { getSelectedEvent } from "../utils/helpers.js";
 import defaultLogo from "../assets/logo.svg";
+import { initSocket, on, off, getSocket } from "../services/socket.js";
 
 export default class QRVoting {
   constructor(router) {
@@ -24,7 +25,9 @@ export default class QRVoting {
     this.finalistsApproved = false;
 
     this.voteResults = [];
-    this.totalVotes  = 0;
+    this.totalVotes = 0;
+
+    this.pollingInterval = null;
   }
 
   /* -------------------------- RANKING -------------------------- */
@@ -50,16 +53,31 @@ export default class QRVoting {
 
   updateQrStatusPill() {
     const pill = document.getElementById("qr-status-pill");
+    const resultsSection = document.getElementById("results-section");
+    const votingBanner = document.getElementById("voting-closed-banner");
+      console.log("qrActive:", this.qrActive);
+  console.log("votingBanner element:", votingBanner);
+  console.log("voteResults length:", this.voteResults?.length);
+  console.log("resultsSection:", resultsSection);
+
     if (!pill) return;
 
     if (this.qrActive) {
       pill.textContent = "Active";
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
+
+      if (votingBanner) votingBanner.style.display = "none";
+      if (resultsSection) resultsSection.style.display = "block";
     } else {
       pill.textContent = "Inactive";
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
+
+      if (this.voteResults?.length) {
+        if (votingBanner) votingBanner.style.display = "flex";
+        if (resultsSection) resultsSection.style.display = "block";
+      }
     }
   }
 
@@ -67,6 +85,14 @@ export default class QRVoting {
     const btn = document.getElementById("generate-qr-btn");
     const expirationInput = document.getElementById("qr-expiration");
     if (!btn) return;
+
+    if (this.qrActive) {
+      btn.disabled = false;
+      btn.innerText = "Disable QR";
+      btn.classList.remove("btn-primary-custom", "btn-secondary");
+      btn.classList.add("btn-primary-disabled");
+      return;
+    }
 
     const hasDate = !!expirationInput?.value;
     const canGenerate = this.finalistsApproved && hasDate;
@@ -107,6 +133,7 @@ export default class QRVoting {
 
         this.updateDownloadButton(qrSrc);
         this.updateQrStatusPill();
+        this.updateQrButtonState();
       } else {
         this.updateDownloadButton(null);
       }
@@ -173,6 +200,9 @@ export default class QRVoting {
           this.qrActive = false;
           qrImg.src = defaultLogo;
           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
+
+          this.stopPolling();
+          off("vote:new");
 
           btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
@@ -274,7 +304,7 @@ export default class QRVoting {
     <!-- Cards -->
     <div class="ranking-cards-grid">
       ${this.ranking
-        .slice(0,8)
+        .slice(0, 8)
         .map((team, index) => {
           const isFinalist = this.finalists.find(
             (t) => t.id_team === team.id_team,
@@ -348,86 +378,124 @@ export default class QRVoting {
 
   /* -------------------------- LIVE RESULTS -------------------------- */
 
-subscribeToVotes() {
-  const { on } = window.__socketService ?? {};
-  if (!on) return;
+  subscribeToVotes() {
+    // Wait for socket to connect before registering handler
+    setTimeout(async () => {
+      const { getSocket } = await import("../services/socket.js");
+      const socket = getSocket();
+      console.log("socket after init:", socket?.connected);
 
-  on("vote:new", async () => {
-    await this.fetchVoteResults();
-    this.renderResults();
-  });
-}
-
-async fetchVoteResults() {
-  try {
-    const eventId = getSelectedEvent();
-    const res     = await getVoteResults(eventId);
-    this.voteResults = res?.results ?? res ?? [];
-    this.totalVotes  = this.voteResults.reduce((sum, t) => sum + (t.votes ?? t.vote_count ?? 0), 0);
-  } catch (err) {
-    console.error("Failed to fetch vote results:", err);
-    this.voteResults = [];
-    this.totalVotes  = 0;
+      on("vote:new", async (data) => {
+        console.log("vote:new received:", data);
+        await this.fetchVoteResults();
+        this.renderResults();
+      });
+    }, 2000);
   }
-}
 
-renderResults() {
-  const container = document.getElementById("results-container");
-  const totalEl = document.getElementById("total-votes");
-  if (!container) return;
+  destroy() {
+    off("vote:new");
+    this.stopPolling();
+  }
 
-  const finalistIds = this.finalists.map(f => f.id_project);       
+  startPolling() {
+    console.log("polling started"); // 👈
+    this.pollingInterval = setInterval(async () => {
+      console.log("polling..."); // 👈
+      await this.fetchVoteResults();
+      this.renderResults();
+    }, 5000);
+  }
 
-  const filteredResults = this.voteResults.filter(t =>
-    finalistIds.includes(t.id_project ?? t.id)
-  );
+  stopPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+  }
 
-  const filteredTotal = filteredResults.reduce((sum, t) =>
-    sum + (t.votes ?? t.vote_count ?? 0), 0
-  );
+  async fetchVoteResults() {
+    try {
+      const eventId = getSelectedEvent();
+      const res = await getVoteResults(eventId);
+      this.voteResults = res?.results ?? res ?? [];
+      this.totalVotes = this.voteResults.reduce(
+        (sum, t) => sum + (t.votes ?? t.vote_count ?? 0),
+        0,
+      );
+    } catch (err) {
+      console.error("Failed to fetch vote results:", err);
+      this.voteResults = [];
+      this.totalVotes = 0;
+    }
+  }
 
-  if (totalEl) totalEl.textContent = filteredTotal;
+  renderResults() {
+    const container = document.getElementById("results-container");
+    const totalEl = document.getElementById("total-votes");
+    if (!container) return;
 
-  if (!filteredResults.length) {
-    container.innerHTML = `
+    const finalistIds = this.finalists.map((f) => f.id_project);
+
+    const filteredResults = this.voteResults.filter((t) =>
+      finalistIds.includes(t.id_project ?? t.id),
+    );
+
+    const filteredTotal = filteredResults.reduce(
+      (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
+      0,
+    );
+
+    if (totalEl) totalEl.textContent = filteredTotal;
+
+    if (!filteredResults.length) {
+      container.innerHTML = `
       <div class="text-center py-5 result-empty">
         <span class="material-symbols-outlined d-block mb-2">how_to_vote</span>
         <p class="mb-0 fw-bold">No votes yet</p>
         <p class="mb-0 results-empty-sub">Results will appear here in real time</p>
       </div>`;
-    return;
-  }
+      return;
+    }
 
-  const sorted = [...filteredResults].sort((a, b) =>
-    (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0)
-  );
+    const sorted = [...filteredResults].sort(
+      (a, b) => (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0),
+    );
 
-  const accentColors = [
-    '#eaa2fc', '#5acca4', '#e6ca52',
-    '#6b5cff', '#fe654f', '#60a5fa',
-  ];
+    const accentColors = [
+      "#eaa2fc",
+      "#5acca4",
+      "#e6ca52",
+      "#6b5cff",
+      "#fe654f",
+      "#60a5fa",
+    ];
 
-  const avatarColors = [
-    { bg: '#e0e7ff', color: '#6b5cff' },
-    { bg: '#d1fae5', color: '#059669' },
-    { bg: '#fef3c7', color: '#d97706' },
-    { bg: '#fce7f3', color: '#db2777' },
-    { bg: '#ede9fe', color: '#7c3aed' },
-    { bg: '#dcfce7', color: '#16a34a' },
-  ];
+    const avatarColors = [
+      { bg: "#e0e7ff", color: "#6b5cff" },
+      { bg: "#d1fae5", color: "#059669" },
+      { bg: "#fef3c7", color: "#d97706" },
+      { bg: "#fce7f3", color: "#db2777" },
+      { bg: "#ede9fe", color: "#7c3aed" },
+      { bg: "#dcfce7", color: "#16a34a" },
+    ];
 
-  const medals = ['🥇', '🥈', '🥉'];
+    const medals = ["🥇", "🥈", "🥉"];
 
-  container.innerHTML = `
+    container.innerHTML = `
     <div class="d-flex flex-column gap-2">
-      ${sorted.map((team, index) => {
-        const votes = team.votes ?? team.vote_count ?? 0;
-        const percentage = filteredTotal > 0 ? Math.round((votes / filteredTotal) * 100) : 0;
-        const accent = accentColors[index % accentColors.length];
-        const av = avatarColors[index % avatarColors.length];
-        const medal = medals[index] ?? `#${index + 1}`;
+      ${sorted
+        .map((team, index) => {
+          const votes = Number(
+            team.total_votes ?? team.votes ?? team.vote_count ?? 0,
+          );
+          const percentage =
+            filteredTotal > 0 ? Math.round((votes / filteredTotal) * 100) : 0;
+          const accent = accentColors[index % accentColors.length];
+          const av = avatarColors[index % avatarColors.length];
+          const medal = medals[index] ?? `#${index + 1}`;
 
-        return `
+          return `
           <div class="result-list-item d-flex align-items-center gap-3 rounded-3 p-3"
                style="background:#f4f3ff;border:1.5px solid rgba(107,92,255,0.1);">
 
@@ -437,13 +505,13 @@ renderResults() {
 
             <div class="result-avatar rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
                  style="background:${av.bg};color:${av.color};width:36px;height:36px;font-size:0.85rem;">
-              ${team.team_name?.[0]?.toUpperCase() ?? '?'}
+              ${team.team_name?.[0]?.toUpperCase() ?? "?"}
             </div>
 
             <div class="flex-grow-1 overflow-hidden">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-bold text-truncate" style="color:#181e4b;font-size:0.85rem;">
-                  ${team.team_name ?? ''}
+                  ${team.team_name ?? ""}
                 </span>
                 <span class="fw-bold flex-shrink-0 ms-2" style="color:${accent};font-size:0.8rem;">
                   ${votes} votes · ${percentage}%
@@ -457,10 +525,11 @@ renderResults() {
 
           </div>
         `;
-      }).join("")}
+        })
+        .join("")}
     </div>
   `;
-}
+  }
 
   attachRankingHandlers() {
     const select = document.getElementById("finalists-count");
@@ -499,6 +568,7 @@ renderResults() {
   /* -------------------------- MAIN RENDER -------------------------- */
 
   async render() {
+    initSocket();
     const app = document.getElementById("app");
 
     app.innerHTML = `
@@ -517,12 +587,16 @@ renderResults() {
     await this.fetchRanking();
     this.renderRankingPanel();
     await this.handleQRButton();
-    this.updateQrStatusPill();
+    //this.updateQrStatusPill();
     this.updateQrButtonState();
     await this.loadExistingQR();
 
     await this.fetchVoteResults();
     this.renderResults();
-    this.subscribeToVotes();
+    this.updateQrStatusPill();
+    if (this.qrActive) {
+      this.subscribeToVotes();
+      this.startPolling();
+    }
   }
 }

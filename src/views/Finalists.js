@@ -35,7 +35,6 @@ export default class FinalistsView {
     if (!this.finalists.length) {
       return `
         <div class="text-center py-5" style="color:#7b7fa8;">
-          <span class="material-symbols-outlined d-block mb-2" style="font-size:48px;">emoji_events</span>
           <p class="fw-bold mb-0">No finalists yet</p>
           <p style="font-size:0.85rem;">Finalists will appear here once approved</p>
         </div>`;
@@ -160,12 +159,6 @@ export default class FinalistsView {
         ${this.header.render()}
         <main class="dashboard-main">
           <div class="container-fluid py-4">
-
-            <!-- Page header -->
-            <div class="text-center mb-5">
-              <h3 class="fw-black mb-2" style="font-size:2rem;color:#181e4b;">Grand Finale Winners</h3>
-              <p style="color:#7b7fa8;">Recognizing the exceptional talent of this season's top performers</p>
-            </div>
 
             <!-- Podium -->
             <div id="podium-container" class="d-flex justify-content-center mb-5">
