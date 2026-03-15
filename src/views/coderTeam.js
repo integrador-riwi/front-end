@@ -217,14 +217,18 @@ export function renderCoderTeam({
               ${members
       .map(
         (m, i) => `
-                <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
+                <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2 ct-member-clickable" 
+                    data-user-id="${m.id_user}" 
+                    style="cursor:pointer; transition: background 0.2s;"
+                    onmouseover="this.style.background='rgba(107, 92, 255, 0.05)'"
+                    onmouseout="this.style.background='transparent'">
                   ${m.github_avatar_url
             ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
             : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
           }
                   <div class="overflow-hidden">
-                    <p class="ct-member-name text-truncate mb-0">${m.name}</p>
-                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
+                    <p class="ct-member-name text-truncate mb-0 fw-bold">${m.name}</p>
+                    <p class="ct-member-role mb-0" style="font-size: 0.75rem; opacity: 0.7;">${m.team_role ?? m.role ?? "Member"}</p>
                   </div>
                 </li>
               `,

@@ -34,8 +34,10 @@ export default class Teams {
       const img = document.createElement("img");
       img.src = user.github_avatar_url;
       img.alt = user.name;
-      img.className = "app-avatar app-avatar-has-tip";
+      img.className = "app-avatar app-avatar-has-tip ct-member-clickable";
       img.dataset.tipName = user.name;
+      img.dataset.userId = user.id_user;
+      img.style.cursor = "pointer";
       container.appendChild(img);
     });
 

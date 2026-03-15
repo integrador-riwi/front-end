@@ -141,6 +141,11 @@ export async function getMyProfile() {
   return response.data ?? response;
 }
 
+export async function getPublicProfile(userId) {
+  const response = await apiFetch(`/users/${userId}/profile`, { method: "GET" });
+  return response.data ?? response;
+}
+
 export async function updateProfile(profileData = {}) {
   const response = await apiFetch("/auth/profile", {
     method: "PUT",
