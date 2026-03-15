@@ -283,6 +283,8 @@ export default class CoderEventSelect {
         const eventId = parseInt(btn.dataset.eventId);
         const event = this.events.find((e) => e.id === eventId);
         sessionStorage.setItem("selectedEvent", JSON.stringify(event));
+        localStorage.setItem("currentEventName", event?.title ?? "");
+        localStorage.setItem("currentEventId", eventId);
         const destination = TL_ROLES.includes(this.user?.role)
           ? "tlDashboard"
           : "coderHome";
