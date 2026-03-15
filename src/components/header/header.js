@@ -26,6 +26,10 @@ const HEADER_LINKS_BY_VIEW = () => ({
     { label: t("nav.dashboard"), route: "dashboard" },
     { label: t("nav.teamsProjects"), route: "projects" },
   ],
+  browseProjects: [
+    { label: t("nav.events"), route: "coderEventSelect" },
+    { label: t("nav.browseProjects"), route: "browseProjects" },
+  ],
   teamDetail: [
     { label: t("nav.events"), route: "events" },
     { label: localStorage.getItem("currentEventName"), route: "dashboard" },
@@ -70,6 +74,10 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
   projects: {
     variant: "teams",
     title: t("nav.projectsOverview"),
+  },
+  browseProjects: {
+    variant: "teams",
+    title: t("nav.browseProjects"),
   },
   teamDetail: {
     variant: "details",
