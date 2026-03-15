@@ -22,12 +22,13 @@ const ADMIN_EVENT_LINKS = () => [
 ];
 
 const CODER_NO_TEAM_LINKS = () => [
+  { label: t("nav.browseProjects"), route: "browseProjects", icon: "bulb" },
   { label: t("nav.events"), route: "coderEventSelect", icon: "calendar" },
 ];
 
 const CODER_TEAM_LINKS = () => [
   { label: t("nav.myProject"), route: "coderHome", icon: "globe" },
-  { label: t("nav.teamsProjects"), route: "projects", icon: "bulb" },
+  { label: t("nav.browseProjects"), route: "browseProjects", icon: "bulb" },
   { label: t("nav.events"), route: "coderEventSelect", icon: "calendar" },
 ];
 

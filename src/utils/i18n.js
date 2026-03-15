@@ -30,6 +30,7 @@ const resources = {
         eventDetails: "Detalles del Evento",
         qrVoting: "Votación QR",
         teams: "Equipos",
+        browseProjects: "Explorar Proyectos",
       },
       role: {
         ADMIN: "Admin Manager",
@@ -38,6 +39,20 @@ const resources = {
         TL_ENGLISH: "Líder Inglés",
         CODER: "Coder",
         STAFF: "Staff",
+      },
+
+      browseProjects: {
+        title: "Explorar Proyectos",
+        subtitle: "Aquí puedes descubrir ideas que ya han sido realizadas. Utilízalas como inspiración para que no se repitan proyectos.",
+        noProjects: "No hay proyectos disponibles",
+        noProjectsDesc: "Todavía no se han subido proyectos para explorar.",
+        errorLoading: "Error al cargar los proyectos.",
+        untitled: "Proyecto sin título",
+        noDesc: "Sin descripción proporcionada.",
+        deliverablesTitle: "Entregables",
+        presentation: "Presentación",
+        noDeliverables: "Aún no hay entregables publicados.",
+        loading: "Cargando..."
       },
 
       // ── Login ─────────────────────────────────────────────
@@ -594,6 +609,7 @@ const resources = {
         eventDetails: "Event Details",
         qrVoting: "QR Voting",
         teams: "Teams",
+        browseProjects: "Browse Projects",
       },
 
       role: {
@@ -603,6 +619,20 @@ const resources = {
         TL_ENGLISH: "English TL",
         CODER: "Coder",
         STAFF: "Staff",
+      },
+
+      browseProjects: {
+        title: "Browse Projects",
+        subtitle: "Here you can discover ideas that have already been carried out. Use them as inspiration so that projects are not repeated.",
+        noProjects: "No projects available",
+        noProjectsDesc: "No projects have been uploaded to explore yet.",
+        errorLoading: "Error loading projects.",
+        untitled: "Untitled Project",
+        noDesc: "No description provided.",
+        deliverablesTitle: "Deliverables",
+        presentation: "Presentation",
+        noDeliverables: "No deliverables published yet.",
+        loading: "Loading..."
       },
 
       login: {

@@ -1,4 +1,6 @@
 import { toast } from "../components/Toast/index.js";
+import { uploadToCloudinary } from "../services/upload.js";
+
 
 export function renderCoderTeam({
   user,
@@ -15,14 +17,13 @@ export function renderCoderTeam({
   const projectDesc = project?.description ?? "No description yet.";
   const isSubmitted = !!project?.submitted_at;
 
-  // deliverables come flat on the project object, not nested
   const deliverables = project
     ? {
-        video_url: project.video_url ?? null,
-        preview_photo_url: project.preview_photo_url ?? null,
-        presentation_url: project.presentation_url ?? null,
-        deploy_url: project.deploy_url ?? null,
-      }
+      video_url: project.video_url ?? null,
+      preview_photo_url: project.preview_photo_url ?? null,
+      presentation_url: project.presentation_url ?? null,
+      deploy_url: project.deploy_url ?? null,
+    }
     : null;
 
   const repoUrl = project?.repo_url ?? null;
@@ -41,46 +42,39 @@ export function renderCoderTeam({
 
             <div class="d-flex flex-wrap gap-4 pt-3 mt-3 ct-stats-divider">
 
-              <!-- Grade - hidden for now -->
-
-              <!-- Due date -->
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Due Date</span>
                 <span class="ct-stat-value">Mon, Mar 9 2026</span>
               </div>
 
-              <!-- Repo Link -->
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Repo Link</span>
-                ${
-                  repoUrl
-                    ? `<a href="${repoUrl}" target="_blank" rel="noopener" class="ct-stat-value ct-repo-link" style="color: var(--color-primary); text-decoration: none;">
+                ${repoUrl
+      ? `<a href="${repoUrl}" target="_blank" rel="noopener" class="ct-stat-value ct-repo-link" style="color: var(--color-primary); text-decoration: none;">
                         <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-right:4px;">
                           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                         </svg>
                         View Repo
                        </a>`
-                    : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
-                }
+      : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
+    }
               </div>
 
-              <!-- Team -->
               <div class="d-flex flex-column gap-1">
                 <span class="ct-stat-label">Team</span>
                 <div class="ct-mini-avatars mt-1">
                   ${members
-                    .slice(0, 3)
-                    .map(
-                      (m) => `
+      .slice(0, 3)
+      .map(
+        (m) => `
                     <div class="ct-mini-avatar">${m.name.charAt(0)}</div>
                   `,
-                    )
-                    .join("")}
-                  ${
-                    members.length > 3
-                      ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
-                      : ""
-                  }
+      )
+      .join("")}
+                  ${members.length > 3
+      ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
+      : ""
+    }
                 </div>
               </div>
 
@@ -129,9 +123,8 @@ export function renderCoderTeam({
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
 
-            ${
-              isSubmitted
-                ? `
+            ${isSubmitted
+      ? `
               <div class="d-flex align-items-center gap-2 mt-3 pt-3" style="border-top:1px solid var(--border);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
@@ -139,17 +132,16 @@ export function renderCoderTeam({
                 <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
               </div>
             `
-                : canEdit
-                  ? `
+      : canEdit
+        ? `
               <button id="submitProjectBtn"
-                class="btn w-100 mt-3"
-                style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
+                class="ct-btn-submit-main"
                 disabled>
                 Submit Project
               </button>
             `
-                  : ""
-            }
+        : ""
+    }
           </div>
 
 
@@ -164,11 +156,10 @@ export function renderCoderTeam({
             </h2>
 
             <div class="d-flex gap-3 align-items-start mb-2">
-              ${
-                user?.github_avatar_url
-                  ? `<img src="${user.github_avatar_url}" alt="${user.name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-                  : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
-              }
+              ${user?.github_avatar_url
+      ? `<img src="${user.github_avatar_url}" alt="${user.name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+      : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
+    }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
                         placeholder="Share your thoughts..."></textarea>
             </div>
@@ -201,15 +192,14 @@ export function renderCoderTeam({
         </div>
 
         <!-- ══ RIGHT COLUMN ══ -->
-        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4 team-details">
+        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4">
           <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
-                ${
-                  isLeader
-                    ? `
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
+                ${isLeader
+      ? `
+                <button class="ct-btn-settings d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -217,34 +207,32 @@ export function renderCoderTeam({
                     Settings
                 </button>
                 `
-                    : ""
-                }
+      : ""
+    }
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
-                .map(
-                  (m, i) => `
+      .map(
+        (m, i) => `
                 <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
-                  ${
-                    m.github_avatar_url
-                      ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-                      : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
-                  }
+                  ${m.github_avatar_url
+            ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+            : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
+          }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0">${m.name}</p>
                     <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
                   </div>
                 </li>
               `,
-                )
-                .join("")}
+      )
+      .join("")}
             </ul>
 
-            ${
-              isLeader && !isSubmitted
-                ? `
+            ${isLeader && !isSubmitted
+      ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -257,14 +245,13 @@ export function renderCoderTeam({
               Add Member
             </button>
             `
-                : ""
-            }
+      : ""
+    }
 
-            ${
-              !isSubmitted
-                ? `
-            <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
-                    id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
+            ${!isSubmitted && !isLeader
+      ? `
+            <button class="ct-btn-danger-refined d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
+                    id="leaveTeamBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                    style="width:15px;height:15px">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -274,19 +261,120 @@ export function renderCoderTeam({
               Leave Team
             </button>
             `
-                : ""
-            }
+      : ""
+    }
           </div>
 
-          ${
-            isTL
-              ? `
+          ${isTL
+      ? `
           
           `
-              : ""
-          }
+      : ""
+    }
         </div>
 
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Video embed helpers
+// ─────────────────────────────────────────────────────────────
+
+function _getVideoEmbed(url) {
+  if (!url) return null;
+
+  // YouTube
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+  );
+  if (ytMatch) {
+    return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}` };
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return { type: "iframe", src: `https://player.vimeo.com/video/${vimeoMatch[1]}` };
+  }
+
+  // Cloudinary or any direct video file
+  if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || url.includes("cloudinary.com")) {
+    return { type: "video", src: url };
+  }
+
+  return null;
+}
+
+function _renderVideoPreview(url) {
+  const embed = _getVideoEmbed(url);
+  if (!embed) return `
+    <div class="ct-preview-unavailable">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;opacity:0.5;">
+        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+      </svg>
+      <span>Video preview not available for this link.</span>
+    </div>
+  `;
+
+  if (embed.type === "iframe") {
+    return `
+      <div class="ct-media-preview ct-video-preview mt-2">
+        <iframe
+          src="${embed.src}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+          onerror="this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Video preview blocked or not found.</div>'"
+        ></iframe>
+      </div>
+    `;
+  }
+
+  // Native video (Cloudinary / direct file)
+  return `
+    <div class="ct-media-preview ct-video-preview mt-2">
+      <video controls preload="metadata" style="width:100%;height:100%;display:block;background:#000;" onerror="this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Video file could not be played.</div>'">
+        <source src="${embed.src}" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  `;
+}
+
+function _renderImagePreview(url) {
+  if (!url) return "";
+  return `
+    <div class="ct-media-preview ct-image-preview mt-2" style="border-radius:12px;overflow:hidden;min-height:100px;background:var(--bg); border: 1px solid var(--border);">
+      <img
+        src="${url}"
+        alt="Project preview"
+        style="width:100%;height:220px;object-fit:cover;display:block;cursor:pointer;"
+        onclick="window.open('${url}','_blank')"
+        onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Image preview not available</div>';"
+      />
+    </div>
+  `;
+}
+
+function _renderDeployPreview(url) {
+  if (!url) return "";
+  return `
+    <div class="ct-media-preview ct-deploy-preview mt-2">
+      <div class="ct-deploy-iframe-wrapper">
+         <iframe src="${url}" title="Deploy Preview" loading="lazy"></iframe>
+         <div class="ct-deploy-fallback">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;margin-bottom:8px;opacity:0.5;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+             </svg>
+             <span>Preview may be blocked by site security.<br/>Click "Open" to visit.</span>
+         </div>
+      </div>
+      <div class="d-flex align-items-center justify-content-between px-1">
+        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Live Preview</span>
+        <a href="${url}" target="_blank" rel="noopener" style="font-size:0.75rem; color:var(--color-primary); text-decoration:none; font-weight:700;">Visit Site ↗</a>
       </div>
     </div>
   `;
@@ -306,6 +394,9 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Pitch Video",
       url: d?.video_url ?? null,
       color: "var(--color-accent)",
+      hasPreview: true,
+      previewType: "video",
+      uploadType: "both", // supports file upload OR URL paste
     },
     {
       key: "repo_url",
@@ -316,6 +407,9 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Repository",
       url: repoUrl,
       color: "var(--color-success)",
+      hasPreview: false,
+      previewType: null,
+      uploadType: "readonly",
     },
     {
       key: "preview_photo_url",
@@ -326,6 +420,9 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Preview Photo",
       url: d?.preview_photo_url ?? null,
       color: "var(--gold)",
+      hasPreview: true,
+      previewType: "image",
+      uploadType: "cloudinary", // image uses Cloudinary upload
     },
     {
       key: "deploy_url",
@@ -336,101 +433,253 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Deploy Link",
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
+      hasPreview: true,
+      previewType: "deploy",
+      uploadType: "url",
     },
   ];
 
   return `
     <div class="d-flex flex-column gap-2">
       ${items
-        .map(
-          (item) => `
-        <div class="d-flex align-items-center justify-content-between gap-3 rounded-3 px-3 py-3
-                    ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
+      .map(
+        (item) => `
+        <div class="d-flex flex-column rounded-3 ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
              data-field="${item.key}">
 
-          <!-- Left: icon + label -->
-          <div class="d-flex align-items-center gap-3 overflow-hidden flex-grow-1 flex-shrink-1 min-w-0">
-            <div class="ct-del-icon flex-shrink-0"
-                 style="background:${item.color}22; color:${item.color}">
-              ${item.icon}
+          <!-- Main Header Row -->
+          <div class="d-flex align-items-center justify-content-between gap-3 px-3 py-3">
+
+            <!-- Left: icon + label -->
+            <div class="d-flex align-items-center gap-3 overflow-hidden flex-grow-1 flex-shrink-1 min-w-0">
+              <div class="ct-del-icon flex-shrink-0"
+                   style="background:${item.color}22; color:${item.color}">
+                ${item.icon}
+              </div>
+              <div class="overflow-hidden">
+                <span class="ct-del-label d-block text-truncate">${item.label}</span>
+                ${item.url && item.key === "repo_url"
+            ? `
+                  <a href="${item.url}" target="_blank" rel="noopener"
+                     class="ct-del-status ct-status-done text-truncate d-block"
+                     style="max-width:180px; font-size:0.75rem;">
+                    ${item.url}
+                  </a>
+                `
+            : `
+                  <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
+                    ${item.url ? "Submitted" : "Pending"}
+                  </span>
+                `
+          }
+              </div>
             </div>
-            <div class="overflow-hidden">
-              <span class="ct-del-label d-block text-truncate">${item.label}</span>
-              ${
-                item.url && item.key === "repo_url"
-                  ? `
-                <a href="${item.url}" target="_blank" rel="noopener"
-                   class="ct-del-status ct-status-done text-truncate d-block"
-                   style="max-width:180px; font-size:0.75rem;">
-                  ${item.url}
-                </a>
+
+            <!-- Right: actions -->
+            <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0">
+              ${item.url
+            ? `
+                <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+                ${canEdit && item.key !== "repo_url"
+              ? `
+                  <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                `
+              : ""
+            }
               `
-                  : `
-                <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
-                  ${item.url ? "Submitted" : "Pending"}
-                </span>
-              `
-              }
+            : canEdit
+              ? _renderUploadControl(item)
+              : ""
+          }
             </div>
           </div>
 
-          <!-- Right: actions -->
-          <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
-            ${
-              item.url
-                ? `
-              <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
-              ${
-                canEdit && item.key !== "repo_url"
-                  ? `
-                <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </button>
-              `
-                  : ""
-              }
-            `
-                : canEdit
-                  ? `
-              <div class="d-flex align-items-center gap-2">
-                <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
-                <button class="ct-btn-icon ct-btn-submit" data-field="${item.key}">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
-                </button>
+          <!-- Edit Panel (Leader only, hidden by default) -->
+          ${canEdit && item.key !== "repo_url"
+            ? `
+              <div class="d-none animate__animated animate__fadeIn ct-edit-panel w-100 px-3 pb-3" id="edit-${item.key}">
+                ${_renderEditControl(item)}
               </div>
             `
-                  : ""
-            }
+            : ""
+          }
 
-            <!-- Edit row hidden by default (leader only, not shown for repo) -->
-            ${
-              canEdit && item.key !== "repo_url"
-                ? `
-              <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${item.key}">
-                <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-                       value="${item.url ?? ""}" placeholder="New URL…" />
-                <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${item.key}">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </button>
-                <button class="ct-btn-cancel ct-edit-cancel" data-field="${item.key}">✕</button>
-              </div>
-            `
-                : ""
-            }
-          </div>
+          <!-- Media previews (shown below the row) -->
+          ${item.url && item.hasPreview && item.previewType === "video" ? `<div class="px-3 pb-3">${_renderVideoPreview(item.url)}</div>` : ""}
+          ${item.url && item.hasPreview && item.previewType === "image" ? `<div class="px-3 pb-3">${_renderImagePreview(item.url)}</div>` : ""}
+          ${item.url && item.hasPreview && item.previewType === "deploy" ? `<div class="px-3 pb-3">${_renderDeployPreview(item.url)}</div>` : ""}
 
         </div>
       `,
-        )
-        .join("")}
+      )
+      .join("")}
+    </div>
+  `;
+}
+
+// Render the appropriate upload control for pending state
+function _renderUploadControl(item) {
+  if (item.uploadType === "cloudinary") {
+    return `
+      <div class="ct-video-input-group">
+        <label class="ct-btn-upload-label" title="Upload image" style="cursor:pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Upload ${item.title}
+          <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
+        </label>
+        <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:8px;">PNG, JPG or WebP (Max 5MB)</p>
+      </div>
+    `;
+  }
+
+  if (item.uploadType === "both") {
+    return `
+      <div class="ct-video-input-group" data-field="${item.key}">
+        <div class="ct-video-tabs">
+          <button type="button" class="ct-video-tab active" data-tab="url">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            URL
+          </button>
+          <button type="button" class="ct-video-tab" data-tab="file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload
+          </button>
+        </div>
+        
+        <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
+          <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste YouTube, Vimeo, or video URL…" />
+          <button class="ct-btn-submit" data-field="${item.key}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="ct-video-panel ct-video-panel-file d-none">
+          <label class="ct-btn-upload-label" style="cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Choose video file
+            <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
+          </label>
+          <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:8px;">MP4, WebM or MOV (Max 10MB)</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Default: URL input
+  return `
+    <div class="ct-video-input-group">
+      <div class="d-flex align-items-center gap-2">
+        <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+        <button class="ct-btn-submit" data-field="${item.key}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Render the edit control (shown when user clicks the edit pencil button)
+function _renderEditControl(item) {
+  if (item.uploadType === "cloudinary") {
+    return `
+      <div class="ct-video-input-group">
+        <label class="ct-btn-upload-label" style="cursor:pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Replace Image
+          <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
+        </label>
+        <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
+      </div>
+    `;
+  }
+
+  if (item.uploadType === "both") {
+    return `
+      <div class="ct-video-input-group" data-field="${item.key}">
+        <div class="ct-video-tabs">
+          <button type="button" class="ct-video-tab active" data-tab="url">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            URL
+          </button>
+          <button type="button" class="ct-video-tab" data-tab="file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload
+          </button>
+        </div>
+        
+        <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
+          <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
+                 value="${item.url ?? ""}" placeholder="Paste video URL…" />
+          <button class="ct-btn-submit ct-edit-submit" data-field="${item.key}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="ct-video-panel ct-video-panel-file d-none">
+          <label class="ct-btn-upload-label" style="cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Replace with video file
+            <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
+          </label>
+        </div>
+        <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ct-video-input-group">
+      <div class="d-flex align-items-center gap-2">
+        <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
+               value="${item.url ?? ""}" placeholder="New URL…" />
+        <button class="ct-btn-submit ct-edit-submit" data-field="${item.key}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+      <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
     </div>
   `;
 }
@@ -471,14 +720,13 @@ function _renderReply(reply, currentUserId) {
             <span class="ct-comment-author">${reply.author_name ?? "Unknown"}</span>
             <span class="ct-comment-time">${time}</span>
           </div>
-          ${
-            isOwner
-              ? `
+          ${isOwner
+      ? `
             <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="Delete reply"
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
-              : ""
-          }
+      : ""
+    }
         </div>
         <p class="ct-comment-text mb-0">${reply.comment}</p>
       </div>
@@ -510,14 +758,13 @@ function _renderComment(comment, currentUserId) {
                 style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;font-weight:600;padding:2px 6px;border-radius:6px;transition:background 0.15s;">
                 Reply
               </button>
-              ${
-                isOwner
-                  ? `
+              ${isOwner
+      ? `
                 <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="Delete comment"
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
-                  : ""
-              }
+      : ""
+    }
             </div>
           </div>
           <p class="ct-comment-text mb-0">${comment.comment}</p>
@@ -537,22 +784,20 @@ function _renderComment(comment, currentUserId) {
           </div>
 
           <!-- Replies -->
-          ${
-            replies.length > 0
-              ? `
+          ${replies.length > 0
+      ? `
             <div class="d-flex flex-column gap-2 mt-3 ps-2" style="border-left:2px solid var(--border);">
               ${replies.map((r) => _renderReply(r, currentUserId)).join("")}
             </div>
           `
-              : ""
-          }
+      : ""
+    }
         </div>
       </div>
     </div>
   `;
 }
 
-// Keep export for backward compat (not used internally anymore)
 export function renderComment({ name, initial, time, text }) {
   return `
     <div class="d-flex gap-3 ct-comment">
@@ -570,9 +815,7 @@ export function renderComment({ name, initial, time, text }) {
 
 function deliverableCount(d, repoUrl) {
   const repo = repoUrl ?? d?.repo_url ?? null;
-  return [d?.video_url, repo, d?.preview_photo_url, d?.deploy_url].filter(
-    Boolean,
-  ).length;
+  return [d?.video_url, repo, d?.preview_photo_url, d?.deploy_url].filter(Boolean).length;
 }
 
 function gradeClass(g) {
@@ -595,14 +838,15 @@ function formatDate(dateStr) {
   return isNaN(d.getTime())
     ? dateStr
     : d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
 }
 
+
 // ─────────────────────────────────────────────────────────────
-// Comments — carga, renderiza y gestiona interacciones
+// Comments loading
 // ─────────────────────────────────────────────────────────────
 export async function loadComments(projectId, user) {
   const list = document.getElementById("commentsList");
@@ -612,11 +856,9 @@ export async function loadComments(projectId, user) {
 
   const currentUserId = user?.id_user ?? null;
 
-  // Lazy-import to avoid circular deps
   const { getComments, postComment, deleteComment } =
     await import("../services/api.js");
 
-  // ── Render helpers ──────────────────────────────────────────
   function renderAll(comments) {
     if (comments.length === 0) {
       list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">No comments yet. Be the first!</p>`;
@@ -634,7 +876,6 @@ export async function loadComments(projectId, user) {
     }
   }
 
-  // ── Load comments ───────────────────────────────────────────
   async function refresh() {
     try {
       const comments = await getComments(projectId);
@@ -647,9 +888,6 @@ export async function loadComments(projectId, user) {
   setLoading(true);
   await refresh();
 
-  // ── Post top-level comment ──────────────────────────────────
-  // Clone button + input to strip any previously attached listeners
-  // Guards against loadComments being called more than once on the same DOM.
   const activeBtn = postBtn.cloneNode(true);
   postBtn.replaceWith(activeBtn);
   const activeInput = input.cloneNode(true);
@@ -667,23 +905,20 @@ export async function loadComments(projectId, user) {
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not post comment.");
+      toast.error("Error", err?.message ?? "Could not post comment.");
     } finally {
       activeBtn.disabled = false;
       activeBtn.textContent = "Post Comment";
     }
   });
 
-  // Allow Ctrl+Enter to submit
   activeInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       activeBtn.click();
     }
   });
 
-  // ── Handlers inside the list (reply, delete) ─────────────────
   function attachListHandlers() {
-    // Reply toggle
     list.querySelectorAll(".ct-btn-reply").forEach((btn) => {
       btn.addEventListener("click", () => {
         const commentId = btn.dataset.commentId;
@@ -696,7 +931,6 @@ export async function loadComments(projectId, user) {
       });
     });
 
-    // Cancel reply
     list.querySelectorAll(".ct-btn-cancel-reply").forEach((btn) => {
       btn.addEventListener("click", () => {
         const commentId = btn.dataset.commentId;
@@ -707,7 +941,6 @@ export async function loadComments(projectId, user) {
       });
     });
 
-    // Send reply
     list.querySelectorAll(".ct-btn-post-reply").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const parentId = parseInt(btn.dataset.parentId);
@@ -726,14 +959,13 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not post reply.");
+          toast.error("Error", err?.message ?? "Could not post reply.");
           btn.disabled = false;
           btn.textContent = "Send";
         }
       });
     });
 
-    // Delete comment or reply
     list.querySelectorAll(".ct-btn-delete-comment").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const commentId = btn.dataset.commentId;
@@ -744,24 +976,19 @@ export async function loadComments(projectId, user) {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          toast.error('Error', err?.message ?? "Could not delete comment.");
+          toast.error("Error", err?.message ?? "Could not delete comment.");
           btn.disabled = false;
         }
       });
 
-      // Hover style
-      btn.addEventListener("mouseenter", () => {
-        btn.style.color = "#ef4444";
-      });
-      btn.addEventListener("mouseleave", () => {
-        btn.style.color = "#ccc";
-      });
+      btn.addEventListener("mouseenter", () => { btn.style.color = "#ef4444"; });
+      btn.addEventListener("mouseleave", () => { btn.style.color = "#ccc"; });
     });
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// Activity — carga y renderiza el brief del proyecto
+// Project Brief
 // ─────────────────────────────────────────────────────────────
 
 export async function loadProjectBrief() {
@@ -789,32 +1016,20 @@ export async function loadProjectBrief() {
 function _renderMarkdown(md) {
   let h = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // Code blocks
   h = h.replace(/```[\s\S]*?```/g, (m) => {
     const code = m.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "");
     return "<pre><code>" + code + "</code></pre>";
   });
 
-  // Inline code
   h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // Headings
   h = h.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   h = h.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   h = h.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-
-  // HR
   h = h.replace(/^---$/gm, "<hr>");
-
-  // Bold / italic
   h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   h = h.replace(/\*([^\n]+?)\*/g, "<em>$1</em>");
-
-  // Lists — group consecutive <li> into <ul>
   h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
   h = h.replace(/(<li>.*?<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>");
-
-  // Paragraphs
   h = h.replace(/^(?!<[a-zA-Z\/])(.+)$/gm, (line) =>
     line.trim() ? "<p>" + line + "</p>" : "",
   );
@@ -882,6 +1097,64 @@ export async function loadEvaluationPanel({
 
   const evaluableMembers = members.filter((m) => m.id_user);
 
+  // Check if all evaluable members are evaluated for all rubrics in this TL's area
+  const requiredEvalsCount = evaluableMembers.length * rubrics.length;
+  const isFullyEvaluated = requiredEvalsCount > 0 && existingEvals.length >= requiredEvalsCount;
+
+  if (isFullyEvaluated) {
+    let totalGroupScore = 0;
+    const individualScoresHtml = evaluableMembers.map(member => {
+      let initTotal = 0;
+      let initW = 0;
+      rubrics.forEach(rubric => {
+        const key = `${rubric.id_rubric}_${member.id_user}`;
+        const existing = existingMap[key];
+        if (existing) {
+          initTotal += (existing.score / 100) * rubric.weight;
+          initW += rubric.weight;
+        }
+      });
+      const finalScore = initW > 0 ? (initTotal / initW) * 100 : 0;
+      totalGroupScore += finalScore;
+
+      const avatar = member.github_avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`;
+      return `
+        <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-white rounded border shadow-sm">
+          <div class="d-flex align-items-center gap-3">
+             <img src="${avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+             <div>
+               <h6 class="mb-0 fw-bold text-dark">${member.name}</h6>
+               <small class="text-muted">${member.team_role || 'Miembro'}</small>
+             </div>
+          </div>
+          <div class="fs-4 fw-bold" style="color:var(--color-primary)">${Math.round(finalScore)}%</div>
+        </div>
+      `;
+    }).join("");
+
+    const groupScore = evaluableMembers.length > 0 ? totalGroupScore / evaluableMembers.length : 0;
+
+    container.innerHTML = `
+      <div class="mb-4 p-4 rounded shadow-sm text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--color-primary), #4e44c2);">
+        <div class="position-relative" style="z-index: 2;">
+          <h4 class="mb-1 text-white fw-bold">Resumen de Calificación</h4>
+          <p class="mb-3 text-white-50">Área de Evaluación: ${allowedArea || 'Global'}</p>
+          <div class="d-flex align-items-center justify-content-between mt-2">
+            <span class="fs-5 fw-medium">Nota Grupal del Área</span>
+            <span class="display-4 fw-bold mb-0 text-white">${Math.round(groupScore)}%</span>
+          </div>
+        </div>
+      </div>
+      <h5 class="fw-bold mb-3 mt-4 text-dark">Desempeño Individual</h5>
+      <div class="d-flex flex-column gap-2 mb-4">
+        ${individualScoresHtml}
+      </div>
+    `;
+
+    submitBtn.classList.add("d-none");
+    return;
+  }
+
   const _calculateMemberTotal = (memberId) => {
     let total = 0;
     let totalW = 0;
@@ -901,7 +1174,7 @@ export async function loadEvaluationPanel({
 
   const membersHtml = evaluableMembers.map((member) => {
     const avatar = member.github_avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`;
-    
+
     let initTotal = 0;
     let initW = 0;
     const rubricsHtml = rubrics.map((rubric) => {
@@ -912,15 +1185,14 @@ export async function loadEvaluationPanel({
         initW += rubric.weight;
       }
 
-      // Sort levels: lowest to highest
       const sortedGrades = [...rubric.grades].sort((a, b) => a.score - b.score);
       const levelsHtml = sortedGrades.map((g) => {
         const isSelected = existing?.gradeId === g.id_grade;
         const color = g.color || (g.score >= 80 ? '#10b981' : g.score >= 50 ? '#f59e0b' : '#ef4444');
         return `
-          <div class="eval-level-card ${isSelected ? 'selected' : ''}" 
-               data-id="${g.id_grade}" 
-               data-rubric-id="${rubric.id_rubric}" 
+          <div class="eval-level-card ${isSelected ? 'selected' : ''}"
+               data-id="${g.id_grade}"
+               data-rubric-id="${rubric.id_rubric}"
                data-member-id="${member.id_user}"
                data-score="${g.score}">
             <div class="eval-card-bar" style="background: ${color}"></div>
@@ -946,14 +1218,12 @@ export async function loadEvaluationPanel({
                PTS %: ${existing ? existing.score : '--'}
             </div>
           </div>
-          
           <div class="eval-levels-grid">
             ${levelsHtml}
           </div>
-
           <div class="eval-feedback-box mt-3">
-            <textarea class="eval-feedback-textarea" 
-                      data-rubric-id="${rubric.id_rubric}" 
+            <textarea class="eval-feedback-textarea"
+                      data-rubric-id="${rubric.id_rubric}"
                       data-member-id="${member.id_user}"
                       placeholder="Add specific feedback for ${rubric.name} (optional)...">${existing?.feedback ?? ""}</textarea>
             <div class="eval-feedback-icon">
@@ -992,24 +1262,20 @@ export async function loadEvaluationPanel({
   container.innerHTML = membersHtml;
   submitBtn.classList.remove("d-none");
 
-  // Interaction handlers
   container.querySelectorAll('.eval-level-card').forEach(card => {
     card.addEventListener('click', () => {
       const memberId = card.dataset.memberId;
       const rubricId = card.dataset.rubricId;
       const score = card.dataset.score;
 
-      // Unselect others in same rubric for same member
       container.querySelectorAll(`.eval-level-card[data-rubric-id="${rubricId}"][data-member-id="${memberId}"]`)
         .forEach(c => c.classList.remove('selected'));
-      
+
       card.classList.add('selected');
 
-      // Update badge
       const badge = document.getElementById(`pts-badge-${rubricId}-${memberId}`);
       if (badge) badge.textContent = `PTS %: ${score}`;
 
-      // Update total
       _calculateMemberTotal(memberId);
     });
   });
@@ -1046,7 +1312,7 @@ export async function loadEvaluationPanel({
 
     try {
       await submitEvaluations(projectId, evaluations);
-      try { await calculateProjectGrades(projectId); } catch (_) {}
+      try { await calculateProjectGrades(projectId); } catch (_) { }
       toast.success('Success', 'Evaluations saved successfully.');
       submitBtn.textContent = "Update Evaluations";
     } catch (err) {
@@ -1059,11 +1325,10 @@ export async function loadEvaluationPanel({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Deliverables — maneja submit y edición de video / preview photo
+// Deliverables — init, upload, and media preview management
 // ─────────────────────────────────────────────────────────────
 
 export function initDeliverables(projectId) {
-  // Field → camelCase key for the API
   const fieldMap = {
     video_url: "videoUrl",
     preview_photo_url: "previewPhotoUrl",
@@ -1071,14 +1336,18 @@ export function initDeliverables(projectId) {
   };
 
   const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
+  const cloudinaryFields = ["preview_photo_url"];
+  const videoFields = ["video_url"];
 
   async function saveField(field, url, btnEl) {
     const apiKey = fieldMap[field];
     if (!apiKey) return;
 
-    const original = btnEl.innerHTML;
-    btnEl.disabled = true;
-    btnEl.innerHTML = `<span class="ct-spinner" style="width:12px;height:12px;border-width:2px;"></span>`;
+    const original = btnEl?.innerHTML ?? "";
+    if (btnEl) {
+      btnEl.disabled = true;
+      btnEl.innerHTML = `<span class="ct-spinner" style="width:12px;height:12px;border-width:2px;"></span>`;
+    }
 
     try {
       const { apiFetch } = await import("../services/api.js");
@@ -1087,9 +1356,7 @@ export function initDeliverables(projectId) {
         body: { [apiKey]: url || null },
       });
 
-      const row = document.querySelector(
-        `.ct-deliverable-item[data-field="${field}"]`,
-      );
+      const row = document.querySelector(`.ct-deliverable-item[data-field="${field}"]`);
       if (row) {
         if (url) {
           row.classList.remove("ct-deliverable-pending");
@@ -1101,7 +1368,7 @@ export function initDeliverables(projectId) {
             statusEl.textContent = "Submitted";
           }
 
-          // Replace the entire actions div with the post-submit state
+          // Update the actions area with the post-submit controls
           const actionsDiv = row.querySelector(".ct-deliverable-actions");
           if (actionsDiv) {
             actionsDiv.innerHTML = `
@@ -1112,31 +1379,111 @@ export function initDeliverables(projectId) {
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-              <div class="d-none align-items-center gap-2 ct-edit-row" id="edit-${field}">
-                <input type="url" class="ct-url-input ct-edit-input" data-field="${field}"
-                       value="${url}" placeholder="New URL…" />
-                <button class="ct-btn-icon ct-btn-submit ct-edit-submit" data-field="${field}">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </button>
-                <button class="ct-btn-cancel ct-edit-cancel" data-field="${field}">✕</button>
-              </div>
             `;
-            attachRowHandlers(actionsDiv);
           }
+
+          // Update/Add the edit panel
+          let editPanel = row.querySelector(".ct-edit-panel");
+          if (!editPanel) {
+            editPanel = document.createElement("div");
+            editPanel.id = `edit-${field}`;
+            editPanel.className = "d-none animate__animated animate__fadeIn ct-edit-panel w-100 px-3 pb-3";
+            const mainRow = row.querySelector(".d-flex.align-items-center.justify-content-between");
+            mainRow.insertAdjacentElement("afterend", editPanel);
+          }
+          
+          const uploadType = cloudinaryFields.includes(field) ? "cloudinary" : (videoFields.includes(field) ? "both" : "url");
+          editPanel.innerHTML = _renderEditControl({ key: field, url, uploadType });
+          
+          attachRowHandlers(row);
+          _refreshMediaPreview(row, field, url);
         } else {
           row.classList.remove("ct-deliverable-done");
           row.classList.add("ct-deliverable-pending");
+          // Remove any existing preview
+          row.querySelector(".ct-media-preview")?.remove();
         }
       }
 
       _refreshDeliverableCount();
     } catch (err) {
-      toast.error('Error', err?.message ?? "Could not save deliverable.");
-      btnEl.innerHTML = original;
+      toast.error("Error", err?.message ?? "Could not save deliverable.");
+      if (btnEl) {
+        btnEl.innerHTML = original;
+        btnEl.disabled = false;
+      }
     } finally {
-      btnEl.disabled = false;
+      if (btnEl) btnEl.disabled = false;
+    }
+  }
+
+  // ── Inject or replace a media preview inside the row ─────
+  function _refreshMediaPreview(row, field, url) {
+    // Remove old preview if present
+    row.querySelector(".ct-media-preview")?.remove();
+
+    let previewHtml = "";
+    if (field === "video_url") {
+      previewHtml = _renderVideoPreview(url);
+    } else if (field === "preview_photo_url") {
+      previewHtml = _renderImagePreview(url);
+    } else if (field === "deploy_url") {
+      previewHtml = _renderDeployPreview(url);
+    }
+
+    if (previewHtml) {
+      const previewWrapper = document.createElement("div");
+      previewWrapper.className = "px-3 pb-3";
+      previewWrapper.innerHTML = previewHtml;
+      row.appendChild(previewWrapper);
+    }
+  }
+
+  // ── Cloudinary file upload with progress ──────────────────
+  async function handleCloudinaryUpload(file, field, triggerEl) {
+    if (!file) return;
+
+    const isVideo = videoFields.includes(field);
+    
+    // Cloudinary Free Limit Validation (Approx 10MB for free accounts to be safe with video processing)
+    const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;  // 5MB
+
+    if (isVideo && file.size > MAX_VIDEO_SIZE) {
+        toast.error("Video too large", `The free plan limit is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        return;
+    }
+    if (!isVideo && file.size > MAX_IMAGE_SIZE) {
+        toast.error("Image too large", `Maximum image size is 5MB. Your image is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        return;
+    }
+
+    const resourceType = isVideo ? "video" : "image";
+    const label = triggerEl?.closest("label");
+
+    const progressId = `upload-progress-${field}`;
+    document.getElementById(progressId)?.remove();
+    if (label) {
+      label.insertAdjacentHTML(
+        "afterend",
+        `<div id="${progressId}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">
+           ${isVideo ? "Uploading video" : "Uploading"}… <span id="${progressId}-pct">0%</span>
+         </div>`,
+      );
+    }
+
+    try {
+      const url = await uploadToCloudinary(file, resourceType, (pct) => {
+        const pctEl = document.getElementById(`${progressId}-pct`);
+        if (pctEl) pctEl.textContent = `${pct}%`;
+      });
+
+      document.getElementById(progressId)?.remove();
+      await saveField(field, url, null);
+      toast.success("Upload complete", isVideo ? "Video uploaded successfully." : "Image uploaded successfully.");
+    } catch (err) {
+      document.getElementById(progressId)?.remove();
+      toast.error("Upload failed", err?.message ?? "Could not upload file.");
     }
   }
 
@@ -1152,15 +1499,12 @@ export function initDeliverables(projectId) {
     if (!btn) return;
     const allDone = done >= 4;
     btn.disabled = !allDone;
-    btn.style.opacity = allDone ? "1" : "0.4";
-    btn.style.cursor = allDone ? "pointer" : "not-allowed";
   }
 
   function _attachSubmitHandler() {
     const btn = document.getElementById("submitProjectBtn");
     if (!btn) return;
 
-    // Enable if already 3 done on init
     const done = document.querySelectorAll(".ct-deliverable-done").length;
     _updateSubmitBtn(done);
 
@@ -1179,7 +1523,6 @@ export function initDeliverables(projectId) {
         const { submitProject } = await import("../services/api.js");
         await submitProject(projectId);
 
-        // Insert success badge before removing the button
         btn.insertAdjacentHTML(
           "afterend",
           `
@@ -1193,55 +1536,80 @@ export function initDeliverables(projectId) {
         );
         btn.remove();
 
-        // Lock all deliverable edit controls
         document
           .querySelectorAll(
-            ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel",
+            ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel, .ct-btn-upload-label",
           )
           .forEach((el) => {
             el.style.display = "none";
           });
 
-        // Hide Add Member and Leave Team buttons
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error('Error', err?.message ?? "Could not submit project.");
+        toast.error("Error", err?.message ?? "Could not submit project.");
         btn.disabled = false;
         btn.textContent = "Submit Project";
       }
     });
   }
 
+  // ── Attach interaction handlers to a deliverable row ──────
   function attachRowHandlers(scope) {
-    // Submit new URL (pending state)
+    // Video tab switching (URL ↔ Upload)
+    scope.querySelectorAll(".ct-video-tabs").forEach((tabs) => {
+      const group = tabs.closest(".ct-video-input-group");
+      if (!group) return;
+      tabs.querySelectorAll(".ct-video-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.querySelectorAll(".ct-video-tab").forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          const panel = tab.dataset.tab;
+          group.querySelector(".ct-video-panel-url").classList.toggle("d-none", panel !== "url");
+          group.querySelector(".ct-video-panel-url").classList.toggle("d-flex", panel === "url");
+          group.querySelector(".ct-video-panel-file").classList.toggle("d-none", panel !== "file");
+        });
+      });
+    });
+
+    // Submit new URL (pending state — non-cloudinary, non-video-upload)
     scope
       .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
       .forEach((btn) => {
         btn.addEventListener("click", async () => {
           const field = btn.dataset.field;
-          if (!editableFields.includes(field)) return;
+          if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
           const input = scope.querySelector(
             `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
           );
           const url = input?.value?.trim();
-          if (!url) {
-            input?.focus();
-            return;
-          }
+          if (!url) { input?.focus(); return; }
           await saveField(field, url, btn);
         });
       });
 
-    // Edit button → show edit row
+    // Cloudinary file input (pending state)
+    scope.querySelectorAll(".ct-cloudinary-input:not(.ct-edit-cloudinary-input)").forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleCloudinaryUpload(file, input.dataset.field, input);
+      });
+    });
+
+    // Edit button → show edit panel
     scope.querySelectorAll(".ct-btn-edit").forEach((btn) => {
       btn.addEventListener("click", () => {
         const field = btn.dataset.field;
-        const editRow = document.getElementById(`edit-${field}`);
-        if (!editRow) return;
-        editRow.classList.remove("d-none");
-        editRow.classList.add("d-flex");
-        editRow.querySelector(".ct-edit-input")?.focus();
+        const panel = document.getElementById(`edit-${field}`);
+        const card = btn.closest(".ct-deliverable-item");
+        if (!panel) return;
+        
+        panel.classList.remove("d-none");
+        card?.classList.add("ct-editing");
+        panel.querySelector(".ct-edit-input")?.focus();
+        
+        // Hide other buttons in the row while editing
+        btn.closest(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.add("d-none"));
       });
     });
 
@@ -1249,36 +1617,42 @@ export function initDeliverables(projectId) {
     scope.querySelectorAll(".ct-edit-cancel").forEach((btn) => {
       btn.addEventListener("click", () => {
         const field = btn.dataset.field;
-        const editRow = document.getElementById(`edit-${field}`);
-        if (editRow) {
-          editRow.classList.add("d-none");
-          editRow.classList.remove("d-flex");
-        }
+        const panel = document.getElementById(`edit-${field}`);
+        const card = btn.closest(".ct-deliverable-item");
+        if (!panel) return;
+        
+        panel.classList.add("d-none");
+        card?.classList.remove("ct-editing");
+        
+        // Show row buttons again
+        card?.querySelector(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.remove("d-none"));
       });
     });
 
-    // Submit edit
+    // Submit edit (URL fields)
     scope.querySelectorAll(".ct-edit-submit").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const field = btn.dataset.field;
-        if (!editableFields.includes(field)) return;
-        const input = document.querySelector(
-          `.ct-edit-input[data-field="${field}"]`,
-        );
+        if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
+        const input = document.querySelector(`.ct-edit-input[data-field="${field}"]`);
         const url = input?.value?.trim();
-        if (!url) {
-          input?.focus();
-          return;
-        }
+        if (!url) { input?.focus(); return; }
         await saveField(field, url, btn);
+      });
+    });
+
+    // Cloudinary edit input (replace image)
+    scope.querySelectorAll(".ct-edit-cloudinary-input").forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleCloudinaryUpload(file, input.dataset.field, input);
       });
     });
   }
 
-  // Attach handlers to each deliverable actions div independently
+  // Attach to all rows
   document.querySelectorAll(".ct-deliverable-item").forEach((row) => {
-    const actionsDiv = row.querySelector(".ct-deliverable-actions");
-    if (actionsDiv) attachRowHandlers(actionsDiv);
+    attachRowHandlers(row);
   });
 
   _attachSubmitHandler();

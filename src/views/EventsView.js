@@ -6,6 +6,7 @@ import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
+import { icons } from "./../utils/icons.js";
 
 export default class EventsView {
   constructor(router) {
@@ -212,7 +213,7 @@ export default class EventsView {
           <div class="d-flex flex-column gap-2 mb-5 pb-3 border-bottom" style="border-color: var(--border) !important;">
             <div class="d-flex align-items-center justify-content-between gap-3">
               <div class="d-flex align-items-center gap-3">
-                <div class="p-3 rounded-circle" style="background-color: var(--accent-dim); color: var(--color-primary);">
+                <div class="p-3 rounded-circle" style="background-color: var(--color-primary-dim); color: var(--color-primary);">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
