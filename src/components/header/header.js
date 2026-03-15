@@ -45,6 +45,11 @@ const HEADER_LINKS_BY_VIEW = () => ({
     { label: t("nav.events"), route: "events" },
     { label: t("nav.ranking"), route: "ranking" },
   ],
+  finalists: [
+    { label: t("nav.events"), route: "events" },
+    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: t("nav.finalists"), route: "finalists" },
+  ],
 });
 
 const HEADER_LAYOUT_BY_ROUTE = () => ({
@@ -83,6 +88,10 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
   details: {
     variant: "details",
     title: t("nav.eventDetails"),
+  },
+  finalists: {
+    variant: "finalists",
+    title: t("nav.finalists"),
   },
 });
 

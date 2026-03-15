@@ -1,0 +1,182 @@
+/* ── Podium container ── */
+.podium-container {
+  max-width: 900px;
+  min-height: 420px;
+  margin: 0 auto;
+}
+
+/* ── Podium columns ── */
+.podium-col {
+  width: 33%;
+}
+
+.podium-col-1st { max-width: 320px; }
+.podium-col-2nd { max-width: 280px; }
+.podium-col-3rd { max-width: 280px; }
+
+/* ── Team info ── */
+.podium-team-name-1st { font-size: 1.3rem; color: #6b5cff; }
+.podium-team-name-2nd { font-size: 1rem;   color: #181e4b; }
+.podium-team-name-3rd { font-size: 1rem;   color: #181e4b; }
+
+.podium-project-name   { color: #7b7fa8; font-size: 0.75rem; font-style: italic; }
+.podium-description    { color: #7b7fa8; font-size: 0.7rem; }
+.podium-description-1st{ color: #7b7fa8; font-size: 0.75rem; }
+
+/* ── Podium blocks ── */
+.podium-block {
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.podium-block-1st {
+  height: 320px;
+  background: linear-gradient(to top, rgba(230,202,82,0.4), rgba(230,202,82,0.1));
+  border-top: 4px solid #e6ca52;
+  padding: 32px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.podium-block-2nd {
+  height: 224px;
+  background: linear-gradient(to top, rgba(90,204,164,0.4), rgba(90,204,164,0.1));
+  border-top: 4px solid #5acca4;
+}
+
+.podium-block-3rd {
+  height: 176px;
+  background: linear-gradient(to top, rgba(234,162,252,0.4), rgba(234,162,252,0.1));
+  border-top: 4px solid #eaa2fc;
+}
+
+/* ── Medal icons ── */
+.podium-medal {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.podium-medal-1st {
+  width: 64px;
+  height: 64px;
+  background: #e6ca52;
+  top: -32px;
+  border: 4px solid white;
+  box-shadow: 0 4px 16px rgba(230, 202, 82, 0.5);
+}
+
+.podium-medal-2nd {
+  width: 48px;
+  height: 48px;
+  background: #5acca4;
+  top: -24px;
+  box-shadow: 0 4px 12px rgba(90, 204, 164, 0.4);
+}
+
+.podium-medal-3rd {
+  width: 48px;
+  height: 48px;
+  background: #eaa2fc;
+  top: -24px;
+  box-shadow: 0 4px 12px rgba(234, 162, 252, 0.4);
+}
+
+/* ── Podium numbers ── */
+.podium-number {
+  font-weight: 900;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+.podium-number-1st { font-size: 4.5rem; color: #e6ca52; opacity: 0.6; }
+.podium-number-2nd { font-size: 3rem;   color: #5acca4; }
+.podium-number-3rd { font-size: 2.5rem; color: #eaa2fc; }
+
+/* ── Podium labels ── */
+.podium-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+.podium-label-1st { font-size: 0.75rem; color: #e6ca52; opacity: 0.8; }
+.podium-label-2nd { font-size: 0.65rem; color: #5acca4; }
+.podium-label-3rd { font-size: 0.65rem; color: #eaa2fc; }
+
+/* ── Podium sublabel ── */
+.podium-sublabel {
+  font-weight: 900;
+  font-size: 0.75rem;
+  color: #7b7fa8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Stars badge ── */
+.podium-stars {
+  position: absolute;
+  top: -16px;
+  right: -8px;
+  transform: rotate(12deg);
+  color: #e6ca52;
+  font-size: 2.2rem;
+  font-variation-settings: 'FILL' 1;
+}
+
+/* ── Avatar ── */
+.podium-avatar {
+  display: block;
+  margin: 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.podium-avatar-1st { width: 112px; height: 112px; border: 4px solid #e6ca52; }
+.podium-avatar-2nd { width: 80px;  height: 80px;  border: 4px solid #5acca4; }
+.podium-avatar-3rd { width: 80px;  height: 80px;  border: 4px solid #eaa2fc; }
+
+/* ── Avatar fallback (initial) ── */
+.podium-avatar-initial {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  margin: 0 auto;
+}
+
+.podium-avatar-initial-1st {
+  width: 112px; height: 112px;
+  border: 4px solid #e6ca52;
+  background: rgba(230,202,82,0.15);
+  color: #e6ca52;
+  font-size: 2.8rem;
+}
+
+.podium-avatar-initial-2nd {
+  width: 80px; height: 80px;
+  border: 4px solid #5acca4;
+  background: rgba(90,204,164,0.15);
+  color: #5acca4;
+  font-size: 1.8rem;
+}
+
+.podium-avatar-initial-3rd {
+  width: 80px; height: 80px;
+  border: 4px solid #eaa2fc;
+  background: rgba(234,162,252,0.15);
+  color: #eaa2fc;
+  font-size: 1.8rem;
+}

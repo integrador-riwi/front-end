@@ -15,9 +15,10 @@ import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
-import { getMyProfile, getMyTeams } from "../services/api.js";
+import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
+import FinalistsView from "../views/Finalists.js";
 import {
   i18nReady,
   t,
@@ -124,6 +125,7 @@ const ROUTE_PERMISSIONS = {
   ],
   tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
   vote: "PUBLIC",
+  finalists: ["ADMIN", "STAFF"],
 };
 
 class App {
@@ -341,6 +343,9 @@ class App {
         this.currentView = new PublicVotingPage(this, params);
         this.currentView.render(this.app);
         return;
+      case "finalists":
+        this.currentView = new FinalistsView(this);
+        break;
 
       default:
         this.currentView = new NotFoundView(this);

@@ -6,7 +6,6 @@ import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
-import { icons } from "./../utils/icons.js";
 
 export default class EventsView {
   constructor(router) {
