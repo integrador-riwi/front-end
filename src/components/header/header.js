@@ -3,7 +3,7 @@ import { t } from "../../utils/i18n.js";
 const HEADER_LINKS_BY_VIEW = () => ({
   dashboard: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
   ],
   "events/create": [
     { label: t("nav.events"), route: "events" },
@@ -32,7 +32,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   teamDetail: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
     { label: t("nav.teamDetails"), route: null },
   ],
   qr: [
@@ -41,7 +41,7 @@ const HEADER_LINKS_BY_VIEW = () => ({
   ],
   coderHome: [
     { label: t("nav.events"), route: "events" },
-    { label: localStorage.getItem("currentEventName"), route: "dashboard" },
+    { label: localStorage.getItem("currentEventName") || t("nav.dashboard"), route: "dashboard" },
     { label: t("nav.teamDetails"), route: null },
   ],
   ranking: [

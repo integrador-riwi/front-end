@@ -53,7 +53,14 @@ export default class CoderHome {
     if (!this.selectedEvent) {
       try {
         const stored = sessionStorage.getItem("selectedEvent");
-        if (stored) this.selectedEvent = JSON.parse(stored);
+        if (stored) {
+          this.selectedEvent = JSON.parse(stored);
+          // Sync with localStorage for breadcrumbs
+          if (this.selectedEvent) {
+            localStorage.setItem("currentEventId", this.selectedEvent.id);
+            localStorage.setItem("currentEventName", this.selectedEvent.title || this.selectedEvent.name);
+          }
+        }
       } catch (_) {}
     }
 
