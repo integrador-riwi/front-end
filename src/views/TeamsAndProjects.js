@@ -20,6 +20,7 @@ export default class Teams {
     this.isAdmin = this.user?.role === "ADMIN";
     this.allTeams = [];
     this.activeClans = new Set();
+    this.searchQuery = "";
     this.currentView = "grid"; // "grid" | "list"
   }
 
@@ -27,11 +28,13 @@ export default class Teams {
     const maxVisible = 5;
     const container = document.createElement("div");
     container.className = "app-avatar-group";
+
     users.slice(0, maxVisible).forEach((user) => {
       const img = document.createElement("img");
       img.src = user.github_avatar_url;
       img.alt = user.name;
-      img.className = "app-avatar";
+      img.className = "app-avatar app-avatar-has-tip";
+      img.dataset.tipName = user.name;
       container.appendChild(img);
     });
 
@@ -43,6 +46,29 @@ export default class Teams {
     }
 
     return container.outerHTML;
+  }
+
+  _initAvatarTooltip() {
+    if (document.getElementById("app-avatar-tip")) return;
+
+    const tip = document.createElement("span");
+    tip.id = "app-avatar-tip";
+    document.body.appendChild(tip);
+
+    document.addEventListener("mouseover", (e) => {
+      const img = e.target.closest(".app-avatar-has-tip");
+      if (!img) return;
+      tip.textContent = img.dataset.tipName;
+      tip.classList.add("visible");
+      const rect = img.getBoundingClientRect();
+      tip.style.left = `${rect.left + rect.width / 2 - tip.offsetWidth / 2}px`;
+      tip.style.top = `${rect.top - tip.offsetHeight - 8}px`;
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      if (!e.target.closest(".app-avatar-has-tip")) return;
+      tip.classList.remove("visible");
+    });
   }
 
   showLoading(container) {
@@ -85,6 +111,7 @@ export default class Teams {
 
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
+    this._initAvatarTooltip();
     await this.renderTeamsGrid();
     this.attachEventHandlers();
 
@@ -231,8 +258,7 @@ export default class Teams {
       <button class="app-filter-btn active" data-clan="ALL">Todos</button>
       ${clans.map((clan) => `
         <button class="app-filter-btn" data-clan="${clan}">
-          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;
-            background:var(--color-primary);opacity:0.7;flex-shrink:0;"></span>
+          <span class="app-clan-dot" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#6c5cff;flex-shrink:0;"></span>
           ${clan}
         </button>
       `).join("")}
@@ -275,11 +301,28 @@ export default class Teams {
   }
 
   _applyFilters() {
-    const teams = this.activeClans.size === 0
-        ? this.allTeams
-        : this.allTeams.filter((team) =>
-            (team.members ?? []).some((member) => this.activeClans.has(member.clan))
+    const query = this.searchQuery.toLowerCase().trim();
+
+    let teams = this.allTeams;
+
+    // Filtro por clan
+    if (this.activeClans.size > 0) {
+      teams = teams.filter((team) =>
+          (team.members ?? []).some((member) => this.activeClans.has(member.clan))
+      );
+    }
+
+    // Filtro por búsqueda: nombre del equipo, descripción y nombre de cualquier miembro
+    if (query) {
+      teams = teams.filter((team) => {
+        const matchName = (team.name ?? "").toLowerCase().includes(query);
+        const matchDesc = (team.description ?? "").toLowerCase().includes(query);
+        const matchMember = (team.members ?? []).some((m) =>
+            (m.name ?? "").toLowerCase().includes(query)
         );
+        return matchName || matchDesc || matchMember;
+      });
+    }
 
     if (this.currentView === "list") {
       this._paintTeamsList(teams);
@@ -390,10 +433,35 @@ export default class Teams {
   attachEventHandlers() {
     const gridViewBtn = document.getElementById("grid-view-btn");
     const listViewBtn = document.getElementById("list-view-btn");
+    const searchInput = document.getElementById("teamsSearchInput");
+    const searchBtn = document.getElementById("teamsSearchBtn");
 
     if (this.isAdmin) {
       this._injectAdminHintStyle();
     }
+
+    // Búsqueda al hacer click en el botón
+    searchBtn?.addEventListener("click", () => {
+      this.searchQuery = searchInput?.value ?? "";
+      this._applyFilters();
+    });
+
+    // Búsqueda en tiempo real mientras escribe (con debounce)
+    searchInput?.addEventListener("input", () => {
+      clearTimeout(this._searchDebounce);
+      this._searchDebounce = setTimeout(() => {
+        this.searchQuery = searchInput.value;
+        this._applyFilters();
+      }, 250);
+    });
+
+    // Búsqueda al presionar Enter
+    searchInput?.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      clearTimeout(this._searchDebounce);
+      this.searchQuery = searchInput.value;
+      this._applyFilters();
+    });
 
     gridViewBtn?.addEventListener("click", async () => {
       gridViewBtn.classList.add("active");
@@ -411,31 +479,7 @@ export default class Teams {
   }
 
   _injectAdminHintStyle() {
-    if (document.getElementById("td-admin-hint-style")) return;
-    const style = document.createElement("style");
-    style.id = "td-admin-hint-style";
-    style.textContent = `
-      .td-view-detail-hint {
-        font-size: 0.75rem;
-        color: var(--color-primary, #6366f1);
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.2rem;
-        opacity: 0;
-        transition: opacity .2s;
-      }
-      .td-clickable:hover .td-view-detail-hint { opacity: 1; }
-      .td-clickable {
-        cursor: pointer;
-        transition: transform .18s, box-shadow .18s;
-      }
-      .td-clickable:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(0,0,0,.1);
-      }
-    `;
-    document.head.appendChild(style);
+    // Estilos movidos a dashboard.css
   }
 
   destroy() {
