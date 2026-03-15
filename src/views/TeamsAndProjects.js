@@ -5,7 +5,7 @@ import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
-import { apiFetch } from "../services/api.js";
+import { apiFetch, searchProjectsSemantic } from "../services/api.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
 import { getTeamsByEvent } from "../services/api.js";
 import { getSelectedEvent } from "../utils/helpers.js";
@@ -22,6 +22,7 @@ export default class Teams {
     this.activeClans = new Set();
     this.searchQuery = "";
     this.currentView = "grid"; // "grid" | "list"
+    this._semanticMode = false; // admin-only toggle
   }
 
   renderAvatars(users) {
@@ -305,14 +306,14 @@ export default class Teams {
 
     let teams = this.allTeams;
 
-    // Filtro por clan
+    // Filter by clan
     if (this.activeClans.size > 0) {
       teams = teams.filter((team) =>
           (team.members ?? []).some((member) => this.activeClans.has(member.clan))
       );
     }
 
-    // Filtro por búsqueda: nombre del equipo, descripción y nombre de cualquier miembro
+    // Filter by text: team name, description, member name
     if (query) {
       teams = teams.filter((team) => {
         const matchName = (team.name ?? "").toLowerCase().includes(query);
@@ -328,6 +329,145 @@ export default class Teams {
       this._paintTeamsList(teams);
     } else {
       this._paintTeamsGrid(teams);
+    }
+  }
+
+  _paintSemanticResults(projects) {
+    const container = document.getElementById("teamsContainer");
+    if (!container) return;
+
+    if (!projects || projects.length === 0) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3 text-center">
+            <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">search_off</span>
+            <div>
+              <p class="app-page-title mb-1" style="font-size:1rem;">No results found</p>
+              <p class="app-page-subtitle mb-0" style="font-size:0.875rem;">No projects matched your search.</p>
+            </div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = "";
+
+    projects.forEach((p) => {
+      const pct   = p.similarity != null ? Math.round(p.similarity * 100) : null;
+      const badge = pct != null ? `<span class="sem-match-badge">${pct}% match</span>` : "";
+
+      // members from searchService may lack github_avatar_url — filter them out
+      const members      = (p.members ?? []).filter((m) => m?.github_avatar_url);
+      const membersIcons = this.renderAvatars(members);
+
+      // Use the same static fallback image as the normal grid cards
+      const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
+      const imgSrc       = p.preview_photo_url || fallbackImg;
+
+      container.insertAdjacentHTML("beforeend", `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="app-project-card td-clickable"
+               data-team-id="${p.id_team}"
+               title="${t("teamsProjects.viewDetail")}"
+               role="button" tabindex="0">
+            <div class="app-project-image">
+              <img src="${imgSrc}" alt="Project image" class="img-fluid"
+                   onerror="this.onerror=null;this.src='${fallbackImg}';" />
+            </div>
+            <div class="p-4">
+              <h5 class="app-card-title">${p.team_name ?? ""} ${badge}</h5>
+              <p class="app-card-text text-break">${p.description ?? ""}</p>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="app-avatar-group">${membersIcons}</div>
+                <span class="td-view-detail-hint">
+                  <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
+                  ${t("teamsProjects.viewDetail")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    });
+
+    if (!this._gridListenersAttached) {
+      this._gridListenersAttached = true;
+      container.addEventListener("click", (e) => {
+        const card = e.target.closest("[data-team-id]");
+        if (!card) return;
+        this.router.navigate("teamDetail", { teamId: card.dataset.teamId });
+      });
+      container.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest("[data-team-id]");
+        if (!card) return;
+        e.preventDefault();
+        this.router.navigate("teamDetail", { teamId: card.dataset.teamId });
+      });
+    }
+  }
+
+  _paintSemanticResultsList(projects) {
+    const container = document.getElementById("teamsContainer");
+    if (!container) return;
+
+    if (!projects || projects.length === 0) {
+      this.showEmpty(container);
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="col-12 px-0">
+        <div class="app-project-card-list p-3">
+          <table class="table table-striped table-hover" style="width:100%;">
+            <thead>
+              <tr>
+                <th style="width:20%;">${t("teamsProjects.leader")}</th>
+                <th style="width:20%;">${t("teamsProjects.team")}</th>
+                <th style="width:40%;">${t("teamsProjects.desc")}</th>
+                <th style="width:10%;">Match</th>
+                <th style="width:10%;"></th>
+              </tr>
+            </thead>
+            <tbody id="teamsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const tbody = document.getElementById("teamsTableBody");
+
+    projects.forEach((p) => {
+      const pct   = p.similarity != null ? Math.round(p.similarity * 100) : null;
+      const badge = pct != null ? `<span class="sem-match-badge">${pct}% match</span>` : "—";
+      const members      = (p.members ?? []).filter((m) => m?.github_avatar_url);
+      const membersIcons = this.renderAvatars(members);
+      const leader       = (p.members ?? []).find((m) => m?.team_role === "LEADER");
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr class="td-clickable" data-team-id="${p.id_team}"
+            style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}">
+          <td><span style="font-size:0.85rem;">${leader?.name ?? "—"}</span></td>
+          <td><h5 class="app-card-title fs-6">${p.team_name ?? ""}</h5></td>
+          <td><p class="app-card-text text-break">${p.description ?? ""}</p></td>
+          <td>${badge}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
+                    data-team-id="${p.id_team}">
+              <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">visibility</span>
+            </button>
+          </td>
+        </tr>
+      `);
+    });
+
+    if (!this._listListenersAttached) {
+      this._listListenersAttached = true;
+      container.addEventListener("click", (e) => {
+        const row = e.target.closest("[data-team-id]");
+        if (!row) return;
+        this.router.navigate("teamDetail", { teamId: row.dataset.teamId });
+      });
     }
   }
 
@@ -434,33 +574,79 @@ export default class Teams {
     const gridViewBtn = document.getElementById("grid-view-btn");
     const listViewBtn = document.getElementById("list-view-btn");
     const searchInput = document.getElementById("teamsSearchInput");
-    const searchBtn = document.getElementById("teamsSearchBtn");
+    const searchBtn   = document.getElementById("teamsSearchBtn");
+    const toggle      = document.getElementById("semanticToggle");
 
     if (this.isAdmin) {
       this._injectAdminHintStyle();
+
+      // Sync toggle state with this._semanticMode
+      if (toggle) {
+        toggle.checked = this._semanticMode;
+        toggle.addEventListener("change", () => {
+          this._semanticMode = toggle.checked;
+          document.getElementById("semanticHint")?.classList.toggle("d-none", !this._semanticMode);
+          // Reset search when switching modes
+          if (searchInput) searchInput.value = "";
+          this.searchQuery = "";
+          this._applyFilters();
+        });
+      }
     }
 
-    // Búsqueda al hacer click en el botón
-    searchBtn?.addEventListener("click", () => {
-      this.searchQuery = searchInput?.value ?? "";
+    const runLocalSearch = () => {
+      this.searchQuery = searchInput?.value?.trim() ?? "";
       this._applyFilters();
-    });
+    };
 
-    // Búsqueda en tiempo real mientras escribe (con debounce)
-    searchInput?.addEventListener("input", () => {
-      clearTimeout(this._searchDebounce);
-      this._searchDebounce = setTimeout(() => {
-        this.searchQuery = searchInput.value;
+    const runSemanticSearch = async () => {
+      const query = searchInput?.value?.trim() ?? "";
+      if (!query) {
+        this.searchQuery = "";
         this._applyFilters();
-      }, 250);
+        return;
+      }
+      const container = document.getElementById("teamsContainer");
+      this.showLoading(container);
+      try {
+        const raw = await searchProjectsSemantic(query, this.eventId);
+        const results = Array.isArray(raw) ? raw : (raw?.data ?? []);
+        if (this.currentView === "list") {
+          this._paintSemanticResultsList(results);
+        } else {
+          this._paintSemanticResults(results);
+        }
+      } catch (err) {
+        console.error("[semantic search] error:", err);
+        this._applyFilters();
+      }
+    };
+
+    const runSearch = () => {
+      if (this.isAdmin && this._semanticMode) {
+        runSemanticSearch();
+      } else {
+        runLocalSearch();
+      }
+    };
+
+    searchBtn?.addEventListener("click", () => {
+      clearTimeout(this._searchDebounce);
+      runSearch();
     });
 
-    // Búsqueda al presionar Enter
     searchInput?.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       clearTimeout(this._searchDebounce);
-      this.searchQuery = searchInput.value;
-      this._applyFilters();
+      runSearch();
+    });
+
+    searchInput?.addEventListener("input", () => {
+      clearTimeout(this._searchDebounce);
+      // Local search is live; semantic only triggers on submit to avoid API spam
+      if (!this._semanticMode) {
+        this._searchDebounce = setTimeout(runLocalSearch, 250);
+      }
     });
 
     gridViewBtn?.addEventListener("click", async () => {
@@ -479,7 +665,8 @@ export default class Teams {
   }
 
   _injectAdminHintStyle() {
-    // Estilos movidos a dashboard.css
+    // Show the semantic search toggle only for admins
+    document.getElementById("semanticToggleWrap")?.classList.remove("d-none");
   }
 
   destroy() {
