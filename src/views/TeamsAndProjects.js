@@ -183,6 +183,9 @@ export default class Teams {
           ? `title="${t("teamsProjects.viewDetail")}"`
           : "";
 
+      const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
+      const imgSrc = team.preview_photo_url || fallbackImg;
+
       const card = `
         <div class="col-12 col-md-6 col-lg-4">
           <div class="app-project-card ${clickableClass}"
@@ -192,9 +195,10 @@ export default class Teams {
                tabindex="${this.isAdmin ? "0" : ""}">
             <div class="app-project-image">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk"
+                src="${imgSrc}"
                 alt="Project image"
                 class="img-fluid"
+                onerror="this.onerror=null;this.src='${fallbackImg}';"
               />
             </div>
             <div class="p-4">
