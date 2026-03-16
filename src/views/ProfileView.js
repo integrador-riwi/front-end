@@ -168,7 +168,31 @@ export default class ProfileView {
         ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">${githubExpired ? (t("profile.githubReconnect") ?? "Reconnect with GitHub") : (t("profile.githubConnect") ?? "Connect with GitHub")}</button>`
         : ""
       }
+                    <div class="d-flex align-items-center justify-content-between gap-2 profile-github-section">
+
+                      <!-- Left -->
+                      ${showGithubLink
+        ? `<a class="profile-link" href="${escapeHtml(githubProfileUrl)}" target="_blank">
+                            @${escapeHtml(githubUsername ?? githubProfileUrl)}
+                          </a>`
+        : `<span class="profile-value mb-0">—</span>`
+      }
+
+                      <!-- Right -->
+                      <div class="d-flex align-items-center justify-content-between w-100 profile-github-status">
+                        <span class="status-pill ${githubConnected && !githubExpired ? 'status-ok' : 'status-warn'}">
+                          ${escapeHtml(statusLabel)}
+                        </span>
+                        ${showConnectBtn
+        ? `<button type="button" class="profile-github-btn" id="connectGithubBtn">
+                              ${githubExpired
+          ? (t("profile.githubReconnect") ?? "Reconnect")
+          : (t("profile.githubConnect") ?? "Connect")}
+                            </button>`
+        : ''
+      }
                       </div>
+
                     </div>
                   </div>
                 </div>

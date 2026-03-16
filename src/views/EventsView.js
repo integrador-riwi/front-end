@@ -63,10 +63,27 @@ export default class EventsView {
     const title = event.title || event.name || t("events.untitled");
     const desc = event.description || "No description provided.";
     const date = event.date || event.start_date || event.createdAt;
+    const endDate = event.end_date || event.final_delivery_date || null;
     const eventId = event.id;
+    const eventStatus = event.status ?? "";
+    const isFinished = eventStatus === "FINISHED";
+    const hasFinalists = isFinished && (event.has_finalists || event.finalists_count > 0);
+
+    const borderColor = isFinished ? "var(--text-muted, #b0b4c8)" : "var(--color-primary)";
+
+    const formatShort = (d) => {
+      if (!d) return t("events.tbd");
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return d;
+      const dd = String(dt.getDate()).padStart(2, "0");
+      const mm = String(dt.getMonth() + 1).padStart(2, "0");
+      const yyyy = dt.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
 
     return `
-        <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column flex-lg-row gap-4 align-items-md-center mb-4" style="border-left: 5px solid var(--color-primary);">
+        <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column flex-lg-row gap-4 align-items-md-center mb-4"
+             style="border-left: 5px solid ${borderColor}; ${isFinished ? "opacity:0.85;" : ""}">
           <div class="container d-flex gap-4 flex-column flex-md-row">
             <div class="d-flex flex-column align-items-center justify-content-center bg-light rounded-4 p-3 flex-shrink-0" style="min-width: 100px; border: 1px solid var(--border);">
               <span class="fs-5 fw-bold" style="color: var(--color-primary);">
@@ -78,15 +95,23 @@ export default class EventsView {
             </div>
 
             <div class="flex-grow-1">
-              <h3 class="mb-2 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); word-break: break-word;">${title}</h3>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h3 class="mb-0 text-wrap" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); word-break: break-word;">${title}</h3>
+                <span style="display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0;background-color:${isFinished ? "#dc2626" : "#10b981"};"></span>
+              </div>
               <p class="mb-2" style="font-size: 0.95rem; color: var(--text-sidebar);">${desc}</p>
               <div class="d-flex flex-wrap gap-3 mt-3">
-                <div class="d-flex align-items-center gap-1" style="font-size: 0.85rem; color: var(--text-sidebar);">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                <div class="d-flex align-items-center gap-1" style="font-size: 0.82rem; color: var(--text-sidebar);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
-                  ${t("events.ends")} ${this.formatDate(date)}
+                  <span><strong style="color:var(--color-text-main);">${t("events.startDate") || "Start"}:</strong> ${formatShort(date)}</span>
+                </div>
+                <div class="d-flex align-items-center gap-1" style="font-size: 0.82rem; color: var(--text-sidebar);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  <span><strong style="color:var(--color-text-main);">${t("events.deliveryDate") || "Delivery"}:</strong> ${formatShort(endDate)}</span>
                 </div>
               </div>
             </div>
@@ -95,12 +120,29 @@ export default class EventsView {
           
           <div class="flex-shrink-0 mt-3 mt-md-0 d-flex flex-column flex-md-row flex-lg-column gap-2" style="min-width: 150px;">
           
-            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects" data-route="details" data-event-name="${title}" data-event-id="${eventId}" style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-view-projects"
+                    data-route="details"
+                    data-event-name="${title}"
+                    data-event-id="${eventId}"
+                    data-event-status="${eventStatus}"
+                    style="border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; transition: all 0.2s ease;"
+                    onmouseover="this.style.backgroundColor='var(--accent-dim)'"
+                    onmouseout="this.style.background='transparent'">
               ${t("events.details")}
             </button>
-            <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white" style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
-              ${t("events.finalists")}
-            </button>
+
+            ${hasFinalists
+        ? `<button class="btn rounded-pill px-4 py-2 w-100 fw-semibold text-white btn-view-finalists"
+                         data-event-id="${eventId}"
+                         data-event-name="${title}"
+                         data-event-status="${eventStatus}"
+                         style="background-color: var(--color-primary); border: 2px solid var(--color-primary); transition: all 0.2s ease;"
+                         onmouseover="this.style.backgroundColor='var(--color-primary-dark)'"
+                         onmouseout="this.style.backgroundColor='var(--color-primary)'">
+                  ${t("events.finalists")}
+                </button>`
+        : ""
+    }
           </div>
         </div>
       `;
@@ -140,61 +182,44 @@ export default class EventsView {
       `;
     }
 
-    const now = new Date();
-    const pastEvents = this.events.filter(
-      (e) => new Date(e.date || e.start_date || e.createdAt) < now,
-    );
-    const inProgressEvents = this.events.filter(
-      (e) => new Date(e.date || e.start_date || e.createdAt) >= now,
-    );
+    const activeEvents   = this.events.filter(e => e.status !== "FINISHED");
+    const finishedEvents = this.events.filter(e => e.status === "FINISHED");
 
     return `
       <div class="d-flex flex-column mt-4">
         
         <!-- IN PROGRESS EVENTS -->
-        ${
-          inProgressEvents.length > 0
-            ? `
-            <div class="mb-5">
-                <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--color-primary); font-weight: 700;">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--mint);"></span>
-                  ${t("events.inProgress")}
-                </h2>
-                <div class="d-flex flex-column">
-                  ${inProgressEvents.map((event) => this.renderEventCard(event)).join("")}
-                </div>
+        ${activeEvents.length > 0 ? `
+          <div class="mb-5">
+            <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--color-primary); font-weight: 700;">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background-color:var(--mint);"></span>
+              ${t("events.inProgress")}
+            </h2>
+            <div class="d-flex flex-column">
+              ${activeEvents.map(e => this.renderEventCard(e)).join("")}
             </div>
-        `
-            : ""
-        }
+          </div>
+        ` : ""}
 
-        <!-- PAST EVENTS -->
-        ${
-          pastEvents.length > 0
-            ? `
-            <div>
-                <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--text-sidebar); font-weight: 600;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
-                     <circle cx="12" cy="12" r="10"></circle>
-                     <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  ${t("events.past")}
-                </h2>
-                <div class="d-flex flex-column opacity-75">
-                  ${pastEvents.map((event) => this.renderEventCard(event)).join("")}
-                </div>
+        <!-- FINISHED EVENTS -->
+        ${finishedEvents.length > 0 ? `
+          <div>
+            <h2 class="h4 mb-3 d-flex align-items-center gap-2" style="color: var(--text-sidebar); font-weight: 600;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              ${t("events.finished") || "Finished"}
+            </h2>
+            <div class="d-flex flex-column">
+              ${finishedEvents.map(e => this.renderEventCard(e)).join("")}
             </div>
-        `
-            : ""
-        }
+          </div>
+        ` : ""}
 
-        ${
-          inProgressEvents.length === 0 && pastEvents.length === 0
-            ? `
-           <p class="text-muted mt-3">${t("events.noEventsFound")}</p>
-        `
-            : ""
-        }
+        ${activeEvents.length === 0 && finishedEvents.length === 0 ? `
+          <p class="text-muted mt-3">${t("events.noEventsFound")}</p>
+        ` : ""}
 
       </div>
     `;
@@ -260,7 +285,7 @@ export default class EventsView {
         if (route && eventId) {
           localStorage.setItem("currentEventId", eventId);
           localStorage.setItem("currentEventName", eventName);
-          //this.router.navigate(`events/${eventId}`);
+          localStorage.setItem("currentEventStatus", e.currentTarget.dataset.eventStatus ?? "");
           this.router.navigate("dashboard", {
             id: eventId,
             name: eventName,
@@ -268,6 +293,21 @@ export default class EventsView {
         }
       });
     });
+
+    document.querySelectorAll(".btn-view-finalists").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const eventId = e.currentTarget.dataset.eventId;
+        const eventName = e.currentTarget.dataset.eventName;
+        const eventStatus = e.currentTarget.dataset.eventStatus;
+        if (eventId) {
+          localStorage.setItem("currentEventId", eventId);
+          localStorage.setItem("currentEventName", eventName);
+          localStorage.setItem("currentEventStatus", eventStatus ?? "");
+          this.router.navigate("finalists");
+        }
+      });
+    });
+
     const newEventBtn = document.getElementById("new-event-button");
     newEventBtn?.addEventListener("click", () => {
       this.router.navigate("events/create");
