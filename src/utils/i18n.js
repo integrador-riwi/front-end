@@ -59,7 +59,7 @@ const resources = {
       login: {
         tagline: "Colabora. Crece. Triunfa.",
         leftDesc:
-          "De la idea al <strong>ganador</strong> — organiza <strong>eventos</strong>, presenta <strong>proyectos</strong> y <strong>vota</strong> en tiempo real.",
+            "De la idea al <strong>ganador</strong> — organiza <strong>eventos</strong>, presenta <strong>proyectos</strong> y <strong>vota</strong> en tiempo real.",
         collaborate: "Colaborar",
         track: "Seguir Progreso",
         grow: "Crecer Juntos",
@@ -78,7 +78,7 @@ const resources = {
       events: {
         title: "Eventos Próximos",
         subtitle:
-          "Descubre y sigue los proyectos integradores y eventos activos.",
+            "Descubre y sigue los proyectos integradores y eventos activos.",
         inProgress: "En Progreso",
         past: "Eventos Pasados",
         noEvents: "No hay eventos próximos",
@@ -94,6 +94,9 @@ const resources = {
         untitled: "Evento sin título",
         approveFinalists: "Aprobar Finalistas",
         approveFinalistsSuccess: "¡Finalistas aprobados correctamente!",
+        finished: "Finalizados",
+        startDate: "Inicio",
+        deliveryDate: "Entrega",
       },
 
       // ── Ranking ───────────────────────────────────────────
@@ -139,7 +142,7 @@ const resources = {
         thScore: "PUNTAJE",
         thBar: "RENDIMIENTO",
         calcDesc:
-          "Estamos procesando los puntajes finales y rúbricas. No tomará mucho tiempo.",
+            "Estamos procesando los puntajes finales y rúbricas. No tomará mucho tiempo.",
         evalRate: "TASA DE EVALUACIÓN",
         projectsEvaluated: "PROYECTOS EVALUADOS",
         total: "Total",
@@ -149,9 +152,9 @@ const resources = {
         readyToPublish: "Listo para Publicar",
         incompleteTeams: "Evaluaciones Incompletas",
         incompleteDesc:
-          "Estos equipos tienen puntajes de rúbrica faltantes por parte de uno o más TLs.",
+            "Estos equipos tienen puntajes de rúbrica faltantes por parte de uno o más TLs.",
         publishWarningDesc:
-          "Algunos equipos no están totalmente evaluados. Esto afectará la precisión del ranking.",
+            "Algunos equipos no están totalmente evaluados. Esto afectará la precisión del ranking.",
       },
 
       // ── Coder Event Select ────────────────────────────────
@@ -160,7 +163,7 @@ const resources = {
         welcome: "Bienvenido, <strong>{{name}}</strong>.",
         subtitleTL: "Selecciona el evento que quieres revisar y evaluar.",
         subtitleCoder:
-          "Selecciona el evento en el que participas para comenzar.",
+            "Selecciona el evento en el que participas para comenzar.",
         noEvents: "No hay eventos activos en este momento.",
         noEventsHint: "Vuelve más tarde o contacta a tu administrador.",
         loading: "Cargando eventos...",
@@ -177,7 +180,7 @@ const resources = {
         subtitle: "Crea un equipo nuevo o únete a uno existente para empezar.",
         createTitle: "Crear un Nuevo Equipo",
         createDesc:
-          "Toma la delantera. Crea un equipo e invita a tus compañeros.",
+            "Toma la delantera. Crea un equipo e invita a tus compañeros.",
         joinTitle: "Unirse a un Equipo",
         teamName: "Nombre del equipo",
         projectDesc: "Descripción del proyecto",
@@ -206,7 +209,7 @@ const resources = {
         filterFull: "Completo",
         placeholderTeamName: "Ej: Los Code Wizards",
         placeholderProjectDesc:
-          "Describe brevemente en qué quiere trabajar tu equipo…",
+            "Describe brevemente en qué quiere trabajar tu equipo…",
       },
 
       // ── Coder Team ────────────────────────────────────────
@@ -240,7 +243,7 @@ const resources = {
         evalSent: "¡Evaluaciones enviadas!",
         evalSavedMsg: "Las evaluaciones se guardaron correctamente.",
         evalIncomplete:
-          "Por favor califica todas las rúbricas de cada miembro.",
+            "Por favor califica todas las rúbricas de cada miembro.",
         updateEval: "Actualizar Evaluaciones",
         leaveConfirm: "¿Estás seguro de que quieres abandonar el equipo?",
         viewRepo: "Ver repositorio",
@@ -266,7 +269,7 @@ const resources = {
         noRubricsConfigured: "No hay rúbricas configuradas para este evento",
         noMembersToEvaluate: "No hay miembros para evaluar",
         evalAlreadySent:
-          "Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.",
+            "Ya enviaste tus evaluaciones para este proyecto. No es posible modificarlas.",
         score: "Puntaje",
         feedbackOptional: "Feedback (opcional)",
         titleEdit: "Editar",
@@ -292,7 +295,6 @@ const resources = {
         declined: "Rechazada",
         joinedTeam: "Te uniste al equipo.",
         rejected: "Rechazaste la invitación.",
-        viewTeam: "Ver equipo",
         inviteMemberHeading: "Invitar miembro",
         closeModal: "Cerrar",
         searchPlaceholder: "Buscar coder por nombre o correo…",
@@ -324,10 +326,10 @@ const resources = {
         requestAcceptedMsg: "El coder ya es parte de tu equipo.",
         requestAcceptedNotifyTitle: "¡Solicitud aceptada!",
         requestAcceptedNotifyMsg:
-          'Tu solicitud para unirte a "{{team}}" fue aceptada.',
+            'Tu solicitud para unirte a "{{team}}" fue aceptada.',
         requestDeclinedTitle: "Solicitud rechazada",
         requestDeclinedMsg:
-          'Tu solicitud para unirte a "{{team}}" fue rechazada.',
+            'Tu solicitud para unirte a "{{team}}" fue rechazada.',
         eventLabel: "Evento",
         viewTeam: "Ver equipo",
       },
@@ -357,7 +359,7 @@ const resources = {
         placeholderDesc: "Describe tu proyecto…",
         placeholderRepo: "https://github.com/equipo/repo",
         repoAutoAssigned:
-          "El repositorio se creó automáticamente y no se puede editar aquí.",
+            "El repositorio se creó automáticamente y no se puede editar aquí.",
         removeMemberConfirm: "¿Eliminar a {{name}} del equipo?",
       },
 
@@ -404,6 +406,7 @@ const resources = {
         membersCount: "miembro(s)",
         notSubmitted: "No enviado",
         alreadyEvaluated: "Ya evaluado",
+        projects: "Proyectos",
       },
       teamsProjects: {
         clan: "Clan",
@@ -438,7 +441,7 @@ const resources = {
         generateQR: "Generar QR",
         disableQR: "Desactivar QR",
         selectExpiration:
-          "Por favor selecciona una fecha de expiración para el QR.",
+            "Por favor selecciona una fecha de expiración para el QR.",
       },
 
       // ── Not Found ─────────────────────────────────────────
@@ -446,7 +449,7 @@ const resources = {
         title: "¡Ups! Página No Encontrada",
         subtitle: "La página que buscas no existe o ha sido movida.",
         lostMsg:
-          "¿Perdido? No te preocupes, nos pasa a los mejores. Volvamos a enfocarnos.",
+            "¿Perdido? No te preocupes, nos pasa a los mejores. Volvamos a enfocarnos.",
         backHome: "Volver al Inicio",
       },
 
@@ -464,6 +467,15 @@ const resources = {
         eventStatus: "Estado del Evento",
         evaluationRate: "TASA DE EVALUACIÓN COMPLETADA",
         publishResults: "Publicar Resultados Finales",
+        publishDisabledHint: "Se requiere evaluación al 100% para publicar",
+        publishConfirm: "¿Cerrar el evento y publicar resultados finales? El estado cambiará a FINALIZADO.",
+        publishSuccess: "Evento finalizado",
+        publishSuccessMsg: "El evento ha sido cerrado exitosamente.",
+        eventFinished: "Evento finalizado",
+        reopenEvent: "Reabrir Evento",
+        reopenConfirm: "¿Reabrir el evento? El estado volverá a EN PROGRESO.",
+        reopenSuccess: "Evento reabierto",
+        reopenSuccessMsg: "El evento ha sido reabierto exitosamente.",
         teams: "Equipos",
         projects: "Proyectos",
         votes: "Votos",
@@ -504,10 +516,10 @@ const resources = {
         githubOrganization: "Organización GitHub",
         verifyingGithub: "Verificando GitHub...",
         noOrgsFound:
-          "No se encontraron organizaciones. Únete a una o crea una primero.",
+            "No se encontraron organizaciones. Únete a una o crea una primero.",
         connectedAs: "Conectado como",
         reposWillBeCreated:
-          "Los repositorios del equipo se crearán en esta organización.",
+            "Los repositorios del equipo se crearán en esta organización.",
         cancel: "Cancelar",
         participatingClans: "Clanes participantes",
         createNewRubric: "Crear Nueva Rúbrica",
@@ -550,6 +562,15 @@ const resources = {
         na: "N/D",
       },
 
+      // ── Public Profile ──────────────────────────────────────
+      publicProfile: {
+        avgGrade: "Nota Prom.",
+        bestGrade: "Mejor Nota",
+        noProjectsHint: "Este usuario aún no ha participado en ningún evento.",
+        viewGithub: "Ver perfil de GitHub",
+        noClan: "Sin Clan",
+      },
+
       // ── Public Voting Page ────────────────────────────────
       publicVoting: {
         voteForBest: "Vota por el mejor proyecto",
@@ -579,6 +600,8 @@ const resources = {
         newCommentMsg: "{{name}} comentó en tu proyecto",
         removedFromTeamTitle: "Eliminado del equipo",
         removedFromTeamMsg: 'Fuiste eliminado del equipo "{{team}}"',
+        retry: "Reintentar",
+        viewDetails: "Ver Detalles",
       },
     },
   },
@@ -638,7 +661,7 @@ const resources = {
       login: {
         tagline: "Collaborate. Grow. Succeed.",
         leftDesc:
-          "From idea to <strong>winner</strong> — organize <strong>events</strong>, showcase <strong>projects</strong>, and <strong>vote</strong> in real time.",
+            "From idea to <strong>winner</strong> — organize <strong>events</strong>, showcase <strong>projects</strong>, and <strong>vote</strong> in real time.",
         collaborate: "Collaborate",
         track: "Track Progress",
         grow: "Grow Together",
@@ -656,7 +679,7 @@ const resources = {
       events: {
         title: "Upcoming Events",
         subtitle:
-          "Discover and track ongoing and past project capstones and events.",
+            "Discover and track ongoing and past project capstones and events.",
         inProgress: "In Progress",
         past: "Past Events",
         noEvents: "No upcoming events",
@@ -672,6 +695,9 @@ const resources = {
         untitled: "Untitled Event",
         approveFinalists: "Approve Finalists",
         approveFinalistsSuccess: "Finalists approved successfully!",
+        finished: "Finished",
+        startDate: "Start",
+        deliveryDate: "Delivery",
       },
 
       ranking: {
@@ -716,7 +742,7 @@ const resources = {
         thScore: "FINAL SCORE",
         thBar: "PERFORMANCE",
         calcDesc:
-          "We are processing final scores and rubrics. This won't take long.",
+            "We are processing final scores and rubrics. This won't take long.",
         evalRate: "EVALUATION RATE",
         projectsEvaluated: "PROJECTS EVALUATED",
         total: "Total",
@@ -726,9 +752,9 @@ const resources = {
         readyToPublish: "Ready to Publish",
         incompleteTeams: "Incomplete Evaluations",
         incompleteDesc:
-          "These teams have missing rubric scores from one or more TLs.",
+            "These teams have missing rubric scores from one or more TLs.",
         publishWarningDesc:
-          "Some teams are not fully evaluated. This will affect the accuracy of the ranking.",
+            "Some teams are not fully evaluated. This will affect the accuracy of the ranking.",
       },
 
       ces: {
@@ -736,7 +762,7 @@ const resources = {
         welcome: "Welcome, <strong>{{name}}</strong>.",
         subtitleTL: "Select the event you want to review and evaluate.",
         subtitleCoder:
-          "Select the event you're participating in to get started.",
+            "Select the event you're participating in to get started.",
         noEvents: "No active events at this time.",
         noEventsHint: "Check back later or contact your administrator.",
         loading: "Loading events...",
@@ -750,7 +776,7 @@ const resources = {
       noTeam: {
         heading: "Find your squad.",
         subtitle:
-          "Establish a new team or join an existing group to get started.",
+            "Establish a new team or join an existing group to get started.",
         createTitle: "Start a New Team",
         createDesc: "Take the lead. Create a team and invite your classmates.",
         joinTitle: "Join an Existing Team",
@@ -781,7 +807,7 @@ const resources = {
         filterFull: "Full",
         placeholderTeamName: "e.g., The Code Wizards",
         placeholderProjectDesc:
-          "Briefly describe what your team wants to work on…",
+            "Briefly describe what your team wants to work on…",
       },
 
       team: {
@@ -839,7 +865,7 @@ const resources = {
         noRubricsConfigured: "No rubrics configured for this event",
         noMembersToEvaluate: "No members to evaluate",
         evalAlreadySent:
-          "You have already submitted your evaluations for this project. They cannot be modified.",
+            "You have already submitted your evaluations for this project. They cannot be modified.",
         score: "Score",
         feedbackOptional: "Feedback (optional)",
         titleEdit: "Edit",
@@ -864,7 +890,6 @@ const resources = {
         declined: "Declined",
         joinedTeam: "You joined the team.",
         rejected: "You rejected the invitation.",
-        viewTeam: "View team",
         inviteMemberHeading: "Invite member",
         closeModal: "Close",
         searchPlaceholder: "Search coder by name or email…",
@@ -889,7 +914,7 @@ const resources = {
         invitationAcceptedByMsg: '{{name}} joined your team "{{team}}"',
         invitationRejectedByTitle: "Invitation declined",
         invitationRejectedByMsg:
-          '{{name}} declined the invitation to "{{team}}"',
+            '{{name}} declined the invitation to "{{team}}"',
         newJoinRequestTitle: "New join request",
         newJoinRequestMsg: "{{name}} wants to join your team",
         joinRequestSubtitle: "Team: {{team}}",
@@ -897,7 +922,7 @@ const resources = {
         requestAcceptedMsg: "The coder is now part of your team.",
         requestAcceptedNotifyTitle: "Request accepted!",
         requestAcceptedNotifyMsg:
-          'Your request to join "{{team}}" has been accepted!',
+            'Your request to join "{{team}}" has been accepted!',
         requestDeclinedTitle: "Request declined",
         requestDeclinedMsg: 'Your request to join "{{team}}" was declined.',
         eventLabel: "Event",
@@ -928,7 +953,7 @@ const resources = {
         placeholderDesc: "Describe your project...",
         placeholderRepo: "https://github.com/team/repo",
         repoAutoAssigned:
-          "The repository was created automatically and cannot be edited here.",
+            "The repository was created automatically and cannot be edited here.",
         removeMemberConfirm: "Remove {{name}} from the team?",
       },
 
@@ -973,6 +998,7 @@ const resources = {
         membersCount: "member(s)",
         notSubmitted: "Not submitted yet",
         alreadyEvaluated: "Already evaluated",
+        projects: "Projects",
       },
 
       teamsProjects: {
@@ -1012,9 +1038,9 @@ const resources = {
       notFound: {
         title: "Oops! Page Not Found",
         subtitle:
-          "The page you are looking for doesn't exist or has been moved.",
+            "The page you are looking for doesn't exist or has been moved.",
         lostMsg:
-          "Lost? Don't worry, it happens to the best of us. Let's get you back on track.",
+            "Lost? Don't worry, it happens to the best of us. Let's get you back on track.",
         backHome: "Back to Dashboard",
       },
 
@@ -1031,6 +1057,15 @@ const resources = {
         eventStatus: "Event Status Overview",
         evaluationRate: "EVALUATION COMPLETION RATE",
         publishResults: "Publish Final Results",
+        publishDisabledHint: "100% evaluation required to publish",
+        publishConfirm: "Close the event and publish final results? Status will change to FINISHED.",
+        publishSuccess: "Event finished",
+        publishSuccessMsg: "The event has been closed successfully.",
+        eventFinished: "Event finished",
+        reopenEvent: "Reopen Event",
+        reopenConfirm: "Reopen the event? Status will return to IN PROGRESS.",
+        reopenSuccess: "Event reopened",
+        reopenSuccessMsg: "The event has been reopened successfully.",
         teams: "Teams",
         projects: "Projects",
         votes: "Votes",
@@ -1072,7 +1107,7 @@ const resources = {
         noOrgsFound: "No organizations found. Join one or create one first.",
         connectedAs: "Connected as",
         reposWillBeCreated:
-          "Team repositories will be created in this organization.",
+            "Team repositories will be created in this organization.",
         cancel: "Cancel",
         participatingClans: "Participating clans",
         createNewRubric: "Create New Rubric",
@@ -1116,6 +1151,15 @@ const resources = {
         na: "N/A",
       },
 
+      // ── Public Profile ──────────────────────────────────────
+      publicProfile: {
+        avgGrade: "Avg Grade",
+        bestGrade: "Best Grade",
+        noProjectsHint: "This user hasn't participated in any events yet.",
+        viewGithub: "View GitHub profile",
+        noClan: "No Clan",
+      },
+
       // ── Public Voting Page ────────────────────────────────
       publicVoting: {
         voteForBest: "Vote for the best project",
@@ -1145,6 +1189,8 @@ const resources = {
         newCommentMsg: "{{name}} commented on your project",
         removedFromTeamTitle: "Removed from team",
         removedFromTeamMsg: 'You have been removed from "{{team}}"',
+        retry: "Retry",
+        viewDetails: "View Details",
       },
     },
   },

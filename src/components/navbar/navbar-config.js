@@ -3,8 +3,8 @@ import { t } from "../../utils/i18n.js";
 
 // Functions so t() is evaluated fresh on every call (picks up current language)
 const TL_BASE_LINKS = () => [
-  { label: t("nav.teamsProjects"), route: "tlDashboard", icon: "edit" },
   { label: t("nav.events"), route: "coderEventSelect", icon: "calendar" },
+  { label: t("nav.teamsProjects"), route: "tlDashboard", icon: "edit" },
 ];
 
 const ADMIN_BASE_LINKS = () => [
@@ -12,14 +12,20 @@ const ADMIN_BASE_LINKS = () => [
   { label: t("nav.newEvent"), route: "events/create", icon: "plus" },
 ];
 
-const ADMIN_EVENT_LINKS = () => [
-  { label: t("nav.backToEvents"), route: "events", icon: "calendar" },
-  { label: t("nav.metrics"), route: "dashboard", icon: "metrics" },
-  { label: t("nav.projects"), route: "projects", icon: "globe" },
-  { label: t("nav.ranking"), route: "ranking", icon: "ranking" },
-  { label: t("nav.voting"), route: "qr", icon: "qr" },
-  { label: t("nav.finalists"), route: "finalists", icon: "trophy" },
-];
+const ADMIN_EVENT_LINKS = (eventStatus) => {
+  const isFinished = eventStatus === "FINISHED";
+  const links = [
+    { label: t("nav.backToEvents"), route: "events", icon: "calendar" },
+    { label: t("nav.metrics"), route: "dashboard", icon: "metrics" },
+    { label: t("nav.projects"), route: "projects", icon: "globe" },
+    { label: t("nav.ranking"), route: "ranking", icon: "ranking" },
+  ];
+  if (!isFinished) {
+    links.push({ label: t("nav.voting"), route: "qr", icon: "qr" });
+    links.push({ label: t("nav.finalists"), route: "finalists", icon: "trophy" });
+  }
+  return links;
+};
 
 const CODER_NO_TEAM_LINKS = () => [
   { label: t("nav.browseProjects"), route: "browseProjects", icon: "bulb" },
@@ -44,7 +50,8 @@ export const getNavLinks = (role, hasTeam) => {
 
   if (role === "ADMIN") {
     const eventId = localStorage.getItem("currentEventId");
-    return eventId ? ADMIN_EVENT_LINKS() : ADMIN_BASE_LINKS();
+    const eventStatus = localStorage.getItem("currentEventStatus");
+    return eventId ? ADMIN_EVENT_LINKS(eventStatus) : ADMIN_BASE_LINKS();
   }
 
   if (role === "CODER") {
