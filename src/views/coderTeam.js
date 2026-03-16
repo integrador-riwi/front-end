@@ -3,12 +3,12 @@ import { uploadToCloudinary } from "../services/upload.js";
 
 
 export function renderCoderTeam({
-  user,
-  team,
-  isLeader = false,
-  isTL = false,
-  selectedEvent = null,
-}) {
+                                  user,
+                                  team,
+                                  isLeader = false,
+                                  isTL = false,
+                                  selectedEvent = null,
+                                }) {
   const { name: teamName, members = [], project = null } = team;
 
   const grade = project?.grade ?? null;
@@ -18,13 +18,13 @@ export function renderCoderTeam({
   const isSubmitted = !!project?.submitted_at;
 
   const deliverables = project
-    ? {
-      video_url: project.video_url ?? null,
-      preview_photo_url: project.preview_photo_url ?? null,
-      presentation_url: project.presentation_url ?? null,
-      deploy_url: project.deploy_url ?? null,
-    }
-    : null;
+      ? {
+        video_url: project.video_url ?? null,
+        preview_photo_url: project.preview_photo_url ?? null,
+        presentation_url: project.presentation_url ?? null,
+        deploy_url: project.deploy_url ?? null,
+      }
+      : null;
 
   const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
@@ -57,7 +57,7 @@ export function renderCoderTeam({
                         View Repo
                        </a>`
       : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
-    }
+  }
               </div>
 
               <div class="d-flex flex-column gap-1">
@@ -66,7 +66,7 @@ export function renderCoderTeam({
                   ${members
       .slice(0, 3)
       .map(
-        (m) => `
+          (m) => `
                     <div class="ct-mini-avatar">${m.name.charAt(0)}</div>
                   `,
       )
@@ -74,7 +74,7 @@ export function renderCoderTeam({
                   ${members.length > 3
       ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
       : ""
-    }
+  }
                 </div>
               </div>
 
@@ -133,15 +133,15 @@ export function renderCoderTeam({
               </div>
             `
       : canEdit
-        ? `
+          ? `
               <button id="submitProjectBtn"
                 class="ct-btn-submit-main"
                 disabled>
                 Submit Project
               </button>
             `
-        : ""
-    }
+          : ""
+  }
           </div>
 
 
@@ -159,7 +159,7 @@ export function renderCoderTeam({
               ${user?.github_avatar_url
       ? `<img src="${user.github_avatar_url}" alt="${user.name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
       : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
-    }
+  }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
                         placeholder="Share your thoughts..."></textarea>
             </div>
@@ -208,18 +208,18 @@ export function renderCoderTeam({
                 </button>
                 `
       : ""
-    }
+  }
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
       .map(
-        (m, i) => `
+          (m, i) => `
                 <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
                   ${m.github_avatar_url
-            ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-            : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
+              ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+              : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
           }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0">${m.name}</p>
@@ -246,7 +246,7 @@ export function renderCoderTeam({
             </button>
             `
       : ""
-    }
+  }
 
             ${!isSubmitted && !isLeader
       ? `
@@ -262,7 +262,7 @@ export function renderCoderTeam({
             </button>
             `
       : ""
-    }
+  }
           </div>
 
           ${isTL
@@ -270,7 +270,7 @@ export function renderCoderTeam({
           
           `
       : ""
-    }
+  }
         </div>
 
       </div>
@@ -287,7 +287,7 @@ function _getVideoEmbed(url) {
 
   // YouTube
   const ytMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
   );
   if (ytMatch) {
     return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}` };
@@ -443,7 +443,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
     <div class="d-flex flex-column gap-2">
       ${items
       .map(
-        (item) => `
+          (item) => `
         <div class="d-flex flex-column rounded-3 ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
              data-field="${item.key}">
 
@@ -459,14 +459,14 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               <div class="overflow-hidden">
                 <span class="ct-del-label d-block text-truncate">${item.label}</span>
                 ${item.url && item.key === "repo_url"
-            ? `
+              ? `
                   <a href="${item.url}" target="_blank" rel="noopener"
                      class="ct-del-status ct-status-done text-truncate d-block"
                      style="max-width:180px; font-size:0.75rem;">
                     ${item.url}
                   </a>
                 `
-            : `
+              : `
                   <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
                     ${item.url ? "Submitted" : "Pending"}
                   </span>
@@ -478,10 +478,10 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             <!-- Right: actions -->
             <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0">
               ${item.url
-            ? `
+              ? `
                 <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
                 ${canEdit && item.key !== "repo_url"
-              ? `
+                  ? `
                   <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -489,24 +489,24 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                     </svg>
                   </button>
                 `
-              : ""
-            }
+                  : ""
+              }
               `
-            : canEdit
-              ? _renderUploadControl(item)
-              : ""
+              : canEdit
+                  ? _renderUploadControl(item)
+                  : ""
           }
             </div>
           </div>
 
           <!-- Edit Panel (Leader only, hidden by default) -->
           ${canEdit && item.key !== "repo_url"
-            ? `
+              ? `
               <div class="d-none animate__animated animate__fadeIn ct-edit-panel w-100 px-3 pb-3" id="edit-${item.key}">
                 ${_renderEditControl(item)}
               </div>
             `
-            : ""
+              : ""
           }
 
           <!-- Media previews (shown below the row) -->
@@ -709,8 +709,8 @@ function _renderReply(reply, currentUserId) {
   const initial = reply.author_name?.charAt(0)?.toUpperCase() ?? "?";
   const time = _formatCommentTime(reply.creationdate);
   const avatarHtml = reply.author_avatar
-    ? `<img src="${reply.author_avatar}" alt="${reply.author_name}" class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
-    : `<div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>`;
+      ? `<img src="${reply.author_avatar}" alt="${reply.author_name}" class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
+      : `<div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>`;
   return `
     <div class="d-flex gap-2 ct-comment ct-reply" data-comment-id="${reply.id_comment}">
       ${avatarHtml}
@@ -726,7 +726,7 @@ function _renderReply(reply, currentUserId) {
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
       : ""
-    }
+  }
         </div>
         <p class="ct-comment-text mb-0">${reply.comment}</p>
       </div>
@@ -740,8 +740,8 @@ function _renderComment(comment, currentUserId) {
   const time = _formatCommentTime(comment.creationdate);
   const replies = comment.replies ?? [];
   const avatarHtml = comment.author_avatar
-    ? `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-    : `<div class="ct-avatar-sm flex-shrink-0">${initial}</div>`;
+      ? `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+      : `<div class="ct-avatar-sm flex-shrink-0">${initial}</div>`;
 
   return `
     <div class="ct-comment-thread" data-comment-id="${comment.id_comment}">
@@ -764,7 +764,7 @@ function _renderComment(comment, currentUserId) {
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
       : ""
-    }
+  }
             </div>
           </div>
           <p class="ct-comment-text mb-0">${comment.comment}</p>
@@ -791,7 +791,7 @@ function _renderComment(comment, currentUserId) {
             </div>
           `
       : ""
-    }
+  }
         </div>
       </div>
     </div>
@@ -836,12 +836,12 @@ function formatDate(dateStr) {
   if (!dateStr || dateStr === "TBD") return "TBD";
   const d = new Date(dateStr);
   return isNaN(d.getTime())
-    ? dateStr
-    : d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+      ? dateStr
+      : d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 }
 
 
@@ -857,7 +857,7 @@ export async function loadComments(projectId, user) {
   const currentUserId = user?.id_user ?? null;
 
   const { getComments, postComment, deleteComment } =
-    await import("../services/api.js");
+      await import("../services/api.js");
 
   function renderAll(comments) {
     if (comments.length === 0) {
@@ -865,8 +865,8 @@ export async function loadComments(projectId, user) {
       return;
     }
     list.innerHTML = comments
-      .map((c) => _renderComment(c, currentUserId))
-      .join("");
+        .map((c) => _renderComment(c, currentUserId))
+        .join("");
     attachListHandlers();
   }
 
@@ -1031,7 +1031,7 @@ function _renderMarkdown(md) {
   h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
   h = h.replace(/(<li>.*?<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>");
   h = h.replace(/^(?!<[a-zA-Z\/])(.+)$/gm, (line) =>
-    line.trim() ? "<p>" + line + "</p>" : "",
+      line.trim() ? "<p>" + line + "</p>" : "",
   );
 
   return h;
@@ -1042,11 +1042,11 @@ function _renderMarkdown(md) {
 // ─────────────────────────────────────────────────────────────
 
 export async function loadEvaluationPanel({
-  projectId,
-  eventId,
-  members,
-  userRole = null,
-}) {
+                                            projectId,
+                                            eventId,
+                                            members,
+                                            userRole = null,
+                                          }) {
   const display = document.getElementById("tl-evaluation-panel");
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
@@ -1065,7 +1065,47 @@ export async function loadEvaluationPanel({
     submitEvaluations,
     getMyEvaluationsForProject,
     calculateProjectGrades,
+    getProjectEvalStatus,
   } = await import("../services/api.js");
+
+  // ── Check blocking rules before rendering the form ────────────────────────
+  let evalStatus = null;
+  try {
+    evalStatus = await getProjectEvalStatus(projectId);
+  } catch (_) {}
+
+  const evalsClosed    = evalStatus?.evaluations_closed ?? false;
+  const areaCapped     = evalStatus?.area_closed ?? false;
+  const alreadySubmitted = evalStatus?.already_submitted ?? false;
+
+  if (evalsClosed && !alreadySubmitted) {
+    container.innerHTML = `
+      <div class="d-flex align-items-center gap-3 p-4 rounded-3 border" style="background:#fff5f5;border-color:#fca5a5!important;">
+        <span class="material-icons-round" style="color:#dc2626;font-size:2rem;">lock</span>
+        <div>
+          <p class="fw-bold mb-0" style="color:#dc2626;">${t("tl.evalsClosedBadge") || "Calificaciones cerradas"}</p>
+          <p class="mb-0 small text-muted">${t("tl.evalsClosedDesc") || "El administrador ha cerrado el período de calificación."}</p>
+        </div>
+      </div>`;
+    submitBtn.classList.add("d-none");
+    return;
+  }
+
+  if (areaCapped && !alreadySubmitted) {
+    const max   = evalStatus?.max_evaluators ?? 3;
+    const count = evalStatus?.evaluator_count ?? max;
+    const area  = evalStatus?.area ?? "";
+    container.innerHTML = `
+      <div class="d-flex align-items-center gap-3 p-4 rounded-3 border" style="background:#fffbeb;border-color:#fcd34d!important;">
+        <span class="material-icons-round" style="color:#d97706;font-size:2rem;">group_off</span>
+        <div>
+          <p class="fw-bold mb-0" style="color:#d97706;">${t("tl.areaFull") || "Área completa"}</p>
+          <p class="mb-0 small text-muted">${t("tl.areaFullHint") || "Ya hay"} ${count}/${max} ${t("tl.evaluators") || "calificadores"} ${area ? `en ${area}` : ""}.</p>
+        </div>
+      </div>`;
+    submitBtn.classList.add("d-none");
+    return;
+  }
 
   let rubrics = [];
   let existingEvals = [];
@@ -1269,7 +1309,7 @@ export async function loadEvaluationPanel({
       const score = card.dataset.score;
 
       container.querySelectorAll(`.eval-level-card[data-rubric-id="${rubricId}"][data-member-id="${memberId}"]`)
-        .forEach(c => c.classList.remove('selected'));
+          .forEach(c => c.classList.remove('selected'));
 
       card.classList.add('selected');
 
@@ -1391,10 +1431,10 @@ export function initDeliverables(projectId) {
             const mainRow = row.querySelector(".d-flex.align-items-center.justify-content-between");
             mainRow.insertAdjacentElement("afterend", editPanel);
           }
-          
+
           const uploadType = cloudinaryFields.includes(field) ? "cloudinary" : (videoFields.includes(field) ? "both" : "url");
           editPanel.innerHTML = _renderEditControl({ key: field, url, uploadType });
-          
+
           attachRowHandlers(row);
           _refreshMediaPreview(row, field, url);
         } else {
@@ -1444,18 +1484,18 @@ export function initDeliverables(projectId) {
     if (!file) return;
 
     const isVideo = videoFields.includes(field);
-    
+
     // Cloudinary Free Limit Validation (Approx 10MB for free accounts to be safe with video processing)
     const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
     const MAX_IMAGE_SIZE = 5 * 1024 * 1024;  // 5MB
 
     if (isVideo && file.size > MAX_VIDEO_SIZE) {
-        toast.error("Video too large", `The free plan limit is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
-        return;
+      toast.error("Video too large", `The free plan limit is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+      return;
     }
     if (!isVideo && file.size > MAX_IMAGE_SIZE) {
-        toast.error("Image too large", `Maximum image size is 5MB. Your image is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
-        return;
+      toast.error("Image too large", `Maximum image size is 5MB. Your image is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+      return;
     }
 
     const resourceType = isVideo ? "video" : "image";
@@ -1465,8 +1505,8 @@ export function initDeliverables(projectId) {
     document.getElementById(progressId)?.remove();
     if (label) {
       label.insertAdjacentHTML(
-        "afterend",
-        `<div id="${progressId}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">
+          "afterend",
+          `<div id="${progressId}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">
            ${isVideo ? "Uploading video" : "Uploading"}… <span id="${progressId}-pct">0%</span>
          </div>`,
       );
@@ -1510,9 +1550,9 @@ export function initDeliverables(projectId) {
 
     btn.addEventListener("click", async () => {
       if (
-        !confirm(
-          "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
-        )
+          !confirm(
+              "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
+          )
       )
         return;
 
@@ -1524,8 +1564,8 @@ export function initDeliverables(projectId) {
         await submitProject(projectId);
 
         btn.insertAdjacentHTML(
-          "afterend",
-          `
+            "afterend",
+            `
           <div class="d-flex align-items-center gap-2 mt-3 pt-3" style="border-top:1px solid var(--border);">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
@@ -1537,12 +1577,12 @@ export function initDeliverables(projectId) {
         btn.remove();
 
         document
-          .querySelectorAll(
-            ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel, .ct-btn-upload-label",
-          )
-          .forEach((el) => {
-            el.style.display = "none";
-          });
+            .querySelectorAll(
+                ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel, .ct-btn-upload-label",
+            )
+            .forEach((el) => {
+              el.style.display = "none";
+            });
 
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
@@ -1574,19 +1614,19 @@ export function initDeliverables(projectId) {
 
     // Submit new URL (pending state — non-cloudinary, non-video-upload)
     scope
-      .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
-      .forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const field = btn.dataset.field;
-          if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
-          const input = scope.querySelector(
-            `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
-          );
-          const url = input?.value?.trim();
-          if (!url) { input?.focus(); return; }
-          await saveField(field, url, btn);
+        .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
+        .forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const field = btn.dataset.field;
+            if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
+            const input = scope.querySelector(
+                `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
+            );
+            const url = input?.value?.trim();
+            if (!url) { input?.focus(); return; }
+            await saveField(field, url, btn);
+          });
         });
-      });
 
     // Cloudinary file input (pending state)
     scope.querySelectorAll(".ct-cloudinary-input:not(.ct-edit-cloudinary-input)").forEach((input) => {
@@ -1603,11 +1643,11 @@ export function initDeliverables(projectId) {
         const panel = document.getElementById(`edit-${field}`);
         const card = btn.closest(".ct-deliverable-item");
         if (!panel) return;
-        
+
         panel.classList.remove("d-none");
         card?.classList.add("ct-editing");
         panel.querySelector(".ct-edit-input")?.focus();
-        
+
         // Hide other buttons in the row while editing
         btn.closest(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.add("d-none"));
       });
@@ -1620,10 +1660,10 @@ export function initDeliverables(projectId) {
         const panel = document.getElementById(`edit-${field}`);
         const card = btn.closest(".ct-deliverable-item");
         if (!panel) return;
-        
+
         panel.classList.add("d-none");
         card?.classList.remove("ct-editing");
-        
+
         // Show row buttons again
         card?.querySelector(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.remove("d-none"));
       });
