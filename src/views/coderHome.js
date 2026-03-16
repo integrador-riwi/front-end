@@ -53,15 +53,8 @@ export default class CoderHome {
     if (!this.selectedEvent) {
       try {
         const stored = sessionStorage.getItem("selectedEvent");
-        if (stored) {
-          this.selectedEvent = JSON.parse(stored);
-          // Sync with localStorage for breadcrumbs
-          if (this.selectedEvent) {
-            localStorage.setItem("currentEventId", this.selectedEvent.id);
-            localStorage.setItem("currentEventName", this.selectedEvent.title || this.selectedEvent.name);
-          }
-        }
-      } catch (_) {}
+        if (stored) this.selectedEvent = JSON.parse(stored);
+      } catch (_) { }
     }
 
     this.searchQuery = "";
@@ -197,7 +190,7 @@ export default class CoderHome {
           const rawTeams = teamsData?.teams ?? [];
           this._teamsTotalPages = teamsData?.pagination?.totalPages ?? 1;
           this.teams = this._mapTeams(rawTeams);
-        } catch (_) {}
+        } catch (_) { }
         this.isLoadingTeams = false;
       }
     } catch (e) {
@@ -308,68 +301,68 @@ export default class CoderHome {
 
     const content = this.team
       ? (() => {
-          const html = renderCoderTeam({
-            user: this.user,
-            team: this.team,
-            isLeader: this.isLeader,
-            selectedEvent: this.selectedEvent ?? null,
-            isTL: [
+        const html = renderCoderTeam({
+          user: this.user,
+          team: this.team,
+          isLeader: this.isLeader,
+          selectedEvent: this.selectedEvent ?? null,
+          isTL: [
+            "TL_DEVELOPMENT",
+            "TL_SOFT_SKILLS",
+            "TL_ENGLISH",
+            "ADMIN",
+          ].includes(this.user?.role),
+        });
+        const projectId = this.team?.project?.id_project;
+        const eventId = this.team?.id_event ?? this.selectedEvent?.id ?? null;
+        setTimeout(() => {
+          loadProjectBrief();
+          if (projectId) loadComments(projectId, this.user);
+          if (projectId) initDeliverables(projectId, this);
+          if (
+            projectId &&
+            eventId &&
+            [
               "TL_DEVELOPMENT",
               "TL_SOFT_SKILLS",
               "TL_ENGLISH",
               "ADMIN",
-            ].includes(this.user?.role),
-          });
-          const projectId = this.team?.project?.id_project;
-          const eventId = this.team?.id_event ?? this.selectedEvent?.id ?? null;
-          setTimeout(() => {
-            loadProjectBrief();
-            if (projectId) loadComments(projectId, this.user);
-            if (projectId) initDeliverables(projectId, this);
-            if (
-              projectId &&
-              eventId &&
-              [
-                "TL_DEVELOPMENT",
-                "TL_SOFT_SKILLS",
-                "TL_ENGLISH",
-                "ADMIN",
-              ].includes(this.user?.role)
-            ) {
-              loadEvaluationPanel({
-                projectId,
-                eventId,
-                members: this.team?.members ?? [],
-              });
-            }
-          }, 0);
-          return html;
-        })()
+            ].includes(this.user?.role)
+          ) {
+            loadEvaluationPanel({
+              projectId,
+              eventId,
+              members: this.team?.members ?? [],
+            });
+          }
+        }, 0);
+        return html;
+      })()
       : renderCoderNoTeam({
-          user: this.user,
-          teams: this.getFilteredTeams(),
-          searchQuery: this.searchQuery,
-          activeFilter: this.activeFilter,
-          availableCount: this.getAvailableCount(),
-          formData: this.formData,
-          analyzeSimilarity: this.aiResult !== null || this.isAnalyzing,
-          aiResult: this.aiResult,
-          isAnalyzing: this.isAnalyzing,
-          createTeamState: {
-            isCreating: this.isCreatingTeam,
-            error: this.createTeamError,
-            success: this.createTeamSuccess,
-          },
-          isLoading: this.isLoadingTeams,
-          selectedEvent: this.selectedEvent ?? null,
-        });
+        user: this.user,
+        teams: this.getFilteredTeams(),
+        searchQuery: this.searchQuery,
+        activeFilter: this.activeFilter,
+        availableCount: this.getAvailableCount(),
+        formData: this.formData,
+        analyzeSimilarity: this.aiResult !== null || this.isAnalyzing,
+        aiResult: this.aiResult,
+        isAnalyzing: this.isAnalyzing,
+        createTeamState: {
+          isCreating: this.isCreatingTeam,
+          error: this.createTeamError,
+          success: this.createTeamSuccess,
+        },
+        isLoading: this.isLoadingTeams,
+        selectedEvent: this.selectedEvent ?? null,
+      });
 
     const pendingBanner =
       !this.team &&
-      (this.pendingInvitations.length > 0 ||
-        this.pendingJoinRequests.length > 0)
+        (this.pendingInvitations.length > 0 ||
+          this.pendingJoinRequests.length > 0)
         ? this._renderPendingInvitationsBanner() +
-          this._renderPendingJoinRequestsBanner()
+        this._renderPendingJoinRequestsBanner()
         : "";
 
     app.innerHTML = `
@@ -389,6 +382,13 @@ export default class CoderHome {
     this.navbar.attachEventHandlers();
     this.attachEventHandlers();
 
+    // Event badge back navigation
+    const eventBadge = document.getElementById("eventBadgeBack");
+    if (eventBadge) {
+      eventBadge.addEventListener("click", () => {
+        this.router.navigate("coderEventSelect");
+      });
+    }
 
     // Mount shared invite modal into the DOM (once per render cycle)
     if (!document.getElementById("inviteModalBackdrop")) {
@@ -468,7 +468,7 @@ export default class CoderHome {
       const newTeams = this._mapTeams(rawTeams);
       this.teams = [...this.teams, ...newTeams];
       this._appendTeamCards(newTeams);
-    } catch (_) {}
+    } catch (_) { }
 
     this._isFetchingMore = false;
     this._showLoadMoreSpinner(false);
@@ -1093,8 +1093,8 @@ export default class CoderHome {
         <p class="pib-title">📬 You have ${this.pendingInvitations.length} pending invitation(s)</p>
         <div class="pib-list">
           ${this.pendingInvitations
-            .map(
-              (inv) => `
+        .map(
+          (inv) => `
             <div class="pib-item">
               <span>Team: <strong>${inv.team_name ?? inv.id_team}</strong></span>
               <div class="pib-actions">
@@ -1105,8 +1105,8 @@ export default class CoderHome {
               </div>
             </div>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
         </div>
       </div>
     `;
@@ -1119,8 +1119,8 @@ export default class CoderHome {
         <p class="pib-title">📤 You have ${this.pendingJoinRequests.length} pending join request(s)</p>
         <div class="pib-list">
           ${this.pendingJoinRequests
-            .map(
-              (req) => `
+        .map(
+          (req) => `
             <div class="pib-item">
               <span>Team: <strong>${req.team_name ?? req.id_team}</strong></span>
               <div class="pib-actions">
@@ -1129,8 +1129,8 @@ export default class CoderHome {
               </div>
             </div>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
         </div>
       </div>
     `;

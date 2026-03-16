@@ -28,7 +28,7 @@ export default class TLDashboardView {
       try {
         const stored = sessionStorage.getItem("selectedEvent");
         if (stored) this.selectedEvent = JSON.parse(stored);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     this.teams = [];

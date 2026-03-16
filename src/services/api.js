@@ -1,6 +1,6 @@
-const API_BASE_URL = "http://localhost:3010/api";
-// const API_BASE_URL =
-//     import.meta.env.VITE_API_URL || "http://localhost:3010/api";
+// const API_BASE_URL = "http://localhost:3010/api";
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -139,6 +139,17 @@ export async function createTeam(teamData) {
 export async function getMyProfile() {
   const response = await apiFetch("/auth/me", { method: "GET" });
   return response.data ?? response;
+}
+
+export async function getPublicProfile(userId) {
+  const response = await apiFetch(`/users/${userId}/profile`, { method: "GET" });
+  const outer = response.data ?? response;
+  // Handle double-nested response: { success, data: { ...profile } }
+  // vs { success, data: { data: { ...profile } } }
+  if (outer.data && typeof outer.data === "object" && outer.data.id_user) {
+    return outer.data;
+  }
+  return outer;
 }
 
 export async function updateProfile(profileData = {}) {

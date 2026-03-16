@@ -27,10 +27,12 @@
   margin-bottom: 1rem;
   transition: color 0.15s;
 }
+
 .tld-back-btn svg {
   width: 14px;
   height: 14px;
 }
+
 .tld-back-btn:hover {
   color: var(--color-primary);
 }
@@ -175,6 +177,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -193,6 +196,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -236,12 +240,15 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .tld-dot-complete {
   background: var(--color-success);
 }
+
 .tld-dot-partial {
   background: var(--color-warning);
 }
+
 .tld-dot-none {
   background: var(--text-dim);
 }
