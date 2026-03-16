@@ -367,7 +367,7 @@ export default class QRVoting {
 
       // 👇 Ask backend teammate to implement this endpoint
       // DELETE /api/qr-votes/event/:eventId/reset
-      await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
+      await apiFetch(`/qr-votes/event/${eventId}/votes`, { method: 'DELETE' });
 
       // Clear localStorage QR cache
       localStorage.removeItem(`qr_event_${eventId}`);

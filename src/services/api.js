@@ -9,7 +9,7 @@ function getToken() {
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
-  
+
   const headers = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
@@ -298,6 +298,41 @@ export async function calculateProjectGrades(projectId) {
 export async function getMyEvaluationsForProject(projectId) {
   const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
     method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getProjectEvalStatus(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/eval-status`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getEventEvalCoverage(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/coverage`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getTeamEvalCounts(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/team-eval-counts`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function closeEventEvaluations(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/close`, {
+    method: "POST",
+  });
+  return response?.data ?? response;
+}
+
+export async function reopenEventEvaluations(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/reopen`, {
+    method: "POST",
   });
   return response?.data ?? response;
 }
