@@ -406,6 +406,7 @@ const resources = {
         membersCount: "miembro(s)",
         notSubmitted: "No enviado",
         alreadyEvaluated: "Ya evaluado",
+        projects: "Proyectos",
       },
       teamsProjects: {
         clan: "Clan",
@@ -561,6 +562,15 @@ const resources = {
         na: "N/D",
       },
 
+      // ── Public Profile ──────────────────────────────────────
+      publicProfile: {
+        avgGrade: "Nota Prom.",
+        bestGrade: "Mejor Nota",
+        noProjectsHint: "Este usuario aún no ha participado en ningún evento.",
+        viewGithub: "Ver perfil de GitHub",
+        noClan: "Sin Clan",
+      },
+
       // ── Public Voting Page ────────────────────────────────
       publicVoting: {
         voteForBest: "Vota por el mejor proyecto",
@@ -590,6 +600,8 @@ const resources = {
         newCommentMsg: "{{name}} comentó en tu proyecto",
         removedFromTeamTitle: "Eliminado del equipo",
         removedFromTeamMsg: 'Fuiste eliminado del equipo "{{team}}"',
+        retry: "Reintentar",
+        viewDetails: "Ver Detalles",
       },
     },
   },
@@ -986,6 +998,7 @@ const resources = {
         membersCount: "member(s)",
         notSubmitted: "Not submitted yet",
         alreadyEvaluated: "Already evaluated",
+        projects: "Projects",
       },
 
       teamsProjects: {
@@ -1138,6 +1151,15 @@ const resources = {
         na: "N/A",
       },
 
+      // ── Public Profile ──────────────────────────────────────
+      publicProfile: {
+        avgGrade: "Avg Grade",
+        bestGrade: "Best Grade",
+        noProjectsHint: "This user hasn't participated in any events yet.",
+        viewGithub: "View GitHub profile",
+        noClan: "No Clan",
+      },
+
       // ── Public Voting Page ────────────────────────────────
       publicVoting: {
         voteForBest: "Vote for the best project",
@@ -1167,6 +1189,8 @@ const resources = {
         newCommentMsg: "{{name}} commented on your project",
         removedFromTeamTitle: "Removed from team",
         removedFromTeamMsg: 'You have been removed from "{{team}}"',
+        retry: "Retry",
+        viewDetails: "View Details",
       },
     },
   },

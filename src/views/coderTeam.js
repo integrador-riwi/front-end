@@ -135,7 +135,8 @@ export function renderCoderTeam({
       : canEdit
         ? `
               <button id="submitProjectBtn"
-                class="ct-btn-submit-main"
+                class="btn w-100 mt-3"
+                style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
                 disabled>
                 Submit Project
               </button>
@@ -192,14 +193,14 @@ export function renderCoderTeam({
         </div>
 
         <!-- ══ RIGHT COLUMN ══ -->
-        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4">
+        <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4 team-details">
           <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
                 ${isLeader
       ? `
-                <button class="ct-btn-settings d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings">
+                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -216,14 +217,18 @@ export function renderCoderTeam({
               ${members
       .map(
         (m, i) => `
-                <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2">
+                <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2 ct-member-clickable" 
+                    data-user-id="${m.id_user}" 
+                    style="cursor:pointer; transition: background 0.2s;"
+                    onmouseover="this.style.background='rgba(107, 92, 255, 0.05)'"
+                    onmouseout="this.style.background='transparent'">
                   ${m.github_avatar_url
             ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
             : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
           }
                   <div class="overflow-hidden">
-                    <p class="ct-member-name text-truncate mb-0">${m.name}</p>
-                    <p class="ct-member-role mb-0">${m.team_role ?? m.role ?? "Member"}</p>
+                    <p class="ct-member-name text-truncate mb-0 fw-bold">${m.name}</p>
+                    <p class="ct-member-role mb-0" style="font-size: 0.75rem; opacity: 0.7;">${m.team_role ?? m.role ?? "Member"}</p>
                   </div>
                 </li>
               `,
@@ -250,8 +255,8 @@ export function renderCoderTeam({
 
             ${!isSubmitted && !isLeader
       ? `
-            <button class="ct-btn-danger-refined d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
-                    id="leaveTeamBtn">
+            <button class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 mt-2"
+                    id="leaveTeamBtn" style="border-radius: 10px; font-size: 0.85rem;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                    style="width:15px;height:15px">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -309,14 +314,7 @@ function _getVideoEmbed(url) {
 
 function _renderVideoPreview(url) {
   const embed = _getVideoEmbed(url);
-  if (!embed) return `
-    <div class="ct-preview-unavailable">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;opacity:0.5;">
-        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
-      </svg>
-      <span>Video preview not available for this link.</span>
-    </div>
-  `;
+  if (!embed) return "";
 
   if (embed.type === "iframe") {
     return `
@@ -327,7 +325,6 @@ function _renderVideoPreview(url) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen
           loading="lazy"
-          onerror="this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Video preview blocked or not found.</div>'"
         ></iframe>
       </div>
     `;
@@ -336,7 +333,7 @@ function _renderVideoPreview(url) {
   // Native video (Cloudinary / direct file)
   return `
     <div class="ct-media-preview ct-video-preview mt-2">
-      <video controls preload="metadata" style="width:100%;height:100%;display:block;background:#000;" onerror="this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Video file could not be played.</div>'">
+      <video controls preload="metadata" style="width:100%;height:100%;display:block;background:#000;">
         <source src="${embed.src}" />
         Your browser does not support the video tag.
       </video>
@@ -347,35 +344,14 @@ function _renderVideoPreview(url) {
 function _renderImagePreview(url) {
   if (!url) return "";
   return `
-    <div class="ct-media-preview ct-image-preview mt-2" style="border-radius:12px;overflow:hidden;min-height:100px;background:var(--bg); border: 1px solid var(--border);">
+    <div class="ct-media-preview ct-image-preview mt-2" style="border-radius:10px;overflow:hidden;max-height:220px;background:var(--bg);">
       <img
         src="${url}"
         alt="Project preview"
         style="width:100%;height:220px;object-fit:cover;display:block;cursor:pointer;"
         onclick="window.open('${url}','_blank')"
-        onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'ct-preview-unavailable\'>Image preview not available</div>';"
+        onerror="this.parentElement.style.display='none'"
       />
-    </div>
-  `;
-}
-
-function _renderDeployPreview(url) {
-  if (!url) return "";
-  return `
-    <div class="ct-media-preview ct-deploy-preview mt-2">
-      <div class="ct-deploy-iframe-wrapper">
-         <iframe src="${url}" title="Deploy Preview" loading="lazy"></iframe>
-         <div class="ct-deploy-fallback">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;margin-bottom:8px;opacity:0.5;">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-             </svg>
-             <span>Preview may be blocked by site security.<br/>Click "Open" to visit.</span>
-         </div>
-      </div>
-      <div class="d-flex align-items-center justify-content-between px-1">
-        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Live Preview</span>
-        <a href="${url}" target="_blank" rel="noopener" style="font-size:0.75rem; color:var(--color-primary); text-decoration:none; font-weight:700;">Visit Site ↗</a>
-      </div>
     </div>
   `;
 }
@@ -433,8 +409,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       label: "Deploy Link",
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
-      hasPreview: true,
-      previewType: "deploy",
+      hasPreview: false,
+      previewType: null,
       uploadType: "url",
     },
   ];
@@ -447,7 +423,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <div class="d-flex flex-column rounded-3 ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
              data-field="${item.key}">
 
-          <!-- Main Header Row -->
+          <!-- Row: icon + label + actions -->
           <div class="d-flex align-items-center justify-content-between gap-3 px-3 py-3">
 
             <!-- Left: icon + label -->
@@ -476,7 +452,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             </div>
 
             <!-- Right: actions -->
-            <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0">
+            <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
               ${item.url
             ? `
                 <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
@@ -496,23 +472,23 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               ? _renderUploadControl(item)
               : ""
           }
-            </div>
-          </div>
 
-          <!-- Edit Panel (Leader only, hidden by default) -->
-          ${canEdit && item.key !== "repo_url"
+              <!-- Edit row hidden by default (leader only, not shown for repo) -->
+              ${canEdit && item.key !== "repo_url"
             ? `
-              <div class="d-none animate__animated animate__fadeIn ct-edit-panel w-100 px-3 pb-3" id="edit-${item.key}">
-                ${_renderEditControl(item)}
-              </div>
-            `
+                <div class="d-none ct-edit-row w-100" id="edit-${item.key}">
+                  ${_renderEditControl(item)}
+                </div>
+              `
             : ""
           }
+            </div>
+
+          </div>
 
           <!-- Media previews (shown below the row) -->
           ${item.url && item.hasPreview && item.previewType === "video" ? `<div class="px-3 pb-3">${_renderVideoPreview(item.url)}</div>` : ""}
           ${item.url && item.hasPreview && item.previewType === "image" ? `<div class="px-3 pb-3">${_renderImagePreview(item.url)}</div>` : ""}
-          ${item.url && item.hasPreview && item.previewType === "deploy" ? `<div class="px-3 pb-3">${_renderDeployPreview(item.url)}</div>` : ""}
 
         </div>
       `,
@@ -523,65 +499,46 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
 }
 
 // Render the appropriate upload control for pending state
+// Render the appropriate upload control for pending state
 function _renderUploadControl(item) {
   if (item.uploadType === "cloudinary") {
     return `
-      <div class="ct-video-input-group">
-        <label class="ct-btn-upload-label" title="Upload image" style="cursor:pointer;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Upload ${item.title}
-          <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
-        </label>
-        <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:8px;">PNG, JPG or WebP (Max 5MB)</p>
-      </div>
+      <label class="ct-btn-upload-styled" title="Upload image">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <span>Upload Photo</span>
+        <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
+      </label>
     `;
   }
 
   if (item.uploadType === "both") {
     return `
-      <div class="ct-video-input-group" data-field="${item.key}">
-        <div class="ct-video-tabs">
+      <div class="ct-video-input-group w-100" data-field="${item.key}">
+        <div class="ct-video-tabs d-flex gap-1 mb-3">
           <button type="button" class="ct-video-tab active" data-tab="url">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-            URL
+            <i class="bi bi-link-45deg"></i> URL
           </button>
           <button type="button" class="ct-video-tab" data-tab="file">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Upload
+            <i class="bi bi-upload"></i> Upload
           </button>
         </div>
-        
         <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
-          <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste YouTube, Vimeo, or video URL…" />
-          <button class="ct-btn-submit" data-field="${item.key}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </button>
+          <div class="ct-edit-input-group">
+            <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste YouTube or Vimeo URL…" />
+            <div class="ct-edit-actions">
+              <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}" title="Save">
+                <i class="bi bi-check-lg"></i> Send
+              </button>
+            </div>
+          </div>
         </div>
-        
         <div class="ct-video-panel ct-video-panel-file d-none">
-          <label class="ct-btn-upload-label" style="cursor:pointer;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Choose video file
+          <label class="ct-btn-upload-styled">
+            <i class="bi bi-camera-video"></i>
+            <span>Choose video file</span>
             <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
           </label>
-          <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:8px;">MP4, WebM or MOV (Max 10MB)</p>
+          <p class="text-center mt-2 mb-0" style="font-size:0.7rem;color:var(--text-muted);">MP4, WebM, MOV supported</p>
         </div>
       </div>
     `;
@@ -589,13 +546,11 @@ function _renderUploadControl(item) {
 
   // Default: URL input
   return `
-    <div class="ct-video-input-group">
-      <div class="d-flex align-items-center gap-2">
-        <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
-        <button class="ct-btn-submit" data-field="${item.key}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+    <div class="ct-edit-input-group">
+      <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+      <div class="ct-edit-actions">
+        <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}">
+          <i class="bi bi-send-fill"></i>
         </button>
       </div>
     </div>
@@ -603,83 +558,72 @@ function _renderUploadControl(item) {
 }
 
 // Render the edit control (shown when user clicks the edit pencil button)
+// Render the edit control (shown when user clicks the edit pencil button)
 function _renderEditControl(item) {
   if (item.uploadType === "cloudinary") {
     return `
-      <div class="ct-video-input-group">
-        <label class="ct-btn-upload-label" style="cursor:pointer;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Replace Image
+      <div class="p-3 w-100">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Edit Photo</span>
+          <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <label class="ct-btn-upload-styled w-100">
+          <i class="bi bi-image-fill"></i>
+          <span>Replace Image</span>
           <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
         </label>
-        <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
       </div>
     `;
   }
 
   if (item.uploadType === "both") {
     return `
-      <div class="ct-video-input-group" data-field="${item.key}">
-        <div class="ct-video-tabs">
-          <button type="button" class="ct-video-tab active" data-tab="url">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-            URL
-          </button>
-          <button type="button" class="ct-video-tab" data-tab="file">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Upload
-          </button>
+      <div class="ct-video-input-group w-100 p-3" data-field="${item.key}">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="ct-video-tabs d-flex gap-1">
+            <button type="button" class="ct-video-tab active" data-tab="url"><i class="bi bi-link-45deg"></i> URL</button>
+            <button type="button" class="ct-video-tab" data-tab="file"><i class="bi bi-upload"></i> File</button>
+          </div>
+          <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
         </div>
         
         <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
-          <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-                 value="${item.url ?? ""}" placeholder="Paste video URL…" />
-          <button class="ct-btn-submit ct-edit-submit" data-field="${item.key}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </button>
+          <div class="ct-edit-input-group">
+            <input type="url" class="ct-edit-input ct-url-input ct-edit-input" data-field="${item.key}"
+                   value="${item.url ?? ""}" placeholder="Paste video URL…" />
+            <div class="ct-edit-actions">
+              <button class="ct-btn-save-edit ct-edit-submit" data-field="${item.key}">
+                <i class="bi bi-check-lg"></i> Save
+              </button>
+            </div>
+          </div>
         </div>
-        
         <div class="ct-video-panel ct-video-panel-file d-none">
-          <label class="ct-btn-upload-label" style="cursor:pointer;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Replace with video file
+          <label class="ct-btn-upload-styled">
+            <i class="bi bi-camera-video"></i>
+            <span>Replace with video file</span>
             <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
           </label>
         </div>
-        <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
       </div>
     `;
   }
 
   return `
-    <div class="ct-video-input-group">
-      <div class="d-flex align-items-center gap-2">
-        <input type="url" class="ct-url-input ct-edit-input" data-field="${item.key}"
-               value="${item.url ?? ""}" placeholder="New URL…" />
-        <button class="ct-btn-submit ct-edit-submit" data-field="${item.key}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </button>
+    <div class="p-3 w-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Update ${item.label}</span>
+        <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
       </div>
-      <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
+      <div class="ct-edit-input-group">
+        <input type="url" class="ct-edit-input ct-url-input ct-edit-input" data-field="${item.key}"
+               value="${item.url ?? ""}" placeholder="Enter new URL…" />
+        <div class="ct-edit-actions">
+          <button class="ct-btn-save-edit ct-edit-submit" data-field="${item.key}">
+            <i class="bi bi-check-lg"></i> Save
+          </button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1336,9 +1280,10 @@ export function initDeliverables(projectId) {
   };
 
   const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
-  const cloudinaryFields = ["preview_photo_url"];
-  const videoFields = ["video_url"];
+  const cloudinaryFields = ["preview_photo_url"]; // image upload
+  const videoFields = ["video_url"];               // video: upload OR URL
 
+  // ── Save field value to backend ───────────────────────────
   async function saveField(field, url, btnEl) {
     const apiKey = fieldMap[field];
     if (!apiKey) return;
@@ -1371,31 +1316,31 @@ export function initDeliverables(projectId) {
           // Update the actions area with the post-submit controls
           const actionsDiv = row.querySelector(".ct-deliverable-actions");
           if (actionsDiv) {
+            const item = {
+              key: field,
+              url: url,
+              label: field === "video_url" ? "Pitch Video" : field === "preview_photo_url" ? "Preview Photo" : "Deploy Link",
+              uploadType: videoFields.includes(field) ? "both" : cloudinaryFields.includes(field) ? "cloudinary" : "url"
+            };
+
             actionsDiv.innerHTML = `
-              <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
-              <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
+              <div class="d-flex align-items-center gap-2">
+                <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+                <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="d-none ct-edit-row" id="edit-${field}">
+                ${_renderEditControl(item)}
+              </div>
             `;
+            attachRowHandlers(actionsDiv);
           }
 
-          // Update/Add the edit panel
-          let editPanel = row.querySelector(".ct-edit-panel");
-          if (!editPanel) {
-            editPanel = document.createElement("div");
-            editPanel.id = `edit-${field}`;
-            editPanel.className = "d-none animate__animated animate__fadeIn ct-edit-panel w-100 px-3 pb-3";
-            const mainRow = row.querySelector(".d-flex.align-items-center.justify-content-between");
-            mainRow.insertAdjacentElement("afterend", editPanel);
-          }
-          
-          const uploadType = cloudinaryFields.includes(field) ? "cloudinary" : (videoFields.includes(field) ? "both" : "url");
-          editPanel.innerHTML = _renderEditControl({ key: field, url, uploadType });
-          
-          attachRowHandlers(row);
+          // Inject media preview below the row
           _refreshMediaPreview(row, field, url);
         } else {
           row.classList.remove("ct-deliverable-done");
@@ -1427,8 +1372,6 @@ export function initDeliverables(projectId) {
       previewHtml = _renderVideoPreview(url);
     } else if (field === "preview_photo_url") {
       previewHtml = _renderImagePreview(url);
-    } else if (field === "deploy_url") {
-      previewHtml = _renderDeployPreview(url);
     }
 
     if (previewHtml) {
@@ -1444,38 +1387,31 @@ export function initDeliverables(projectId) {
     if (!file) return;
 
     const isVideo = videoFields.includes(field);
-    
-    // Cloudinary Free Limit Validation (Approx 10MB for free accounts to be safe with video processing)
-    const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
-    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;  // 5MB
-
-    if (isVideo && file.size > MAX_VIDEO_SIZE) {
-        toast.error("Video too large", `The free plan limit is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
-        return;
-    }
-    if (!isVideo && file.size > MAX_IMAGE_SIZE) {
-        toast.error("Image too large", `Maximum image size is 5MB. Your image is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
-        return;
-    }
-
     const resourceType = isVideo ? "video" : "image";
-    const label = triggerEl?.closest("label");
+    const label = triggerEl?.closest("label") || triggerEl;
 
     const progressId = `upload-progress-${field}`;
     document.getElementById(progressId)?.remove();
-    if (label) {
-      label.insertAdjacentHTML(
-        "afterend",
-        `<div id="${progressId}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">
-           ${isVideo ? "Uploading video" : "Uploading"}… <span id="${progressId}-pct">0%</span>
-         </div>`,
-      );
-    }
+    
+    label.insertAdjacentHTML(
+      "afterend",
+      `<div id="${progressId}" class="mt-2 w-100">
+        <div class="d-flex justify-content-between mb-1" style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+          <span>${isVideo ? "Video" : "Image"} Uploading…</span>
+          <span id="${progressId}-pct">0%</span>
+        </div>
+        <div class="progress" style="height: 5px; border-radius: 99px; background:#edf2f7; overflow:hidden;">
+          <div id="${progressId}-bar" class="progress-bar progress-bar-animated" role="progressbar" style="width: 0%; background:var(--color-primary); border-radius:99px; transition: width 0.2s;"></div>
+        </div>
+      </div>`,
+    );
 
     try {
       const url = await uploadToCloudinary(file, resourceType, (pct) => {
         const pctEl = document.getElementById(`${progressId}-pct`);
+        const barEl = document.getElementById(`${progressId}-bar`);
         if (pctEl) pctEl.textContent = `${pct}%`;
+        if (barEl) barEl.style.width = `${pct}%`;
       });
 
       document.getElementById(progressId)?.remove();
@@ -1499,6 +1435,8 @@ export function initDeliverables(projectId) {
     if (!btn) return;
     const allDone = done >= 4;
     btn.disabled = !allDone;
+    btn.style.opacity = allDone ? "1" : "0.4";
+    btn.style.cursor = allDone ? "pointer" : "not-allowed";
   }
 
   function _attachSubmitHandler() {
@@ -1596,20 +1534,15 @@ export function initDeliverables(projectId) {
       });
     });
 
-    // Edit button → show edit panel
+    // Edit button → show edit row
     scope.querySelectorAll(".ct-btn-edit").forEach((btn) => {
       btn.addEventListener("click", () => {
         const field = btn.dataset.field;
-        const panel = document.getElementById(`edit-${field}`);
-        const card = btn.closest(".ct-deliverable-item");
-        if (!panel) return;
-        
-        panel.classList.remove("d-none");
-        card?.classList.add("ct-editing");
-        panel.querySelector(".ct-edit-input")?.focus();
-        
-        // Hide other buttons in the row while editing
-        btn.closest(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.add("d-none"));
+        const editRow = document.getElementById(`edit-${field}`);
+        if (!editRow) return;
+        editRow.classList.remove("d-none");
+        editRow.classList.add("d-flex");
+        editRow.querySelector(".ct-edit-input")?.focus();
       });
     });
 
@@ -1617,15 +1550,11 @@ export function initDeliverables(projectId) {
     scope.querySelectorAll(".ct-edit-cancel").forEach((btn) => {
       btn.addEventListener("click", () => {
         const field = btn.dataset.field;
-        const panel = document.getElementById(`edit-${field}`);
-        const card = btn.closest(".ct-deliverable-item");
-        if (!panel) return;
-        
-        panel.classList.add("d-none");
-        card?.classList.remove("ct-editing");
-        
-        // Show row buttons again
-        card?.querySelector(".ct-deliverable-actions")?.querySelectorAll(".ct-btn-open, .ct-btn-edit").forEach(b => b.classList.remove("d-none"));
+        const editRow = document.getElementById(`edit-${field}`);
+        if (editRow) {
+          editRow.classList.add("d-none");
+          editRow.classList.remove("d-flex");
+        }
       });
     });
 
@@ -1652,7 +1581,8 @@ export function initDeliverables(projectId) {
 
   // Attach to all rows
   document.querySelectorAll(".ct-deliverable-item").forEach((row) => {
-    attachRowHandlers(row);
+    const actionsDiv = row.querySelector(".ct-deliverable-actions");
+    if (actionsDiv) attachRowHandlers(actionsDiv);
   });
 
   _attachSubmitHandler();

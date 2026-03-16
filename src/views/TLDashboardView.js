@@ -28,7 +28,7 @@ export default class TLDashboardView {
       try {
         const stored = sessionStorage.getItem("selectedEvent");
         if (stored) this.selectedEvent = JSON.parse(stored);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     this.teams = [];
@@ -81,7 +81,7 @@ export default class TLDashboardView {
                   await import("../services/api.js");
                 const evals = await getMyEvaluationsForProject(projectId);
                 _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
-              } catch (_) {}
+              } catch (_) { }
             }
 
             return {
@@ -154,11 +154,10 @@ export default class TLDashboardView {
             <div>
               <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
               <h1 class="tld-title">${this.selectedEvent?.title ?? "Teams"}</h1>
-              ${
-                this.selectedEvent?.cohort
-                  ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
-                  : ""
-              }
+              ${this.selectedEvent?.cohort
+        ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
+        : ""
+      }
             </div>
             <div class="tld-stat-pills">
               <div class="tld-stat-pill">
@@ -300,9 +299,8 @@ export default class TLDashboardView {
           </div>
         </div>
 
-        ${
-          hasProject
-            ? `
+        ${hasProject
+        ? `
           <div class="tld-progress-wrap">
             <div class="tld-progress-bar">
               <div class="tld-progress-fill${isSubmitted ? " tld-progress-fill--submitted" : ""}" style="width:${progress}%"></div>
@@ -310,8 +308,8 @@ export default class TLDashboardView {
             <span class="tld-progress-label">${isSubmitted ? (t("tl.submittedReview") ?? "Submitted for review") : `${deliverables}/${totalDeliverables} deliverables`}</span>
           </div>
         `
-            : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
-        }
+        : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
+      }
 
         <div class="tld-card-members">
           <div class="tld-avatars-row">

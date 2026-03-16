@@ -141,6 +141,17 @@ export async function getMyProfile() {
   return response.data ?? response;
 }
 
+export async function getPublicProfile(userId) {
+  const response = await apiFetch(`/users/${userId}/profile`, { method: "GET" });
+  const outer = response.data ?? response;
+  // Handle double-nested response: { success, data: { ...profile } }
+  // vs { success, data: { data: { ...profile } } }
+  if (outer.data && typeof outer.data === "object" && outer.data.id_user) {
+    return outer.data;
+  }
+  return outer;
+}
+
 export async function updateProfile(profileData = {}) {
   const response = await apiFetch("/auth/profile", {
     method: "PUT",
