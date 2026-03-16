@@ -58,7 +58,7 @@ export default class Teams {
     tip.id = "app-avatar-tip";
     document.body.appendChild(tip);
 
-    document.addEventListener("mouseover", (e) => {
+    this._avatarMouseOver = (e) => {
       const img = e.target.closest(".app-avatar-has-tip");
       if (!img) return;
       tip.textContent = img.dataset.tipName;
@@ -66,12 +66,15 @@ export default class Teams {
       const rect = img.getBoundingClientRect();
       tip.style.left = `${rect.left + rect.width / 2 - tip.offsetWidth / 2}px`;
       tip.style.top = `${rect.top - tip.offsetHeight - 8}px`;
-    });
+    };
 
-    document.addEventListener("mouseout", (e) => {
+    this._avatarMouseOut = (e) => {
       if (!e.target.closest(".app-avatar-has-tip")) return;
       tip.classList.remove("visible");
-    });
+    };
+
+    document.addEventListener("mouseover", this._avatarMouseOver);
+    document.addEventListener("mouseout", this._avatarMouseOut);
   }
 
   showLoading(container) {
@@ -673,5 +676,13 @@ export default class Teams {
 
   destroy() {
     if (this._offLangChange) this._offLangChange();
+    if (this._avatarMouseOver) {
+      document.removeEventListener("mouseover", this._avatarMouseOver);
+    }
+    if (this._avatarMouseOut) {
+      document.removeEventListener("mouseout", this._avatarMouseOut);
+    }
+    const tip = document.getElementById("app-avatar-tip");
+    if (tip) tip.remove();
   }
 }
