@@ -231,7 +231,7 @@ export default class PublicProfileView {
 
     _attachBackButton() {
         document.getElementById("ppBackBtn")?.addEventListener("click", () => {
-            window.history.back();
+            this.router.back();
         });
     }
 
@@ -247,7 +247,6 @@ export default class PublicProfileView {
             });
         });
     }
-
     _getGradeClass(grade) {
         if (grade >= 90) return "pp-grade-excellent";
         if (grade >= 75) return "pp-grade-good";
