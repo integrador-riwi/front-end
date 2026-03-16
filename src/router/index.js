@@ -152,6 +152,7 @@ class App {
     this.user = null;
     this.hasTeam = false;
     this.currentParams = {};
+    this.historyStack = [];
     this._langUnsubscribe = null;
 
     // Re-render the current view whenever the language changes.
@@ -309,9 +310,22 @@ class App {
       }
     }
 
+    if (this.currentRoute) {
+      this.historyStack.push({ route: this.currentRoute, params: this.currentParams });
+    }
+
+
     this._renderView(route, params);
   }
 
+  back(fallbackRoute = null) {
+    if (this.historyStack.length > 0) {
+      const prev = this.historyStack.pop();
+      this._renderView(prev.route, prev.params);
+    } else {
+      this.navigate(fallbackRoute || this.getHomeRoute());
+    }
+  }
   _mountView(route, params = {}) {
     switch (route) {
       case "login":

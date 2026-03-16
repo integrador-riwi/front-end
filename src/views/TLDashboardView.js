@@ -60,8 +60,8 @@ export default class TLDashboardView {
 
     try {
       const res = await apiFetch(
-          `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
-          { method: "GET" },
+        `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
+        { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
 
@@ -72,40 +72,40 @@ export default class TLDashboardView {
 
       // Enrich each team with project + member count + eval status
       this.teams = await Promise.all(
-          raw.map(async (t) => {
-            try {
-              const detail = await apiFetch(`/teams/${t.id_team}`, {
-                method: "GET",
-              });
-              const full = detail?.data ?? detail;
-              const projectId = full.project?.id_project ?? null;
+        raw.map(async (t) => {
+          try {
+            const detail = await apiFetch(`/teams/${t.id_team}`, {
+              method: "GET",
+            });
+            const full = detail?.data ?? detail;
+            const projectId = full.project?.id_project ?? null;
 
-              let _alreadyEvaluated = false;
-              let _evalStatus = null; // { evaluations_closed, area_closed, already_submitted, evaluator_count }
+            let _alreadyEvaluated = false;
+            let _evalStatus = null; // { evaluations_closed, area_closed, already_submitted, evaluator_count }
 
-              if (projectId) {
-                try {
-                  const { getMyEvaluationsForProject } = await import("../services/api.js");
-                  const [evals, evalStatus] = await Promise.all([
-                    getMyEvaluationsForProject(projectId),
-                    getProjectEvalStatus(projectId),
-                  ]);
-                  _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
-                  _evalStatus = evalStatus;
-                } catch (_) {}
-              }
-
-              return {
-                ...t,
-                members: full.members ?? [],
-                project: full.project ?? null,
-                _alreadyEvaluated,
-                _evalStatus,
-              };
-            } catch {
-              return { ...t, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
+            if (projectId) {
+              try {
+                const { getMyEvaluationsForProject } = await import("../services/api.js");
+                const [evals, evalStatus] = await Promise.all([
+                  getMyEvaluationsForProject(projectId),
+                  getProjectEvalStatus(projectId),
+                ]);
+                _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
+                _evalStatus = evalStatus;
+              } catch (_) { }
             }
-          }),
+
+            return {
+              ...t,
+              members: full.members ?? [],
+              project: full.project ?? null,
+              _alreadyEvaluated,
+              _evalStatus,
+            };
+          } catch {
+            return { ...t, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
+          }
+        }),
       );
 
       // For ADMIN: also fetch event-level coverage
@@ -170,20 +170,15 @@ export default class TLDashboardView {
             <div>
               <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
               <h1 class="tld-title">${this.selectedEvent?.title ?? "Teams"}</h1>
-              ${
-        this.selectedEvent?.cohort
-            ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
-            : ""
-    }
+              ${this.selectedEvent?.cohort
+        ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
+        : ""
+      }
             </div>
             <div class="tld-stat-pills">
               <div class="tld-stat-pill">
                 <span class="tld-stat-num">${this.teams.length}</span>
                 <span class="tld-stat-label">${t("tl.teams")}</span>
-              </div>
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.filter((t) => t.project).length}</span>
-                <span class="tld-stat-label">${t("tl.withProject")}</span>
               </div>
               <div class="tld-stat-pill">
                 <span class="tld-stat-num">${this.teams.reduce((sum, t) => sum + (t.members?.length ?? 0), 0)}</span>
@@ -219,8 +214,8 @@ export default class TLDashboardView {
   _renderGrid() {
     if (this.isLoading) {
       return Array.from(
-          { length: 6 },
-          () => `<div class="tld-card tld-card-skeleton"></div>`,
+        { length: 6 },
+        () => `<div class="tld-card tld-card-skeleton"></div>`,
       ).join("");
     }
 
@@ -260,73 +255,73 @@ export default class TLDashboardView {
 
     const totalDeliverables = 3;
     const progress = hasProject
-        ? Math.round((deliverables / totalDeliverables) * 100)
-        : 0;
+      ? Math.round((deliverables / totalDeliverables) * 100)
+      : 0;
 
     const avatarsHtml = members
-        .slice(0, 4)
-        .map((m, i) =>
-            m.github_avatar_url
-                ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
-                : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
-        )
-        .join("");
+      .slice(0, 4)
+      .map((m, i) =>
+        m.github_avatar_url
+          ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
+          : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
+      )
+      .join("");
 
     const extraMembers =
-        members.length > 4
-            ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
-            : "";
+      members.length > 4
+        ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
+        : "";
 
     const statusDot = isSubmitted
-        ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
-        : hasProject
-            ? deliverables === totalDeliverables
-                ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
-                : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-            : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
+      ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
+      : hasProject
+        ? deliverables === totalDeliverables
+          ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
+          : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
+        : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
 
     // Button state — respecting 3 blocking rules from eval-status
     const evalStatus = team._evalStatus;
-    const evalsClosed     = evalStatus?.evaluations_closed ?? false;
-    const areaCapped      = evalStatus?.area_closed ?? false;
+    const evalsClosed = evalStatus?.evaluations_closed ?? false;
+    const areaCapped = evalStatus?.area_closed ?? false;
     const alreadyDoneArea = evalStatus?.already_submitted ?? team._alreadyEvaluated;
 
     let evalBtnContent, evalBtnDisabled, evalBtnClass, evalBtnTitle;
 
     if (!isSubmitted && hasProject) {
       // Project exists but not submitted yet
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.notSubmitted")}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.notSubmitted")}`;
       evalBtnDisabled = "disabled";
-      evalBtnClass    = "tld-eval-btn";
-      evalBtnTitle    = "";
+      evalBtnClass = "tld-eval-btn";
+      evalBtnTitle = "";
     } else if (!hasProject) {
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.noProject")}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.noProject")}`;
       evalBtnDisabled = "disabled";
-      evalBtnClass    = "tld-eval-btn";
-      evalBtnTitle    = "";
+      evalBtnClass = "tld-eval-btn";
+      evalBtnTitle = "";
     } else if (evalsClosed) {
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${t("tl.evalsClosed") || "Calificaciones cerradas"}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${t("tl.evalsClosed") || "Calificaciones cerradas"}`;
       evalBtnDisabled = "disabled";
-      evalBtnClass    = "tld-eval-btn tld-eval-btn--locked";
-      evalBtnTitle    = t("tl.evalsClosedHint") || "El admin cerró las calificaciones";
+      evalBtnClass = "tld-eval-btn tld-eval-btn--locked";
+      evalBtnTitle = t("tl.evalsClosedHint") || "El admin cerró las calificaciones";
     } else if (alreadyDoneArea) {
       // Already submitted — show review mode
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${t("team.reviewEval")}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${t("team.reviewEval")}`;
       evalBtnDisabled = "";
-      evalBtnClass    = "tld-eval-btn tld-eval-btn--reviewed";
-      evalBtnTitle    = "";
+      evalBtnClass = "tld-eval-btn tld-eval-btn--reviewed";
+      evalBtnTitle = "";
     } else if (areaCapped) {
       const max = evalStatus?.max_evaluators ?? 3;
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg> ${t("tl.areaFull") || "Área completa"}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg> ${t("tl.areaFull") || "Área completa"}`;
       evalBtnDisabled = "disabled";
-      evalBtnClass    = "tld-eval-btn tld-eval-btn--locked";
-      evalBtnTitle    = `${t("tl.areaFullHint") || "Ya hay"} ${evalStatus?.evaluator_count ?? max}/${max} ${t("tl.evaluators") || "calificadores"}`;
+      evalBtnClass = "tld-eval-btn tld-eval-btn--locked";
+      evalBtnTitle = `${t("tl.areaFullHint") || "Ya hay"} ${evalStatus?.evaluator_count ?? max}/${max} ${t("tl.evaluators") || "calificadores"}`;
     } else {
       // Can evaluate
-      evalBtnContent  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> ${t("team.evaluate")}`;
+      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> ${t("team.evaluate")}`;
       evalBtnDisabled = "";
-      evalBtnClass    = "tld-eval-btn tld-eval-btn--ready";
-      evalBtnTitle    = "";
+      evalBtnClass = "tld-eval-btn tld-eval-btn--ready";
+      evalBtnTitle = "";
     }
 
     return `
@@ -342,9 +337,8 @@ export default class TLDashboardView {
           </div>
         </div>
 
-        ${
-        hasProject
-            ? `
+        ${hasProject
+        ? `
           <div class="tld-progress-wrap">
             <div class="tld-progress-bar">
               <div class="tld-progress-fill${isSubmitted ? " tld-progress-fill--submitted" : ""}" style="width:${progress}%"></div>
@@ -352,8 +346,8 @@ export default class TLDashboardView {
             <span class="tld-progress-label">${isSubmitted ? (t("tl.submittedReview") ?? "Submitted for review") : `${deliverables}/${totalDeliverables} deliverables`}</span>
           </div>
         `
-            : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
-    }
+        : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
+      }
 
         <div class="tld-card-members">
           <div class="tld-avatars-row">
@@ -430,9 +424,9 @@ export default class TLDashboardView {
     const cv = this.evalCoverage;
     if (!cv) return "";
 
-    const isClosed   = cv.evaluations_closed;
-    const canClose   = cv.canClose;
-    const missing    = cv.missing ?? [];
+    const isClosed = cv.evaluations_closed;
+    const canClose = cv.canClose;
+    const missing = cv.missing ?? [];
 
     if (isClosed) {
       return `
@@ -453,20 +447,20 @@ export default class TLDashboardView {
     }
 
     const missingHtml = missing.length > 0
-        ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
+      ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
           ${missing.slice(0, 5).map(m =>
-            `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`
-        ).join("")}
+        `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`
+      ).join("")}
           ${missing.length > 5 ? `<li>...y ${missing.length - 5} más</li>` : ""}
         </ul>`
-        : "";
+      : "";
 
     const warningHtml = !canClose && missing.length > 0
-        ? `<p class="mb-0 small mt-1" style="color:#92400e;">
+      ? `<p class="mb-0 small mt-1" style="color:#92400e;">
           <span class="material-icons-round" style="font-size:.85rem;vertical-align:middle;">warning</span>
           ${t("tl.closeWarning") || "Al cerrar, los proyectos sin cobertura completa se calificarán solo con las evaluaciones existentes."}
         </p>`
-        : "";
+      : "";
 
     return `
       <div class="tld-eval-admin-panel${canClose ? " tld-eval-admin-panel--ready" : " tld-eval-admin-panel--warn"}">
@@ -478,7 +472,7 @@ export default class TLDashboardView {
             <strong>${canClose
         ? (t("tl.allEvalsComplete") || "Todas las áreas calificadas — listo para cerrar")
         : (t("tl.evalsPending") || `${missing.length} proyecto(s) sin calificación completa`)
-    }</strong>
+      }</strong>
             ${missingHtml}
             ${warningHtml}
           </div>
@@ -500,9 +494,9 @@ export default class TLDashboardView {
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) return this.teams;
     return this.teams.filter(
-        (t) =>
-            t.name?.toLowerCase().includes(q) ||
-            t.project?.name?.toLowerCase().includes(q),
+      (t) =>
+        t.name?.toLowerCase().includes(q) ||
+        t.project?.name?.toLowerCase().includes(q),
     );
   }
 
