@@ -54,7 +54,12 @@ export async function loginUser(email, password) {
 export async function createQR(id_event, expires_at, finalists) {
   return apiFetch("/qr-votes", {
     method: "POST",
-    body: { id_event, expires_at, top_n: finalists.length },
+    body: {
+      id_event,
+      expires_at,
+      top_n: finalists.length,
+      finalist_ids: finalists.map((f) => f.id_project).filter(Boolean),
+    },
   });
 }
 
@@ -115,10 +120,10 @@ export async function getEventById(eventId) {
   return response.data
 }
 
-export async function submitVote(qr_vote_id,project_id) {
+export async function submitVote(qr_vote_id, project_id, voter_token) {
   return apiFetch("/qr-votes/vote", {
     method: "POST",
-    body: { qr_vote_id, project_id },
+    body: { qr_vote_id, project_id, voter_token },
   });
 }
 

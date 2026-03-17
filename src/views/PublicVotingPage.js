@@ -30,11 +30,17 @@ export default class PublicVotingPage {
 
   async fetchRanking() {
     try {
-      const res    = await getVotingProjects(this.eventId); 
-      this.ranking = res?.projects || [];     
+      const res    = await getVotingProjects(this.eventId);
+      this.ranking = res?.projects || [];
       const qrVoteId = res.qr_vote_id;
       console.log(qrVoteId)
       sessionStorage.setItem("qrVoteId",JSON.stringify(qrVoteId));
+
+      // Generar voter_token único por evento — persiste al cerrar el browser
+      if (!localStorage.getItem(`voter_token_${this.eventId}`)) {
+        const token = crypto.randomUUID();
+        localStorage.setItem(`voter_token_${this.eventId}`, token);
+      }
     } catch (error) {
       console.error("Error loading ranking", error);
       this.ranking = [];
@@ -42,21 +48,22 @@ export default class PublicVotingPage {
   }
 
   /* -------------------------- VOTING -------------------------- */
-async handleVote(projectId) {
-  try {
-    const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
-    await submitVote(qrVoteId, Number(projectId));
+  async handleVote(projectId) {
+    try {
+      const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
+      const voterToken = localStorage.getItem(`voter_token_${this.eventId}`);
+      await submitVote(qrVoteId, Number(projectId), voterToken);
 
-    sessionStorage.setItem(`voted_event_${this.projectId}`, "true");
-    alert(t("publicVoting.voteSuccess"));
-    this.disableVoting();
+      localStorage.setItem(`voted_event_${this.eventId}`, "true");
+      alert(t("publicVoting.voteSuccess"));
+      this.disableVoting();
 
-  } catch (error) {
-    console.error("Vote error:", error);
-    console.log("Vote error details:", error?.response?.data); 
-    alert(t("publicVoting.voteError"));
+    } catch (error) {
+      console.error("Vote error:", error);
+      console.log("Vote error details:", error?.response?.data);
+      alert(t("publicVoting.voteError"));
+    }
   }
-}
 
   disableVoting() {
     const buttons = document.querySelectorAll(".vote-btn");
@@ -105,9 +112,9 @@ async handleVote(projectId) {
     const buttons = document.querySelectorAll(".vote-btn");
 
     buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const teamId = btn.dataset.team;
-        this.handleVote(teamId);
+        await this.handleVote(teamId);
       });
     });
   }
