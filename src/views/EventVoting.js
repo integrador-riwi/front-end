@@ -352,7 +352,7 @@ export default class QRVoting {
 
   btn.addEventListener("click", async () => {
     const confirmed = confirm(
-      "⚠️ This will permanently delete ALL votes for this event. Are you sure?"
+      "This will permanently delete ALL votes for this event. Are you sure?"
     );
     if (!confirmed) return;
 
@@ -365,8 +365,6 @@ export default class QRVoting {
     try {
       const eventId = getSelectedEvent();
 
-      // 👇 Ask backend teammate to implement this endpoint
-      // DELETE /api/qr-votes/event/:eventId/reset
       await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
 
       // Clear localStorage QR cache
@@ -389,7 +387,7 @@ export default class QRVoting {
       this.updateDownloadButton(null);
       this.updateSubmitVotesButton();
 
-      btn.innerHTML = `✅ Votes reset successfully`;
+      btn.innerHTML = `Votes reset successfully`;
       btn.disabled  = false;
 
       // Reload ranking panel to reset approve state
