@@ -8,15 +8,21 @@ function getToken() {
 
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
+  const isFormData = options.body instanceof FormData;
+
+  const headers = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    headers,
+    body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
   });
 
   // 204 No Content — no hay body que parsear
@@ -133,6 +139,17 @@ export async function createTeam(teamData) {
 export async function getMyProfile() {
   const response = await apiFetch("/auth/me", { method: "GET" });
   return response.data ?? response;
+}
+
+export async function getPublicProfile(userId) {
+  const response = await apiFetch(`/users/${userId}/profile`, { method: "GET" });
+  const outer = response.data ?? response;
+  // Handle double-nested response: { success, data: { ...profile } }
+  // vs { success, data: { data: { ...profile } } }
+  if (outer.data && typeof outer.data === "object" && outer.data.id_user) {
+    return outer.data;
+  }
+  return outer;
 }
 
 export async function updateProfile(profileData = {}) {
@@ -281,6 +298,41 @@ export async function calculateProjectGrades(projectId) {
 export async function getMyEvaluationsForProject(projectId) {
   const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
     method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getProjectEvalStatus(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/eval-status`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getEventEvalCoverage(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/coverage`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function getTeamEvalCounts(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/team-eval-counts`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
+export async function closeEventEvaluations(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/close`, {
+    method: "POST",
+  });
+  return response?.data ?? response;
+}
+
+export async function reopenEventEvaluations(eventId) {
+  const response = await apiFetch(`/evaluations/event/${eventId}/reopen`, {
+    method: "POST",
   });
   return response?.data ?? response;
 }

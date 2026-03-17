@@ -181,10 +181,10 @@ export default class CoderEventSelect {
     const fmt = (d) =>
       d
         ? new Date(d).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
         : t("events.tbd");
     const startDate = fmt(event.date);
     const endDate = fmt(event.end_date);
@@ -213,17 +213,16 @@ export default class CoderEventSelect {
           <span class="ces-event-type" style="background:${typeStyle.bg};color:${typeStyle.color}">
             ${typeStyle.label}
           </span>
-          ${
-            event.github_org
-              ? `
+          ${event.github_org
+        ? `
             <span class="ces-event-org">
               <svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
               </svg>
               ${event.github_org}
             </span>`
-              : ""
-          }
+        : ""
+      }
         </div>
         <h2 class="ces-event-name">${event.title}</h2>
         <p class="ces-event-desc">${event.description || t("common.noDescription")}</p>
@@ -235,9 +234,8 @@ export default class CoderEventSelect {
             </svg>
             <span>${startDate} → ${endDate}</span>
           </div>
-          ${
-            event.cohort
-              ? `
+          ${event.cohort
+        ? `
             <div class="ces-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -246,19 +244,18 @@ export default class CoderEventSelect {
               </svg>
               <span>${t("eventDetails.cohort")} ${event.cohort}</span>
             </div>`
-              : ""
-          }
-          ${
-            event.max_team_size
-              ? `
+        : ""
+      }
+          ${event.max_team_size
+        ? `
             <div class="ces-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
               </svg>
               <span>${t("ces.upTo")} ${event.max_team_size} ${t("ces.perTeam")}</span>
             </div>`
-              : ""
-          }
+        : ""
+      }
         </div>
         <button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
           ${isTL ? (t("ces.review") ?? "Review this event") : (t("ces.select") ?? "Join this event")}
@@ -283,8 +280,13 @@ export default class CoderEventSelect {
         const eventId = parseInt(btn.dataset.eventId);
         const event = this.events.find((e) => e.id === eventId);
         sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-        localStorage.setItem("currentEventName", event?.title ?? "");
-        localStorage.setItem("currentEventId", eventId);
+
+        // Also sync with localStorage for header/breadcrumbs consistency
+        if (event) {
+          localStorage.setItem("currentEventId", event.id);
+          localStorage.setItem("currentEventName", event.title || event.name);
+        }
+
         const destination = TL_ROLES.includes(this.user?.role)
           ? "tlDashboard"
           : "coderHome";

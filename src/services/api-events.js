@@ -84,3 +84,17 @@ export const calculateFinalists = async (eventId) => {
   });
   return res.data;
 };
+
+export async function finishEvent(eventId) {
+  return apiFetch(`/events/${eventId}`, {
+    method: "PUT",
+    body: { status: "FINISHED" },
+  });
+}
+
+export async function reopenEvent(eventId) {
+  return apiFetch(`/events/${eventId}`, {
+    method: "PUT",
+    body: { status: "IN_PROGRESS" },
+  });
+}

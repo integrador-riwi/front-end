@@ -54,11 +54,18 @@
 }
 
 @keyframes ct-hero-glow {
-  0% { opacity: 0.5; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.1); }
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
-.ct-hero-card > * {
+.ct-hero-card>* {
   position: relative;
   z-index: 2;
 }
@@ -1284,4 +1291,222 @@
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DELIVERABLES REFINEMENT
+───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   DELIVERABLES REFINEMENT & EDITING
+───────────────────────────────────────────────────────────── */
+
+.ct-edit-row {
+  display: flex;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  animation: ct-fade-in 0.25s ease-out;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  margin-top: 0.75rem !important;
+}
+
+@keyframes ct-fade-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ct-video-tabs {
+  background: #edf2f7;
+  padding: 3px;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.ct-video-tab {
+  border: none;
+  background: transparent;
+  padding: 5px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ct-video-tab i {
+  font-size: 0.85rem;
+}
+
+.ct-video-tab.active {
+  background: #fff;
+  color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.ct-video-panel {
+  padding: 4px 0;
+}
+
+.ct-edit-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.ct-edit-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.ct-edit-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(107, 92, 255, 0.1);
+  outline: none;
+}
+
+.ct-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ct-btn-save-edit {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.ct-btn-save-edit:hover {
+  background: #5548e2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 92, 255, 0.25);
+}
+
+.ct-btn-cancel-edit {
+  background: #fff;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.ct-btn-cancel-edit:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.ct-btn-upload-styled {
+  background: #fff;
+  border: 1.5px dashed var(--border);
+  color: var(--text-muted);
+  padding: 12px;
+  border-radius: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ct-btn-upload-styled:hover {
+  background: var(--accent-dim);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ct-btn-upload-styled i {
+  font-size: 1.25rem;
+}
+
+.ct-preview-container {
+  transition: all 0.3s ease;
+  border-color: rgba(107, 92, 255, 0.1) !important;
+}
+
+.ct-preview-container img,
+.ct-preview-container video {
+  display: block;
+  width: 100%;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Video Modal Styling */
+#videoModal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+#videoModal .btn-close-white {
+  background-color: rgba(255, 255, 255, 0.2);
+  opacity: 0.8;
+  padding: 10px;
+}
+
+#videoModal .btn-close-white:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  opacity: 1;
+}
+
+@keyframes ct-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ct-spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 2px solid #fff;
+  width: 12px;
+  height: 12px;
+  animation: ct-spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ct-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

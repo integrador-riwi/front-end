@@ -20,16 +20,7 @@ export default class TeamDetailView {
     this.teamId = params.teamId;
   }
 
-  _isAdmin() {
-    return this.user?.role === "ADMIN";
-  }
-
   async render() {
-    if (!this._isAdmin()) {
-      this.router.navigate("projects");
-      return;
-    }
-
     const app = document.getElementById("app");
 
     app.innerHTML = `

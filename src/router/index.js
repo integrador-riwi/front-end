@@ -14,6 +14,8 @@ import ProjectSettings from "../views/ProjectSettings.js";
 import EventsView from "../views/EventsView.js";
 import ProfileView from "../views/ProfileView.js";
 import TLDashboardView from "../views/TLDashboardView.js";
+import BrowseProjects from "../views/BrowseProjects.js";
+import PublicProfileView from "../views/PublicProfileView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
@@ -102,8 +104,15 @@ const ROUTE_PERMISSIONS = {
   events: ["ADMIN", "STAFF"],
   "events/create": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
-  projects: ["ADMIN", "STAFF", "CODER"],
-  teamDetail: ["ADMIN"], // ← NUEVO
+  projects: ["ADMIN", "STAFF"],
+  browseProjects: ["CODER"],
+  teamDetail: [
+    "ADMIN",
+    "CODER",
+    "TL_DEVELOPMENT",
+    "TL_SOFT_SKILLS",
+    "TL_ENGLISH",
+  ],
   ranking: ["ADMIN", "STAFF"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -124,6 +133,14 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   tlDashboard: ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"],
+  publicProfile: [
+    "ADMIN",
+    "STAFF",
+    "CODER",
+    "TL_DEVELOPMENT",
+    "TL_SOFT_SKILLS",
+    "TL_ENGLISH",
+  ],
   vote: "PUBLIC",
   finalists: ["ADMIN", "STAFF"],
 };
@@ -135,6 +152,7 @@ class App {
     this.user = null;
     this.hasTeam = false;
     this.currentParams = {};
+    this.historyStack = [];
     this._langUnsubscribe = null;
 
     // Re-render the current view whenever the language changes.
@@ -142,6 +160,17 @@ class App {
     this._langUnsubscribe = onLangChange(() => {
       if (this.currentRoute) {
         this._renderView(this.currentRoute, this.currentParams);
+      }
+    });
+
+    // Delegated click handler for user profile links across the app
+    document.addEventListener("click", (e) => {
+      const memberItem = e.target.closest(".ct-member-clickable");
+      if (memberItem) {
+        const userId = memberItem.dataset.userId;
+        if (userId) {
+          this.navigate("publicProfile", { userId });
+        }
       }
     });
 
@@ -174,6 +203,12 @@ class App {
     if (path.startsWith("/vote/")) {
       const eventId = path.split("/")[2];
       this.navigate("vote", { eventId });
+      return;
+    }
+
+    if (path.startsWith("/profile/")) {
+      const userId = path.split("/")[2];
+      this.navigate("publicProfile", { userId });
       return;
     }
 
@@ -275,9 +310,22 @@ class App {
       }
     }
 
+    if (this.currentRoute) {
+      this.historyStack.push({ route: this.currentRoute, params: this.currentParams });
+    }
+
+
     this._renderView(route, params);
   }
 
+  back(fallbackRoute = null) {
+    if (this.historyStack.length > 0) {
+      const prev = this.historyStack.pop();
+      this._renderView(prev.route, prev.params);
+    } else {
+      this.navigate(fallbackRoute || this.getHomeRoute());
+    }
+  }
   _mountView(route, params = {}) {
     switch (route) {
       case "login":
@@ -303,8 +351,10 @@ class App {
       case "projects":
         this.currentView = new Teams(this);
         break;
-
-      case "teamDetail":
+      case "browseProjects":
+        this.currentView = new BrowseProjects(this);
+        break;
+      case "teamDetail": // ← NUEVO
         this.currentView = new TeamDetailView(this, params);
         break;
 
@@ -332,6 +382,10 @@ class App {
 
       case "profile":
         this.currentView = new ProfileView(this);
+        break;
+
+      case "publicProfile":
+        this.currentView = new PublicProfileView(this, params);
         break;
 
       case "tlDashboard":
