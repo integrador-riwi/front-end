@@ -381,7 +381,7 @@ class App {
         break;
 
       case "profile":
-        this.currentView = new ProfileView(this);
+        this.currentView = new PublicProfileView(this, { userId: getCurrentUser()?.id_user });
         break;
 
       case "publicProfile":
