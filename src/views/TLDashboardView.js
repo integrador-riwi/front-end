@@ -60,8 +60,8 @@ export default class TLDashboardView {
 
     try {
       const res = await apiFetch(
-        `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
-        { method: "GET" },
+          `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
+          { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
 
@@ -72,40 +72,40 @@ export default class TLDashboardView {
 
       // Enrich each team with project + member count + eval status
       this.teams = await Promise.all(
-        raw.map(async (t) => {
-          try {
-            const detail = await apiFetch(`/teams/${t.id_team}`, {
-              method: "GET",
-            });
-            const full = detail?.data ?? detail;
-            const projectId = full.project?.id_project ?? null;
+          raw.map(async (t) => {
+            try {
+              const detail = await apiFetch(`/teams/${t.id_team}`, {
+                method: "GET",
+              });
+              const full = detail?.data ?? detail;
+              const projectId = full.project?.id_project ?? null;
 
-            let _alreadyEvaluated = false;
-            let _evalStatus = null; // { evaluations_closed, area_closed, already_submitted, evaluator_count }
+              let _alreadyEvaluated = false;
+              let _evalStatus = null; // { evaluations_closed, area_closed, already_submitted, evaluator_count }
 
-            if (projectId) {
-              try {
-                const { getMyEvaluationsForProject } = await import("../services/api.js");
-                const [evals, evalStatus] = await Promise.all([
-                  getMyEvaluationsForProject(projectId),
-                  getProjectEvalStatus(projectId),
-                ]);
-                _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
-                _evalStatus = evalStatus;
-              } catch (_) { }
+              if (projectId) {
+                try {
+                  const { getMyEvaluationsForProject } = await import("../services/api.js");
+                  const [evals, evalStatus] = await Promise.all([
+                    getMyEvaluationsForProject(projectId),
+                    getProjectEvalStatus(projectId),
+                  ]);
+                  _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
+                  _evalStatus = evalStatus;
+                } catch (_) { }
+              }
+
+              return {
+                ...t,
+                members: full.members ?? [],
+                project: full.project ?? null,
+                _alreadyEvaluated,
+                _evalStatus,
+              };
+            } catch {
+              return { ...t, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
             }
-
-            return {
-              ...t,
-              members: full.members ?? [],
-              project: full.project ?? null,
-              _alreadyEvaluated,
-              _evalStatus,
-            };
-          } catch {
-            return { ...t, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
-          }
-        }),
+          }),
       );
 
       // For ADMIN: also fetch event-level coverage
@@ -170,10 +170,6 @@ export default class TLDashboardView {
             <div>
               <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
               <h1 class="tld-title">${this.selectedEvent?.title ?? "Teams"}</h1>
-              ${this.selectedEvent?.cohort
-        ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
-        : ""
-      }
             </div>
             <div class="tld-stat-pills">
               <div class="tld-stat-pill">
@@ -214,8 +210,8 @@ export default class TLDashboardView {
   _renderGrid() {
     if (this.isLoading) {
       return Array.from(
-        { length: 6 },
-        () => `<div class="tld-card tld-card-skeleton"></div>`,
+          { length: 6 },
+          () => `<div class="tld-card tld-card-skeleton"></div>`,
       ).join("");
     }
 
@@ -255,30 +251,30 @@ export default class TLDashboardView {
 
     const totalDeliverables = 3;
     const progress = hasProject
-      ? Math.round((deliverables / totalDeliverables) * 100)
-      : 0;
+        ? Math.round((deliverables / totalDeliverables) * 100)
+        : 0;
 
     const avatarsHtml = members
-      .slice(0, 4)
-      .map((m, i) =>
-        m.github_avatar_url
-          ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
-          : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
-      )
-      .join("");
+        .slice(0, 4)
+        .map((m, i) =>
+            m.github_avatar_url
+                ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
+                : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
+        )
+        .join("");
 
     const extraMembers =
-      members.length > 4
-        ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
-        : "";
+        members.length > 4
+            ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
+            : "";
 
     const statusDot = isSubmitted
-      ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
-      : hasProject
-        ? deliverables === totalDeliverables
-          ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
-          : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-        : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
+        ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
+        : hasProject
+            ? deliverables === totalDeliverables
+                ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
+                : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
+            : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
 
     // Button state — respecting 3 blocking rules from eval-status
     const evalStatus = team._evalStatus;
@@ -347,7 +343,7 @@ export default class TLDashboardView {
           </div>
         `
         : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
-      }
+    }
 
         <div class="tld-card-members">
           <div class="tld-avatars-row">
@@ -447,20 +443,20 @@ export default class TLDashboardView {
     }
 
     const missingHtml = missing.length > 0
-      ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
+        ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
           ${missing.slice(0, 5).map(m =>
-        `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`
-      ).join("")}
+            `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`
+        ).join("")}
           ${missing.length > 5 ? `<li>...y ${missing.length - 5} más</li>` : ""}
         </ul>`
-      : "";
+        : "";
 
     const warningHtml = !canClose && missing.length > 0
-      ? `<p class="mb-0 small mt-1" style="color:#92400e;">
+        ? `<p class="mb-0 small mt-1" style="color:#92400e;">
           <span class="material-icons-round" style="font-size:.85rem;vertical-align:middle;">warning</span>
           ${t("tl.closeWarning") || "Al cerrar, los proyectos sin cobertura completa se calificarán solo con las evaluaciones existentes."}
         </p>`
-      : "";
+        : "";
 
     return `
       <div class="tld-eval-admin-panel${canClose ? " tld-eval-admin-panel--ready" : " tld-eval-admin-panel--warn"}">
@@ -472,7 +468,7 @@ export default class TLDashboardView {
             <strong>${canClose
         ? (t("tl.allEvalsComplete") || "Todas las áreas calificadas — listo para cerrar")
         : (t("tl.evalsPending") || `${missing.length} proyecto(s) sin calificación completa`)
-      }</strong>
+    }</strong>
             ${missingHtml}
             ${warningHtml}
           </div>
@@ -494,9 +490,9 @@ export default class TLDashboardView {
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) return this.teams;
     return this.teams.filter(
-      (t) =>
-        t.name?.toLowerCase().includes(q) ||
-        t.project?.name?.toLowerCase().includes(q),
+        (t) =>
+            t.name?.toLowerCase().includes(q) ||
+            t.project?.name?.toLowerCase().includes(q),
     );
   }
 
