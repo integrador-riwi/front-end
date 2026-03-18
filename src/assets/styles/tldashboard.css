@@ -135,8 +135,8 @@
   color: var(--text-primary);
   outline: none;
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+          border-color 0.15s,
+          box-shadow 0.15s;
 }
 
 .tld-search-input:focus {
@@ -163,8 +163,8 @@
   box-shadow: 0 2px 12px rgba(107, 92, 255, 0.06);
   animation: tldCardIn 0.3s ease both;
   transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+          box-shadow 0.2s,
+          transform 0.2s;
 }
 
 .tld-card:hover {
@@ -355,8 +355,8 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background 0.15s,
-    transform 0.1s;
+          background 0.15s,
+          transform 0.1s;
   margin-top: auto;
 }
 
@@ -445,7 +445,6 @@
   transform: translateY(-1px);
 }
 
-/* "Ver Evaluación" — already reviewed state */
 .tld-eval-btn--reviewed {
   background: #f0fdf4;
   color: #15803d;
@@ -453,8 +452,10 @@
   box-shadow: none;
 }
 
-.tld-eval-btn--reviewed:hover {
+/* Use higher specificity to override .tld-eval-btn:hover:not(:disabled) */
+.tld-eval-btn.tld-eval-btn--reviewed:hover:not(:disabled) {
   background: #dcfce7;
+  color: #15803d;
   transform: translateY(-1px);
 }
 

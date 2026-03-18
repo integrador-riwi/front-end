@@ -23,6 +23,7 @@ export default class Teams {
     this.searchQuery = "";
     this.currentView = "grid"; // "grid" | "list"
     this._semanticMode = false; // admin-only toggle
+    this.teamAreaCounts = {}; // id_team -> { DEVELOPMENT: N, SOFT_SKILLS: N, ENGLISH: N }
   }
 
   renderAvatars(users) {
@@ -162,9 +163,36 @@ export default class Teams {
 
       this.allTeams = totalTeams;
       this.renderClanFilters(totalTeams);
+
+      // Admin: cargar contadores de calificaciones por área
+      if (this.isAdmin && this.eventId) {
+        try {
+          const { getTeamEvalCounts } = await import("../services/api.js");
+          const counts = await getTeamEvalCounts(this.eventId);
+          counts.forEach((row) => {
+            this.teamAreaCounts[row.id_team] = row.areas ?? {};
+          });
+        } catch (_) {}
+      }
     }
 
     this._applyFilters();
+  }
+
+  _renderAreaCounts(team) {
+    if (!this.isAdmin) return "";
+    const areas = this.teamAreaCounts[team.id_team] ?? {};
+    const MAX = 3;
+    const LABELS = { DEVELOPMENT: "Dev", SOFT_SKILLS: "Soft", ENGLISH: "Eng" };
+    const badges = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"].map((area) => {
+      const count = areas[area] ?? 0;
+      const isFull = count >= MAX;
+      const bg = isFull ? "rgba(90,204,164,0.12)" : "rgba(0,0,0,0.04)";
+      const color = isFull ? "#059669" : "var(--text-muted)";
+      const border = isFull ? "rgba(90,204,164,0.3)" : "transparent";
+      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${LABELS[area]} ${count}/${MAX}</span>`;
+    }).join("");
+    return `<div class="d-flex gap-1" style="flex-wrap:nowrap;">${badges}</div>`;
   }
 
   _paintTeamsGrid(teams, container) {
@@ -209,6 +237,7 @@ export default class Teams {
             <div class="p-4">
               <h5 class="app-card-title">${team.name}</h5>
               <p class="app-card-text text-break">${team.description ?? ""}</p>
+              ${this._renderAreaCounts(team)}
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="app-avatar-group">
                   ${membersIcons}
@@ -359,19 +388,19 @@ export default class Teams {
       return;
     }
 
+    const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
     container.innerHTML = "";
 
     projects.forEach((p) => {
-      const pct   = p.similarity != null ? Math.round(p.similarity * 100) : null;
-      const badge = pct != null ? `<span class="sem-match-badge">${pct}% match</span>` : "";
+      const pct = p.similarity != null ? Math.round(p.similarity * 100) : null;
+      const matchBadge = pct != null
+          ? `<span class="sem-match-badge" style="font-size:0.7rem;background:rgba(107,92,255,0.1);color:var(--color-primary);border:1px solid rgba(107,92,255,0.25);padding:2px 8px;border-radius:20px;font-weight:700;">${pct}% match</span>`
+          : "";
 
-      // members from searchService may lack github_avatar_url — filter them out
-      const members      = (p.members ?? []).filter((m) => m?.github_avatar_url);
+      const members = (p.members ?? []).filter((m) => m?.github_avatar_url);
       const membersIcons = this.renderAvatars(members);
-
-      // Use the same static fallback image as the normal grid cards
-      const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
-      const imgSrc       = p.preview_photo_url || fallbackImg;
+      const imgSrc = p.preview_photo_url || fallbackImg;
+      const fakeTeam = { id_team: p.id_team };
 
       container.insertAdjacentHTML("beforeend", `
         <div class="col-12 col-md-6 col-lg-4">
@@ -384,8 +413,12 @@ export default class Teams {
                    onerror="this.onerror=null;this.src='${fallbackImg}';" />
             </div>
             <div class="p-4">
-              <h5 class="app-card-title">${p.team_name ?? ""} ${badge}</h5>
-              <p class="app-card-text text-break">${p.description ?? ""}</p>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="app-card-title mb-0">${p.team_name ?? ""}</h5>
+                ${matchBadge}
+              </div>
+              <p class="app-card-text text-break mb-2">${p.description ?? ""}</p>
+              ${this._renderAreaCounts(fakeTeam)}
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="app-avatar-group">${membersIcons}</div>
                 <span class="td-view-detail-hint">
@@ -428,14 +461,14 @@ export default class Teams {
     container.innerHTML = `
       <div class="col-12 px-0">
         <div class="app-project-card-list p-3">
-          <table class="table table-striped table-hover" style="width:100%;">
+          <table class="table table-hover mb-0" style="width:100%;">
             <thead>
               <tr>
-                <th style="width:20%;">${t("teamsProjects.leader")}</th>
-                <th style="width:20%;">${t("teamsProjects.team")}</th>
-                <th style="width:40%;">${t("teamsProjects.desc")}</th>
+                <th style="width:22%;">${t("teamsProjects.team")}</th>
+                <th style="width:28%;">${t("teamsProjects.desc")}</th>
                 <th style="width:10%;">Match</th>
-                <th style="width:10%;"></th>
+                <th style="width:16%;">${t("teamsProjects.members")}</th>
+                <th style="width:24%;">Area Grades</th>
               </tr>
             </thead>
             <tbody id="teamsTableBody"></tbody>
@@ -447,25 +480,29 @@ export default class Teams {
     const tbody = document.getElementById("teamsTableBody");
 
     projects.forEach((p) => {
-      const pct   = p.similarity != null ? Math.round(p.similarity * 100) : null;
-      const badge = pct != null ? `<span class="sem-match-badge">${pct}% match</span>` : "—";
-      const members      = (p.members ?? []).filter((m) => m?.github_avatar_url);
+      const pct = p.similarity != null ? Math.round(p.similarity * 100) : null;
+      const matchBadge = pct != null
+          ? `<span class="sem-match-badge" style="font-size:0.7rem;background:rgba(107,92,255,0.1);color:var(--color-primary);border:1px solid rgba(107,92,255,0.25);padding:2px 7px;border-radius:20px;font-weight:700;">${pct}%</span>`
+          : "—";
+
+      const members = (p.members ?? []).filter((m) => m?.github_avatar_url);
       const membersIcons = this.renderAvatars(members);
-      const leader       = (p.members ?? []).find((m) => m?.team_role === "LEADER");
+      const fakeTeam = { id_team: p.id_team };
 
       tbody.insertAdjacentHTML("beforeend", `
         <tr class="td-clickable" data-team-id="${p.id_team}"
             style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}">
-          <td><span style="font-size:0.85rem;">${leader?.name ?? "—"}</span></td>
-          <td><h5 class="app-card-title fs-6">${p.team_name ?? ""}</h5></td>
-          <td><p class="app-card-text text-break">${p.description ?? ""}</p></td>
-          <td>${badge}</td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
-                    data-team-id="${p.id_team}">
-              <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">visibility</span>
-            </button>
+          <td style="vertical-align:middle;">
+            <strong style="font-size:0.88rem;">${p.team_name ?? ""}</strong>
           </td>
+          <td style="vertical-align:middle;font-size:0.82rem;color:var(--text-muted);">
+            ${p.description ?? ""}
+          </td>
+          <td style="vertical-align:middle;">${matchBadge}</td>
+          <td style="vertical-align:middle;">
+            <div class="app-avatar-group">${membersIcons}</div>
+          </td>
+          <td style="vertical-align:middle;">${this._renderAreaCounts(fakeTeam)}</td>
         </tr>
       `);
     });
@@ -521,14 +558,13 @@ export default class Teams {
     teamsContainer.innerHTML = `
       <div class="col-12 px-0">
         <div class="app-project-card-list p-3">
-          <table class="table table-striped table-hover" style="width:100%;">
+          <table class="table table-hover mb-0" style="width:100%;">
             <thead>
               <tr>
-                <th style="width:20%;">${t("teamsProjects.leader")}</th>
-                <th style="width:20%;">${t("teamsProjects.team")}</th>
-                <th style="width:45%;">${t("teamsProjects.desc")}</th>
-                <th style="width:15%;">${t("teamsProjects.members")}</th>
-                ${this.isAdmin ? `<th style="width:10%;"></th>` : ""}
+                <th style="width:24%;">${t("teamsProjects.team")}</th>
+                <th style="width:30%;">${t("teamsProjects.desc")}</th>
+                <th style="width:18%;">${t("teamsProjects.members")}</th>
+                ${this.isAdmin ? `<th style="width:28%;">Area Grades</th>` : ""}
               </tr>
             </thead>
             <tbody id="teamsTableBody"></tbody>
@@ -544,25 +580,17 @@ export default class Teams {
       const membersIcons = this.renderAvatars(members);
 
       const row = `
-        <tr ${
-          this.isAdmin
-              ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"`
-              : ""
-      }>
-          <td><span style="font-size:0.85rem;">${team.leader_name ?? "—"}</span></td>
-          <td><h5 class="app-card-title fs-6">${team.name}</h5></td>
-          <td><p class="app-card-text text-break">${team.description ?? ""}</p></td>
-          <td><div class="app-avatar-group">${membersIcons}</div></td>
-          ${
-          this.isAdmin
-              ? `<td>
-                 <button class="btn btn-sm btn-outline-primary td-row-detail-btn"
-                         data-team-id="${team.id_team}">
-                   <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">visibility</span>
-                 </button>
-               </td>`
-              : ""
-      }
+        <tr ${this.isAdmin ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"` : ""}>
+          <td style="vertical-align:middle;">
+            <strong style="font-size:0.88rem;">${team.name}</strong>
+          </td>
+          <td style="vertical-align:middle;font-size:0.82rem;color:var(--text-muted);">
+            ${team.description ?? ""}
+          </td>
+          <td style="vertical-align:middle;">
+            <div class="app-avatar-group">${membersIcons}</div>
+          </td>
+          ${this.isAdmin ? `<td style="vertical-align:middle;">${this._renderAreaCounts(team)}</td>` : ""}
         </tr>
       `;
 
