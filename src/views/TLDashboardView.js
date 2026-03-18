@@ -599,6 +599,7 @@ export default class TLDashboardView {
       if (projectId) {
         if (this.commentsCleanup) this.commentsCleanup();
         this.commentsCleanup = loadComments(projectId, this.user);
+        import("./coderTeam.js").then(({ loadMemberGrades }) => loadMemberGrades(projectId));
       }
       if (projectId && eventId && isTL) {
         loadEvaluationPanel({ projectId, eventId, members: team.members ?? [], userRole: this.user?.role ?? null });

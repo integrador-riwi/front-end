@@ -216,7 +216,7 @@ export function renderCoderTeam({
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
       .map(
-        (m, i) => `
+          (m, i) => `
                 <li class="ct-member-item d-flex align-items-center gap-3 rounded-3 px-2 py-2 ct-member-clickable" 
                     data-user-id="${m.id_user}" 
                     style="cursor:pointer; transition: background 0.2s;"
@@ -276,6 +276,7 @@ export function renderCoderTeam({
           `
       : ""
   }
+          <div id="member-grades-section"></div>
         </div>
 
       </div>
@@ -475,12 +476,12 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
 
               <!-- Edit row hidden by default (leader only, not shown for repo) -->
               ${canEdit && item.key !== "repo_url"
-            ? `
+              ? `
                 <div class="d-none ct-edit-row w-100" id="edit-${item.key}">
                   ${_renderEditControl(item)}
                 </div>
               `
-            : ""
+              : ""
           }
             </div>
 
@@ -956,6 +957,80 @@ export async function loadProjectBrief() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Member Grades Panel
+// ─────────────────────────────────────────────────────────────
+
+export async function loadMemberGrades(projectId) {
+  const container = document.getElementById("member-grades-section");
+  if (!container) return;
+
+  const AREA_LABELS = { DEVELOPMENT: "Dev", SOFT_SKILLS: "Soft", ENGLISH: "Eng" };
+  const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
+
+  try {
+    const { apiFetch } = await import("../services/api.js");
+    const res = await apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" });
+    const results = res?.data ?? res ?? [];
+
+    if (!Array.isArray(results) || results.length === 0) return;
+
+    // Project grade = max individual final_score
+    const projectGrade = Math.max(...results.map(r => parseFloat(r.final_score) || 0));
+
+    const membersHtml = results.map((r) => {
+      const areaScores = Array.isArray(r.area_scores) ? r.area_scores : [];
+
+      const areaBadges = AREAS.map((area) => {
+        const entry = areaScores.find((a) => a.area === area);
+        const score = entry ? Math.round(parseFloat(entry.final_score)) : null;
+        const color = score == null ? "var(--text-muted)"
+            : score >= 80 ? "#059669"
+                : score >= 50 ? "#d97706"
+                    : "#dc2626";
+        const bg = score == null ? "rgba(0,0,0,0.04)"
+            : score >= 80 ? "rgba(5,150,105,0.08)"
+                : score >= 50 ? "rgba(217,119,6,0.08)"
+                    : "rgba(220,38,38,0.08)";
+
+        return `
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:44px;">
+            <span style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.04em;">${AREA_LABELS[area]}</span>
+            <span style="font-size:0.78rem;font-weight:700;color:${color};background:${bg};padding:2px 7px;border-radius:20px;">${score != null ? score : "—"}</span>
+          </div>`;
+      }).join("");
+
+      return `
+        <li style="display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--border,#f0f0f8);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            ${r.github_avatar_url
+          ? `<img src="${r.github_avatar_url}" alt="${r.user_name}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+          : `<div style="width:32px;height:32px;border-radius:50%;background:var(--accent-dim);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0;">${r.user_name?.charAt(0) ?? "?"}</div>`
+      }
+            <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary,#181e4b);">${r.user_name}</span>
+          </div>
+          <div style="display:flex;gap:8px;padding-left:42px;">${areaBadges}</div>
+        </li>`;
+    }).join("");
+
+    const gradeColor = projectGrade >= 80 ? "#059669" : projectGrade >= 50 ? "#d97706" : "#dc2626";
+
+    container.innerHTML = `
+      <div class="bg-white rounded-4 p-4 ct-card-shadow">
+        <h2 class="ct-section-title mb-3">Grades</h2>
+        <ul class="list-unstyled mb-0">${membersHtml}</ul>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1.5px solid var(--border,#f0f0f8);">
+          <span style="font-size:0.88rem;font-weight:700;color:var(--text-muted);">Project Grade</span>
+          <span style="font-size:1.2rem;font-weight:800;color:${gradeColor};">${projectGrade.toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    // No grades yet — show nothing silently
+    console.warn("Grades not available yet:", err?.message);
+  }
+}
+
 function _renderMarkdown(md) {
   let h = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -985,11 +1060,11 @@ function _renderMarkdown(md) {
 // ─────────────────────────────────────────────────────────────
 
 export async function loadEvaluationPanel({
-  projectId,
-  eventId,
-  members,
-  userRole = null,
-}) {
+                                            projectId,
+                                            eventId,
+                                            members,
+                                            userRole = null,
+                                          }) {
   const display = document.getElementById("tl-evaluation-panel");
   const container = document.getElementById("tl-rubrics-container");
   const submitBtn = document.getElementById("submitEvaluationsBtn");
@@ -1433,8 +1508,8 @@ export function initDeliverables(projectId) {
     document.getElementById(progressId)?.remove();
 
     label.insertAdjacentHTML(
-      "afterend",
-      `<div id="${progressId}" class="mt-2 w-100">
+        "afterend",
+        `<div id="${progressId}" class="mt-2 w-100">
         <div class="d-flex justify-content-between mb-1" style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
           <span>${isVideo ? "Video" : "Image"} Uploading…</span>
           <span id="${progressId}-pct">0%</span>
