@@ -905,9 +905,12 @@ export default class QRVoting {
     await this.handleQRButton();
     this.handleSubmitVotes();
     this.handleResetVotes();
-    this.renderStaffQRSection();
     this.updateQrButtonState();
     await this.loadExistingQR();
+
+    // Si ya hay un QR activo, los finalistas ya fueron aprobados en algún momento
+    if (this.qrActive) this.finalistsApproved = true;
+    this.renderStaffQRSection();
 
     await this.fetchVoteResults();
     this.renderResults();
