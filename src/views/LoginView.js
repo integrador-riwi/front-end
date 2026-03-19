@@ -146,7 +146,7 @@ export default class LoginView {
 
     try {
       const response = await loginUser(this.email, this.password);
-      saveSession(response.data.token, response.data.user);
+      saveSession(response.data.token, response.data.refreshToken, response.data.user);
       this.router.init();
     } catch (err) {
       const errorMessage =
