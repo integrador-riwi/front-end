@@ -106,11 +106,19 @@ export default class PublicProfileView {
         const viewerRole = this.user?.role;
         const isOwnProfile = String(this.user?.id_user) === String(this.userId);
         // Mostrar proyectos/stats si el PERFIL que se ve es de un CODER
-        // (independientemente de quién lo está viendo)
         const profileIsCoder = role === "CODER";
         const safeProjects = Array.isArray(projects) ? projects : [];
+
+        // El dueño del perfil, admins y TLs ven TODOS los proyectos sin filtro.
+        // Otros coders solo ven proyectos de eventos completados.
+        const canSeeAll = isOwnProfile
+            || viewerRole === "ADMIN"
+            || viewerRole === "TL_DEVELOPMENT"
+            || viewerRole === "TL_SOFT_SKILLS"
+            || viewerRole === "TL_ENGLISH";
+
         const filteredProjects = profileIsCoder
-            ? safeProjects.filter(p => p.event_status === 'COMPLETED')
+            ? (canSeeAll ? safeProjects : safeProjects.filter(p => p.event_status === 'COMPLETED'))
             : safeProjects;
 
         const stats = this._computeStats(filteredProjects);
