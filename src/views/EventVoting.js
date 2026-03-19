@@ -380,18 +380,6 @@ export default class QRVoting {
             </button>
           </div>
 
-          ${this.staffQrImage ? `
-            <div class="d-flex flex-column align-items-center gap-2 mb-3">
-              <img src="${this.staffQrImage}" alt="Staff QR"
-                   style="width:150px;height:150px;border-radius:12px;border:2px solid rgba(107,92,255,0.2);" />
-              <button id="download-staff-qr-btn"
-                      class="btn btn-sm fw-bold"
-                      style="background:#6b5cff;color:#fff;border:none;border-radius:8px;font-size:0.78rem;padding:5px 16px;">
-                Download QR
-              </button>
-            </div>
-          ` : ""}
-
           <button id="regenerate-staff-qr-btn"
                   class="btn btn-sm w-100 fw-bold"
                   style="background:transparent;color:#7b7fa8;border:1px solid rgba(107,92,255,0.2);border-radius:8px;font-size:0.8rem;padding:6px;">
@@ -449,29 +437,6 @@ export default class QRVoting {
         } catch {
           copyBtn.textContent = "Error";
         }
-      });
-    }
-
-    // Descargar QR de staff
-    const downloadBtn = document.getElementById("download-staff-qr-btn");
-    if (downloadBtn && this.staffQrImage) {
-      downloadBtn.addEventListener("click", () => {
-        const SIZE = 512;
-        const img = new Image();
-        img.src = this.staffQrImage;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = SIZE;
-          canvas.height = SIZE;
-          const ctx = canvas.getContext("2d");
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, SIZE, SIZE);
-          ctx.drawImage(img, 0, 0, SIZE, SIZE);
-          const link = document.createElement("a");
-          link.href = canvas.toDataURL("image/png");
-          link.download = `staff-qr-event-${getSelectedEvent()}.png`;
-          link.click();
-        };
       });
     }
   }
