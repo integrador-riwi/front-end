@@ -35,28 +35,28 @@ export default class FinalistsView {
   /* -------------------------- RENDER PODIUM -------------------------- */
 
   renderPodium() {
-  if (!this.finalists.length) {
-    return `
+    if (!this.finalists.length) {
+      return `
       <div class="text-center py-5" style="color:#7b7fa8;">
         <p class="fw-bold mb-0">No finalists yet</p>
         <p style="font-size:0.85rem;">Finalists will appear here once approved</p>
       </div>`;
-  }
+    }
 
-  const first  = this.finalists[0] ?? null;
-  const second = this.finalists[1] ?? null;
-  const third  = this.finalists[2] ?? null;
+    const first  = this.finalists[0] ?? null;
+    const second = this.finalists[1] ?? null;
+    const third  = this.finalists[2] ?? null;
 
-  const avatarEl = (team, position) => {
-    if (!team) return "";
-    return `<div class="podium-avatar-initial podium-avatar-initial-${position}">
+    const avatarEl = (team, position) => {
+      if (!team) return "";
+      return `<div class="podium-avatar-initial podium-avatar-initial-${position}">
       ${team.team_name?.[0]?.toUpperCase() ?? "?"}
     </div>`;
-  };
+    };
 
-  const podiumCard = (team, position, config) => {
-    if (!team) return '';
-    return `
+    const podiumCard = (team, position, config) => {
+      if (!team) return '';
+      return `
       <div class="col-12 col-md-4 d-flex flex-column align-items-center
                   ${position === '1st' ? 'order-md-2' : position === '2nd' ? 'order-md-1' : 'order-md-3'}">
 
@@ -93,47 +93,47 @@ export default class FinalistsView {
 
       </div>
     `;
-  };
+    };
 
-  return `
+    return `
     <div class="row g-4 align-items-end w-100" style="max-width:900px;margin:0 auto;">
 
       ${podiumCard(first, '1st', {
-        nameClass:  'fw-black podium-team-name-1st',
-        blockClass: 'podium-block-1st',
-        medalClass: 'podium-medal-1st',
-        medalIcon:  'emoji_events',
-        numberClass:'podium-number-1st',
-        labelClass: 'podium-label-1st',
-        rank:       '1',
-        rankLabel:  'Winner',
-      })}
+      nameClass:  'fw-black podium-team-name-1st',
+      blockClass: 'podium-block-1st',
+      medalClass: 'podium-medal-1st',
+      medalIcon:  'emoji_events',
+      numberClass:'podium-number-1st',
+      labelClass: 'podium-label-1st',
+      rank:       '1',
+      rankLabel:  'Winner',
+    })}
 
       ${podiumCard(second, '2nd', {
-        nameClass:  'fw-bold podium-team-name-2nd',
-        blockClass: 'podium-block-2nd',
-        medalClass: 'podium-medal-2nd',
-        medalIcon:  'military_tech',
-        numberClass:'podium-number-2nd',
-        labelClass: 'podium-label-2nd',
-        rank:       '2',
-        rankLabel:  'Silver',
-      })}
+      nameClass:  'fw-bold podium-team-name-2nd',
+      blockClass: 'podium-block-2nd',
+      medalClass: 'podium-medal-2nd',
+      medalIcon:  'military_tech',
+      numberClass:'podium-number-2nd',
+      labelClass: 'podium-label-2nd',
+      rank:       '2',
+      rankLabel:  'Silver',
+    })}
 
       ${podiumCard(third, '3rd', {
-        nameClass:  'fw-bold podium-team-name-3rd',
-        blockClass: 'podium-block-3rd',
-        medalClass: 'podium-medal-3rd',
-        medalIcon:  'workspace_premium',
-        numberClass:'podium-number-3rd',
-        labelClass: 'podium-label-3rd',
-        rank:       '3',
-        rankLabel:  'Bronze',
-      })}
+      nameClass:  'fw-bold podium-team-name-3rd',
+      blockClass: 'podium-block-3rd',
+      medalClass: 'podium-medal-3rd',
+      medalIcon:  'workspace_premium',
+      numberClass:'podium-number-3rd',
+      labelClass: 'podium-label-3rd',
+      rank:       '3',
+      rankLabel:  'Bronze',
+    })}
 
     </div>
   `;
-}
+  }
 
   /* -------------------------- MAIN RENDER -------------------------- */
 
@@ -148,9 +148,10 @@ export default class FinalistsView {
           <div class="container-fluid py-4">
 
             <!-- Podium -->
-            <div id="podium-container" class="d-flex justify-content-center mb-5">
-              <div class="d-flex align-items-center justify-content-center py-5">
-                <div class="spinner-border" style="color:#6b5cff;"></div>
+            <div id="podium-container">
+              <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
+                <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
+                <p class="text-muted fw-medium">Loading Finalists...</p>
               </div>
             </div>
 

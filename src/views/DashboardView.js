@@ -116,7 +116,7 @@ export default class DashboardView {
       return `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: var(--accent);"></div>
-          <p class="text-muted fw-medium">${t("dashboard.preparingInsights")}</p>
+          <p class="text-muted fw-medium">Loading Metrics...</p>
         </div>
       `;
     }

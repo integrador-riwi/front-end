@@ -60,3 +60,4 @@ export function getSelectedEvent() {
   const event = localStorage.getItem("currentEventId");
   return event ? JSON.parse(event) : null;
 }
+

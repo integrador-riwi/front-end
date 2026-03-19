@@ -171,10 +171,12 @@ export default class Ranking {
 
   _renderMain() {
     if (this.loadingRanking) {
-      return `<div class="rk-loading-v2">
-                <div class="rk-spinner-glow"></div>
-                <p>${t("ranking.loading") ?? "Fetching latest scores..."}</p>
-              </div>`;
+      return `
+        <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
+          <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
+          <p class="text-muted fw-medium">Loading Ranking...</p>
+        </div>
+      `;
     }
 
     if (this.publishing) {

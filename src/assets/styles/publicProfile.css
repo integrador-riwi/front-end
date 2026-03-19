@@ -13,7 +13,7 @@
 .pp-hero {
   position: relative;
   background: url("/riwi_banner.png") center/cover no-repeat,
-              linear-gradient(135deg, var(--color-primary) 0%, var(--lilac) 60%, var(--mint) 100%);
+  linear-gradient(135deg, var(--color-primary) 0%, var(--lilac) 60%, var(--mint) 100%);
   height: 280px;
   border-radius: 0 0 32px 32px;
   overflow: hidden;
@@ -65,7 +65,7 @@
   border-radius: 24px;
   border: 1px solid rgba(107,92,255,0.1);
   box-shadow: 0 20px 60px -15px rgba(107,92,255,0.12),
-              0 4px 12px rgba(0,0,0,0.04);
+  0 4px 12px rgba(0,0,0,0.04);
   margin-top: -80px;
   position: relative;
   z-index: 5;
@@ -74,7 +74,7 @@
 
 .pp-profile-card:hover {
   box-shadow: 0 24px 64px -15px rgba(107,92,255,0.16),
-              0 8px 20px rgba(0,0,0,0.06);
+  0 8px 20px rgba(0,0,0,0.06);
 }
 
 /* ── Avatar ──────────────────────────────────────── */
@@ -129,6 +129,127 @@
   padding: 4px 14px;
   border-radius: 20px;
 }
+
+/* Badge de rol debajo del avatar */
+.pp-role-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  color: var(--color-primary);
+  border: 1px solid rgba(107,92,255,0.18);
+}
+
+/* Email del perfil */
+.pp-email {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7b7fa8);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+/* Descripción inline bajo el correo */
+.pp-description-inline {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #4b5263);
+  line-height: 1.5;
+  max-width: 480px;
+}
+
+/* ── GitHub Button ───────────────────────────────── */
+.pp-github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary, #181e4b);
+  background: var(--bg-surface, #f4f3ff);
+  border: 1.5px solid rgba(107,92,255,0.18);
+  text-decoration: none;
+  transition: background 0.35s ease, border-color 0.35s ease,
+  box-shadow 0.35s ease, transform 0.35s ease;
+}
+.pp-github-btn:hover {
+  background: #24292f;
+  color: #fff;
+  border-color: #24292f;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.pp-github-icon {
+  flex-shrink: 0;
+  transition: transform 0.4s ease;
+}
+.pp-github-btn:hover .pp-github-icon {
+  transform: rotate(15deg);
+}
+
+.pp-edit-desc-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-primary, #6b5cff);
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+}
+.pp-edit-desc-btn:hover {
+  background: var(--accent-dim, rgba(107,92,255,0.08));
+}
+.pp-desc-textarea {
+  width: 100%;
+  border: 1.5px solid rgba(107,92,255,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--text-primary, #181e4b);
+  background: var(--bg-surface, #f8f8fc);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.pp-desc-textarea:focus {
+  border-color: var(--color-primary, #6b5cff);
+}
+.pp-desc-save-btn {
+  background: var(--color-primary, #6b5cff);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.pp-desc-save-btn:hover { opacity: 0.88; }
+.pp-desc-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pp-desc-cancel-btn {
+  background: none;
+  border: 1.5px solid var(--border-color, #e0e0ef);
+  border-radius: 8px;
+  padding: 6px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted, #7b7fa8);
+  transition: background 0.15s;
+}
+.pp-desc-cancel-btn:hover { background: var(--accent-dim, rgba(107,92,255,0.06)); }
 
 .pp-clan-badge {
   background: linear-gradient(135deg, var(--accent-dim), rgba(234,162,252,0.1));
