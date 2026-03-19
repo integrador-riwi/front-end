@@ -546,7 +546,7 @@ function _renderUploadControl(item) {
   // Default: URL input
   return `
     <div class="ct-edit-input-group">
-      <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+      <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
       <div class="ct-edit-actions">
         <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}">
           <i class="bi bi-send-fill"></i>
