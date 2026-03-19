@@ -21,6 +21,7 @@ import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
 import FinalistsView from "../views/Finalists.js";
+import Landing from "../views/Landing.js";
 import {
   i18nReady,
   t,
@@ -99,6 +100,7 @@ import QRVoting from "../views/EventVoting.js";
 import NotFoundView from "../views/NotFoundView.js";
 
 const ROUTE_PERMISSIONS = {
+  landing: "PUBLIC",
   login: "PUBLIC",
   dashboard: ["ADMIN", "STAFF"],
   events: ["ADMIN", "STAFF"],
@@ -179,7 +181,7 @@ class App {
 
   getHomeRoute() {
     const user = getCurrentUser();
-    if (!user) return "login";
+    if (!user) return "landing";
 
     switch (user.role) {
       case "ADMIN":
@@ -223,7 +225,7 @@ class App {
       window.history.replaceState({}, "", "/");
 
       if (!isAuthenticated()) {
-        this.navigate("login");
+        this.navigate("landing");
         return;
       }
 
@@ -237,7 +239,7 @@ class App {
     }
 
     if (!isAuthenticated()) {
-      this.navigate("login");
+      this.navigate("landing");
       return;
     }
 
@@ -328,6 +330,10 @@ class App {
   }
   _mountView(route, params = {}) {
     switch (route) {
+      case "landing":
+        this.currentView = new Landing(this);
+        break;
+
       case "login":
         this.currentView = new LoginView(this);
         break;
