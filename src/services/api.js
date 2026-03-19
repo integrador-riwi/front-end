@@ -59,6 +59,20 @@ export async function createQR(id_event, expires_at, finalists) {
       expires_at,
       top_n: finalists.length,
       finalist_ids: finalists.map((f) => f.id_project).filter(Boolean),
+      vote_type: "PUBLIC",
+    },
+  });
+}
+
+export async function createStaffQR(id_event, expires_at, finalists) {
+  return apiFetch("/qr-votes", {
+    method: "POST",
+    body: {
+      id_event,
+      expires_at,
+      top_n: finalists.length,
+      finalist_ids: finalists.map((f) => f.id_project).filter(Boolean),
+      vote_type: "STAFF",
     },
   });
 }
