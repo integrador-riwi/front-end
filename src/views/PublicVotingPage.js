@@ -1,5 +1,5 @@
 import "../assets/styles/voting.css";
-import { submitVote, getVotingProjects } from "../services/api.js";
+import { submitVote, getVotingProjects, getStaffVotingProjects } from "../services/api.js";
 import { getEventRanking } from "../services/api-events.js";
 import { t, onLangChange } from "../utils/i18n.js";
 
@@ -7,22 +7,24 @@ export default class PublicVotingPage {
   constructor(app, params) {
     this.app = app;
     this.eventId = params.eventId;
+    this.staffToken = params.staffToken ?? null;
+    this.isStaff = params.isStaff ?? !!this.staffToken;
     this._offLangChange = null;
     this.event = null;
     this.ranking = [];
+    this.qrVoteId = null;
   }
 
   /* -------------------------- FETCH -------------------------- */
 
   async fetchEvent() {
     try {
-      if (!this.eventId) {
+      if (!this.isStaff && !this.eventId) {
         console.error("No eventId found");
         return;
       }
-      const eventPath = window.location.pathname.split('/')
-      this.event = eventPath[eventPath.length - 1]
-
+      const eventPath = window.location.pathname.split("/");
+      this.event = eventPath[eventPath.length - 1];
     } catch (error) {
       console.error("Error loading event", error);
     }
@@ -30,16 +32,26 @@ export default class PublicVotingPage {
 
   async fetchRanking() {
     try {
-      const res    = await getVotingProjects(this.eventId);
-      this.ranking = res?.projects || [];
-      const qrVoteId = res.qr_vote_id;
-      console.log(qrVoteId)
-      sessionStorage.setItem("qrVoteId",JSON.stringify(qrVoteId));
+      let res;
 
-      // Generar voter_token único por evento — persiste al cerrar el browser
-      if (!localStorage.getItem(`voter_token_${this.eventId}`)) {
-        const token = crypto.randomUUID();
-        localStorage.setItem(`voter_token_${this.eventId}`, token);
+      if (this.isStaff) {
+        // Staff: usa el token privado de la URL
+        res = await getStaffVotingProjects(this.staffToken);
+      } else {
+        res = await getVotingProjects(this.eventId);
+      }
+
+      this.ranking = res?.projects || [];
+      this.qrVoteId = res?.qr_vote_id;
+      sessionStorage.setItem("qrVoteId", JSON.stringify(this.qrVoteId));
+
+      // Token único por sesión — usa staffToken o eventId como clave
+      const tokenKey = this.isStaff
+        ? `voter_token_staff_${this.staffToken}`
+        : `voter_token_${this.eventId}`;
+
+      if (!localStorage.getItem(tokenKey)) {
+        localStorage.setItem(tokenKey, crypto.randomUUID());
       }
     } catch (error) {
       console.error("Error loading ranking", error);
@@ -48,26 +60,32 @@ export default class PublicVotingPage {
   }
 
   /* -------------------------- VOTING -------------------------- */
+
   async handleVote(projectId) {
     try {
       const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
-      const voterToken = localStorage.getItem(`voter_token_${this.eventId}`);
+      const tokenKey = this.isStaff
+        ? `voter_token_staff_${this.staffToken}`
+        : `voter_token_${this.eventId}`;
+      const voterToken = localStorage.getItem(tokenKey);
+
       await submitVote(qrVoteId, Number(projectId), voterToken);
 
-      localStorage.setItem(`voted_event_${this.eventId}`, "true");
+      const votedKey = this.isStaff
+        ? `voted_staff_${this.staffToken}`
+        : `voted_event_${this.eventId}`;
+      localStorage.setItem(votedKey, "true");
+
       alert(t("publicVoting.voteSuccess"));
       this.disableVoting();
-
     } catch (error) {
       console.error("Vote error:", error);
-      console.log("Vote error details:", error?.response?.data);
       alert(t("publicVoting.voteError"));
     }
   }
 
   disableVoting() {
-    const buttons = document.querySelectorAll(".vote-btn");
-    buttons.forEach((btn) => (btn.disabled = true));
+    document.querySelectorAll(".vote-btn").forEach((btn) => (btn.disabled = true));
   }
 
   /* -------------------------- RENDER -------------------------- */
@@ -123,7 +141,8 @@ export default class PublicVotingPage {
     await this.fetchEvent();
     await this.fetchRanking();
 
-    if (!this.event) {
+    // En modo staff el token de la URL es suficiente para identificar la sesión
+    if (!this.isStaff && !this.event) {
       container.innerHTML = `
         <div style="text-align:center;padding:48px;">
           <h2>Event not found</h2>
@@ -144,7 +163,8 @@ export default class PublicVotingPage {
       </div>
     `;
 
-    if (localStorage.getItem(`voted_event_${this.eventId}`)) {
+    if (localStorage.getItem(`voted_staff_${this.staffToken}`) ||
+        localStorage.getItem(`voted_event_${this.eventId}`)) {
       this.disableVoting();
     }
 

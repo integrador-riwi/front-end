@@ -144,6 +144,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   vote: "PUBLIC",
+  staffVote: "PUBLIC",
   finalists: ["ADMIN", "STAFF"],
 };
 
@@ -205,6 +206,13 @@ class App {
     if (path.startsWith("/vote/")) {
       const eventId = path.split("/")[2];
       this.navigate("vote", { eventId });
+      return;
+    }
+
+    // Detect staff private voting route
+    if (path.startsWith("/staff-vote/")) {
+      const staffToken = path.split("/")[2];
+      this.navigate("staffVote", { staffToken });
       return;
     }
 
@@ -401,6 +409,11 @@ class App {
 
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
+        this.currentView.render(this.app);
+        return;
+
+      case "staffVote":
+        this.currentView = new PublicVotingPage(this, { ...params, isStaff: true });
         this.currentView.render(this.app);
         return;
       case "finalists":

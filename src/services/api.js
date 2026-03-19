@@ -88,6 +88,11 @@ export async function getVotingProjects(id_event) {
     method: "GET"})
 }
 
+export async function getStaffVotingProjects(staffToken) {
+  return apiFetch(`/qr-votes/vote/staff/${staffToken}/projects`, {
+    method: "GET"})
+}
+
 export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
 }
