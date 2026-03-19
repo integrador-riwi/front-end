@@ -341,8 +341,17 @@ export default class QRVoting {
   /* -------------------------- STAFF QR -------------------------- */
 
   renderStaffQRSection() {
-    const container = document.getElementById("staff-qr-section");
-    if (!container) return;
+    let container = document.getElementById("staff-qr-section");
+
+    // Si el div no existe en el template aún, lo creamos después del danger zone
+    if (!container) {
+      const dangerZone = document.getElementById("reset-votes-section");
+      if (!dangerZone) return;
+      container = document.createElement("div");
+      container.id = "staff-qr-section";
+      container.className = "mt-3";
+      dangerZone.insertAdjacentElement("afterend", container);
+    }
 
     container.innerHTML = `
       <div class="rounded-4 p-4" style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);">
