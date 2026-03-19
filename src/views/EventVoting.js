@@ -106,8 +106,8 @@ export default class QRVoting {
       btn.classList.remove("btn-primary-custom");
       btn.classList.add("btn-secondary");
       btn.title = !this.finalistsApproved
-        ? "Approve finalists first"
-        : "Select an expiration date first";
+          ? "Approve finalists first"
+          : "Select an expiration date first";
     }
   }
 
@@ -231,14 +231,14 @@ export default class QRVoting {
         let qrSrc = await getQR(eventId);
 
         if (
-          !qrSrc ||
-          (Array.isArray(qrSrc) && qrSrc.length === 0) ||
-          typeof qrSrc !== "string"
+            !qrSrc ||
+            (Array.isArray(qrSrc) && qrSrc.length === 0) ||
+            typeof qrSrc !== "string"
         ) {
           const response = await createQR(
-            eventId,
-            expirationDate,
-            this.finalists,
+              eventId,
+              expirationDate,
+              this.finalists,
           );
           qrSrc = response?.qrImage;
         }
@@ -281,7 +281,7 @@ export default class QRVoting {
 
     btn.addEventListener("click", async () => {
       const confirmed = confirm(
-        "Are you sure you want to close voting and calculate winners? This cannot be undone.",
+          "Are you sure you want to close voting and calculate winners? This cannot be undone.",
       );
       if (!confirmed) return;
 
@@ -336,74 +336,74 @@ export default class QRVoting {
   }
 
   handleResetVotes() {
-  // Only show reset section for ADMIN
-  const resetSection = document.getElementById("reset-votes-section");
-  if (!resetSection) return;
+    // Only show reset section for ADMIN
+    const resetSection = document.getElementById("reset-votes-section");
+    if (!resetSection) return;
 
-  if (this.user?.role === 'ADMIN') {
-    resetSection.style.display = "block";
-  } else {
-    resetSection.style.display = "none";
-    return;
-  }
+    if (this.user?.role === 'ADMIN') {
+      resetSection.style.display = "block";
+    } else {
+      resetSection.style.display = "none";
+      return;
+    }
 
-  const btn = document.getElementById("reset-votes-btn");
-  if (!btn) return;
+    const btn = document.getElementById("reset-votes-btn");
+    if (!btn) return;
 
-  btn.addEventListener("click", async () => {
-    const confirmed = confirm(
-      "This will permanently delete ALL votes for this event. Are you sure?"
-    );
-    if (!confirmed) return;
+    btn.addEventListener("click", async () => {
+      const confirmed = confirm(
+          "⚠️ This will permanently delete ALL votes for this event. Are you sure?"
+      );
+      if (!confirmed) return;
 
-    btn.disabled  = true;
-    btn.innerHTML = `
+      btn.disabled  = true;
+      btn.innerHTML = `
       <span class="spinner-border spinner-border-sm me-2"></span>
       Resetting...
     `;
 
-    try {
-      const eventId = getSelectedEvent();
+      try {
+        const eventId = getSelectedEvent();
 
       await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
 
-      // Clear localStorage QR cache
-      localStorage.removeItem(`qr_event_${eventId}`);
+        // Clear localStorage QR cache
+        localStorage.removeItem(`qr_event_${eventId}`);
 
-      // Reset local state
-      this.voteResults      = [];
-      this.totalVotes       = 0;
-      this.qrActive         = false;
-      this.finalistsApproved = false;
+        // Reset local state
+        this.voteResults      = [];
+        this.totalVotes       = 0;
+        this.qrActive         = false;
+        this.finalistsApproved = false;
 
-      // Reset QR image
-      const qrImg = document.getElementById("qr");
-      if (qrImg) qrImg.src = defaultLogo;
+        // Reset QR image
+        const qrImg = document.getElementById("qr");
+        if (qrImg) qrImg.src = defaultLogo;
 
-      // Update UI
-      this.renderResults();
-      this.updateQrStatusPill();
-      this.updateQrButtonState();
-      this.updateDownloadButton(null);
-      this.updateSubmitVotesButton();
+        // Update UI
+        this.renderResults();
+        this.updateQrStatusPill();
+        this.updateQrButtonState();
+        this.updateDownloadButton(null);
+        this.updateSubmitVotesButton();
 
-      btn.innerHTML = `Votes reset successfully`;
-      btn.disabled  = false;
+        btn.innerHTML = `Votes reset successfully`;
+        btn.disabled  = false;
 
-      // Reload ranking panel to reset approve state
-      this.renderRankingPanel();
+        // Reload ranking panel to reset approve state
+        this.renderRankingPanel();
 
-    } catch (err) {
-      console.error("Failed to reset votes:", err);
-      alert("Error resetting votes: " + err.message);
-      btn.disabled  = false;
-      btn.innerHTML = `
+      } catch (err) {
+        console.error("Failed to reset votes:", err);
+        alert("Error resetting votes: " + err.message);
+        btn.disabled  = false;
+        btn.innerHTML = `
         <span class="material-symbols-outlined align-middle me-1" style="font-size:16px;">restart_alt</span>
         Reset Votes
       `;
-    }
-  });
-}
+      }
+    });
+  }
 
   /* -------------------------- RENDER RANKING -------------------------- */
 
@@ -448,7 +448,7 @@ export default class QRVoting {
         .slice(0, 8)
         .map((team, index) => {
           const isFinalist = this.finalists.find(
-            (t) => t.id_team === team.id_team,
+              (t) => t.id_team === team.id_team,
           );
           const av = avatarColors[index % avatarColors.length];
 
@@ -467,12 +467,12 @@ export default class QRVoting {
                   ${team.team_name?.[0]?.toUpperCase() ?? "?"}
                 </div>
                 ${
-                  isFinalist
-                    ? `
+              isFinalist
+                  ? `
                 <div class="ranking-check position-absolute d-flex align-items-center justify-content-center rounded-circle">
                 </div>`
-                    : ""
-                }
+                  : ""
+          }
               </div>
 
               <!-- Info -->
@@ -488,15 +488,15 @@ export default class QRVoting {
 
                 <!-- Finalist badge -->
                 ${
-                  isFinalist
-                    ? `
+              isFinalist
+                  ? `
                 <div>
                   <span class="ranking-finalist-badge badge rounded-pill fw-bold text-uppercase">
                     ✓ Finalist
                   </span>
                 </div>`
-                    : ""
-                }
+                  : ""
+          }
               </div>
 
             </div>
@@ -559,8 +559,8 @@ export default class QRVoting {
       const res = await getVoteResults(eventId);
       this.voteResults = res?.results ?? res ?? [];
       this.totalVotes = this.voteResults.reduce(
-        (sum, t) => sum + (t.votes ?? t.vote_count ?? 0),
-        0,
+          (sum, t) => sum + (t.votes ?? t.vote_count ?? 0),
+          0,
       );
     } catch (err) {
       console.error("Failed to fetch vote results:", err);
@@ -577,12 +577,12 @@ export default class QRVoting {
     const finalistIds = this.finalists.map((f) => f.id_project);
 
     const filteredResults = this.voteResults.filter((t) =>
-      finalistIds.includes(t.id_project ?? t.id),
+        finalistIds.includes(t.id_project ?? t.id),
     );
 
     const filteredTotal = filteredResults.reduce(
-      (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
-      0,
+        (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
+        0,
     );
 
     if (totalEl) totalEl.textContent = filteredTotal;
@@ -598,7 +598,7 @@ export default class QRVoting {
     }
 
     const sorted = [...filteredResults].sort(
-      (a, b) => (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0),
+        (a, b) => (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0),
     );
 
     const accentColors = [
@@ -626,10 +626,10 @@ export default class QRVoting {
       ${sorted
         .map((team, index) => {
           const votes = Number(
-            team.total_votes ?? team.votes ?? team.vote_count ?? 0,
+              team.total_votes ?? team.votes ?? team.vote_count ?? 0,
           );
           const percentage =
-            filteredTotal > 0 ? Math.round((votes / filteredTotal) * 100) : 0;
+              filteredTotal > 0 ? Math.round((votes / filteredTotal) * 100) : 0;
           const accent = accentColors[index % accentColors.length];
           const av = avatarColors[index % avatarColors.length];
           const medal = medals[index] ?? `#${index + 1}`;
@@ -723,6 +723,17 @@ export default class QRVoting {
     this.header.mountBreadcrumb();
     this.navbar.attachEventHandlers();
 
+    // Mostrar spinner mientras carga el ranking
+    const rankingContainer = document.getElementById("ranking-container");
+    if (rankingContainer) {
+      rankingContainer.innerHTML = `
+        <div class="d-flex flex-column align-items-center justify-content-center" style="height: 200px; gap: 16px;">
+          <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
+          <p class="text-muted fw-medium">Loading Voting...</p>
+        </div>
+      `;
+    }
+
     await this.fetchRanking();
     this.renderRankingPanel();
     await this.handleQRButton();
@@ -740,11 +751,11 @@ export default class QRVoting {
       this.subscribeToVotes();
       this.startPolling();
     } else if (this.voteResults?.length) {
-      
+
       this.pollingInterval = setInterval(async () => {
         await this.fetchVoteResults();
         this.renderResults();
-      }, 15000); 
+      }, 15000);
     }
   }
 }

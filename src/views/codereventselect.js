@@ -37,54 +37,54 @@ export default class CoderEventSelect {
       if (pendingInvitations.length > 0) {
         const inv = pendingInvitations[0];
         toast.info(
-          t("invite.pendingInvitation") ?? "Pending invitation",
-          `You have an invitation to join "${inv.team_name || "a team"}"`,
-          {
-            duration: 0,
-            dropdown: {
-              items: [
-                {
-                  title: inv.team_name || t("common.team"),
-                  subtitle: inv.event_name || t("common.event"),
-                  accept: true,
-                  deny: true,
-                  id: inv.id_invitation,
-                  teamId: inv.id_team,
+            t("invite.pendingInvitation") ?? "Pending invitation",
+            `You have an invitation to join "${inv.team_name || "a team"}"`,
+            {
+              duration: 0,
+              dropdown: {
+                items: [
+                  {
+                    title: inv.team_name || t("common.team"),
+                    subtitle: inv.event_name || t("common.event"),
+                    accept: true,
+                    deny: true,
+                    id: inv.id_invitation,
+                    teamId: inv.id_team,
+                  },
+                ],
+                onAccept: async (item) => {
+                  toast.remove();
+                  try {
+                    await acceptInvitation(item.id);
+                    toast.success(
+                        t("invite.accepted") ?? "Accepted!",
+                        t("invite.joinedTeam") ?? "You joined the team.",
+                    );
+                    window.location.hash = "#/coder";
+                  } catch (err) {
+                    toast.error(
+                        t("common.errorTitle"),
+                        err?.message ?? t("common.error"),
+                    );
+                  }
                 },
-              ],
-              onAccept: async (item) => {
-                toast.remove();
-                try {
-                  await acceptInvitation(item.id);
-                  toast.success(
-                    t("invite.accepted") ?? "Accepted!",
-                    t("invite.joinedTeam") ?? "You joined the team.",
-                  );
-                  window.location.hash = "#/coder";
-                } catch (err) {
-                  toast.error(
-                    t("common.errorTitle"),
-                    err?.message ?? t("common.error"),
-                  );
-                }
-              },
-              onDeny: async (item) => {
-                toast.remove();
-                try {
-                  await rejectInvitation(item.id);
-                  toast.info(
-                    t("invite.declined") ?? "Declined",
-                    t("invite.rejected") ?? "You rejected the invitation.",
-                  );
-                } catch (err) {
-                  toast.error(
-                    t("common.errorTitle"),
-                    err?.message ?? t("common.error"),
-                  );
-                }
+                onDeny: async (item) => {
+                  toast.remove();
+                  try {
+                    await rejectInvitation(item.id);
+                    toast.info(
+                        t("invite.declined") ?? "Declined",
+                        t("invite.rejected") ?? "You rejected the invitation.",
+                    );
+                  } catch (err) {
+                    toast.error(
+                        t("common.errorTitle"),
+                        err?.message ?? t("common.error"),
+                    );
+                  }
+                },
               },
             },
-          },
         );
       }
     } catch (e) {
@@ -141,8 +141,8 @@ export default class CoderEventSelect {
 
   _renderSkeletons() {
     return Array.from(
-      { length: 3 },
-      () => `
+        { length: 3 },
+        () => `
       <div class="ces-event-card ces-skeleton">
         <div class="ces-sk-badge"></div>
         <div class="ces-sk-title"></div>
@@ -173,19 +173,19 @@ export default class CoderEventSelect {
       `;
     }
     return this.events
-      .map((event, i) => this._renderEventCard(event, i))
-      .join("");
+        .map((event, i) => this._renderEventCard(event, i))
+        .join("");
   }
 
   _renderEventCard(event, index) {
     const fmt = (d) =>
-      d
-        ? new Date(d).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-        : t("events.tbd");
+        d
+            ? new Date(d).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+            : t("events.tbd");
     const startDate = fmt(event.date);
     const endDate = fmt(event.end_date);
 
@@ -222,7 +222,7 @@ export default class CoderEventSelect {
               ${event.github_org}
             </span>`
         : ""
-      }
+    }
         </div>
         <h2 class="ces-event-name">${event.title}</h2>
         <p class="ces-event-desc">${event.description || t("common.noDescription")}</p>
@@ -234,18 +234,6 @@ export default class CoderEventSelect {
             </svg>
             <span>${startDate} → ${endDate}</span>
           </div>
-          ${event.cohort
-        ? `
-            <div class="ces-meta-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <span>${t("eventDetails.cohort")} ${event.cohort}</span>
-            </div>`
-        : ""
-      }
           ${event.max_team_size
         ? `
             <div class="ces-meta-item">
@@ -255,7 +243,7 @@ export default class CoderEventSelect {
               <span>${t("ces.upTo")} ${event.max_team_size} ${t("ces.perTeam")}</span>
             </div>`
         : ""
-      }
+    }
         </div>
         <button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
           ${isTL ? (t("ces.review") ?? "Review this event") : (t("ces.select") ?? "Join this event")}
@@ -288,8 +276,8 @@ export default class CoderEventSelect {
         }
 
         const destination = TL_ROLES.includes(this.user?.role)
-          ? "tlDashboard"
-          : "coderHome";
+            ? "tlDashboard"
+            : "coderHome";
         this.app.navigate(destination, { selectedEvent: event });
       });
     });

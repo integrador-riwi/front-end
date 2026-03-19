@@ -51,9 +51,9 @@ export default class Navbar {
   <div class="d-flex align-items-center">
   <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0 profileBtn" style="cursor:pointer;">
     ${
-      this.user?.github_avatar_url
-        ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
-        : getInitials(this.user?.name)
+        this.user?.github_avatar_url
+            ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+            : getInitials(this.user?.name)
     }
   </div>
 
@@ -82,8 +82,8 @@ export default class Navbar {
         <nav class="sidebar-nav flex-grow-1 overflow-auto py-3 px-2">
           <ul class="d-flex flex-column gap-1 list-unstyled m-0 p-0">
             ${links
-              .map(
-                (link) => `
+        .map(
+            (link) => `
               <li>
                 <button
                   class="nav-link d-flex align-items-center gap-3 w-100 ${this.currentRoute === link.route ? "active" : ""}"
@@ -94,8 +94,8 @@ export default class Navbar {
                 </button>
               </li>
             `,
-              )
-              .join("")}
+        )
+        .join("")}
             
           </ul>
         </nav>
@@ -105,10 +105,10 @@ export default class Navbar {
           <div class="sidebar-user d-flex align-items-center gap-3 rounded mb-1 px-2 py-2 profileBtn" style="cursor: pointer;">
             <div class="sidebar-avatar d-flex align-items-center justify-content-center flex-shrink-0">
               ${
-                this.user?.github_avatar_url
-                  ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
-                  : getInitials(this.user?.name)
-              }
+        this.user?.github_avatar_url
+            ? `<img src="${this.user.github_avatar_url}" alt="${this.user.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+            : getInitials(this.user?.name)
+    }
             </div>
             <div class="sidebar-user-info flex-grow-1 overflow-hidden">
               <p class="sidebar-user-name text-truncate mb-0">${this.user?.name ?? "User"}</p>
@@ -158,17 +158,25 @@ export default class Navbar {
     // NAV LINKS
     document.querySelectorAll(".nav-link").forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (btn.dataset.route === "events") {
+        const targetRoute = btn.dataset.route;
+
+        // No recargar si ya estamos en la misma ruta
+        if (targetRoute === this.router.currentRoute) {
+          this.closeSidebarMobile();
+          return;
+        }
+
+        if (targetRoute === "events") {
           localStorage.removeItem("currentEventId");
           localStorage.removeItem("currentEventName");
         }
 
-        if (btn.dataset.route === "coderEventSelect") {
+        if (targetRoute === "coderEventSelect") {
           sessionStorage.removeItem("selectedEvent");
         }
 
-        this.setActiveRoute(btn.dataset.route);
-        this.router.navigate(btn.dataset.route);
+        this.setActiveRoute(targetRoute);
+        this.router.navigate(targetRoute);
 
         // cerrar sidebar en mobile
         this.closeSidebarMobile();
@@ -186,9 +194,12 @@ export default class Navbar {
     // PROFILE
     document.querySelectorAll(".profileBtn")?.forEach((e) => {
       e.addEventListener("click", () => {
+        if (this.router.currentRoute === "profile") {
+          this.closeSidebarMobile();
+          return;
+        }
         this.setActiveRoute("profile");
         this.router.navigate("profile");
-
         this.closeSidebarMobile();
       });
     });
@@ -245,10 +256,10 @@ export default class Navbar {
 
     // LANG TOGGLE
     document
-      .getElementById("langToggleBtn")
-      ?.addEventListener("click", async () => {
-        await toggleLang();
-      });
+        .getElementById("langToggleBtn")
+        ?.addEventListener("click", async () => {
+          await toggleLang();
+        });
   }
 
   destroy() {}
