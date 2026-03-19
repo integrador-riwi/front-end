@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getEventRanking, calculateFinalists } from "../services/api-events.js";
-import { createQR, getQR, getVoteResults, apiFetch } from "../services/api.js";
+import { createQR, createStaffQR, getQR, getVoteResults, apiFetch } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -27,6 +27,9 @@ export default class QRVoting {
 
     this.voteResults = [];
     this.totalVotes = 0;
+
+    this.staffQrLink = null;
+    this.staffQrImage = null;
 
     this.pollingInterval = null;
   }
@@ -333,6 +336,168 @@ export default class QRVoting {
         }
       }
     });
+  }
+
+  /* -------------------------- STAFF QR -------------------------- */
+
+  renderStaffQRSection() {
+    const container = document.getElementById("staff-qr-section");
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="rounded-4 p-4" style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="material-symbols-outlined" style="color:#6b5cff;font-size:1.2rem;">lock</span>
+          <h3 class="fw-bold mb-0" style="color:#181e4b;font-size:1rem;">Staff Voting Link</h3>
+          <span class="badge rounded-pill ms-1" style="background:rgba(107,92,255,0.1);color:#6b5cff;font-size:0.7rem;">PRIVATE</span>
+        </div>
+        <p class="mb-3" style="color:#7b7fa8;font-size:0.83rem;">
+          Generate a private link for staff members only. This link is different from the public QR and won't be visible to the audience.
+        </p>
+
+        ${this.staffQrLink ? `
+          <!-- Link generado — oculto como contraseña -->
+          <div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-2"
+               style="background:#f4f3ff;border:1px solid rgba(107,92,255,0.2);">
+            <span class="material-symbols-outlined flex-shrink-0" style="color:#6b5cff;font-size:1rem;">lock</span>
+            <span class="flex-grow-1" style="font-size:1rem;color:#181e4b;letter-spacing:3px;user-select:none;">
+              ••••••••••••••••••••••••••••••
+            </span>
+            <button id="copy-staff-link-btn"
+                    class="btn btn-sm flex-shrink-0 fw-bold d-flex align-items-center gap-1"
+                    style="background:rgba(107,92,255,0.1);color:#6b5cff;border:none;border-radius:8px;font-size:0.78rem;padding:5px 12px;">
+              <span class="material-symbols-outlined" style="font-size:0.95rem;">content_copy</span>
+              Copy link
+            </button>
+          </div>
+
+          ${this.staffQrImage ? `
+            <div class="d-flex flex-column align-items-center gap-2 mb-3">
+              <img src="${this.staffQrImage}" alt="Staff QR"
+                   style="width:150px;height:150px;border-radius:12px;border:2px solid rgba(107,92,255,0.2);" />
+              <button id="download-staff-qr-btn"
+                      class="btn btn-sm fw-bold"
+                      style="background:#6b5cff;color:#fff;border:none;border-radius:8px;font-size:0.78rem;padding:5px 16px;">
+                Download QR
+              </button>
+            </div>
+          ` : ""}
+
+          <button id="regenerate-staff-qr-btn"
+                  class="btn btn-sm w-100 fw-bold"
+                  style="background:transparent;color:#7b7fa8;border:1px solid rgba(107,92,255,0.2);border-radius:8px;font-size:0.8rem;padding:6px;">
+            Regenerate Link
+          </button>
+
+        ` : `
+          <!-- Sin link aún -->
+          <button id="generate-staff-qr-btn"
+                  class="btn w-100 fw-bold"
+                  style="background:rgba(107,92,255,0.08);color:#6b5cff;border:1.5px dashed rgba(107,92,255,0.3);border-radius:10px;font-size:0.875rem;padding:10px;"
+                  ${!this.finalistsApproved ? "disabled title='Approve finalists first'" : ""}>
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">add_link</span>
+            Generate Staff Link
+          </button>
+          ${!this.finalistsApproved ? `
+            <p class="text-center mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">
+              Approve finalists before generating the staff link
+            </p>
+          ` : ""}
+        `}
+      </div>
+    `;
+
+    this._attachStaffQRHandlers();
+  }
+
+  _attachStaffQRHandlers() {
+    // Generar por primera vez
+    const generateBtn = document.getElementById("generate-staff-qr-btn");
+    if (generateBtn) {
+      generateBtn.addEventListener("click", () => this._generateStaffQR(generateBtn));
+    }
+
+    // Regenerar
+    const regenBtn = document.getElementById("regenerate-staff-qr-btn");
+    if (regenBtn) {
+      regenBtn.addEventListener("click", () => this._generateStaffQR(regenBtn));
+    }
+
+    // Copiar link
+    const copyBtn = document.getElementById("copy-staff-link-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(this.staffQrLink);
+          copyBtn.textContent = "Copied!";
+          copyBtn.style.background = "rgba(90,204,164,0.15)";
+          copyBtn.style.color = "#059669";
+          setTimeout(() => {
+            copyBtn.textContent = "Copy";
+            copyBtn.style.background = "rgba(107,92,255,0.1)";
+            copyBtn.style.color = "#6b5cff";
+          }, 2000);
+        } catch {
+          copyBtn.textContent = "Error";
+        }
+      });
+    }
+
+    // Descargar QR de staff
+    const downloadBtn = document.getElementById("download-staff-qr-btn");
+    if (downloadBtn && this.staffQrImage) {
+      downloadBtn.addEventListener("click", () => {
+        const SIZE = 512;
+        const img = new Image();
+        img.src = this.staffQrImage;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, SIZE, SIZE);
+          ctx.drawImage(img, 0, 0, SIZE, SIZE);
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = `staff-qr-event-${getSelectedEvent()}.png`;
+          link.click();
+        };
+      });
+    }
+  }
+
+  async _generateStaffQR(triggerBtn) {
+    if (!this.finalistsApproved) return;
+
+    const expirationInput = document.getElementById("qr-expiration");
+    const expirationValue = expirationInput?.value;
+    if (!expirationValue) {
+      alert("Please select an expiration date first.");
+      return;
+    }
+
+    const originalHtml = triggerBtn.innerHTML;
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Generating…`;
+
+    try {
+      const eventId = getSelectedEvent();
+      const expirationDate = new Date(expirationValue).toISOString();
+
+      const response = await createStaffQR(eventId, expirationDate, this.finalists);
+      const data = response?.data ?? response;
+
+      this.staffQrLink  = data?.votePageUrl ?? data?.qrVote?.qr_code_url ?? null;
+      this.staffQrImage = data?.qrImage ?? null;
+
+      this.renderStaffQRSection();
+    } catch (err) {
+      console.error("Staff QR error:", err);
+      alert("Error generating staff link: " + (err?.message ?? "Unknown error"));
+      triggerBtn.disabled = false;
+      triggerBtn.innerHTML = originalHtml;
+    }
   }
 
   handleResetVotes() {
@@ -697,7 +862,8 @@ export default class QRVoting {
         approveBtn.classList.remove("btn-success");
         approveBtn.classList.add("btn-secondary");
 
-        this.updateQrButtonState(); //
+        this.updateQrButtonState();
+        this.renderStaffQRSection();
 
         console.log("Finalists approved:", this.finalists);
       });
@@ -739,6 +905,7 @@ export default class QRVoting {
     await this.handleQRButton();
     this.handleSubmitVotes();
     this.handleResetVotes();
+    this.renderStaffQRSection();
     this.updateQrButtonState();
     await this.loadExistingQR();
 
