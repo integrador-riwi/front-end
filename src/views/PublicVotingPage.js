@@ -91,7 +91,10 @@ export default class PublicVotingPage {
     } catch (e) {
       console.error(e);
       if (btn) { btn.disabled = false; btn.innerHTML = this._btnLabel(); }
-      this.showToast(t("publicVoting.voteError") || "Error submitting vote.");
+      const msg = e?.message?.includes('cédula')
+        ? 'Esta cédula ya registró un voto. No es posible votar dos veces.'
+        : (t("publicVoting.voteError") || "Error submitting vote.");
+      this.showToast(msg);
     }
   }
 
