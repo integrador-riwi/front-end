@@ -151,7 +151,12 @@ export async function getQRImage(id_event) {
   });
 }
 
-export async function getQRImageById(qr_id) {
+export async function checkCedulaVoted(qrVoteId, documento) {
+  return apiFetch(`/qr-votes/vote/${qrVoteId}/check-cedula?documento=${encodeURIComponent(documento)}`, {
+    method: "GET",
+  });
+}
+
   return apiFetch(`/qr-votes/${qr_id}/image`, {
     method: "GET",
   });

@@ -1,5 +1,5 @@
 import "../assets/styles/voting.css";
-import { submitVote, getVotingProjects, getStaffVotingProjects } from "../services/api.js";
+import { submitVote, getVotingProjects, getStaffVotingProjects, checkCedulaVoted } from "../services/api.js";
 import { t, onLangChange } from "../utils/i18n.js";
 
 export default class PublicVotingPage {
@@ -345,10 +345,26 @@ export default class PublicVotingPage {
       if (!/[0-9]/.test(e.key)) e.preventDefault();
     });
 
-    submitBtn.addEventListener("click", () => {
+    submitBtn.addEventListener("click", async () => {
       const doc  = docInput.value.trim();
       const name = nameInput.value.trim();
       if (!/^\d{6,12}$/.test(doc) || name.length < 3) return;
+
+      // Verificar si la cédula ya votó antes de mostrar el podio
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="v-spinner"></span> Verificando…`;
+
+      try {
+        const res = await checkCedulaVoted(this.qrVoteId, doc);
+        if (res?.already_voted) {
+          errDoc.textContent = "Esta cédula ya registró un voto en esta sesión.";
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `Continuar a votar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>`;
+          return;
+        }
+      } catch (_) {
+        // Si falla la verificación, dejar pasar (el backend lo bloqueará al votar)
+      }
 
       this._saveIdentity(doc, name);
 
