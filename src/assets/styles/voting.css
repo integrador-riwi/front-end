@@ -557,3 +557,115 @@ html:has(.v-page) {
   font-weight: 700;
   color: #7b7fa8;
 }
+
+
+/* ── IDENTITY SCREEN ─────────────────────────────────── */
+.v-identity-wrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 20px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.v-identity-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1.5px solid rgba(107,92,255,0.13);
+  box-shadow: 0 4px 24px rgba(107,92,255,0.10);
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.v-identity-icon {
+  width: 56px; height: 56px;
+  background: rgba(107,92,255,0.08);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #6b5cff;
+  margin-bottom: 16px;
+}
+
+.v-identity-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #181e4b;
+  margin: 0 0 6px;
+}
+
+.v-identity-sub {
+  font-size: 0.8rem;
+  color: #7b7fa8;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.v-identity-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.v-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #181e4b;
+  letter-spacing: 0.2px;
+}
+
+.v-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(107,92,255,0.2);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #181e4b;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.v-input:focus {
+  border-color: #6b5cff;
+  box-shadow: 0 0 0 3px rgba(107,92,255,0.12);
+  background: #fff;
+}
+
+.v-input::placeholder { color: #b0b3c6; }
+
+.v-field-error {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  min-height: 16px;
+  display: block;
+}
+
+#identity-submit-btn {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+#identity-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

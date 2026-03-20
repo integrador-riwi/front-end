@@ -15,6 +15,11 @@ export default class PublicVotingPage {
     this.bench = [];          // teams not yet on podium
     this.qrVoteId = null;
     this.dragging = null;     // { team, from: 'bench'|'podium', index }
+
+    // Voter identity — collected before voting
+    this.voterIdentified = false;
+    this.voterDocumento = null;
+    this.voterNombre = null;
   }
 
   /* ── FETCH ──────────────────────────────────────────────── */
@@ -73,7 +78,13 @@ export default class PublicVotingPage {
           .map((team, i) => team ? { project_id: Number(team.id_project), position: i + 1 } : null)
           .filter(Boolean);
 
-      await submitVote(qrVoteId, Number(first.id_project), localStorage.getItem(key), podium);
+      await submitVote(
+        qrVoteId,
+        Number(first.id_project),
+        localStorage.getItem(key),
+        podium,
+        { documento: this.voterDocumento, nombre: this.voterNombre }
+      );
       const votedKey = this.isStaff ? `voted_staff_${this.staffToken}` : `voted_event_${this.eventId}`;
       localStorage.setItem(votedKey, "true");
       this.showSuccess(first.team_name);
@@ -199,6 +210,164 @@ export default class PublicVotingPage {
           </svg>
         </div>
       </div>`;
+  }
+
+  /* ── IDENTITY SCREEN ────────────────────────────────────── */
+
+  _identityStorageKey() {
+    return this.isStaff
+      ? `voter_identity_staff_${this.staffToken}`
+      : `voter_identity_${this.eventId}`;
+  }
+
+  _loadSavedIdentity() {
+    try {
+      const saved = sessionStorage.getItem(this._identityStorageKey());
+      if (saved) {
+        const { documento, nombre } = JSON.parse(saved);
+        if (documento && nombre) {
+          this.voterDocumento = documento;
+          this.voterNombre    = nombre;
+          this.voterIdentified = true;
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  _saveIdentity(documento, nombre) {
+    this.voterDocumento  = documento.trim();
+    this.voterNombre     = nombre.trim();
+    this.voterIdentified = true;
+    sessionStorage.setItem(
+      this._identityStorageKey(),
+      JSON.stringify({ documento: this.voterDocumento, nombre: this.voterNombre })
+    );
+  }
+
+  buildIdentityScreen() {
+    return `
+      <div class="v-page" id="vote-wrap">
+        <div class="v-header">
+          <div class="v-logo">
+            <svg viewBox="0 0 24 24" fill="white" width="20" height="20">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+          <div class="v-header-text">
+            <h1 class="v-title">TeamUp Voting</h1>
+            <p class="v-subtitle">Ingresa tus datos para continuar</p>
+          </div>
+        </div>
+
+        <div class="v-identity-wrap">
+          <div class="v-identity-card">
+            <div class="v-identity-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <h2 class="v-identity-title">Identifícate para votar</h2>
+            <p class="v-identity-sub">Estos datos son necesarios para validar tu participación</p>
+
+            <div class="v-identity-form" id="identity-form">
+              <div class="v-field">
+                <label class="v-label" for="id-documento">Número de cédula</label>
+                <input
+                  class="v-input"
+                  id="id-documento"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="Ej: 1234567890"
+                  maxlength="12"
+                  autocomplete="off"
+                />
+                <span class="v-field-error" id="err-documento"></span>
+              </div>
+
+              <div class="v-field">
+                <label class="v-label" for="id-nombre">Nombre completo</label>
+                <input
+                  class="v-input"
+                  id="id-nombre"
+                  type="text"
+                  placeholder="Ej: Juan Pérez"
+                  maxlength="80"
+                  autocomplete="off"
+                />
+                <span class="v-field-error" id="err-nombre"></span>
+              </div>
+
+              <button class="v-submit" id="identity-submit-btn" disabled>
+                Continuar a votar
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  attachIdentityHandlers(container) {
+    const docInput  = document.getElementById("id-documento");
+    const nameInput = document.getElementById("id-nombre");
+    const submitBtn = document.getElementById("identity-submit-btn");
+    const errDoc    = document.getElementById("err-documento");
+    const errName   = document.getElementById("err-nombre");
+
+    const validate = () => {
+      const doc  = docInput.value.trim();
+      const name = nameInput.value.trim();
+      const docOk  = /^\d{6,12}$/.test(doc);
+      const nameOk = name.length >= 3;
+
+      errDoc.textContent  = doc.length > 0 && !docOk  ? "Ingresa entre 6 y 12 dígitos numéricos" : "";
+      errName.textContent = name.length > 0 && !nameOk ? "Ingresa al menos 3 caracteres" : "";
+
+      submitBtn.disabled = !(docOk && nameOk);
+    };
+
+    docInput.addEventListener("input",  validate);
+    nameInput.addEventListener("input", validate);
+
+    // Allow only digits in document field
+    docInput.addEventListener("keypress", (e) => {
+      if (!/[0-9]/.test(e.key)) e.preventDefault();
+    });
+
+    submitBtn.addEventListener("click", () => {
+      const doc  = docInput.value.trim();
+      const name = nameInput.value.trim();
+      if (!/^\d{6,12}$/.test(doc) || name.length < 3) return;
+
+      this._saveIdentity(doc, name);
+
+      // Animate out → render voting page
+      const wrap = document.getElementById("vote-wrap");
+      if (wrap) {
+        wrap.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        wrap.style.opacity = "0";
+        wrap.style.transform = "translateY(-8px)";
+        setTimeout(() => {
+          this._dragAttached  = false;
+          this._touchAttached = false;
+          container.innerHTML = this.buildPage();
+          this.attachDragDrop();
+          this.attachTouchDrag();
+          document.getElementById("submit-vote-btn")?.addEventListener("click", () => this.handleVote());
+        }, 250);
+      }
+    });
+
+    // Auto-focus first field
+    setTimeout(() => docInput.focus(), 100);
   }
 
   buildPage() {
@@ -511,8 +680,18 @@ export default class PublicVotingPage {
       return;
     }
 
-    this._dragAttached = false;
+    this._dragAttached  = false;
     this._touchAttached = false;
+
+    // If voter not identified yet, show identity screen first
+    this._loadSavedIdentity();
+    if (!this.voterIdentified) {
+      container.innerHTML = this.buildIdentityScreen();
+      this.attachIdentityHandlers(container);
+      this._offLangChange = onLangChange(() => this.render(container));
+      return;
+    }
+
     container.innerHTML = this.buildPage();
     this.attachDragDrop();
     this.attachTouchDrag();
