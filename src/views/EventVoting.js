@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getEventRanking, calculateFinalists } from "../services/api-events.js";
-import { createQR, createStaffQR, getQR, getVoteResults, apiFetch } from "../services/api.js";
+import { createQR, createStaffQR, getQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -713,6 +713,20 @@ export default class QRVoting {
     const totalEl = document.getElementById("total-votes");
     if (!container) return;
 
+    // Inject audit button if not already present
+    const resultsSection = document.getElementById("results-section");
+    if (resultsSection && !document.getElementById("open-audit-btn")) {
+      const auditBtn = document.createElement("button");
+      auditBtn.id = "open-audit-btn";
+      auditBtn.innerHTML = `🔐 Auditar votos`;
+      auditBtn.style.cssText = `
+        margin-bottom:12px;padding:6px 16px;border-radius:20px;border:1.5px solid #6b5cff;
+        background:transparent;color:#6b5cff;font-size:.8rem;font-weight:700;cursor:pointer;
+      `;
+      auditBtn.addEventListener("click", () => this.openAuditModal());
+      resultsSection.prepend(auditBtn);
+    }
+
     const finalistIds = this.finalists.map((f) => f.id_project);
 
     const filteredResults = this.voteResults.filter((t) =>
@@ -900,6 +914,124 @@ export default class QRVoting {
         await this.fetchVoteResults();
         this.renderResults();
       }, 15000);
+    }
+  }
+
+  // ── Auditoría de votos ────────────────────────────────────────────────────
+  async openAuditModal() {
+    const eventId = getSelectedEvent();
+    if (!eventId) return;
+
+    let modal = document.getElementById("audit-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "audit-modal";
+      modal.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;";
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:780px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 Auditoría de Votos</h5>
+          <button id="close-audit-modal" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
+        </div>
+        <div id="audit-modal-body" style="overflow-y:auto;padding:24px;flex:1;">
+          <div class="text-center py-4" style="color:#6b7280;">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Verificando firmas HMAC...
+          </div>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = "flex";
+    document.getElementById("close-audit-modal").addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+
+    try {
+      const { summary, votes } = await auditVotesByEvent(eventId);
+      const body = document.getElementById("audit-modal-body");
+
+      const verdictBadge = (status) => {
+        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ VÁLIDO</span>`;
+        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ SIN FIRMA</span>`;
+        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ INVÁLIDO</span>`;
+      };
+
+      const invalidAlert = summary.invalid > 0
+        ? `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:.875rem;">
+             ⚠️ <strong>${summary.invalid} voto(s) con firma inválida detectados.</strong>
+             Estos votos pudieron haber sido modificados o insertados directamente en la base de datos.
+           </div>`
+        : "";
+
+      const noHashAlert = summary.no_hash > 0
+        ? `<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
+             ℹ️ <strong>${summary.no_hash} voto(s) sin firma HMAC.</strong>
+             Fueron registrados antes de activar el sistema de auditoría.
+           </div>`
+        : "";
+
+      const rows = votes.map((v, i) => `
+        <tr style="border-bottom:1px solid #f3f4f6;${v.status === "INVALID" ? "background:#fff5f5;" : ""}">
+          <td style="padding:8px 12px;color:#9ca3af;">${i + 1}</td>
+          <td style="padding:8px 12px;font-weight:600;">${v.project_name ?? "—"}</td>
+          <td style="padding:8px 12px;">
+            <span style="background:${v.voter_role === "STAFF" ? "#ede9fe" : "#e0f2fe"};color:${v.voter_role === "STAFF" ? "#7c3aed" : "#0369a1"};padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:700;">
+              ${v.voter_role}
+            </span>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-family:monospace;font-size:.75rem;">${v.voter_ip ?? "—"}</td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:.75rem;">${v.voted_at ? new Date(v.voted_at).toLocaleString("es-CO") : "—"}</td>
+          <td style="padding:8px 12px;">${verdictBadge(v.status)}</td>
+        </tr>
+      `).join("");
+
+      body.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+          <div style="background:#d1fae5;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#065f46;">${summary.valid}</div>
+            <div style="font-size:.8rem;color:#065f46;font-weight:600;">Válidos</div>
+          </div>
+          <div style="background:#fef3c7;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#92400e;">${summary.no_hash}</div>
+            <div style="font-size:.8rem;color:#92400e;font-weight:600;">Sin firma</div>
+          </div>
+          <div style="background:#fee2e2;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#991b1b;">${summary.invalid}</div>
+            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">Inválidos</div>
+          </div>
+        </div>
+        ${invalidAlert}
+        ${noHashAlert}
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+            <thead>
+              <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">#</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Proyecto</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Rol</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">IP</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Fecha</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          ${votes.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:24px 0;">No hay votos registrados.</p>' : ""}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("audit-modal-body").innerHTML = `
+        <div style="color:#ef4444;text-align:center;padding:24px;">
+          Error al cargar la auditoría: ${err.message}
+        </div>
+      `;
     }
   }
 }
