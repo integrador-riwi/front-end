@@ -958,9 +958,11 @@ export async function loadProjectBrief() {
 // Member Grades Panel
 // ─────────────────────────────────────────────────────────────
 
-export async function loadMemberGrades(projectId) {
+export async function loadMemberGrades(projectId, context = {}) {
   const container = document.getElementById("member-grades-section");
   if (!container) return;
+
+  const { members = [], rubrics = [], existingEvals = [] } = context;
 
   const AREA_META = {
     DEVELOPMENT: { label: "Dev", short: "DEV", icon: "code", color: "var(--mint)", barClass: "mg-bar-dev" },
@@ -971,13 +973,63 @@ export async function loadMemberGrades(projectId) {
 
   try {
     const { apiFetch } = await import("../services/api.js");
-    const res = await apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" });
-    const results = res?.data ?? res ?? [];
+    const res = await apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" }).catch(() => null);
+    let results = res?.data ?? res ?? null;
 
-    if (!Array.isArray(results) || results.length === 0) return;
+    let isPending = false;
+    let isPartial = false;
 
-    // Project grade = average of all members' final_scores
-    const projectGrade = results.reduce((acc, r) => acc + (parseFloat(r.final_score) || 0), 0) / results.length;
+    if (!Array.isArray(results) || results.length === 0) {
+      if (members.length > 0) {
+        isPending = true;
+        results = members.filter(m => m.id_user).map(m => ({
+          user_name: m.name,
+          github_avatar_url: m.github_avatar_url,
+          id_user: m.id_user,
+          final_score: 0,
+          area_scores: []
+        }));
+      } else {
+        container.innerHTML = "";
+        return;
+      }
+    } else {
+       // Check if results are partial (missing final_score globally)
+       const hasGlobal = results.some(r => r.final_score != null);
+       const hasAnyArea = results.some(r => Array.isArray(r.area_scores) && r.area_scores.length > 0);
+
+       if (!hasGlobal) {
+         if (hasAnyArea) {
+           isPartial = true;
+           results = results.map(r => {
+             const areaScores = Array.isArray(r.area_scores) ? r.area_scores.filter(a => a.final_score != null) : [];
+             const sum = areaScores.reduce((acc, a) => acc + (parseFloat(a.final_score) || 0), 0);
+             const avg = areaScores.length > 0 ? sum / areaScores.length : 0;
+             return { ...r, final_score: avg, isPartial: true };
+           });
+         } else {
+           isPending = true;
+           // Keep placeholder results from members list if possible
+           if (results.length === 0 && members.length > 0) {
+              results = members.filter(m => m.id_user).map(m => ({
+                user_name: m.name, github_avatar_url: m.github_avatar_url, id_user: m.id_user, final_score: 0, area_scores: []
+              }));
+           }
+         }
+       }
+    }
+
+    // Safeguard: Hide sidebar ONLY if interactive rubrics are visible (active evaluation)
+    const rGrid = document.querySelector(".mg-rubrics-grid");
+    if (rGrid && rGrid.offsetParent !== null) {
+      container.innerHTML = "";
+      return;
+    }
+
+    // Final check: Calculate project-wide grade from individual member global scores
+
+    // Project grade calculation (if not pending)
+    const projectGrade = isPending ? 0 : results.reduce((acc, r) => acc + (parseFloat(r.final_score) || 0), 0) / results.length;
 
     // Compute grade tier — uses CSS variables to stay palette-loyal
     const getTier = (g) => {
@@ -1019,7 +1071,7 @@ export async function loadMemberGrades(projectId) {
 
         const delay = idx * 0.1;
         return `
-          <div class="mg-area-row" style="animation-delay: ${delay}s;">
+          <div class="mg-area-row" style="animation-delay: ${delay}s; opacity: ${isPending ? 0.5 : 1};">
             <div class="mg-area-header">
               <div class="mg-area-pills">
                 <div class="mg-area-icon-wrapper" style="background:color-mix(in srgb, ${meta.color}, transparent 85%);">
@@ -1028,12 +1080,12 @@ export async function loadMemberGrades(projectId) {
                 <span class="mg-area-label" style="color:var(--navy);">${meta.short}</span>
               </div>
               <div class="mg-area-score-badge" style="background:color-mix(in srgb, ${meta.color}, transparent 85%); color:${meta.color};">
-                ${pct != null ? `${pct}` : "—"}
+                ${isPending ? "—" : (pct != null ? `${pct}` : "—")}
               </div>
             </div>
             <div class="mg-bar-container">
               <div class="mg-bar-track" style="background:color-mix(in srgb, ${meta.color}, transparent 90%);">
-                <div class="mg-bar-fill" style="width:${pct ?? 0}%; background:linear-gradient(90deg, ${meta.color}, color-mix(in srgb, ${meta.color}, black 15%));"></div>
+                <div class="mg-bar-fill" style="width:${isPending ? 0 : (pct ?? 0)}%; background:linear-gradient(90deg, ${meta.color}, color-mix(in srgb, ${meta.color}, black 15%));"></div>
               </div>
             </div>
             ${feedbackHtml}
@@ -1050,30 +1102,41 @@ export async function loadMemberGrades(projectId) {
               <div class="mg-member-name">${r.user_name}</div>
             </div>
             <div class="mg-score-badge">
-              <span class="mg-score-value" style="color:${memberTier.colorVar};">${Math.round(globalScore)}</span>
+              <span class="mg-score-value" style="color:${isPending ? 'var(--text-dim)' : memberTier.colorVar};">
+                ${isPending ? "—" : Math.round(globalScore)}
+              </span>
               <span class="mg-score-unit">pts</span>
             </div>
-            <span class="material-icons-round mg-chevron">expand_more</span>
+            ${isPending ? '' : '<span class="material-icons-round mg-chevron">expand_more</span>'}
           </div>
           <div id="${memberId}" class="mg-expand-panel" style="display:none;">
-            ${areaRowsHtml}
+            ${isPending ? '' : areaRowsHtml}
           </div>
         </div>`;
     }).join("");
 
     container.innerHTML = `
       <div class="mg-wrapper">
-        <div class="ct-hero-card p-4 mb-3" style="border-radius:20px;">
+        <div class="ct-hero-card p-4 mb-3" style="border-radius:20px; ${isPending ? 'background: linear-gradient(135deg, #7b7fa8, #181e4b);' : ''}">
           <div style="position:relative;z-index:2;">
-            <div class="ct-stat-label mb-1">Global Performance</div>
+            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? 'Fase de Evaluación' : (isPartial ? 'Nota Acumulada' : 'Rendimiento Global')}</div>
             <div class="mg-hero-score-row">
-              <span class="mg-hero-score">${projectGrade.toFixed(1)}</span>
-              <span class="mg-hero-denom">/100</span>
+              <span class="mg-hero-score">${isPending ? 'En Progreso' : projectGrade.toFixed(1)}</span>
+              ${isPending ? '' : '<span class="mg-hero-denom">/100</span>'}
             </div>
-            <div class="mg-hero-track mt-3">
-              <div class="ct-grade-bar ${projTier.barSuf} mg-hero-fill" style="width:${Math.min(100, projectGrade)}%;"></div>
-            </div>
-            <div class="ct-stat-label mt-2">${results.length} participant${results.length !== 1 ? "s" : ""}</div>
+            ${isPending ? `
+              <div class="mt-3 p-2 rounded-3" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);">
+                <div class="d-flex align-items-center gap-2 small text-white">
+                  <span class="material-icons-round" style="font-size:1rem;">info</span>
+                  <span>Esperando evaluaciones del equipo...</span>
+                </div>
+              </div>
+            ` : `
+              <div class="mg-hero-track mt-3">
+                <div class="ct-grade-bar ${projTier.barSuf} mg-hero-fill" style="width:${Math.min(100, projectGrade)}%;"></div>
+              </div>
+            `}
+            <div class="ct-stat-label mt-2" style="color: rgba(255,255,255,0.6);">${results.length} participant${results.length !== 1 ? "s" : ""}</div>
           </div>
         </div>
         <div class="mg-members-section">
@@ -1245,11 +1308,7 @@ export async function loadEvaluationPanel({
     return;
   }
 
-  // This TL already submitted → load their grades and show the summary only (no rubric)
-  if (alreadySubmitted) {
-    container.parentElement.classList.add("d-none");
-    return;
-  }
+  // rubrics and existingEvals will be fetched below to populate the sidebar grades if finished
 
 
   let rubrics = [];
@@ -1282,12 +1341,56 @@ export async function loadEvaluationPanel({
 
   const evaluableMembers = members.filter((m) => m.id_user);
 
-  // Check if all evaluable members are evaluated for all rubrics in this TL's area
-  const requiredEvalsCount = evaluableMembers.length * rubrics.length;
-  const isFullyEvaluated = requiredEvalsCount > 0 && existingEvals.length >= requiredEvalsCount;
+  // Check if every evaluable member has an evaluation for every rubric in this area
+  const isFullyEvaluated = rubrics.length > 0 && evaluableMembers.length > 0 &&
+    evaluableMembers.every(m => 
+      rubrics.every(r => existingMap[`${r.id_rubric}_${m.id_user}`])
+    );
 
-  if (isFullyEvaluated) {
-    container.parentElement.classList.add("d-none");
+  if (isFullyEvaluated || alreadySubmitted) {
+    const totalScore = existingEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (existingEvals.length || 1);
+    
+    // Build a small member breakdown list
+    const membersBreakdown = evaluableMembers.map(m => {
+       const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
+       const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
+       return `
+         <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
+           <div class="d-flex align-items-center gap-2">
+             <img src="${m.github_avatar_url || ''}" style="width:24px;height:24px;border-radius:50%;background:#eee;">
+             <span class="small fw-bold">${m.name}</span>
+           </div>
+           <div class="badge rounded-pill" style="background: var(--bg-card); color: var(--color-primary); border: 1px solid var(--border);">${mScore.toFixed(0)} pts</div>
+         </div>`;
+    }).join("");
+
+    container.innerHTML = `
+      <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+        <div class="text-center mb-4">
+          <div class="material-icons-round mb-3" style="font-size: 3.5rem; color: var(--mint);">verified</div>
+          <h3 class="fw-bold mb-2">Evaluación Finalizada</h3>
+          <p class="text-muted">Has completado satisfactoriamente las evaluaciones del equipo.</p>
+        </div>
+        
+        <div class="row align-items-center g-4">
+           <div class="col-md-5">
+             <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
+               <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">Promedio Área</div>
+               <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
+             </div>
+           </div>
+           <div class="col-md-7">
+             <div class="ps-md-4 border-start">
+               <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">Desglose por Miembro</div>
+               ${membersBreakdown}
+             </div>
+           </div>
+        </div>
+        
+        <p class="mt-4 pt-4 border-top text-center small text-muted">Consulta la <b>Nota Acumulada</b> en el panel lateral para más detalles.</p>
+      </div>`;
+    submitBtn.classList.add("d-none");
+    loadMemberGrades(projectId, { members: evaluableMembers, rubrics, existingEvals });
     return;
   }
 
@@ -1457,6 +1560,19 @@ export async function loadEvaluationPanel({
       await submitEvaluations(projectId, evaluations);
       try { await calculateProjectGrades(projectId); } catch (_) { }
       toast.success('Success', 'Evaluations saved successfully.');
+      
+      // Refresh sidebar grades immediately
+      loadMemberGrades(projectId, { 
+        members: evaluableMembers, 
+        rubrics, 
+        existingEvals: evaluations.map(ev => ({
+          evaluated_user_id: ev.evaluatedUserId,
+          id_rubric: ev.gradeId ? rubrics.find(r => r.grades.some(g => g.id_grade === ev.gradeId))?.id_rubric : null,
+          score: ev.gradeId ? rubrics.find(r => r.grades.some(g => g.id_grade === ev.gradeId))?.grades.find(g => g.id_grade === ev.gradeId)?.score : 0,
+          feedback: ev.feedback
+        }))
+      });
+
       submitBtn.textContent = "Update Evaluations";
     } catch (err) {
       toast.error('Error', err?.message ?? "Failed to save evaluations.");

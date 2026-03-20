@@ -80,7 +80,7 @@ export default class TeamDetailView {
       setTimeout(() => {
         if (projectId) {
           loadComments(projectId, this.user);
-          loadMemberGrades(projectId);
+          loadMemberGrades(projectId, { members: res.data.members });
           initDeliverables(projectId);
         }
       }, 0);
