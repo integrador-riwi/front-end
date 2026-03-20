@@ -713,20 +713,6 @@ export default class QRVoting {
     const totalEl = document.getElementById("total-votes");
     if (!container) return;
 
-    // Inject audit button if not already present
-    const resultsSection = document.getElementById("results-section");
-    if (resultsSection && !document.getElementById("open-audit-btn")) {
-      const auditBtn = document.createElement("button");
-      auditBtn.id = "open-audit-btn";
-      auditBtn.innerHTML = `🔐 Auditar votos`;
-      auditBtn.style.cssText = `
-        margin-bottom:12px;padding:6px 16px;border-radius:20px;border:1.5px solid #6b5cff;
-        background:transparent;color:#6b5cff;font-size:.8rem;font-weight:700;cursor:pointer;
-      `;
-      auditBtn.addEventListener("click", () => this.openAuditModal());
-      resultsSection.prepend(auditBtn);
-    }
-
     const finalistIds = this.finalists.map((f) => f.id_project);
 
     const filteredResults = this.voteResults.filter((t) =>
@@ -899,6 +885,9 @@ export default class QRVoting {
     // Si ya hay un QR activo, los finalistas ya fueron aprobados en algún momento
     if (this.qrActive) this.finalistsApproved = true;
     this.renderStaffQRSection();
+
+    // Wire up audit button from template
+    document.getElementById("open-audit-btn")?.addEventListener("click", () => this.openAuditModal());
 
     await this.fetchVoteResults();
     this.renderResults();
