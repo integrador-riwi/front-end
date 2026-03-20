@@ -226,7 +226,7 @@ export async function getEventById(eventId) {
 }
 
 export async function submitVote(qr_vote_id, project_id, voter_token, podium = [], identity = {}) {
-  return apiFetch(`/qr-votes/vote/${eventId}`, {
+  return apiFetch(`/qr-votes/vote`, {
     method: "POST",
     body: {
       qr_vote_id,
