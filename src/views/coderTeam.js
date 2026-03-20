@@ -523,7 +523,7 @@ function _renderUploadControl(item) {
         </div>
         <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
           <div class="ct-edit-input-group">
-            <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste YouTube or Vimeo URL…" />
+            <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste YouTube or Vimeo URL…" />
             <div class="ct-edit-actions">
               <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}" title="Save">
                 <i class="bi bi-check-lg"></i> Send
