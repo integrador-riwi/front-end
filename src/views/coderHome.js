@@ -536,7 +536,7 @@ export default class CoderHome {
     if (show && !spinner) {
       spinner = document.createElement("div");
       spinner.className = "load-more-spinner";
-      spinner.innerHTML = `<span class="ai-spinner"></span> Loading more...`;
+      spinner.innerHTML = `<span class="ai-spinner"></span> ${t("common.loadingMore") || "Loading more..."}`;
       listEl.appendChild(spinner);
     } else if (!show && spinner) {
       spinner.remove();
@@ -772,15 +772,15 @@ export default class CoderHome {
     const dropdownItems = invitations.map((inv) => ({
       id: inv.id_invitation,
       idTeam: inv.id_team,
-      title: inv.team_name || "Unnamed Team",
-      subtitle: `${inv.event_name || "No event"} • Invited by: ${inv.invited_by_name || t("common.someone")}`,
+      title: inv.team_name || t("teamsProjects.unnamedTeam") || "Unnamed Team",
+      subtitle: `${inv.event_name || t("invite.noEvent") || "No event"} • ${t("invite.invitedBy") || "Invited by:"} ${inv.invited_by_name || t("common.someone")}`,
       accept: true,
       deny: true,
     }));
 
     toast.info(
         t("invite.pendingInvitations"),
-        `You have ${count} unanswered invitation(s)`,
+        `${t("invite.unansweredInvitations") || "You have unanswered invitation(s):"} ${count}`,
         {
           duration: 0,
           dropdown: {

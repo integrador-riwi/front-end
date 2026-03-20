@@ -48,6 +48,10 @@ const HEADER_LINKS_BY_VIEW = () => ({
     { label: t("nav.events"), route: "events" },
     { label: t("nav.ranking"), route: "ranking" },
   ],
+  finalists: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.finalists"), route: null },
+  ],
 });
 
 const HEADER_LAYOUT_BY_ROUTE = () => ({

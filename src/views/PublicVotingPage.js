@@ -62,7 +62,7 @@ export default class PublicVotingPage {
     const first = this.podium[0];
     if (!first) return;
     const btn = document.getElementById("submit-vote-btn");
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="v-spinner"></span> Submitting…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<span class="v-spinner"></span> ${t("publicVoting.submitting") || "Submitting…"}`; }
     try {
       const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
       const key = this.isStaff
@@ -85,7 +85,7 @@ export default class PublicVotingPage {
   }
 
   _btnLabel() {
-    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Submit my ranking`;
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${t("publicVoting.submitRanking") || "Submit my ranking"}`;
   }
 
   showSuccess(teamName) {
@@ -99,9 +99,9 @@ export default class PublicVotingPage {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h2 class="v-modal-title">¡Voto registrado!</h2>
+        <h2 class="v-modal-title">${t("publicVoting.voteRegistered") || "¡Voto registrado!"}</h2>
         <p class="v-modal-team">${teamName}</p>
-        <p class="v-modal-sub">Gracias por participar. Serás redirigido en unos segundos.</p>
+        <p class="v-modal-sub">${t("publicVoting.thanks") || "Gracias por participar. Serás redirigido en unos segundos."}</p>
         <div class="v-modal-countdown">
           <div class="v-modal-bar"><div class="v-modal-bar-fill" id="v-countdown-bar"></div></div>
           <span class="v-modal-seconds" id="v-countdown-num">5</span>
@@ -222,8 +222,8 @@ export default class PublicVotingPage {
             </svg>
           </div>
           <div class="v-header-text">
-            <h1 class="v-title">TeamUp Voting</h1>
-            <p class="v-subtitle">Drag teams to the podium · your 1st place is your vote</p>
+            <h1 class="v-title">${t("publicVoting.title") || "TeamUp Voting"}</h1>
+            <p class="v-subtitle">${t("publicVoting.subtitle") || "Drag teams to the podium · your 1st place is your vote"}</p>
           </div>
         </div>
 
@@ -243,13 +243,13 @@ export default class PublicVotingPage {
         <!-- Bench -->
         ${this.bench.length ? `
           <div class="v-bench-section">
-            <p class="v-bench-label">Drag a team to the podium</p>
+            <p class="v-bench-label">${t("publicVoting.dragToPodium") || "Drag a team to the podium"}</p>
             <div class="v-bench" id="v-bench">
               ${this.bench.map((team, i) => this.renderBenchCard(team, i)).join("")}
             </div>
           </div>` : `
           <div class="v-bench-section">
-            <p class="v-bench-label v-bench-label--done">All teams placed on the podium</p>
+            <p class="v-bench-label v-bench-label--done">${t("publicVoting.allPlaced") || "All teams placed on the podium"}</p>
           </div>`
     }
 
@@ -258,7 +258,7 @@ export default class PublicVotingPage {
           <div class="v-footer-inner">
             <button class="v-submit${!podiumComplete || voted ? " v-submit--done" : ""}"
                     id="submit-vote-btn" ${!podiumComplete || voted ? "disabled" : ""}>
-              ${voted ? "✓ Already voted" : !podiumComplete ? "Fill all 3 podium spots to vote" : this._btnLabel()}
+              ${voted ? (t("publicVoting.alreadyVoted") || "✓ Already voted") : !podiumComplete ? (t("publicVoting.fillSpots") || "Fill all 3 podium spots to vote") : this._btnLabel()}
             </button>
           </div>
         </div>
@@ -307,12 +307,12 @@ export default class PublicVotingPage {
     if (benchSection) {
       if (this.bench.length) {
         benchSection.innerHTML = `
-          <p class="v-bench-label">Drag a team to the podium</p>
+          <p class="v-bench-label">${t("publicVoting.dragToPodium") || "Drag a team to the podium"}</p>
           <div class="v-bench" id="v-bench">
             ${this.bench.map((team, i) => this.renderBenchCard(team, i)).join("")}
           </div>`;
       } else {
-        benchSection.innerHTML = `<p class="v-bench-label v-bench-label--done">All teams placed on the podium</p>`;
+        benchSection.innerHTML = `<p class="v-bench-label v-bench-label--done">${t("publicVoting.allPlaced") || "All teams placed on the podium"}</p>`;
       }
     }
 
@@ -321,7 +321,7 @@ export default class PublicVotingPage {
     if (btn) {
       btn.disabled = !podiumComplete || voted;
       btn.className = `v-submit${!podiumComplete || voted ? " v-submit--done" : ""}`;
-      btn.innerHTML = voted ? "✓ Already voted" : !podiumComplete ? "Fill all 3 podium spots to vote" : this._btnLabel();
+      btn.innerHTML = voted ? (t("publicVoting.alreadyVoted") || "✓ Already voted") : !podiumComplete ? (t("publicVoting.fillSpots") || "Fill all 3 podium spots to vote") : this._btnLabel();
     }
 
     this.attachDragDrop();
@@ -507,7 +507,7 @@ export default class PublicVotingPage {
     await this.fetchRanking();
 
     if (!this.isStaff && !this.event) {
-      container.innerHTML = `<div class="v-empty"><h2>Event not found</h2><p>This event doesn't exist or is no longer available.</p></div>`;
+      container.innerHTML = `<div class="v-empty"><h2>${t("publicVoting.eventNotFound") || "Event not found"}</h2><p>${t("publicVoting.eventNotExist") || "This event doesn't exist or is no longer available."}</p></div>`;
       return;
     }
 
