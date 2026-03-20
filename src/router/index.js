@@ -260,10 +260,15 @@ class App {
         this.user = user;
       }
       this.navigate(this.getHomeRoute());
-    } catch {
-      // Token inválido y refresh también falló — apiFetch ya limpió el localStorage
-      // y redirigió a "/" pero por si acaso navegamos a landing
-      this.navigate("landing");
+    } catch (err) {
+      // Si el token sigue en localStorage, el error fue transitorio (red, CORS, etc.)
+      // No cerrar sesión — redirigir al home de todas formas
+      // Solo ir a landing si apiFetch ya limpió el token (auth realmente falló)
+      if (isAuthenticated()) {
+        this.navigate(this.getHomeRoute());
+      } else {
+        this.navigate("landing");
+      }
     }
   }
 
