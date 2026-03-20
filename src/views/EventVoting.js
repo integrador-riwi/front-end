@@ -130,8 +130,11 @@ export default class QRVoting {
           ? qrList.find(q => q.vote_type === "STAFF" && q.staff_token)
           : null;
       if (activeStaffQr) {
-        this.staffQrLink = activeStaffQr.qr_code_url ?? null;
-        this.staffQrId   = activeStaffQr.id ?? null;
+        this.staffQrLink  = activeStaffQr.qr_code_url ?? null;
+        this.staffQrId    = activeStaffQr.id ?? null;
+        // Recuperar imagen cacheada si existe
+        const staffCacheKey = `qr_staff_${this.staffQrId}`;
+        this.staffQrImage = localStorage.getItem(staffCacheKey) ?? null;
       }
 
       const qrImg = document.getElementById("qr");
@@ -452,6 +455,15 @@ export default class QRVoting {
         </p>
 
         ${this.staffQrLink ? `
+          <!-- QR image -->
+          ${this.staffQrImage ? `
+          <div class="d-flex flex-column align-items-center mb-3">
+            <div style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);border-radius:12px;padding:12px;display:inline-block;">
+              <img src="${this.staffQrImage}" alt="Staff QR" style="width:180px;height:180px;display:block;border-radius:6px;"/>
+            </div>
+            <p class="mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">Muestra este QR solo al staff</p>
+          </div>` : ""}
+
           <!-- Link generado — oculto como contraseña -->
           <div class="staff-link-box">
             <span class="material-symbols-outlined staff-link-icon">lock</span>
@@ -514,7 +526,10 @@ export default class QRVoting {
         disableBtn.disabled = true;
         disableBtn.textContent = "Disabling…";
         try {
-          if (this.staffQrId) await toggleQR(this.staffQrId);
+          if (this.staffQrId) {
+            localStorage.removeItem(`qr_staff_${this.staffQrId}`);
+            await toggleQR(this.staffQrId);
+          }
           this.staffQrLink  = null;
           this.staffQrId    = null;
           this.staffQrImage = null;
@@ -572,6 +587,11 @@ export default class QRVoting {
       this.staffQrLink  = data?.votePageUrl ?? data?.qrVote?.qr_code_url ?? null;
       this.staffQrImage = data?.qrImage ?? null;
       this.staffQrId    = data?.qrVote?.id ?? null;
+
+      // Cachear imagen para recuperarla si el admin recarga la página
+      if (this.staffQrId && this.staffQrImage) {
+        localStorage.setItem(`qr_staff_${this.staffQrId}`, this.staffQrImage);
+      }
 
       this.renderStaffQRSection();
     } catch (err) {
