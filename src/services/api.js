@@ -462,3 +462,7 @@ export async function searchProjectsSemantic(query, eventId = null, limit = 20) 
   if (eventId) url += `&eventId=${eventId}`;
   return apiFetch(url, { method: "GET" });
 }
+export async function auditVotesByEvent(eventId) {
+  const response = await apiFetch(`/qr-votes/event/${eventId}/audit`, { method: "GET" });
+  return response;
+}
