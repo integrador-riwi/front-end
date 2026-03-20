@@ -213,10 +213,17 @@ export async function getEventById(eventId) {
   return response.data
 }
 
-export async function submitVote(qr_vote_id, project_id, voter_token, podium = []) {
+export async function submitVote(qr_vote_id, project_id, voter_token, podium = [], identity = {}) {
   return apiFetch("/qr-votes/vote", {
     method: "POST",
-    body: { qr_vote_id, project_id, voter_token, podium },
+    body: {
+      qr_vote_id,
+      project_id,
+      voter_token,
+      podium,
+      voter_documento: identity.documento ?? null,
+      voter_nombre:    identity.nombre    ?? null,
+    },
   });
 }
 

@@ -1110,6 +1110,8 @@ export default class QRVoting {
               ${v.voter_role}
             </span>
           </td>
+          <td style="padding:8px 12px;color:#374151;font-size:.8rem;">${v.voter_documento ?? '—'}</td>
+          <td style="padding:8px 12px;color:#374151;font-size:.8rem;">${v.voter_nombre ?? '—'}</td>
           <td style="padding:8px 12px;color:#6b7280;font-family:monospace;font-size:.75rem;">${v.voter_ip ?? "—"}</td>
           <td style="padding:8px 12px;color:#6b7280;font-size:.75rem;">${v.voted_at ? new Date(v.voted_at).toLocaleString("es-CO") : "—"}</td>
           <td style="padding:8px 12px;">${verdictBadge(v.status)}</td>
@@ -1140,6 +1142,8 @@ export default class QRVoting {
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">#</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Project</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Role</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Cédula</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Nombre</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">IP</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Date</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Status</th>
