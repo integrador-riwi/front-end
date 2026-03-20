@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getEventRanking, calculateFinalists } from "../services/api-events.js";
-import { createQR, createStaffQR, getQR, getQRImage, toggleQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
+import { createQR, createStaffQR, getQR, getQRImage, getQRImageById, toggleQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -132,9 +132,20 @@ export default class QRVoting {
       if (activeStaffQr) {
         this.staffQrLink  = activeStaffQr.qr_code_url ?? null;
         this.staffQrId    = activeStaffQr.id ?? null;
-        // Recuperar imagen cacheada si existe
+        // Recuperar imagen cacheada, o pedirla al backend
         const staffCacheKey = `qr_staff_${this.staffQrId}`;
-        this.staffQrImage = localStorage.getItem(staffCacheKey) ?? null;
+        const cached = localStorage.getItem(staffCacheKey);
+        if (cached) {
+          this.staffQrImage = cached;
+        } else {
+          try {
+            const imgData = await getQRImageById(this.staffQrId);
+            this.staffQrImage = imgData?.qrImage ?? null;
+            if (this.staffQrImage) localStorage.setItem(staffCacheKey, this.staffQrImage);
+          } catch (e) {
+            console.error('Failed to load staff QR image:', e);
+          }
+        }
       }
 
       const qrImg = document.getElementById("qr");
