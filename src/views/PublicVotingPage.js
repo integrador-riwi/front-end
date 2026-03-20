@@ -688,7 +688,7 @@ export default class PublicVotingPage {
 
     // If voter not identified yet, show identity screen first
     this._loadSavedIdentity();
-    if (!this.voterIdentified) {
+    if (!this.isStaff && !this.voterIdentified) {
       container.innerHTML = this.buildIdentityScreen();
       this.attachIdentityHandlers(container);
       this._offLangChange = onLangChange(() => this.render(container));
