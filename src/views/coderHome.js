@@ -8,8 +8,8 @@ import {
   renderCoderTeam,
   loadProjectBrief,
   loadComments,
-  loadEvaluationPanel,
   loadMemberGrades,
+  loadEvaluationPanel,
   initDeliverables,
 } from "./coderTeam.js";
 import {
@@ -319,8 +319,8 @@ export default class CoderHome {
           setTimeout(() => {
             loadProjectBrief();
             if (projectId) loadComments(projectId, this.user);
-            if (projectId) initDeliverables(projectId, this);
             if (projectId) loadMemberGrades(projectId);
+            if (projectId) initDeliverables(projectId, this);
             if (
                 projectId &&
                 eventId &&
