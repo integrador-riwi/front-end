@@ -259,6 +259,24 @@ class App {
         saveUser(user);
         this.user = user;
       }
+
+      // Intentar restaurar la última ruta visitada (persistida en sessionStorage)
+      const savedRoute = sessionStorage.getItem("lastRoute");
+      if (savedRoute) {
+        try {
+          const { route, params } = JSON.parse(savedRoute);
+          // Verificar que el rol del usuario tiene acceso a esa ruta
+          const permission = ROUTE_PERMISSIONS[route];
+          const userRole = (me?.data ?? me)?.role;
+          if (permission && (permission === "PUBLIC" || (Array.isArray(permission) && permission.includes(userRole)))) {
+            this.navigate(route, params || {});
+            return;
+          }
+        } catch {
+          // Si hay error parseando, ignorar y usar home por defecto
+        }
+      }
+
       this.navigate(this.getHomeRoute());
     } catch (err) {
       // Si el token sigue en localStorage, el error fue transitorio (red, CORS, etc.)
@@ -342,6 +360,12 @@ class App {
       this.historyStack.push({ route: this.currentRoute, params: this.currentParams });
     }
 
+    // Persistir la ruta actual para restaurarla si el usuario recarga
+    // Solo guardar rutas privadas (no landing/login/vote/staffVote)
+    const publicRoutes = ["landing", "login", "vote", "staffVote", "not-found"];
+    if (!publicRoutes.includes(route)) {
+      sessionStorage.setItem("lastRoute", JSON.stringify({ route, params }));
+    }
 
     this._renderView(route, params);
   }
@@ -451,4 +475,5 @@ class App {
     this.currentView.render();
   }
 }
+
 new App();

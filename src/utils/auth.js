@@ -45,6 +45,7 @@ export function saveSession(token, refreshToken, user) {
 export function clearSession(router) {
   disconnectSocket();
   clearAuth();
+  sessionStorage.removeItem("lastRoute");
   if (router) {
     router.navigate("login");
   }
