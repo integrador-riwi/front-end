@@ -11,7 +11,7 @@ let _refreshQueue = [];
 
 function _processQueue(error, token = null) {
   _refreshQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve(token)
+      error ? reject(error) : resolve(token)
   );
   _refreshQueue = [];
 }
@@ -145,6 +145,18 @@ export async function getQR(id_event) {
   });
 }
 
+export async function getQRImage(id_event) {
+  return apiFetch(`/qr-votes/event/${id_event}/image`, {
+    method: "GET",
+  });
+}
+
+export async function toggleQR(qr_id) {
+  return apiFetch(`/qr-votes/${qr_id}/toggle`, {
+    method: "PATCH",
+  });
+}
+
 export async function getVotingProjects(id_event) {
   return apiFetch(`/qr-votes/vote/${id_event}/projects`, {
     method: "GET"})
@@ -201,10 +213,10 @@ export async function getEventById(eventId) {
   return response.data
 }
 
-export async function submitVote(qr_vote_id, project_id, voter_token) {
+export async function submitVote(qr_vote_id, project_id, voter_token, podium = []) {
   return apiFetch("/qr-votes/vote", {
     method: "POST",
-    body: { qr_vote_id, project_id, voter_token },
+    body: { qr_vote_id, project_id, voter_token, podium },
   });
 }
 

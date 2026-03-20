@@ -333,3 +333,75 @@
   color: #7b7fa8;
   line-height: 1.5;
 }
+/* ── Staff Link Box ── */
+.staff-link-box {
+  background: #f4f3ff;
+  border: 1px solid rgba(107,92,255,0.2);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.staff-link-box .staff-link-icon {
+  color: #6b5cff;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.staff-link-dots {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 3px;
+  color: #181e4b;
+  font-size: 1rem;
+  user-select: none;
+}
+
+.staff-link-copy-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(107,92,255,0.1);
+  color: #6b5cff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.staff-link-copy-btn:hover {
+  background: rgba(107,92,255,0.2);
+}
+
+.staff-link-copy-btn .material-symbols-outlined {
+  font-size: 0.95rem;
+}
+
+.staff-link-regen-btn {
+  width: 100%;
+  background: transparent;
+  color: #7b7fa8;
+  border: 1px solid rgba(107,92,255,0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.staff-link-regen-btn:hover {
+  background: rgba(107,92,255,0.05);
+  color: #6b5cff;
+}
