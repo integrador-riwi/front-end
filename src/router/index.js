@@ -199,7 +199,7 @@ class App {
     }
   }
 
-  init() {
+  async init() {
     const path = window.location.pathname;
 
     // Detect QR public voting route
@@ -222,9 +222,6 @@ class App {
       return;
     }
 
-    const user = getCurrentUser();
-    this.user = user;
-
     const params = new URLSearchParams(window.location.search);
     const githubSuccess = params.get("github");
     const githubError = params.get("error");
@@ -246,12 +243,28 @@ class App {
       return;
     }
 
+    // Sin token → landing directamente
     if (!isAuthenticated()) {
       this.navigate("landing");
       return;
     }
 
-    this.navigate(this.getHomeRoute());
+    // Hay token — verificar que sigue siendo válido
+    try {
+      const { getMe } = await import("../services/api.js");
+      const me = await getMe();
+      const user = me?.data ?? me;
+      if (user) {
+        const { saveUser } = await import("../utils/auth.js");
+        saveUser(user);
+        this.user = user;
+      }
+      this.navigate(this.getHomeRoute());
+    } catch {
+      // Token inválido y refresh también falló — apiFetch ya limpió el localStorage
+      // y redirigió a "/" pero por si acaso navegamos a landing
+      this.navigate("landing");
+    }
   }
 
   async checkUserTeam() {
