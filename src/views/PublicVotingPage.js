@@ -115,7 +115,7 @@ export default class PublicVotingPage {
                style="width:64px;height:64px;background:${color.bg};">
           </div>
           <h3 class="fw-bold mb-2" style="color:#1e1b4b;">${team.team_name}</h3>
-          <p class="text-secondary mb-4">${team.project_name || ""}</p>
+          <p class="text-secondary mb-4">${team.name || team.project_name || ""}</p>
           <button class="vote-btn btn w-100 fw-bold py-3 rounded-pill text-white"
                   style="background:#7c3aed;box-shadow:0 4px 14px rgba(124,58,237,0.3);"
                   data-team="${team.id_project}">

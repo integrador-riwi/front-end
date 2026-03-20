@@ -698,7 +698,7 @@ export default class QRVoting {
       const res = await getVoteResults(eventId);
       this.voteResults = res?.results ?? res ?? [];
       this.totalVotes = this.voteResults.reduce(
-          (sum, t) => sum + (t.votes ?? t.vote_count ?? 0),
+          (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
           0,
       );
     } catch (err) {
@@ -737,7 +737,7 @@ export default class QRVoting {
     }
 
     const sorted = [...filteredResults].sort(
-        (a, b) => (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0),
+        (a, b) => Number(b.total_votes ?? b.votes ?? b.vote_count ?? 0) - Number(a.total_votes ?? a.votes ?? a.vote_count ?? 0),
     );
 
     const accentColors = [
@@ -922,13 +922,13 @@ export default class QRVoting {
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;width:100%;max-width:780px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
         <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 Auditoría de Votos</h5>
+          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 Vote Audit</h5>
           <button id="close-audit-modal" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
         </div>
         <div id="audit-modal-body" style="overflow-y:auto;padding:24px;flex:1;">
           <div class="text-center py-4" style="color:#6b7280;">
             <div class="spinner-border spinner-border-sm me-2"></div>
-            Verificando firmas HMAC...
+            Verifying HMAC signatures...
           </div>
         </div>
       </div>
@@ -947,9 +947,9 @@ export default class QRVoting {
       const body = document.getElementById("audit-modal-body");
 
       const verdictBadge = (status) => {
-        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ VÁLIDO</span>`;
-        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ SIN FIRMA</span>`;
-        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ INVÁLIDO</span>`;
+        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ VALID</span>`;
+        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ NO SIGNATURE</span>`;
+        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ INVALID</span>`;
       };
 
       const invalidAlert = summary.invalid > 0
@@ -985,15 +985,15 @@ export default class QRVoting {
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
           <div style="background:#d1fae5;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#065f46;">${summary.valid}</div>
-            <div style="font-size:.8rem;color:#065f46;font-weight:600;">Válidos</div>
+            <div style="font-size:.8rem;color:#065f46;font-weight:600;">Valid</div>
           </div>
           <div style="background:#fef3c7;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#92400e;">${summary.no_hash}</div>
-            <div style="font-size:.8rem;color:#92400e;font-weight:600;">Sin firma</div>
+            <div style="font-size:.8rem;color:#92400e;font-weight:600;">No Signature</div>
           </div>
           <div style="background:#fee2e2;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#991b1b;">${summary.invalid}</div>
-            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">Inválidos</div>
+            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">Invalid</div>
           </div>
         </div>
         ${invalidAlert}
@@ -1003,22 +1003,22 @@ export default class QRVoting {
             <thead>
               <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">#</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Proyecto</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Rol</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Project</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Role</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">IP</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Fecha</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Estado</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Date</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Status</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          ${votes.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:24px 0;">No hay votos registrados.</p>' : ""}
+          ${votes.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:24px 0;">No votes registered.</p>' : ""}
         </div>
       `;
     } catch (err) {
       document.getElementById("audit-modal-body").innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:24px;">
-          Error al cargar la auditoría: ${err.message}
+          Error loading audit: ${err.message}
         </div>
       `;
     }
