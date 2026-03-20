@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getEventRanking, calculateFinalists } from "../services/api-events.js";
-import { createQR, createStaffQR, getQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
+import { createQR, createStaffQR, getQR, getQRImage, toggleQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -30,6 +30,7 @@ export default class QRVoting {
 
     this.staffQrLink = null;
     this.staffQrImage = null;
+    this.staffQrId = null;
 
     this.pollingInterval = null;
   }
@@ -117,14 +118,67 @@ export default class QRVoting {
   async loadExistingQR() {
     try {
       const eventId = getSelectedEvent();
-      const cached = localStorage.getItem(`qr_event_${eventId}`);
-      const qrSrc = cached || null;
+
+      // Always check backend for active QR — localStorage may be stale
+      const qrList = await getQR(eventId);
+      const activeQr = Array.isArray(qrList)
+          ? qrList.find(q => q.active && q.vote_type === "PUBLIC")
+          : null;
+
+      // Also load existing staff QR link if it exists
+      const activeStaffQr = Array.isArray(qrList)
+          ? qrList.find(q => q.vote_type === "STAFF" && q.staff_token)
+          : null;
+      if (activeStaffQr) {
+        this.staffQrLink = activeStaffQr.qr_code_url ?? null;
+        this.staffQrId   = activeStaffQr.id ?? null;
+      }
 
       const qrImg = document.getElementById("qr");
 
-      if (qrSrc) {
-        qrImg.src = qrSrc;
+      if (activeQr) {
+        // Use cached image if available, otherwise regenerate from QR URL
+        const cached = localStorage.getItem(`qr_event_${eventId}`);
+        let qrSrc = cached || null;
+
+        if (!qrSrc) {
+          // Regenerate QR image from backend (uses qrcode library)
+          try {
+            const imgData = await getQRImage(eventId);
+            qrSrc = imgData?.qrImage ?? null;
+            if (qrSrc) localStorage.setItem(`qr_event_${eventId}`, qrSrc);
+          } catch (e) {
+            console.error("Failed to regenerate QR image:", e);
+          }
+        }
+
+        if (qrSrc && qrImg) qrImg.src = qrSrc;
         this.qrActive = true;
+        this.finalistsApproved = true;
+
+        // Store expires_at so render() can fill the input after handleQRButton registers
+        this._activeQrExpiresAt = activeQr.expires_at ?? null;
+
+        // Extract finalist_ids from the active QR to populate this.finalists
+        const finalistIds = Array.isArray(activeQr.finalist_ids)
+            ? activeQr.finalist_ids
+            : (typeof activeQr.finalist_ids === "string"
+                ? JSON.parse(activeQr.finalist_ids || "[]")
+                : []);
+
+        this.finalistsCount = finalistIds.length || activeQr.top_n || this.finalistsCount;
+        // Map finalist_ids back to ranking teams
+        if (finalistIds.length > 0) {
+          this.finalists = finalistIds
+              .map(id => this.ranking.find(t => t.id_project === id || t.id_team === id))
+              .filter(Boolean);
+          // Fallback: if mapping fails, just take top N from ranking
+          if (this.finalists.length === 0) {
+            this.finalists = this.ranking.slice(0, this.finalistsCount);
+          }
+        } else {
+          this.finalists = this.ranking.slice(0, this.finalistsCount);
+        }
 
         const btn = document.getElementById("generate-qr-btn");
         if (btn) {
@@ -199,6 +253,38 @@ export default class QRVoting {
     btn.addEventListener("click", async () => {
       try {
         if (this.qrActive) {
+
+          // Validar que exista staff link generado
+          if (!this.staffQrLink) {
+            alert("You must generate the Staff Voting Link before disabling the QR.");
+            return;
+          }
+
+          // Validar que haya al menos 1 voto de staff
+          const totalStaffVotes = this.voteResults.reduce(
+              (sum, t) => sum + Number(t.staff_ballots ?? 0), 0
+          );
+          const uniqueStaffVoters = Math.round(totalStaffVotes / 3);
+          if (uniqueStaffVoters < 1) {
+            alert("At least 1 staff vote must be registered before disabling the QR.");
+            return;
+          }
+
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Disabling...`;
+
+          try {
+            // Desactivar el QR en la DB
+            const eventId = getSelectedEvent();
+            const qrList = await getQR(eventId);
+            const activeQr = Array.isArray(qrList)
+                ? qrList.find(q => q.active && q.vote_type === "PUBLIC")
+                : null;
+            if (activeQr) await toggleQR(activeQr.id);
+          } catch (err) {
+            console.error("Failed to disable QR in DB:", err);
+          }
+
           this.qrActive = false;
           qrImg.src = defaultLogo;
           localStorage.removeItem(`qr_event_${getSelectedEvent()}`);
@@ -206,6 +292,7 @@ export default class QRVoting {
           this.stopPolling();
           off("vote:new");
 
+          btn.disabled = false;
           btn.innerText = "Generate QR";
           btn.classList.remove("btn-primary-disabled");
           btn.classList.add("btn-primary-custom");
@@ -366,25 +453,24 @@ export default class QRVoting {
 
         ${this.staffQrLink ? `
           <!-- Link generado — oculto como contraseña -->
-          <div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-2"
-               style="background:#f4f3ff;border:1px solid rgba(107,92,255,0.2);">
-            <span class="material-symbols-outlined flex-shrink-0" style="color:#6b5cff;font-size:1rem;">lock</span>
-            <span class="flex-grow-1" style="font-size:1rem;color:#181e4b;letter-spacing:3px;user-select:none;">
-              ••••••••••••••••••••••••••••••
-            </span>
-            <button id="copy-staff-link-btn"
-                    class="btn btn-sm flex-shrink-0 fw-bold d-flex align-items-center gap-1"
-                    style="background:rgba(107,92,255,0.1);color:#6b5cff;border:none;border-radius:8px;font-size:0.78rem;padding:5px 12px;">
-              <span class="material-symbols-outlined" style="font-size:0.95rem;">content_copy</span>
-              Copy link
+          <div class="staff-link-box">
+            <span class="material-symbols-outlined staff-link-icon">lock</span>
+            <span class="staff-link-dots">••••••••••••••••••••••••</span>
+            <button id="copy-staff-link-btn" class="staff-link-copy-btn">
+              <span class="material-symbols-outlined">content_copy</span>
+              Copy
             </button>
           </div>
 
-          <button id="regenerate-staff-qr-btn"
-                  class="btn btn-sm w-100 fw-bold"
-                  style="background:transparent;color:#7b7fa8;border:1px solid rgba(107,92,255,0.2);border-radius:8px;font-size:0.8rem;padding:6px;">
-            Regenerate Link
-          </button>
+          <div class="d-flex gap-2">
+            <button id="regenerate-staff-qr-btn" class="staff-link-regen-btn" style="flex:1;">
+              Regenerate Link
+            </button>
+            <button id="disable-staff-qr-btn" class="staff-link-regen-btn"
+                    style="flex:1;color:#fe654f;border-color:rgba(254,101,79,0.25);">
+              Disable Link
+            </button>
+          </div>
 
         ` : `
           <!-- Sin link aún -->
@@ -418,6 +504,27 @@ export default class QRVoting {
     const regenBtn = document.getElementById("regenerate-staff-qr-btn");
     if (regenBtn) {
       regenBtn.addEventListener("click", () => this._generateStaffQR(regenBtn));
+    }
+
+    // Deshabilitar staff link
+    const disableBtn = document.getElementById("disable-staff-qr-btn");
+    if (disableBtn) {
+      disableBtn.addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to disable the staff voting link?")) return;
+        disableBtn.disabled = true;
+        disableBtn.textContent = "Disabling…";
+        try {
+          if (this.staffQrId) await toggleQR(this.staffQrId);
+          this.staffQrLink  = null;
+          this.staffQrId    = null;
+          this.staffQrImage = null;
+          this.renderStaffQRSection();
+        } catch (err) {
+          console.error("Failed to disable staff QR:", err);
+          disableBtn.disabled = false;
+          disableBtn.textContent = "Disable Link";
+        }
+      });
     }
 
     // Copiar link
@@ -464,6 +571,7 @@ export default class QRVoting {
 
       this.staffQrLink  = data?.votePageUrl ?? data?.qrVote?.qr_code_url ?? null;
       this.staffQrImage = data?.qrImage ?? null;
+      this.staffQrId    = data?.qrVote?.id ?? null;
 
       this.renderStaffQRSection();
     } catch (err) {
@@ -504,7 +612,7 @@ export default class QRVoting {
       try {
         const eventId = getSelectedEvent();
 
-      await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
+        await apiFetch(`/qr-votes/event/${eventId}/votes`, { method: 'DELETE' });
 
         // Clear localStorage QR cache
         localStorage.removeItem(`qr_event_${eventId}`);
@@ -646,9 +754,18 @@ export default class QRVoting {
     </div>
 
     <!-- Approve button -->
-    <div class="text-end mt-4">
-      <button class="btn btn-approve fw-bold px-4 py-2 rounded-3" id="approve-finalists-btn">
-        Approve Finalists
+    <div class="d-flex align-items-center justify-content-between mt-4 flex-wrap gap-2">
+      ${this.finalistsApproved ? `
+        <div class="d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+             style="background:rgba(90,204,164,0.1);border:1px solid rgba(90,204,164,0.3);">
+          <span class="material-symbols-outlined" style="color:#5acca4;font-size:1rem;">check_circle</span>
+          <span style="color:#059669;font-size:0.85rem;font-weight:700;">
+            ${this.finalists.length} finalist${this.finalists.length !== 1 ? "s" : ""} approved
+          </span>
+        </div>` : `<div></div>`}
+      <button class="btn btn-approve fw-bold px-4 py-2 rounded-3" id="approve-finalists-btn"
+              ${this.finalistsApproved ? "disabled" : ""}>
+        ${this.finalistsApproved ? "Finalists Approved" : "Approve Finalists"}
       </button>
     </div>
   `;
@@ -697,10 +814,12 @@ export default class QRVoting {
       const eventId = getSelectedEvent();
       const res = await getVoteResults(eventId);
       this.voteResults = res?.results ?? res ?? [];
-      this.totalVotes = this.voteResults.reduce(
-          (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
-          0,
-      );
+      // Count unique ballots cast (people who voted), not point totals
+      const totalPublic = this.voteResults.reduce((sum, t) => sum + Number(t.public_ballots ?? 0), 0);
+      const totalStaff  = this.voteResults.reduce((sum, t) => sum + Number(t.staff_ballots  ?? 0), 0);
+      // Each person votes once, so sum of ballots across all teams / 3 positions = unique voters
+      // Use the max public_ballots of any single team as proxy, or sum divided by 3
+      this.totalVotes = Math.round((totalPublic + totalStaff) / 3);
     } catch (err) {
       console.error("Failed to fetch vote results:", err);
       this.voteResults = [];
@@ -713,18 +832,26 @@ export default class QRVoting {
     const totalEl = document.getElementById("total-votes");
     if (!container) return;
 
-    const finalistIds = this.finalists.map((f) => f.id_project);
+    // When QR is active or finalists are approved, show all results from the event
+    // (the QR already scopes to the approved finalists on the backend)
+    const finalistIds = this.finalists.map((f) => f.id_project).filter(Boolean);
+    const filteredResults = (this.finalistsApproved && this.voteResults.length > 0)
+        ? this.voteResults  // show all — QR already filtered on backend
+        : finalistIds.length > 0
+            ? this.voteResults.filter((t) => finalistIds.includes(t.id_project ?? t.id))
+            : this.voteResults;
 
-    const filteredResults = this.voteResults.filter((t) =>
-        finalistIds.includes(t.id_project ?? t.id),
-    );
+    // Show unique voters count, not total points
+    const totalPublicBallots = filteredResults.reduce((sum, t) => sum + Number(t.public_ballots ?? 0), 0);
+    const totalStaffBallots  = filteredResults.reduce((sum, t) => sum + Number(t.staff_ballots  ?? 0), 0);
+    const uniqueVoters = Math.round((totalPublicBallots + totalStaffBallots) / 3);
+    if (totalEl) totalEl.textContent = uniqueVoters;
 
+    // Keep filteredTotal as points for bar percentage calculation
     const filteredTotal = filteredResults.reduce(
         (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
         0,
     );
-
-    if (totalEl) totalEl.textContent = filteredTotal;
 
     if (!filteredResults.length) {
       container.innerHTML = `
@@ -791,9 +918,7 @@ export default class QRVoting {
                 <span class="fw-bold text-truncate" style="color:#181e4b;font-size:0.85rem;">
                   ${team.team_name ?? ""}
                 </span>
-                <span class="fw-bold flex-shrink-0 ms-2" style="color:${accent};font-size:0.8rem;">
-                  ${votes} votes · ${percentage}%
-                </span>
+
               </div>
               <div class="rounded-pill overflow-hidden" style="height:6px;background:rgba(107,92,255,0.1);">
                 <div class="h-100 rounded-pill"
@@ -879,11 +1004,21 @@ export default class QRVoting {
     await this.handleQRButton();
     this.handleSubmitVotes();
     this.handleResetVotes();
-    this.updateQrButtonState();
     await this.loadExistingQR();
 
-    // Si ya hay un QR activo, los finalistas ya fueron aprobados en algún momento
-    if (this.qrActive) this.finalistsApproved = true;
+    // Fill expiration date input with the active QR's expiry (must be after handleQRButton)
+    if (this._activeQrExpiresAt) {
+      const expirationInput = document.getElementById("qr-expiration");
+      if (expirationInput) {
+        const dt = new Date(this._activeQrExpiresAt);
+        const pad = n => String(n).padStart(2, "0");
+        expirationInput.value = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      }
+    }
+
+    // Re-render ranking panel now that we know if QR is active + finalists approved
+    this.renderRankingPanel();
+    this.updateQrButtonState();
     this.renderStaffQRSection();
 
     // Wire up audit button from template
@@ -953,18 +1088,18 @@ export default class QRVoting {
       };
 
       const invalidAlert = summary.invalid > 0
-        ? `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:.875rem;">
+          ? `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:.875rem;">
              ⚠️ <strong>${summary.invalid} voto(s) con firma inválida detectados.</strong>
              Estos votos pudieron haber sido modificados o insertados directamente en la base de datos.
            </div>`
-        : "";
+          : "";
 
       const noHashAlert = summary.no_hash > 0
-        ? `<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
+          ? `<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
              ℹ️ <strong>${summary.no_hash} voto(s) sin firma HMAC.</strong>
              Fueron registrados antes de activar el sistema de auditoría.
            </div>`
-        : "";
+          : "";
 
       const rows = votes.map((v, i) => `
         <tr style="border-bottom:1px solid #f3f4f6;${v.status === "INVALID" ? "background:#fff5f5;" : ""}">

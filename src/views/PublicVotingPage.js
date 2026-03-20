@@ -68,7 +68,12 @@ export default class PublicVotingPage {
       const key = this.isStaff
           ? `voter_token_staff_${this.staffToken}`
           : `voter_token_${this.eventId}`;
-      await submitVote(qrVoteId, Number(first.id_project), localStorage.getItem(key));
+      // Build podium: [{project_id, position}] — pos1=3pts, pos2=2pts, pos3=1pt
+      const podium = this.podium
+          .map((team, i) => team ? { project_id: Number(team.id_project), position: i + 1 } : null)
+          .filter(Boolean);
+
+      await submitVote(qrVoteId, Number(first.id_project), localStorage.getItem(key), podium);
       const votedKey = this.isStaff ? `voted_staff_${this.staffToken}` : `voted_event_${this.eventId}`;
       localStorage.setItem(votedKey, "true");
       this.showSuccess(first.team_name);
@@ -95,6 +100,7 @@ export default class PublicVotingPage {
           </svg>
         </div>
         <h2 class="v-modal-title">¡Voto registrado!</h2>
+        <p class="v-modal-team">${teamName}</p>
         <p class="v-modal-sub">Gracias por participar. Serás redirigido en unos segundos.</p>
         <div class="v-modal-countdown">
           <div class="v-modal-bar"><div class="v-modal-bar-fill" id="v-countdown-bar"></div></div>
