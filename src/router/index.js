@@ -25,72 +25,12 @@ import Landing from "../views/Landing.js";
 import {
   i18nReady,
   t,
-  toggleLang,
   onLangChange,
-  getLang,
 } from "../utils/i18n.js";
 
 await i18nReady;
 
-// ── Floating language toggle (always visible, all views) ──────────────────────
-function mountLangToggle() {
-  const existing = document.getElementById("floatingLangBtn");
-  if (existing) existing.remove();
 
-  const btn = document.createElement("button");
-  btn.id = "floatingLangBtn";
-  btn.textContent = t("nav.langToggle");
-  btn.title = t("nav.langLabel");
-  btn.style.cssText = `
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    background: var(--color-primary, #6b5cff);
-    color: #fff;
-    border: none;
-    border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-    transition: opacity 0.2s;
-  `;
-  btn.addEventListener("mouseenter", () => {
-    if (!btn.disabled) btn.style.opacity = "0.85";
-  });
-  btn.addEventListener("mouseleave", () => {
-    if (!btn.disabled) btn.style.opacity = "1";
-  });
-  btn.addEventListener("click", async () => {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    btn.style.cursor = "not-allowed";
-    try {
-      await toggleLang();
-    } finally {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-      btn.style.cursor = "pointer";
-    }
-  });
-  document.body.appendChild(btn);
-}
-
-mountLangToggle();
-// Update only the button label on lang change — no full re-mount needed
-onLangChange(() => {
-  const btn = document.getElementById("floatingLangBtn");
-  if (btn) {
-    btn.textContent = t("nav.langToggle");
-    btn.title = t("nav.langLabel");
-  } else {
-    mountLangToggle();
-  }
-});
 
 if (isAuthenticated()) {
   initSocket();
