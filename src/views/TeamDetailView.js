@@ -8,6 +8,7 @@ import { apiFetch } from "../services/api.js";
 import {
   renderCoderTeam,
   loadComments,
+  loadMemberGrades,
   initDeliverables,
 } from "./coderTeam.js";
 
@@ -79,6 +80,7 @@ export default class TeamDetailView {
       setTimeout(() => {
         if (projectId) {
           loadComments(projectId, this.user);
+          loadMemberGrades(projectId, { members: res.data.members });
           initDeliverables(projectId);
         }
       }, 0);

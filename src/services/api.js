@@ -6,6 +6,16 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
+let _isRefreshing = false;
+let _refreshQueue = [];
+
+function _processQueue(error, token = null) {
+  _refreshQueue.forEach(({ resolve, reject }) =>
+      error ? reject(error) : resolve(token)
+  );
+  _refreshQueue = [];
+}
+
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
@@ -25,17 +35,69 @@ export async function apiFetch(endpoint, options = {}) {
     body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
   });
 
-  // 204 No Content — no hay body que parsear
-  if (response.status === 204) {
-    return null;
+  if (response.status === 204) return null;
+
+  // 401 — intentar renovar con el refreshToken de localStorage
+  if (response.status === 401 && endpoint !== "/auth/refresh" && endpoint !== "/auth/login") {
+    if (_isRefreshing) {
+      return new Promise((resolve, reject) => {
+        _refreshQueue.push({ resolve, reject });
+      }).then((newToken) => {
+        return apiFetch(endpoint, {
+          ...options,
+          headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
+        });
+      });
+    }
+
+    _isRefreshing = true;
+
+    try {
+      const { getRefreshToken, setToken, setRefreshToken, clearAuth } = await import("../utils/auth.js");
+      const refreshToken = getRefreshToken();
+
+      if (!refreshToken) throw new Error("No refresh token");
+
+      const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!refreshRes.ok) throw new Error("Refresh failed");
+
+      const refreshData = await refreshRes.json();
+      const newToken = refreshData?.data?.token ?? refreshData?.token;
+      const newRefreshToken = refreshData?.data?.refreshToken ?? refreshData?.refreshToken;
+
+      if (!newToken) throw new Error("No token in refresh response");
+
+      setToken(newToken);
+      if (newRefreshToken) setRefreshToken(newRefreshToken);
+
+      _processQueue(null, newToken);
+
+      // Reintentar la request original con el nuevo token
+      return apiFetch(endpoint, {
+        ...options,
+        headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
+      });
+
+    } catch (refreshError) {
+      _processQueue(refreshError);
+      const { clearAuth } = await import("../utils/auth.js");
+      clearAuth();
+      window.location.href = "/";
+      throw refreshError;
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   const data = await response.json();
 
   if (!response.ok) {
-    const error = new Error(
-        data.message || data.error || "Error en la petición",
-    );
+    const error = new Error(data.message || data.error || "Error en la petición");
     error.response = { data, status: response.status };
     throw error;
   }
@@ -54,7 +116,26 @@ export async function loginUser(email, password) {
 export async function createQR(id_event, expires_at, finalists) {
   return apiFetch("/qr-votes", {
     method: "POST",
-    body: { id_event, expires_at, top_n: finalists.length },
+    body: {
+      id_event,
+      expires_at,
+      top_n: finalists.length,
+      finalist_ids: finalists.map((f) => f.id_project).filter(Boolean),
+      vote_type: "PUBLIC",
+    },
+  });
+}
+
+export async function createStaffQR(id_event, expires_at, finalists) {
+  return apiFetch("/qr-votes", {
+    method: "POST",
+    body: {
+      id_event,
+      expires_at,
+      top_n: finalists.length,
+      finalist_ids: finalists.map((f) => f.id_project).filter(Boolean),
+      vote_type: "STAFF",
+    },
   });
 }
 
@@ -64,8 +145,25 @@ export async function getQR(id_event) {
   });
 }
 
+export async function getQRImage(id_event) {
+  return apiFetch(`/qr-votes/event/${id_event}/image`, {
+    method: "GET",
+  });
+}
+
+export async function toggleQR(qr_id) {
+  return apiFetch(`/qr-votes/${qr_id}/toggle`, {
+    method: "PATCH",
+  });
+}
+
 export async function getVotingProjects(id_event) {
   return apiFetch(`/qr-votes/vote/${id_event}/projects`, {
+    method: "GET"})
+}
+
+export async function getStaffVotingProjects(staffToken) {
+  return apiFetch(`/qr-votes/vote/staff/${staffToken}/projects`, {
     method: "GET"})
 }
 
@@ -115,10 +213,10 @@ export async function getEventById(eventId) {
   return response.data
 }
 
-export async function submitVote(qr_vote_id,project_id) {
+export async function submitVote(qr_vote_id, project_id, voter_token, podium = []) {
   return apiFetch("/qr-votes/vote", {
     method: "POST",
-    body: { qr_vote_id, project_id },
+    body: { qr_vote_id, project_id, voter_token, podium },
   });
 }
 
@@ -375,4 +473,8 @@ export async function searchProjectsSemantic(query, eventId = null, limit = 20) 
   let url = `/projects/search?q=${encodeURIComponent(query)}&limit=${limit}`;
   if (eventId) url += `&eventId=${eventId}`;
   return apiFetch(url, { method: "GET" });
+}
+export async function auditVotesByEvent(eventId) {
+  const response = await apiFetch(`/qr-votes/event/${eventId}/audit`, { method: "GET" });
+  return response;
 }

@@ -3,12 +3,12 @@ import { uploadToCloudinary } from "../services/upload.js";
 
 
 export function renderCoderTeam({
-                                  user,
-                                  team,
-                                  isLeader = false,
-                                  isTL = false,
-                                  selectedEvent = null,
-                                }) {
+  user,
+  team,
+  isLeader = false,
+  isTL = false,
+  selectedEvent = null,
+}) {
   const { name: teamName, members = [], project = null } = team;
 
   const grade = project?.grade ?? null;
@@ -18,13 +18,13 @@ export function renderCoderTeam({
   const isSubmitted = !!project?.submitted_at;
 
   const deliverables = project
-      ? {
-        video_url: project.video_url ?? null,
-        preview_photo_url: project.preview_photo_url ?? null,
-        presentation_url: project.presentation_url ?? null,
-        deploy_url: project.deploy_url ?? null,
-      }
-      : null;
+    ? {
+      video_url: project.video_url ?? null,
+      preview_photo_url: project.preview_photo_url ?? null,
+      presentation_url: project.presentation_url ?? null,
+      deploy_url: project.deploy_url ?? null,
+    }
+    : null;
 
   const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
@@ -57,7 +57,7 @@ export function renderCoderTeam({
                         View Repo
                        </a>`
       : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
-  }
+    }
               </div>
 
               <div class="d-flex flex-column gap-1">
@@ -66,7 +66,7 @@ export function renderCoderTeam({
                   ${members
       .slice(0, 3)
       .map(
-          (m) => `
+        (m) => `
                     <div class="ct-mini-avatar">${m.name.charAt(0)}</div>
                   `,
       )
@@ -74,7 +74,7 @@ export function renderCoderTeam({
                   ${members.length > 3
       ? `<div class="ct-mini-avatar ct-mini-more">+${members.length - 3}</div>`
       : ""
-  }
+    }
                 </div>
               </div>
 
@@ -133,7 +133,7 @@ export function renderCoderTeam({
               </div>
             `
       : canEdit
-          ? `
+        ? `
               <button id="submitProjectBtn"
                 class="btn w-100 mt-3"
                 style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
@@ -141,8 +141,8 @@ export function renderCoderTeam({
                 Submit Project
               </button>
             `
-          : ""
-  }
+        : ""
+    }
           </div>
 
 
@@ -160,7 +160,7 @@ export function renderCoderTeam({
               ${user?.github_avatar_url
       ? `<img src="${user.github_avatar_url}" alt="${user.name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
       : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
-  }
+    }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
                         placeholder="Share your thoughts..."></textarea>
             </div>
@@ -170,6 +170,7 @@ export function renderCoderTeam({
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
           </div>
+
             <!-- TL Evaluation Panel -->
             <div class="bg-white rounded-4 p-4 ct-card-shadow d-none" id="tl-evaluation-panel">
             <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3" style="border-color: var(--border) !important;">
@@ -194,7 +195,7 @@ export function renderCoderTeam({
 
         <!-- ══ RIGHT COLUMN ══ -->
         <div class="col-12 col-lg-4 coderteam-right-col d-flex flex-column gap-4 team-details">
-          <div class="bg-white rounded-4 p-4 ct-card-shadow team-details d-flex flex-column">
+          <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column" style="max-height:88vh;overflow-y:auto;">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
                 <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
@@ -209,7 +210,7 @@ export function renderCoderTeam({
                 </button>
                 `
       : ""
-  }
+    }
             </div>
 
             <h2 class="ct-section-title mb-3">Project Team</h2>
@@ -223,8 +224,8 @@ export function renderCoderTeam({
                     onmouseover="this.style.background='rgba(107, 92, 255, 0.05)'"
                     onmouseout="this.style.background='transparent'">
                   ${m.github_avatar_url
-              ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-              : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
+            ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="ct-avatar-md flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+            : `<div class="ct-avatar-md ct-avatar-color-${i % 4} flex-shrink-0">${m.name.charAt(0)}</div>`
           }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0 fw-bold">${m.name}</p>
@@ -251,7 +252,7 @@ export function renderCoderTeam({
             </button>
             `
       : ""
-  }
+    }
 
             ${!isSubmitted && !isLeader
       ? `
@@ -267,15 +268,12 @@ export function renderCoderTeam({
             </button>
             `
       : ""
-  }
+    }
           </div>
 
-          ${isTL
-      ? `
-          
-          `
-      : ""
-  }
+          <!-- Consolidated Member Grades (moved to sidebar) -->
+          <div id="member-grades-section"></div>
+
         </div>
 
       </div>
@@ -292,7 +290,7 @@ function _getVideoEmbed(url) {
 
   // YouTube
   const ytMatch = url.match(
-      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
   );
   if (ytMatch) {
     return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}` };
@@ -419,7 +417,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
     <div class="d-flex flex-column gap-2">
       ${items
       .map(
-          (item) => `
+        (item) => `
         <div class="d-flex flex-column rounded-3 ct-deliverable-item ${item.url ? "ct-deliverable-done" : "ct-deliverable-pending"}"
              data-field="${item.key}">
 
@@ -435,14 +433,14 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               <div class="overflow-hidden">
                 <span class="ct-del-label d-block text-truncate">${item.label}</span>
                 ${item.url && item.key === "repo_url"
-              ? `
+            ? `
                   <a href="${item.url}" target="_blank" rel="noopener"
                      class="ct-del-status ct-status-done text-truncate d-block"
                      style="max-width:180px; font-size:0.75rem;">
                     ${item.url}
                   </a>
                 `
-              : `
+            : `
                   <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
                     ${item.url ? "Submitted" : "Pending"}
                   </span>
@@ -454,10 +452,10 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             <!-- Right: actions -->
             <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
               ${item.url
-              ? `
+            ? `
                 <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
                 ${canEdit && item.key !== "repo_url"
-                  ? `
+              ? `
                   <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -465,12 +463,12 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                     </svg>
                   </button>
                 `
-                  : ""
-              }
+              : ""
+            }
               `
-              : canEdit
-                  ? _renderUploadControl(item)
-                  : ""
+            : canEdit
+              ? _renderUploadControl(item)
+              : ""
           }
 
               <!-- Edit row hidden by default (leader only, not shown for repo) -->
@@ -546,7 +544,7 @@ function _renderUploadControl(item) {
   // Default: URL input
   return `
     <div class="ct-edit-input-group">
-      <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+      <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
       <div class="ct-edit-actions">
         <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}">
           <i class="bi bi-send-fill"></i>
@@ -652,8 +650,8 @@ function _renderReply(reply, currentUserId) {
   const initial = reply.author_name?.charAt(0)?.toUpperCase() ?? "?";
   const time = _formatCommentTime(reply.creationdate);
   const avatarHtml = reply.author_avatar
-      ? `<img src="${reply.author_avatar}" alt="${reply.author_name}" class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
-      : `<div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>`;
+    ? `<img src="${reply.author_avatar}" alt="${reply.author_name}" class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
+    : `<div class="ct-avatar-sm flex-shrink-0" style="width:28px;height:28px;font-size:0.7rem;">${initial}</div>`;
   return `
     <div class="d-flex gap-2 ct-comment ct-reply" data-comment-id="${reply.id_comment}">
       ${avatarHtml}
@@ -669,7 +667,7 @@ function _renderReply(reply, currentUserId) {
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
       : ""
-  }
+    }
         </div>
         <p class="ct-comment-text mb-0">${reply.comment}</p>
       </div>
@@ -683,8 +681,8 @@ function _renderComment(comment, currentUserId) {
   const time = _formatCommentTime(comment.creationdate);
   const replies = comment.replies ?? [];
   const avatarHtml = comment.author_avatar
-      ? `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
-      : `<div class="ct-avatar-sm flex-shrink-0">${initial}</div>`;
+    ? `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="ct-avatar-sm flex-shrink-0" style="border-radius:50%;object-fit:cover;">`
+    : `<div class="ct-avatar-sm flex-shrink-0">${initial}</div>`;
 
   return `
     <div class="ct-comment-thread" data-comment-id="${comment.id_comment}">
@@ -707,7 +705,7 @@ function _renderComment(comment, currentUserId) {
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
       : ""
-  }
+    }
             </div>
           </div>
           <p class="ct-comment-text mb-0">${comment.comment}</p>
@@ -734,7 +732,7 @@ function _renderComment(comment, currentUserId) {
             </div>
           `
       : ""
-  }
+    }
         </div>
       </div>
     </div>
@@ -779,12 +777,12 @@ function formatDate(dateStr) {
   if (!dateStr || dateStr === "TBD") return "TBD";
   const d = new Date(dateStr);
   return isNaN(d.getTime())
-      ? dateStr
-      : d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
+    ? dateStr
+    : d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
 }
 
 
@@ -800,7 +798,7 @@ export async function loadComments(projectId, user) {
   const currentUserId = user?.id_user ?? null;
 
   const { getComments, postComment, deleteComment } =
-      await import("../services/api.js");
+    await import("../services/api.js");
 
   function renderAll(comments) {
     if (comments.length === 0) {
@@ -808,8 +806,8 @@ export async function loadComments(projectId, user) {
       return;
     }
     list.innerHTML = comments
-        .map((c) => _renderComment(c, currentUserId))
-        .join("");
+      .map((c) => _renderComment(c, currentUserId))
+      .join("");
     attachListHandlers();
   }
 
@@ -956,6 +954,264 @@ export async function loadProjectBrief() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Member Grades Panel
+// ─────────────────────────────────────────────────────────────
+
+export async function loadMemberGrades(projectId, context = {}) {
+  const container = document.getElementById("member-grades-section");
+  if (!container) return;
+
+  const { members = [], rubrics = [], existingEvals = [] } = context;
+
+  const AREA_META = {
+    DEVELOPMENT: { label: "Dev", short: "DEV", icon: "code", color: "var(--mint)", barClass: "mg-bar-dev" },
+    SOFT_SKILLS: { label: "Soft Skills", short: "SOFT", icon: "psychology", color: "var(--coral)", barClass: "mg-bar-soft" },
+    ENGLISH: { label: "English", short: "ENG", icon: "language", color: "var(--gold)", barClass: "mg-bar-eng" },
+  };
+  const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
+
+  try {
+    const { apiFetch } = await import("../services/api.js");
+    const res = await apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" }).catch(() => null);
+    let results = res?.data ?? res ?? null;
+
+    let isPending = false;
+    let isPartial = false;
+
+    if (!Array.isArray(results) || results.length === 0) {
+      if (members.length > 0) {
+        isPending = true;
+        results = members.filter(m => m.id_user).map(m => ({
+          user_name: m.name,
+          github_avatar_url: m.github_avatar_url,
+          id_user: m.id_user,
+          final_score: 0,
+          area_scores: []
+        }));
+      } else {
+        container.innerHTML = "";
+        return;
+      }
+    } else {
+       // Check if results are partial (missing final_score globally)
+       const hasGlobal = results.some(r => r.final_score != null);
+       const hasAnyArea = results.some(r => Array.isArray(r.area_scores) && r.area_scores.length > 0);
+
+       if (!hasGlobal) {
+         if (hasAnyArea) {
+           isPartial = true;
+           results = results.map(r => {
+             const areaScores = Array.isArray(r.area_scores) ? r.area_scores.filter(a => a.final_score != null) : [];
+             const sum = areaScores.reduce((acc, a) => acc + (parseFloat(a.final_score) || 0), 0);
+             const avg = areaScores.length > 0 ? sum / areaScores.length : 0;
+             return { ...r, final_score: avg, isPartial: true };
+           });
+         } else {
+           isPending = true;
+           // Keep placeholder results from members list if possible
+           if (results.length === 0 && members.length > 0) {
+              results = members.filter(m => m.id_user).map(m => ({
+                user_name: m.name, github_avatar_url: m.github_avatar_url, id_user: m.id_user, final_score: 0, area_scores: []
+              }));
+           }
+         }
+       }
+    }
+
+    // Safeguard: Hide sidebar ONLY if interactive rubrics are visible (active evaluation)
+    const rGrid = document.querySelector(".mg-rubrics-grid");
+    if (rGrid && rGrid.offsetParent !== null) {
+      container.innerHTML = "";
+      return;
+    }
+
+    // Final check: Calculate project-wide grade from individual member global scores
+
+    // Project grade calculation (if not pending)
+    const projectGrade = isPending ? 0 : results.reduce((acc, r) => acc + (parseFloat(r.final_score) || 0), 0) / results.length;
+
+    // Compute grade tier — uses CSS variables to stay palette-loyal
+    const getTier = (g) => {
+      if (g >= 90) return { label: "Excellent", colorVar: "var(--mint)", bg: "rgba(90,204,164,0.12)", border: "rgba(90,204,164,0.3)", chipClass: "ct-grade-chip ct-grade-excellent", barSuf: "ct-grade-excellent" };
+      if (g >= 75) return { label: "Good", colorVar: "var(--accent)", bg: "rgba(107,92,255,0.10)", border: "rgba(107,92,255,0.28)", chipClass: "ct-grade-chip ct-grade-good", barSuf: "ct-grade-good" };
+      if (g >= 60) return { label: "Average", colorVar: "var(--gold)", bg: "rgba(230,202,82,0.12)", border: "rgba(230,202,82,0.3)", chipClass: "ct-grade-chip ct-grade-average", barSuf: "ct-grade-average" };
+      return { label: "Below Avg", colorVar: "var(--coral)", bg: "rgba(254,101,79,0.12)", border: "rgba(254,101,79,0.3)", chipClass: "ct-grade-chip ct-grade-low", barSuf: "ct-grade-low" };
+    };
+
+    const projTier = getTier(projectGrade);
+
+    // Build members HTML
+    const membersHtml = results.map((r, idx) => {
+      const areaScores = Array.isArray(r.area_scores) ? r.area_scores : [];
+      const globalScore = parseFloat(r.final_score) || 0;
+      const memberTier = getTier(globalScore);
+      const userId = r.id_user || r.evaluated_user_id;
+      const memberId = `mg-member-${userId || idx}`;
+
+      const avatarHtml = r.github_avatar_url
+        ? `<img src="${r.github_avatar_url}" alt="${r.user_name}" class="mg-avatar" style="border:2px solid ${memberTier.border};">`
+        : `<div class="mg-avatar mg-avatar-fallback" style="background:${memberTier.bg};color:${memberTier.colorVar};border:2px solid ${memberTier.border};">${r.user_name?.charAt(0)?.toUpperCase() ?? "?"}</div>`;
+
+      // Per-area score rows (shown when member is clicked)
+      const areaRowsHtml = AREAS.map(area => {
+        const meta = AREA_META[area];
+        const entry = areaScores.find(a => a.area === area);
+        const score = entry ? parseFloat(entry.final_score) : null;
+        const pct = score != null ? Math.min(100, Math.round(score)) : null;
+        const at = score != null ? getTier(score) : null;
+
+        const feedbackList = Array.isArray(entry?.feedbacks)
+          ? entry.feedbacks.filter(Boolean)
+          : entry?.feedback ? [entry.feedback] : [];
+
+        const feedbackHtml = feedbackList.length > 0
+          ? `<div class="mg-feedbacks">${feedbackList.map(fb => `<p class="mg-feedback-text">"${fb}"</p>`).join("")}</div>`
+          : "";
+
+        const delay = idx * 0.1;
+        return `
+          <div class="mg-area-row" style="animation-delay: ${delay}s; opacity: ${isPending ? 0.5 : 1};">
+            <div class="mg-area-header">
+              <div class="mg-area-pills">
+                <div class="mg-area-icon-wrapper" style="background:color-mix(in srgb, ${meta.color}, transparent 85%);">
+                  <span class="material-icons-round mg-area-icon" style="color:${meta.color};">${meta.icon}</span>
+                </div>
+                <span class="mg-area-label" style="color:var(--navy);">${meta.short}</span>
+              </div>
+              <div class="mg-area-score-badge" style="background:color-mix(in srgb, ${meta.color}, transparent 85%); color:${meta.color};">
+                ${isPending ? "—" : (pct != null ? `${pct}` : "—")}
+              </div>
+            </div>
+            <div class="mg-bar-container">
+              <div class="mg-bar-track" style="background:color-mix(in srgb, ${meta.color}, transparent 90%);">
+                <div class="mg-bar-fill" style="width:${isPending ? 0 : (pct ?? 0)}%; background:linear-gradient(90deg, ${meta.color}, color-mix(in srgb, ${meta.color}, black 15%));"></div>
+              </div>
+            </div>
+            ${feedbackHtml}
+          </div>`;
+      }).join("");
+
+      return `
+        <div class="mg-member-row" data-target="${memberId}">
+          <div class="mg-member-header"
+               onmouseover="this.parentElement.style.borderColor='${memberTier.border}';this.parentElement.style.boxShadow='0 4px 18px ${memberTier.bg}'"
+               onmouseout="this.parentElement.style.borderColor='var(--border)';this.parentElement.style.boxShadow='none'">
+            ${avatarHtml}
+            <div class="mg-member-info">
+              <div class="mg-member-name">${r.user_name}</div>
+            </div>
+            <div class="mg-score-badge">
+              <span class="mg-score-value" style="color:${isPending ? 'var(--text-dim)' : memberTier.colorVar};">
+                ${isPending ? "—" : Math.round(globalScore)}
+              </span>
+              <span class="mg-score-unit">pts</span>
+            </div>
+            ${isPending ? '' : '<span class="material-icons-round mg-chevron">expand_more</span>'}
+          </div>
+          <div id="${memberId}" class="mg-expand-panel" style="display:none;">
+            ${isPending ? '' : areaRowsHtml}
+          </div>
+        </div>`;
+    }).join("");
+
+    container.innerHTML = `
+      <div class="mg-wrapper">
+        <div class="ct-hero-card p-4 mb-3" style="border-radius:20px; ${isPending ? 'background: linear-gradient(135deg, #7b7fa8, #181e4b);' : ''}">
+          <div style="position:relative;z-index:2;">
+            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? 'Fase de Evaluación' : (isPartial ? 'Nota Acumulada' : 'Rendimiento Global')}</div>
+            <div class="mg-hero-score-row">
+              <span class="mg-hero-score">${isPending ? 'En Progreso' : projectGrade.toFixed(1)}</span>
+              ${isPending ? '' : '<span class="mg-hero-denom">/100</span>'}
+            </div>
+            ${isPending ? `
+              <div class="mt-3 p-2 rounded-3" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);">
+                <div class="d-flex align-items-center gap-2 small text-white">
+                  <span class="material-icons-round" style="font-size:1rem;">info</span>
+                  <span>Esperando evaluaciones del equipo...</span>
+                </div>
+              </div>
+            ` : `
+              <div class="mg-hero-track mt-3">
+                <div class="ct-grade-bar ${projTier.barSuf} mg-hero-fill" style="width:${Math.min(100, projectGrade)}%;"></div>
+              </div>
+            `}
+            <div class="ct-stat-label mt-2" style="color: rgba(255,255,255,0.6);">${results.length} participant${results.length !== 1 ? "s" : ""}</div>
+          </div>
+        </div>
+        <div class="mg-members-section">
+          <div class="ct-section-title mb-2 px-1">Team Performance</div>
+          <div id="mg-members-list">${membersHtml}</div>
+        </div>
+      </div>
+      <style>
+        .mg-wrapper { display:flex; flex-direction:column; }
+        .mg-hero-score-row { display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+        .mg-hero-score { font-size:2.2rem; font-weight:900; color:#fff; letter-spacing:-0.04em; font-family:var(--main-font); line-height:1; }
+        .mg-hero-denom { font-size:1rem; font-weight:600; color:rgba(255,255,255,0.45); }
+        .mg-hero-track { height:5px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
+        .mg-hero-fill  { height:100%; border-radius:99px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
+        .mg-members-section { display:flex; flex-direction:column; }
+        .mg-member-row { cursor:pointer; border-radius:14px; border:1px solid var(--border); background:var(--bg-panel); transition:border-color 0.2s,box-shadow 0.2s; margin-bottom:8px; overflow:hidden; }
+        .mg-member-header { display:flex; align-items:center; gap:12px; padding:12px 14px; }
+        .mg-avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+        .mg-avatar-fallback { display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; }
+        .mg-member-info { flex:1; min-width:0; }
+        .mg-member-name { font-size:0.9rem; font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .mg-tier-chip { margin-top:3px; display:inline-block; }
+        .mg-score-badge { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; }
+        .mg-score-value { font-size:1.15rem; font-weight:900; line-height:1; font-family:var(--main-font); }
+        .mg-score-unit  { font-size:0.62rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; }
+        .mg-chevron { font-size:1.1rem; color:var(--text-muted); transition:transform 0.25s ease; flex-shrink:0; }
+        .mg-chevron.open { transform:rotate(180deg); }
+        .mg-expand-panel { padding:0 14px 14px; display:flex; flex-direction:column; gap:12px; animation:mg-fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) both; }
+        .mg-area-row { 
+          display:flex; flex-direction:column; gap:12px; padding:12px; border-radius:14px; 
+          background:rgba(255,255,255,0.4); border:1px solid rgba(0,0,0,0.03); 
+          transition: all 0.25s ease; animation: mg-slide-up 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+        .mg-area-row:hover { background:rgba(255,255,255,0.7); transform:translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.08); }
+        .mg-area-header { display:flex; align-items:center; justify-content:space-between; }
+        .mg-area-pills { display:flex; align-items:center; gap:10px; }
+        .mg-area-icon-wrapper { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+        .mg-area-icon { font-size:1.05rem !important; }
+        .mg-area-label { font-size:0.78rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; }
+        .mg-area-score-badge { padding:4px 10px; border-radius:8px; font-size:0.8rem; font-weight:900; font-family:var(--main-font); letter-spacing:-0.01em; }
+        .mg-bar-container { position:relative; padding-top:2px; }
+        .mg-bar-track { height:8px; border-radius:99px; overflow:hidden; }
+        .mg-bar-fill { height:100%; border-radius:99px; transition:width 1.2s cubic-bezier(0.22, 1, 0.36, 1); }
+        .mg-feedbacks { display:flex; flex-direction:column; gap:6px; margin-top:4px; padding-left:4px; }
+        .mg-feedback-text { 
+           font-size:0.74rem; color:var(--text-muted); font-style:italic; line-height:1.5; margin:0; 
+           padding:6px 12px; background:rgba(255,255,255,0.5); border-left:2px solid var(--border); border-radius:0 8px 8px 0;
+        }
+        @keyframes mg-fade-in { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes mg-slide-up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .mg-area-icon-wrapper { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+      </style>
+    `;
+
+    // Accordion toggle
+    container.querySelectorAll(".mg-member-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const targetId = row.dataset.target;
+        const panel = document.getElementById(targetId);
+        const chevron = row.querySelector(".mg-chevron");
+        if (!panel) return;
+        const isOpen = panel.style.display !== "none";
+        panel.style.display = isOpen ? "none" : "flex";
+        if (chevron) chevron.classList.toggle("open", !isOpen);
+      });
+    });
+
+    // Wire sidebar clicks to these rows
+    attachMemberClickHandlers();
+
+  } catch (err) {
+    console.warn("Grades not available yet:", err?.message);
+  }
+}
+
 function _renderMarkdown(md) {
   let h = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -974,7 +1230,7 @@ function _renderMarkdown(md) {
   h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
   h = h.replace(/(<li>.*?<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>");
   h = h.replace(/^(?!<[a-zA-Z\/])(.+)$/gm, (line) =>
-      line.trim() ? "<p>" + line + "</p>" : "",
+    line.trim() ? "<p>" + line + "</p>" : "",
   );
 
   return h;
@@ -1015,12 +1271,13 @@ export async function loadEvaluationPanel({
   let evalStatus = null;
   try {
     evalStatus = await getProjectEvalStatus(projectId);
-  } catch (_) {}
+  } catch (_) { }
 
-  const evalsClosed    = evalStatus?.evaluations_closed ?? false;
-  const areaCapped     = evalStatus?.area_closed ?? false;
+  const evalsClosed = evalStatus?.evaluations_closed ?? false;
+  const areaCapped = evalStatus?.area_closed ?? false;
   const alreadySubmitted = evalStatus?.already_submitted ?? false;
 
+  // Evals globally closed, and this TL didn't submit yet → show lock
   if (evalsClosed && !alreadySubmitted) {
     container.innerHTML = `
       <div class="d-flex align-items-center gap-3 p-4 rounded-3 border" style="background:#fff5f5;border-color:#fca5a5!important;">
@@ -1034,10 +1291,11 @@ export async function loadEvaluationPanel({
     return;
   }
 
+  // Area already has enough evaluators and this TL hasn't submitted → show warning
   if (areaCapped && !alreadySubmitted) {
-    const max   = evalStatus?.max_evaluators ?? 3;
+    const max = evalStatus?.max_evaluators ?? 3;
     const count = evalStatus?.evaluator_count ?? max;
-    const area  = evalStatus?.area ?? "";
+    const area = evalStatus?.area ?? "";
     container.innerHTML = `
       <div class="d-flex align-items-center gap-3 p-4 rounded-3 border" style="background:#fffbeb;border-color:#fcd34d!important;">
         <span class="material-icons-round" style="color:#d97706;font-size:2rem;">group_off</span>
@@ -1049,6 +1307,9 @@ export async function loadEvaluationPanel({
     submitBtn.classList.add("d-none");
     return;
   }
+
+  // rubrics and existingEvals will be fetched below to populate the sidebar grades if finished
+
 
   let rubrics = [];
   let existingEvals = [];
@@ -1080,61 +1341,56 @@ export async function loadEvaluationPanel({
 
   const evaluableMembers = members.filter((m) => m.id_user);
 
-  // Check if all evaluable members are evaluated for all rubrics in this TL's area
-  const requiredEvalsCount = evaluableMembers.length * rubrics.length;
-  const isFullyEvaluated = requiredEvalsCount > 0 && existingEvals.length >= requiredEvalsCount;
+  // Check if every evaluable member has an evaluation for every rubric in this area
+  const isFullyEvaluated = rubrics.length > 0 && evaluableMembers.length > 0 &&
+    evaluableMembers.every(m => 
+      rubrics.every(r => existingMap[`${r.id_rubric}_${m.id_user}`])
+    );
 
-  if (isFullyEvaluated) {
-    let totalGroupScore = 0;
-    const individualScoresHtml = evaluableMembers.map(member => {
-      let initTotal = 0;
-      let initW = 0;
-      rubrics.forEach(rubric => {
-        const key = `${rubric.id_rubric}_${member.id_user}`;
-        const existing = existingMap[key];
-        if (existing) {
-          initTotal += (existing.score / 100) * rubric.weight;
-          initW += rubric.weight;
-        }
-      });
-      const finalScore = initW > 0 ? (initTotal / initW) * 100 : 0;
-      totalGroupScore += finalScore;
-
-      const avatar = member.github_avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`;
-      return `
-        <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-white rounded border shadow-sm">
-          <div class="d-flex align-items-center gap-3">
-             <img src="${avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-             <div>
-               <h6 class="mb-0 fw-bold text-dark">${member.name}</h6>
-               <small class="text-muted">${member.team_role || 'Miembro'}</small>
-             </div>
-          </div>
-          <div class="fs-4 fw-bold" style="color:var(--color-primary)">${Math.round(finalScore)}%</div>
-        </div>
-      `;
+  if (isFullyEvaluated || alreadySubmitted) {
+    const totalScore = existingEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (existingEvals.length || 1);
+    
+    // Build a small member breakdown list
+    const membersBreakdown = evaluableMembers.map(m => {
+       const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
+       const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
+       return `
+         <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
+           <div class="d-flex align-items-center gap-2">
+             <img src="${m.github_avatar_url || ''}" style="width:24px;height:24px;border-radius:50%;background:#eee;">
+             <span class="small fw-bold">${m.name}</span>
+           </div>
+           <div class="badge rounded-pill" style="background: var(--bg-card); color: var(--color-primary); border: 1px solid var(--border);">${mScore.toFixed(0)} pts</div>
+         </div>`;
     }).join("");
 
-    const groupScore = evaluableMembers.length > 0 ? totalGroupScore / evaluableMembers.length : 0;
-
     container.innerHTML = `
-      <div class="mb-4 p-4 rounded shadow-sm text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--color-primary), #4e44c2);">
-        <div class="position-relative" style="z-index: 2;">
-          <h4 class="mb-1 text-white fw-bold">Resumen de Calificación</h4>
-          <p class="mb-3 text-white-50">Área de Evaluación: ${allowedArea || 'Global'}</p>
-          <div class="d-flex align-items-center justify-content-between mt-2">
-            <span class="fs-5 fw-medium">Nota Grupal del Área</span>
-            <span class="display-4 fw-bold mb-0 text-white">${Math.round(groupScore)}%</span>
-          </div>
+      <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+        <div class="text-center mb-4">
+          <div class="material-icons-round mb-3" style="font-size: 3.5rem; color: var(--mint);">verified</div>
+          <h3 class="fw-bold mb-2">Evaluación Finalizada</h3>
+          <p class="text-muted">Has completado satisfactoriamente las evaluaciones del equipo.</p>
         </div>
-      </div>
-      <h5 class="fw-bold mb-3 mt-4 text-dark">Desempeño Individual</h5>
-      <div class="d-flex flex-column gap-2 mb-4">
-        ${individualScoresHtml}
-      </div>
-    `;
-
+        
+        <div class="row align-items-center g-4">
+           <div class="col-md-5">
+             <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
+               <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">Promedio Área</div>
+               <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
+             </div>
+           </div>
+           <div class="col-md-7">
+             <div class="ps-md-4 border-start">
+               <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">Desglose por Miembro</div>
+               ${membersBreakdown}
+             </div>
+           </div>
+        </div>
+        
+        <p class="mt-4 pt-4 border-top text-center small text-muted">Consulta la <b>Nota Acumulada</b> en el panel lateral para más detalles.</p>
+      </div>`;
     submitBtn.classList.add("d-none");
+    loadMemberGrades(projectId, { members: evaluableMembers, rubrics, existingEvals });
     return;
   }
 
@@ -1152,7 +1408,10 @@ export async function loadEvaluationPanel({
 
     const final = totalW > 0 ? (total / totalW) * 100 : 0;
     const scoreEl = document.getElementById(`member-score-${memberId}`);
-    if (scoreEl) scoreEl.textContent = Math.round(final);
+    const barEl = document.getElementById(`member-score-bar-${memberId}`);
+    const rounded = Math.round(final);
+    if (scoreEl) scoreEl.textContent = rounded;
+    if (barEl) barEl.style.width = `${rounded}%`;
   };
 
   const membersHtml = evaluableMembers.map((member) => {
@@ -1179,11 +1438,11 @@ export async function loadEvaluationPanel({
                data-member-id="${member.id_user}"
                data-score="${g.score}">
             <div class="eval-card-bar" style="background: ${color}"></div>
-            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">LEVEL ${g.score}%</span>
+            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">LEVEL ${g.score}</span>
             <div class="eval-level-name">${g.name || 'Level'}</div>
             <div class="eval-level-desc">${g.description || 'No description available for this level.'}</div>
             <div class="eval-card-footer">
-              <span class="eval-card-pts">Pts %: ${g.score}</span>
+              <span class="eval-card-pts">Pts: ${g.score}</span>
               <div class="eval-selection-circle"></div>
             </div>
           </div>
@@ -1198,7 +1457,7 @@ export async function loadEvaluationPanel({
               <div class="eval-rubric-meta">${rubric.area} • WEIGHT: ${rubric.weight}</div>
             </div>
             <div class="eval-pts-badge" id="pts-badge-${rubric.id_rubric}-${member.id_user}">
-               PTS %: ${existing ? existing.score : '--'}
+               PTS: ${existing ? existing.score : '--'}
             </div>
           </div>
           <div class="eval-levels-grid">
@@ -1230,10 +1489,14 @@ export async function loadEvaluationPanel({
             </div>
           </div>
           <div class="eval-score-container">
-            <div class="eval-score-label">Average Score</div>
-            <div class="eval-score-value">
+            <div class="eval-score-label" style="text-align:right;">Average Score</div>
+            <div class="eval-score-value" style="text-align:right;">
               <span id="member-score-${member.id_user}">${Math.round(initScore)}</span>
-              <span class="eval-score-total"> / 100</span>
+              <span class="eval-score-total">/100</span>
+            </div>
+            <div class="eval-score-bar-track mt-1" style="width:120px;height:5px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;">
+              <div id="member-score-bar-${member.id_user}" 
+                   style="height:100%;width:${Math.round(initScore)}%;background:var(--color-primary);border-radius:99px;transition:width 0.4s ease;"></div>
             </div>
           </div>
         </div>
@@ -1252,12 +1515,12 @@ export async function loadEvaluationPanel({
       const score = card.dataset.score;
 
       container.querySelectorAll(`.eval-level-card[data-rubric-id="${rubricId}"][data-member-id="${memberId}"]`)
-          .forEach(c => c.classList.remove('selected'));
+        .forEach(c => c.classList.remove('selected'));
 
       card.classList.add('selected');
 
       const badge = document.getElementById(`pts-badge-${rubricId}-${memberId}`);
-      if (badge) badge.textContent = `PTS %: ${score}`;
+      if (badge) badge.textContent = `PTS: ${score}`;
 
       _calculateMemberTotal(memberId);
     });
@@ -1297,6 +1560,19 @@ export async function loadEvaluationPanel({
       await submitEvaluations(projectId, evaluations);
       try { await calculateProjectGrades(projectId); } catch (_) { }
       toast.success('Success', 'Evaluations saved successfully.');
+      
+      // Refresh sidebar grades immediately
+      loadMemberGrades(projectId, { 
+        members: evaluableMembers, 
+        rubrics, 
+        existingEvals: evaluations.map(ev => ({
+          evaluated_user_id: ev.evaluatedUserId,
+          id_rubric: ev.gradeId ? rubrics.find(r => r.grades.some(g => g.id_grade === ev.gradeId))?.id_rubric : null,
+          score: ev.gradeId ? rubrics.find(r => r.grades.some(g => g.id_grade === ev.gradeId))?.grades.find(g => g.id_grade === ev.gradeId)?.score : 0,
+          feedback: ev.feedback
+        }))
+      });
+
       submitBtn.textContent = "Update Evaluations";
     } catch (err) {
       toast.error('Error', err?.message ?? "Failed to save evaluations.");
@@ -1487,9 +1763,9 @@ export function initDeliverables(projectId) {
 
     btn.addEventListener("click", async () => {
       if (
-          !confirm(
-              "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
-          )
+        !confirm(
+          "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
+        )
       )
         return;
 
@@ -1501,8 +1777,8 @@ export function initDeliverables(projectId) {
         await submitProject(projectId);
 
         btn.insertAdjacentHTML(
-            "afterend",
-            `
+          "afterend",
+          `
           <div class="d-flex align-items-center gap-2 mt-3 pt-3" style="border-top:1px solid var(--border);">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
@@ -1514,12 +1790,12 @@ export function initDeliverables(projectId) {
         btn.remove();
 
         document
-            .querySelectorAll(
-                ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel, .ct-btn-upload-label",
-            )
-            .forEach((el) => {
-              el.style.display = "none";
-            });
+          .querySelectorAll(
+            ".ct-btn-edit, .ct-btn-submit, .ct-url-input, .ct-edit-cancel, .ct-btn-upload-label",
+          )
+          .forEach((el) => {
+            el.style.display = "none";
+          });
 
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
@@ -1551,19 +1827,19 @@ export function initDeliverables(projectId) {
 
     // Submit new URL (pending state — non-cloudinary, non-video-upload)
     scope
-        .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
-        .forEach((btn) => {
-          btn.addEventListener("click", async () => {
-            const field = btn.dataset.field;
-            if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
-            const input = scope.querySelector(
-                `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
-            );
-            const url = input?.value?.trim();
-            if (!url) { input?.focus(); return; }
-            await saveField(field, url, btn);
-          });
+      .querySelectorAll(".ct-btn-submit:not(.ct-edit-submit)")
+      .forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const field = btn.dataset.field;
+          if (!editableFields.includes(field) || cloudinaryFields.includes(field)) return;
+          const input = scope.querySelector(
+            `.ct-url-input:not(.ct-edit-input)[data-field="${field}"]`,
+          );
+          const url = input?.value?.trim();
+          if (!url) { input?.focus(); return; }
+          await saveField(field, url, btn);
         });
+      });
 
     // Cloudinary file input (pending state)
     scope.querySelectorAll(".ct-cloudinary-input:not(.ct-edit-cloudinary-input)").forEach((input) => {
@@ -1625,4 +1901,43 @@ export function initDeliverables(projectId) {
   });
 
   _attachSubmitHandler();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Sidebar Member Click Handler
+// ─────────────────────────────────────────────────────────────
+
+export function attachMemberClickHandlers() {
+  const sidebarMembers = document.querySelectorAll(".ct-member-clickable");
+
+  sidebarMembers.forEach(item => {
+    // Only attach once
+    if (item.dataset.clickAttached) return;
+    item.dataset.clickAttached = "true";
+
+    item.addEventListener("click", () => {
+      const userId = item.dataset.userId;
+      if (!userId) return;
+
+      const gradeRow = document.querySelector(`.mg-member-row[data-target="mg-member-${userId}"]`);
+      if (!gradeRow) return;
+
+      // Scroll to the grades section
+      gradeRow.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // If it's not already open, click it to expand
+      const panel = document.getElementById(`mg-member-${userId}`);
+      if (panel && panel.style.display === "none") {
+        gradeRow.click();
+      }
+
+      // Visual feedback on the row
+      gradeRow.style.transition = "background 0.5s";
+      const originalBg = gradeRow.style.background || "var(--bg-panel)";
+      gradeRow.style.background = "rgba(107, 92, 255, 0.15)";
+      setTimeout(() => {
+        gradeRow.style.background = originalBg;
+      }, 1000);
+    });
+  });
 }

@@ -8,8 +8,17 @@ export const getToken = () => {
   return localStorage.getItem("token");
 };
 
+export const setRefreshToken = (token) => {
+  localStorage.setItem("refreshToken", token);
+};
+
+export const getRefreshToken = () => {
+  return localStorage.getItem("refreshToken");
+};
+
 export const clearAuth = () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
 };
 
@@ -26,8 +35,9 @@ export function saveUser(user) {
   localStorage.setItem("user", JSON.stringify(user));
 }
 
-export function saveSession(token, user) {
+export function saveSession(token, refreshToken, user) {
   localStorage.setItem("token", token);
+  localStorage.setItem("refreshToken", refreshToken);
   localStorage.setItem("user", JSON.stringify(user));
   initSocket();
 }
@@ -35,6 +45,7 @@ export function saveSession(token, user) {
 export function clearSession(router) {
   disconnectSocket();
   clearAuth();
+  sessionStorage.removeItem("lastRoute");
   if (router) {
     router.navigate("login");
   }

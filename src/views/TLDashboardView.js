@@ -1,12 +1,14 @@
-//import "../assets/styles/coderHome.css";
-//import "../assets/styles/coderTeam.css";
+import "../assets/styles/dashboard.css";
+import "../assets/styles/projects.css";
+import "../assets/styles/components.css";
 import "../assets/styles/tldashboard.css";
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
-import { apiFetch } from "../services/api.js";
+import { apiFetch, getTeamEvalCounts } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import mainContent from "/pages/teams_dashboard.html?raw";
 import {
   renderCoderTeam,
   loadProjectBrief,
@@ -15,6 +17,17 @@ import {
 } from "./coderTeam.js";
 
 const TL_ROLES = ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"];
+const MAX_PER_AREA = 3;
+const ROLE_AREA_MAP = {
+  TL_DEVELOPMENT: "DEVELOPMENT",
+  TL_SOFT_SKILLS: "SOFT_SKILLS",
+  TL_ENGLISH: "ENGLISH",
+};
+const AREA_LABELS = {
+  DEVELOPMENT: "Dev",
+  SOFT_SKILLS: "Soft",
+  ENGLISH: "Eng",
+};
 
 export default class TLDashboardView {
   constructor(router) {
@@ -28,20 +41,26 @@ export default class TLDashboardView {
       try {
         const stored = sessionStorage.getItem("selectedEvent");
         if (stored) this.selectedEvent = JSON.parse(stored);
-      } catch (_) { }
+      } catch (_) {}
     }
 
+    this.allTeams = [];
     this.teams = [];
+    this.activeClans = new Set();
+    this.searchQuery = "";
+    this.currentView = "grid";
     this.isLoading = true;
     this.error = null;
-    this.searchQuery = "";
-    this.evalCoverage = null; // { evaluations_closed, canClose, missing[] }
+    this.evalCoverage = null;
     this.isAdmin = this.user?.role === "ADMIN";
+    // Map: id_team -> { DEVELOPMENT: count, SOFT_SKILLS: count, ENGLISH: count }
+    this.teamAreaCounts = {};
 
-    // Detail mode — when a TL clicks "Evaluate" on a team
     this.detailTeam = null;
     this.commentsCleanup = null;
   }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   async init() {
     this.render();
@@ -49,72 +68,81 @@ export default class TLDashboardView {
     await this._loadTeams();
   }
 
+  // ── Data ───────────────────────────────────────────────────────────────────
+
   async _loadTeams() {
     if (!this.selectedEvent?.id) {
       this.error = t("tl.noEventSelected");
       toast.error(t("common.errorTitle"), this.error);
       this.isLoading = false;
-      this._renderList();
+      this._paintGrid();
       return;
     }
 
     try {
       const res = await apiFetch(
-        `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
-        { method: "GET" },
+          `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
+          { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
 
       const {
         getProjectEvalStatus,
         getEventEvalCoverage,
+        getMyEvaluationsForProject,
       } = await import("../services/api.js");
 
-      // Enrich each team with project + member count + eval status
-      this.teams = await Promise.all(
-        raw.map(async (t) => {
-          try {
-            const detail = await apiFetch(`/teams/${t.id_team}`, {
-              method: "GET",
-            });
-            const full = detail?.data ?? detail;
-            const projectId = full.project?.id_project ?? null;
+      // Fetch per-area evaluator counts for the whole event at once
+      try {
+        const counts = await getTeamEvalCounts(this.selectedEvent.id);
+        // counts: [{ id_team, team_name, areas: { DEVELOPMENT: N, SOFT_SKILLS: N, ENGLISH: N } }]
+        counts.forEach((row) => {
+          this.teamAreaCounts[row.id_team] = row.areas ?? {};
+        });
+      } catch (_) {}
 
-            let _alreadyEvaluated = false;
-            let _evalStatus = null; // { evaluations_closed, area_closed, already_submitted, evaluator_count }
+      this.allTeams = await Promise.all(
+          raw.map(async (team) => {
+            try {
+              const detail = await apiFetch(`/teams/${team.id_team}`, { method: "GET" });
+              const full = detail?.data ?? detail;
+              const projectId = full.project?.id_project ?? null;
 
-            if (projectId) {
-              try {
-                const { getMyEvaluationsForProject } = await import("../services/api.js");
-                const [evals, evalStatus] = await Promise.all([
-                  getMyEvaluationsForProject(projectId),
-                  getProjectEvalStatus(projectId),
-                ]);
-                _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
-                _evalStatus = evalStatus;
-              } catch (_) { }
+              let _alreadyEvaluated = false;
+              let _evalStatus = null;
+
+              if (projectId) {
+                try {
+                  const [evals, evalStatus] = await Promise.all([
+                    getMyEvaluationsForProject(projectId),
+                    getProjectEvalStatus(projectId),
+                  ]);
+                  _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
+                  _evalStatus = evalStatus;
+                } catch (_) {}
+              }
+
+              return {
+                ...team,
+                members: full.members ?? [],
+                project: full.project ?? null,
+                preview_photo_url: full.project?.preview_photo_url ?? null,
+                description: full.project?.description ?? team.description ?? "",
+                _alreadyEvaluated,
+                _evalStatus,
+              };
+            } catch {
+              return { ...team, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
             }
-
-            return {
-              ...t,
-              members: full.members ?? [],
-              project: full.project ?? null,
-              _alreadyEvaluated,
-              _evalStatus,
-            };
-          } catch {
-            return { ...t, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
-          }
-        }),
+          }),
       );
 
-      // For ADMIN: also fetch event-level coverage
+      this.teams = [...this.allTeams];
+
       if (this.isAdmin && this.selectedEvent?.id) {
         try {
           this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
-        } catch (_) {
-          this.evalCoverage = null;
-        }
+        } catch (_) {}
       }
     } catch (err) {
       this.error = t("tl.loadError");
@@ -122,14 +150,426 @@ export default class TLDashboardView {
     }
 
     this.isLoading = false;
-    this._renderList();
-    this._attachListHandlers();
+    this.renderClanFilters(this.allTeams);
+    this._applyFilters();
+    this._attachHandlers();
+    if (this.isAdmin) this._renderAdminEvalPanel();
   }
 
-  // ── Full page render (shell + navbar) ──────────────────────────────────────
+  // ── Shell ──────────────────────────────────────────────────────────────────
+
   render() {
     const app = document.getElementById("app");
     if (!app) return;
+
+    app.innerHTML = `
+      ${this.navbar.render()}
+      <div id="overlay" class="sidebar-overlay"></div>
+      <div style="display:flex;flex-direction:column;width:100%">
+        ${this.header.render()}
+        <main class="dashboard-main">
+          <div id="tl-admin-panel"></div>
+          ${mainContent}
+        </main>
+      </div>
+    `;
+
+    this.header.mountBreadcrumb();
+    this.header.attachEventHandlers();
+    this._initAvatarTooltip();
+
+    const teamsContainer = document.getElementById("teamsContainer");
+    if (teamsContainer) {
+      teamsContainer.innerHTML = `
+        <div class="col-12">
+          <div class="d-flex flex-column align-items-center justify-content-center" style="height:60vh;gap:16px;">
+            <div class="ce-spinner" style="width:40px;height:40px;border-width:4px;border-color:rgba(107,92,255,0.2);border-top-color:var(--color-primary,#6b5cff);"></div>
+            <p class="text-muted fw-medium">Loading Teams...</p>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!this._offLangChange) {
+      this._offLangChange = onLangChange(() => {
+        if (this.detailTeam) this._renderDetail(this.detailTeam);
+        else this.render();
+      });
+    }
+  }
+
+  // ── Filters ────────────────────────────────────────────────────────────────
+
+  _applyFilters() {
+    const query = this.searchQuery.toLowerCase().trim();
+    let teams = this.allTeams;
+
+    if (this.activeClans.size > 0) {
+      teams = teams.filter((team) =>
+          (team.members ?? []).some((m) => this.activeClans.has(m.clan))
+      );
+    }
+
+    if (query) {
+      teams = teams.filter((team) =>
+          (team.name ?? "").toLowerCase().includes(query) ||
+          (team.description ?? "").toLowerCase().includes(query) ||
+          (team.project?.name ?? "").toLowerCase().includes(query) ||
+          (team.members ?? []).some((m) => (m.name ?? "").toLowerCase().includes(query))
+      );
+    }
+
+    this.teams = teams;
+    if (this.currentView === "list") this._paintList();
+    else this._paintGrid();
+  }
+
+  // ── Grid ───────────────────────────────────────────────────────────────────
+
+  _paintGrid() {
+    const container = document.getElementById("teamsContainer");
+    if (!container || this.isLoading) return;
+
+    if (this.error) {
+      container.innerHTML = this._emptyHtml(`<span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">error_outline</span><p class="app-page-subtitle mb-0">${this.error}</p>`);
+      return;
+    }
+
+    if (!this.teams.length) {
+      container.innerHTML = this._emptyHtml(`<span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span><p class="app-page-title mb-1" style="font-size:1rem;">${t("tl.noTeamsFound")}</p>`);
+      return;
+    }
+
+    const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
+    container.innerHTML = "";
+
+    this.teams.forEach((team) => {
+      const members = team.members ?? [];
+      const project = team.project;
+      const hasProject = !!project;
+      const isSubmitted = !!project?.submitted_at;
+      const imgSrc = team.preview_photo_url || fallbackImg;
+
+      const maxVisible = 5;
+      const avatarsHtml = members.slice(0, maxVisible).map((m) =>
+          m.github_avatar_url
+              ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="app-avatar app-avatar-has-tip ct-member-clickable" data-tip-name="${m.name}" data-user-id="${m.id_user}" style="cursor:pointer;">`
+              : `<div class="app-avatar" style="background:var(--accent-dim);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:700;">${m.name?.charAt(0) ?? "?"}</div>`
+      ).join("") + (members.length > maxVisible ? `<span class="app-avatar-more">+${members.length - maxVisible}</span>` : "");
+
+      const submittedBadge = isSubmitted
+          ? `<span style="font-size:0.7rem;background:rgba(90,204,164,0.12);color:#059669;border:1px solid rgba(90,204,164,0.3);padding:2px 8px;border-radius:20px;font-weight:700;">${t("tl.ready")}</span>`
+          : "";
+
+      container.insertAdjacentHTML("beforeend", `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="app-project-card">
+            <div class="app-project-image">
+              <img src="${imgSrc}" alt="Project image" class="img-fluid"
+                   onerror="this.onerror=null;this.src='${fallbackImg}';" />
+            </div>
+            <div class="p-4 d-flex flex-column h-100">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="app-card-title mb-0">${team.name}</h5>
+                ${submittedBadge}
+              </div>
+              <p class="app-card-text text-break mb-2">${hasProject ? (project.name ?? "") : `<span style="opacity:.45;font-style:italic;">${t("tl.noProject")}</span>`}</p>
+              ${this._renderAreaCounts(team)}
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="app-avatar-group">${avatarsHtml}</div>
+                <span style="font-size:0.78rem;color:var(--text-muted);">${members.length} ${t("tl.membersCount")}</span>
+              </div>
+              ${this._buildEvalButton(team)}
+            </div>
+          </div>
+        </div>
+      `);
+    });
+
+    this._attachEvalBtnHandlers();
+  }
+
+  // ── List ───────────────────────────────────────────────────────────────────
+
+  _paintList() {
+    const container = document.getElementById("teamsContainer");
+    if (!container || this.isLoading) return;
+
+    if (!this.teams.length) {
+      container.innerHTML = this._emptyHtml(`<span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span><p class="app-page-title mb-1" style="font-size:1rem;">${t("tl.noTeamsFound")}</p>`);
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="col-12 px-0">
+        <div class="app-project-card-list p-3">
+          <table class="table table-hover mb-0" style="width:100%;">
+            <thead>
+              <tr>
+                <th style="width:22%;">${t("tl.teams")}</th>
+                <th style="width:20%;">Project</th>
+                <th style="width:18%;">Members</th>
+                <th style="width:24%;">Area Grades</th>
+                <th style="width:16%;"></th>
+              </tr>
+            </thead>
+            <tbody id="tl-list-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const tbody = document.getElementById("tl-list-tbody");
+    this.teams.forEach((team) => {
+      const members = team.members ?? [];
+      const project = team.project;
+      const hasProject = !!project;
+      const isSubmitted = !!project?.submitted_at;
+
+      const membersAvatars = members.slice(0, 5).map((m) =>
+          m.github_avatar_url
+              ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="app-avatar app-avatar-has-tip" data-tip-name="${m.name}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #fff;cursor:default;">`
+              : `<div class="app-avatar app-avatar-has-tip" data-tip-name="${m.name}" style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;border:2px solid #fff;cursor:default;">${m.name?.charAt(0) ?? "?"}</div>`
+      ).join("") + (members.length > 5 ? `<span class="app-avatar-more" style="font-size:0.7rem;">+${members.length - 5}</span>` : "");
+
+      const submittedBadge = isSubmitted
+          ? `<span style="font-size:0.65rem;background:rgba(90,204,164,0.12);color:#059669;border:1px solid rgba(90,204,164,0.3);padding:1px 6px;border-radius:20px;font-weight:700;margin-left:4px;">${t("tl.ready")}</span>`
+          : "";
+
+      const evalBtn = this._buildEvalButton(team);
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td style="vertical-align:middle;">
+            <strong style="font-size:0.88rem;">${team.name}</strong>${submittedBadge}
+          </td>
+          <td style="vertical-align:middle;font-size:0.82rem;color:var(--text-muted);">
+            ${hasProject ? (project.name ?? "") : `<span style="opacity:.45;font-style:italic;">${t("tl.noProject")}</span>`}
+          </td>
+          <td style="vertical-align:middle;">
+            <div class="app-avatar-group">${membersAvatars}</div>
+          </td>
+          <td style="vertical-align:middle;">${this._renderAreaCounts(team)}</td>
+          <td style="vertical-align:middle;">${evalBtn}</td>
+        </tr>
+      `);
+    });
+
+    this._attachEvalBtnHandlers();
+  }
+
+  // ── Area counts badge row ──────────────────────────────────────────────────
+
+  _renderAreaCounts(team) {
+    const areas = this.teamAreaCounts[team.id_team] ?? {};
+    const userArea = ROLE_AREA_MAP[this.user?.role] ?? null;
+
+    const badges = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"].map((area) => {
+      const count = areas[area] ?? 0;
+      const isFull = count >= MAX_PER_AREA;
+      const isUserArea = area === userArea;
+      const label = AREA_LABELS[area];
+
+      let bg, color, border;
+      if (isFull) {
+        bg = "rgba(90,204,164,0.12)"; color = "#059669"; border = "rgba(90,204,164,0.3)";
+      } else if (isUserArea) {
+        bg = "rgba(107,92,255,0.1)"; color = "var(--color-primary)"; border = "rgba(107,92,255,0.3)";
+      } else {
+        bg = "rgba(0,0,0,0.04)"; color = "var(--text-muted)"; border = "transparent";
+      }
+
+      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${label} ${count}/${MAX_PER_AREA}</span>`;
+    }).join("");
+
+    return `<div class="d-flex gap-1 flex-wrap mb-2">${badges}</div>`;
+  }
+
+  // ── Eval button ────────────────────────────────────────────────────────────
+
+  _buildEvalButton(team) {
+    const project = team.project;
+    const hasProject = !!project;
+    const isSubmitted = !!project?.submitted_at;
+    const evalStatus = team._evalStatus;
+    const evalsClosed = evalStatus?.evaluations_closed ?? false;
+    const alreadyDone = evalStatus?.already_submitted ?? team._alreadyEvaluated;
+
+    // Use teamAreaCounts for area cap check (more accurate than _evalStatus.area_closed)
+    const userArea = ROLE_AREA_MAP[this.user?.role] ?? null;
+    const areaCount = userArea ? (this.teamAreaCounts[team.id_team]?.[userArea] ?? 0) : 0;
+    const areaCapped = userArea ? areaCount >= MAX_PER_AREA : false;
+
+    let content, disabled, cls, title;
+
+    if (!hasProject) {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">info</span> ${t("tl.noProject")}`;
+      disabled = "disabled"; cls = "tld-eval-btn"; title = "";
+    } else if (!isSubmitted) {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">hourglass_empty</span> ${t("tl.notSubmitted")}`;
+      disabled = "disabled"; cls = "tld-eval-btn"; title = "";
+    } else if (evalsClosed) {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">lock</span> ${t("tl.evalsClosed") || "Evaluations closed"}`;
+      disabled = "disabled"; cls = "tld-eval-btn tld-eval-btn--locked"; title = t("tl.evalsClosedHint") || "";
+    } else if (alreadyDone) {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">visibility</span> ${t("team.reviewEval")}`;
+      disabled = ""; cls = "tld-eval-btn tld-eval-btn--reviewed"; title = "";
+    } else if (areaCapped && !this.isAdmin) {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">group_off</span> ${t("tl.areaFull") || "Area full"}`;
+      disabled = "disabled"; cls = "tld-eval-btn tld-eval-btn--locked";
+      title = `${areaCount}/${MAX_PER_AREA} ${t("tl.evaluators") || "evaluators"}`;
+    } else {
+      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">rate_review</span> ${t("team.evaluate")}`;
+      disabled = ""; cls = "tld-eval-btn tld-eval-btn--ready"; title = "";
+    }
+
+    return `<button class="${cls}" data-team-id="${team.id_team}" ${disabled} ${title ? `title="${title}"` : ""}>${content}</button>`;
+  }
+
+  // ── Clan filters ───────────────────────────────────────────────────────────
+
+  renderClanFilters(teams) {
+    const container = document.getElementById("clanFiltersContainer");
+    if (!container) return;
+
+    const clansSet = new Set();
+    teams.forEach((team) => {
+      (team.members ?? []).forEach((m) => { if (m.clan) clansSet.add(m.clan); });
+    });
+    const clans = [...clansSet].sort();
+
+    container.innerHTML = `
+      <button class="app-filter-btn active" data-clan="ALL">Todos</button>
+      ${clans.map((clan) => `
+        <button class="app-filter-btn" data-clan="${clan}">
+          <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#6c5cff;flex-shrink:0;margin-right:4px;"></span>
+          ${clan}
+        </button>
+      `).join("")}
+    `;
+
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-clan]");
+      if (!btn) return;
+      const clan = btn.dataset.clan;
+      if (clan === "ALL") {
+        this.activeClans.clear();
+        container.querySelectorAll(".app-filter-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      } else {
+        container.querySelector("[data-clan='ALL']")?.classList.remove("active");
+        if (this.activeClans.has(clan)) { this.activeClans.delete(clan); btn.classList.remove("active"); }
+        else { this.activeClans.add(clan); btn.classList.add("active"); }
+        if (this.activeClans.size === 0) container.querySelector("[data-clan='ALL']")?.classList.add("active");
+      }
+      this._applyFilters();
+    });
+  }
+
+  // ── Admin panel ────────────────────────────────────────────────────────────
+
+  _renderAdminEvalPanel() {
+    const panel = document.getElementById("tl-admin-panel");
+    if (!panel || !this.evalCoverage) return;
+
+    const cv = this.evalCoverage;
+    const isClosed = cv.evaluations_closed;
+    const canClose = cv.canClose;
+    const missing = cv.missing ?? [];
+
+    if (isClosed) {
+      panel.innerHTML = `
+        <div class="tld-eval-admin-panel tld-eval-admin-panel--closed mx-3 mt-3">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="material-icons-round" style="color:#dc2626;font-size:1.2rem;">lock</span>
+            <div class="flex-grow-1">
+              <strong style="color:#dc2626;">${t("tl.evalsClosedBadge") || "Evaluations closed"}</strong>
+              <p class="mb-0 small text-muted">${t("tl.evalsClosedDesc") || "TLs can no longer submit evaluations."}</p>
+            </div>
+            <button id="btnReopenEvals" class="btn btn-sm btn-outline-danger" style="white-space:nowrap;">
+              <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">lock_open</span>
+              ${t("tl.reopenEvals") || "Reopen evaluations"}
+            </button>
+          </div>
+        </div>`;
+    } else {
+      const missingHtml = missing.length > 0
+          ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
+            ${missing.slice(0, 5).map((m) => `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`).join("")}
+            ${missing.length > 5 ? `<li>...and ${missing.length - 5} more</li>` : ""}
+          </ul>` : "";
+
+      panel.innerHTML = `
+        <div class="tld-eval-admin-panel${canClose ? " tld-eval-admin-panel--ready" : " tld-eval-admin-panel--warn"} mx-3 mt-3">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="material-icons-round" style="color:${canClose ? "#10b981" : "#f59e0b"};font-size:1.2rem;">${canClose ? "check_circle" : "pending"}</span>
+            <div class="flex-grow-1">
+              <strong>${canClose ? (t("tl.allEvalsComplete") || "All areas graded") : (t("tl.evalsPending") || `${missing.length} project(s) missing evaluations`)}</strong>
+              ${missingHtml}
+            </div>
+            <button id="btnCloseEvals" class="btn btn-sm btn-danger"
+                    data-has-missing="${missing.length > 0}" data-missing-count="${missing.length}"
+                    style="white-space:nowrap;">
+              <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">lock</span>
+              ${t("tl.closeEvals") || "Close evaluations"}
+            </button>
+          </div>
+        </div>`;
+    }
+
+    this._attachAdminPanelHandlers();
+  }
+
+  _attachAdminPanelHandlers() {
+    document.getElementById("btnCloseEvals")?.addEventListener("click", async () => {
+      const btn = document.getElementById("btnCloseEvals");
+      const hasMissing = btn.dataset.hasMissing === "true";
+      const missingCount = parseInt(btn.dataset.missingCount ?? "0");
+      const msg = hasMissing
+          ? `⚠️ ${missingCount} project(s) missing evaluations.\n\nClose anyway?`
+          : t("tl.closeEvalsConfirm") || "Close evaluations?";
+      if (!confirm(msg)) return;
+      const { closeEventEvaluations, getEventEvalCoverage } = await import("../services/api.js");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${t("common.loading") || "Processing..."}`;
+      try {
+        await closeEventEvaluations(this.selectedEvent.id);
+        this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
+        toast.success(t("tl.evalsClosedBadge") || "Evaluations closed", "");
+        this._renderAdminEvalPanel();
+      } catch (err) {
+        toast.error(t("common.errorTitle"), err?.message ?? "Error");
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("btnReopenEvals")?.addEventListener("click", async () => {
+      const { reopenEventEvaluations, getEventEvalCoverage } = await import("../services/api.js");
+      const btn = document.getElementById("btnReopenEvals");
+      btn.disabled = true;
+      btn.textContent = t("common.loading") || "Processing...";
+      try {
+        await reopenEventEvaluations(this.selectedEvent.id);
+        this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
+        toast.success(t("tl.reopenEvals") || "Evaluations reopened", "");
+        this._renderAdminEvalPanel();
+      } catch (err) {
+        toast.error(t("common.errorTitle"), err?.message ?? "Error");
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // ── Detail view ────────────────────────────────────────────────────────────
+
+  _renderDetail(team) {
+    const app = document.getElementById("app");
+    if (!app) return;
+
+    this.detailTeam = team;
+    const isTL = TL_ROLES.includes(this.user?.role);
+    const eventId = team.id_event ?? this.selectedEvent?.id ?? null;
+    const projectId = team.project?.id_project ?? null;
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -142,257 +582,16 @@ export default class TLDashboardView {
       </div>
     `;
 
-    //this.navbar.attachEventHandlers();
-    this.header.mountBreadcrumb();
-    this.header.attachEventHandlers();
-    this._renderList();
-    if (!this._offLangChange) {
-      this._offLangChange = onLangChange(() => {
-        if (this.detailTeam) {
-          this._renderDetail(this.detailTeam);
-        } else {
-          this.render();
-        }
-      });
-    }
-  }
-
-  // ── Teams list ─────────────────────────────────────────────────────────────
-  _renderList() {
-    const content = document.getElementById("tl-content");
-    if (!content) return;
-
-    content.innerHTML = `
-      <div class="tld-page">
-
-        <header class="tld-header">
-          <div class="tld-header-top">
-            <div>
-              <p class="tld-eyebrow">Team Lead · ${this._roleLabel()}</p>
-              <h1 class="tld-title">${this.selectedEvent?.title ?? "Teams"}</h1>
-              ${this.selectedEvent?.cohort
-        ? `<span class="tld-cohort-badge">Cohort ${this.selectedEvent.cohort}</span>`
-        : ""
-      }
-            </div>
-            <div class="tld-stat-pills">
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.length}</span>
-                <span class="tld-stat-label">${t("tl.teams")}</span>
-              </div>
-              <div class="tld-stat-pill">
-                <span class="tld-stat-num">${this.teams.reduce((sum, t) => sum + (t.members?.length ?? 0), 0)}</span>
-                <span class="tld-stat-label">${t("tl.coders")}</span>
-              </div>
-            </div>
-
-            <div class="w-100 tld-search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input
-                id="tldSearch"
-                type="text"
-                class="tld-search-input"
-                placeholder="${t("tl.searchTeams")}"
-                value="${this.searchQuery}" />
-            </div>
-          </div>
-
-          ${this.isAdmin ? this._renderAdminEvalPanel() : ""}
-
-        <!-- Grid -->
-        <div class="tld-grid" id="tldGrid">
-          ${this._renderGrid()}
-        </div>
-      </div>
-    `;
-
-    this._attachListHandlers();
-  }
-
-  _renderGrid() {
-    if (this.isLoading) {
-      return Array.from(
-        { length: 6 },
-        () => `<div class="tld-card tld-card-skeleton"></div>`,
-      ).join("");
-    }
-
-    if (this.error) {
-      return `<div class="tld-empty"><p>${this.error}</p></div>`;
-    }
-
-    const filtered = this._filtered();
-
-    if (!filtered.length) {
-      return `
-        <div class="tld-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <p>${t("tl.noTeamsFound")}</p>
-        </div>
-      `;
-    }
-
-    return filtered.map((team, i) => this._renderTeamCard(team, i)).join("");
-  }
-
-  _renderTeamCard(team, index) {
-    const project = team.project;
-    const members = team.members ?? [];
-    const hasProject = !!project;
-    const isSubmitted = !!project?.submitted_at;
-
-    const deliverables = [
-      project?.repo_url,
-      project?.video_url,
-      project?.preview_photo_url,
-    ].filter(Boolean).length;
-
-    const totalDeliverables = 3;
-    const progress = hasProject
-      ? Math.round((deliverables / totalDeliverables) * 100)
-      : 0;
-
-    const avatarsHtml = members
-      .slice(0, 4)
-      .map((m, i) =>
-        m.github_avatar_url
-          ? `<img src="${m.github_avatar_url}" alt="${m.name}" class="tld-avatar" style="z-index:${10 - i};">`
-          : `<div class="tld-avatar tld-avatar-initial" style="z-index:${10 - i};">${m.name?.charAt(0) ?? "?"}</div>`,
-      )
-      .join("");
-
-    const extraMembers =
-      members.length > 4
-        ? `<div class="tld-avatar tld-avatar-more">+${members.length - 4}</div>`
-        : "";
-
-    const statusDot = isSubmitted
-      ? `<span class="tld-status-dot tld-dot-submitted" title=t("tl.submittedReview") ?? "Submitted — ready for review"></span>`
-      : hasProject
-        ? deliverables === totalDeliverables
-          ? `<span class="tld-status-dot tld-dot-complete" title="${t("tl.allDeliverables") ?? "All deliverables submitted"}"></span>`
-          : `<span class="tld-status-dot tld-dot-partial" title="${deliverables}/${totalDeliverables} deliverables"></span>`
-        : `<span class="tld-status-dot tld-dot-none" title=t("tl.noProject")></span>`;
-
-    // Button state — respecting 3 blocking rules from eval-status
-    const evalStatus = team._evalStatus;
-    const evalsClosed = evalStatus?.evaluations_closed ?? false;
-    const areaCapped = evalStatus?.area_closed ?? false;
-    const alreadyDoneArea = evalStatus?.already_submitted ?? team._alreadyEvaluated;
-
-    let evalBtnContent, evalBtnDisabled, evalBtnClass, evalBtnTitle;
-
-    if (!isSubmitted && hasProject) {
-      // Project exists but not submitted yet
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.notSubmitted")}`;
-      evalBtnDisabled = "disabled";
-      evalBtnClass = "tld-eval-btn";
-      evalBtnTitle = "";
-    } else if (!hasProject) {
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${t("tl.noProject")}`;
-      evalBtnDisabled = "disabled";
-      evalBtnClass = "tld-eval-btn";
-      evalBtnTitle = "";
-    } else if (evalsClosed) {
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${t("tl.evalsClosed") || "Calificaciones cerradas"}`;
-      evalBtnDisabled = "disabled";
-      evalBtnClass = "tld-eval-btn tld-eval-btn--locked";
-      evalBtnTitle = t("tl.evalsClosedHint") || "El admin cerró las calificaciones";
-    } else if (alreadyDoneArea) {
-      // Already submitted — show review mode
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${t("team.reviewEval")}`;
-      evalBtnDisabled = "";
-      evalBtnClass = "tld-eval-btn tld-eval-btn--reviewed";
-      evalBtnTitle = "";
-    } else if (areaCapped) {
-      const max = evalStatus?.max_evaluators ?? 3;
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg> ${t("tl.areaFull") || "Área completa"}`;
-      evalBtnDisabled = "disabled";
-      evalBtnClass = "tld-eval-btn tld-eval-btn--locked";
-      evalBtnTitle = `${t("tl.areaFullHint") || "Ya hay"} ${evalStatus?.evaluator_count ?? max}/${max} ${t("tl.evaluators") || "calificadores"}`;
-    } else {
-      // Can evaluate
-      evalBtnContent = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> ${t("team.evaluate")}`;
-      evalBtnDisabled = "";
-      evalBtnClass = "tld-eval-btn tld-eval-btn--ready";
-      evalBtnTitle = "";
-    }
-
-    return `
-      <article class="tld-card${isSubmitted ? " tld-card--submitted" : ""}" data-team-id="${team.id_team}" style="animation-delay:${index * 40}ms">
-          <div class="tld-card-top">
-          <div class="tld-card-name-row">
-            ${statusDot}
-            <h3 class="tld-card-team-name">${team.name}</h3>
-            ${isSubmitted ? `<span class="tld-submitted-badge">${t("tl.ready")}</span>` : ""}
-          </div>
-          <div class="tld-card-project-name">
-            ${hasProject ? project.name : `<span style="opacity:.45;font-style:italic;">${t("tl.noProject")}</span>`}
-          </div>
-        </div>
-
-        ${hasProject
-        ? `
-          <div class="tld-progress-wrap">
-            <div class="tld-progress-bar">
-              <div class="tld-progress-fill${isSubmitted ? " tld-progress-fill--submitted" : ""}" style="width:${progress}%"></div>
-            </div>
-            <span class="tld-progress-label">${isSubmitted ? (t("tl.submittedReview") ?? "Submitted for review") : `${deliverables}/${totalDeliverables} deliverables`}</span>
-          </div>
-        `
-        : `<div class="tld-progress-wrap"><div class="tld-progress-bar"><div class="tld-progress-fill" style="width:0%"></div></div><span class="tld-progress-label">${t("tl.noDeliverables")}</span></div>`
-      }
-
-        <div class="tld-card-members">
-          <div class="tld-avatars-row">
-            ${avatarsHtml}${extraMembers}
-          </div>
-          <span class="tld-member-count">${members.length} ${t("tl.membersCount")}</span>
-        </div>
-
-        <button
-          class="${evalBtnClass}"
-          data-team-id="${team.id_team}"
-          ${evalBtnDisabled}
-          ${evalBtnTitle ? `title="${evalBtnTitle}"` : ""}>
-          ${evalBtnContent}
-        </button>
-      </article>
-    `;
-  }
-
-  _renderDetail(team) {
-    const content = document.getElementById("tl-content");
-    if (!content) return;
-
-    // Track which team is open so onLangChange can re-render the right view
-    this.detailTeam = team;
-
-    const isTL = TL_ROLES.includes(this.user?.role);
-    const eventId = team.id_event ?? this.selectedEvent?.id ?? null;
-    const projectId = team.project?.id_project ?? null;
-
-    // Update breadcrumbs for detail view
+    this.navbar.attachEventHandlers();
     this.header.mountBreadcrumb([
       { label: t("nav.events"), route: "coderEventSelect" },
-      {
-        label: this.selectedEvent?.title ?? t("tl.teams"),
-        route: "tlDashboard",
-      },
+      { label: this.selectedEvent?.title ?? t("tl.teams"), route: "tlDashboard" },
       { label: team.name, route: null },
     ]);
+    this.header.attachEventHandlers();
 
-    content.innerHTML = renderCoderTeam({
-      user: this.user,
-      team,
-      isLeader: false,
-      isTL,
+    document.getElementById("tl-content").innerHTML = renderCoderTeam({
+      user: this.user, team, isLeader: false, isTL,
     });
 
     setTimeout(() => {
@@ -400,193 +599,100 @@ export default class TLDashboardView {
       if (projectId) {
         if (this.commentsCleanup) this.commentsCleanup();
         this.commentsCleanup = loadComments(projectId, this.user);
+        import("./coderTeam.js").then(({ loadMemberGrades }) => loadMemberGrades(projectId, { members: team.members }));
       }
       if (projectId && eventId && isTL) {
-        loadEvaluationPanel({
-          projectId,
-          eventId,
-          members: team.members ?? [],
-          userRole: this.user?.role ?? null,
-        });
+        loadEvaluationPanel({ projectId, eventId, members: team.members ?? [], userRole: this.user?.role ?? null });
       }
-    }, 0);
-
-    // Hide coder-only buttons that don't make sense for a TL viewer
-    setTimeout(() => {
       document.getElementById("leaveTeamBtn")?.remove();
       document.getElementById("addMemberBtn")?.remove();
       document.querySelector(".btn-project-settings")?.remove();
     }, 0);
   }
 
-  // ── Admin eval close/reopen panel ─────────────────────────────────────────
-  _renderAdminEvalPanel() {
-    const cv = this.evalCoverage;
-    if (!cv) return "";
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
-    const isClosed = cv.evaluations_closed;
-    const canClose = cv.canClose;
-    const missing = cv.missing ?? [];
-
-    if (isClosed) {
-      return `
-        <div class="tld-eval-admin-panel tld-eval-admin-panel--closed">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="material-icons-round" style="color:#dc2626;font-size:1.2rem;">lock</span>
-            <div class="flex-grow-1">
-              <strong style="color:#dc2626;">${t("tl.evalsClosedBadge") || "Calificaciones cerradas"}</strong>
-              <p class="mb-0 small text-muted">${t("tl.evalsClosedDesc") || "Los TLs ya no pueden enviar calificaciones."}</p>
-            </div>
-            <button id="btnReopenEvals" class="btn btn-sm btn-outline-danger" style="white-space:nowrap;">
-              <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">lock_open</span>
-              ${t("tl.reopenEvals") || "Reabrir calificaciones"}
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    const missingHtml = missing.length > 0
-      ? `<ul class="mb-0 ps-3 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
-          ${missing.slice(0, 5).map(m =>
-        `<li><strong>${m.projectName}</strong>: ${m.missingAreas.join(", ")}</li>`
-      ).join("")}
-          ${missing.length > 5 ? `<li>...y ${missing.length - 5} más</li>` : ""}
-        </ul>`
-      : "";
-
-    const warningHtml = !canClose && missing.length > 0
-      ? `<p class="mb-0 small mt-1" style="color:#92400e;">
-          <span class="material-icons-round" style="font-size:.85rem;vertical-align:middle;">warning</span>
-          ${t("tl.closeWarning") || "Al cerrar, los proyectos sin cobertura completa se calificarán solo con las evaluaciones existentes."}
-        </p>`
-      : "";
-
-    return `
-      <div class="tld-eval-admin-panel${canClose ? " tld-eval-admin-panel--ready" : " tld-eval-admin-panel--warn"}">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-          <span class="material-icons-round" style="color:${canClose ? "#10b981" : "#f59e0b"};font-size:1.2rem;">
-            ${canClose ? "check_circle" : "pending"}
-          </span>
-          <div class="flex-grow-1">
-            <strong>${canClose
-        ? (t("tl.allEvalsComplete") || "Todas las áreas calificadas — listo para cerrar")
-        : (t("tl.evalsPending") || `${missing.length} proyecto(s) sin calificación completa`)
-      }</strong>
-            ${missingHtml}
-            ${warningHtml}
-          </div>
-          <button id="btnCloseEvals"
-                  class="btn btn-sm btn-danger"
-                  data-has-missing="${missing.length > 0}"
-                  data-missing-count="${missing.length}"
-                  style="white-space:nowrap;">
-            <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">lock</span>
-            ${t("tl.closeEvals") || "Cerrar calificaciones"}
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  _filtered() {
-    const q = this.searchQuery.trim().toLowerCase();
-    if (!q) return this.teams;
-    return this.teams.filter(
-      (t) =>
-        t.name?.toLowerCase().includes(q) ||
-        t.project?.name?.toLowerCase().includes(q),
-    );
-  }
-
-  _roleLabel() {
-    const map = {
-      TL_DEVELOPMENT: t("tl.areaDev") ?? "Development",
-      TL_SOFT_SKILLS: t("tl.areaSoft") ?? "Soft Skills",
-      TL_ENGLISH: t("tl.areaEnglish") ?? "English",
-      ADMIN: t("tl.areaAdmin") ?? "Admin",
-    };
-    return map[this.user?.role] ?? t("tl.teamLead") ?? "Team Lead";
-  }
-
-  // ── Event handlers ────────────────────────────────────────────────────────
-  _attachListHandlers() {
-    const searchInput = document.getElementById("tldSearch");
+  _attachHandlers() {
+    // Search
+    const searchInput = document.getElementById("teamsSearchInput");
     if (searchInput) {
       searchInput.value = this.searchQuery;
       searchInput.addEventListener("input", (e) => {
         this.searchQuery = e.target.value;
-        const grid = document.getElementById("tldGrid");
-        if (grid) grid.innerHTML = this._renderGrid();
-        this._attachEvalBtnHandlers();
+        this._applyFilters();
       });
     }
+    document.getElementById("teamsSearchBtn")?.addEventListener("click", () => this._applyFilters());
 
-    // Admin: close evaluations
-    document.getElementById("btnCloseEvals")?.addEventListener("click", async () => {
-      const btn = document.getElementById("btnCloseEvals");
-      const hasMissing = btn.dataset.hasMissing === "true";
-      const missingCount = parseInt(btn.dataset.missingCount ?? "0");
+    // Grid/list toggle
+    const gridBtn = document.getElementById("grid-view-btn");
+    const listBtn = document.getElementById("list-view-btn");
 
-      let confirmMsg;
-      if (hasMissing) {
-        confirmMsg = `⚠️ ${missingCount} proyecto(s) no tienen todas las áreas calificadas.\n\nAl cerrar, se calculará la nota con las evaluaciones que existan.\n\n¿Deseas cerrar de todas formas?`;
-      } else {
-        confirmMsg = t("tl.closeEvalsConfirm") || "¿Cerrar las calificaciones? Los TLs ya no podrán enviar más evaluaciones.";
-      }
-
-      if (!confirm(confirmMsg)) return;
-
-      const { closeEventEvaluations, getEventEvalCoverage } = await import("../services/api.js");
-      btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${t("common.loading") || "Procesando..."}`;
-      try {
-        await closeEventEvaluations(this.selectedEvent.id);
-        this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
-        toast.success(t("tl.evalsClosedBadge") || "Calificaciones cerradas", t("tl.evalsClosedDesc") || "Los TLs ya no pueden enviar calificaciones.");
-        this._renderList();
-        this._attachListHandlers();
-      } catch (err) {
-        toast.error(t("common.errorTitle"), err?.message ?? "No se pudo cerrar.");
-        btn.disabled = false;
-      }
+    gridBtn?.addEventListener("click", () => {
+      this.currentView = "grid";
+      gridBtn.classList.add("active");
+      listBtn?.classList.remove("active");
+      this._paintGrid();
     });
 
-    // Admin: reopen evaluations
-    document.getElementById("btnReopenEvals")?.addEventListener("click", async () => {
-      const { reopenEventEvaluations, getEventEvalCoverage } = await import("../services/api.js");
-      const btn = document.getElementById("btnReopenEvals");
-      btn.disabled = true;
-      btn.textContent = t("common.loading") || "Procesando...";
-      try {
-        await reopenEventEvaluations(this.selectedEvent.id);
-        this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
-        toast.success(t("tl.reopenEvals") || "Calificaciones reabiertas", "");
-        this._renderList();
-        this._attachListHandlers();
-      } catch (err) {
-        toast.error(t("common.errorTitle"), err?.message ?? "No se pudo reabrir.");
-        btn.disabled = false;
-      }
+    listBtn?.addEventListener("click", () => {
+      this.currentView = "list";
+      listBtn.classList.add("active");
+      gridBtn?.classList.remove("active");
+      this._paintList();
     });
 
     this._attachEvalBtnHandlers();
   }
 
   _attachEvalBtnHandlers() {
-    document.querySelectorAll(".tld-eval-btn[data-team-id]").forEach((btn) => {
-      if (btn.disabled) return;
-      btn.addEventListener("click", () => {
+    document.querySelectorAll(".tld-eval-btn[data-team-id]:not([disabled])").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
         const teamId = parseInt(btn.dataset.teamId);
-        const team = this.teams.find((t) => t.id_team === teamId);
-        if (!team) return;
-        this._renderDetail(team);
+        const team = this.allTeams.find((t) => t.id_team === teamId);
+        if (team) this._renderDetail(team);
       });
     });
   }
 
+  // ── Utils ──────────────────────────────────────────────────────────────────
+
+  _emptyHtml(inner) {
+    return `<div class="col-12"><div class="app-project-card d-flex flex-column align-items-center justify-content-center py-5 gap-3 text-center">${inner}</div></div>`;
+  }
+
+  _initAvatarTooltip() {
+    if (document.getElementById("app-avatar-tip")) return;
+
+    const tip = document.createElement("span");
+    tip.id = "app-avatar-tip";
+    document.body.appendChild(tip);
+
+    this._avatarMouseOver = (e) => {
+      const img = e.target.closest(".app-avatar-has-tip");
+      if (!img) return;
+      tip.textContent = img.dataset.tipName;
+      tip.classList.add("visible");
+      const rect = img.getBoundingClientRect();
+      tip.style.left = `${rect.left + rect.width / 2 - tip.offsetWidth / 2}px`;
+      tip.style.top = `${rect.top - tip.offsetHeight - 8}px`;
+    };
+
+    this._avatarMouseOut = (e) => {
+      if (!e.target.closest(".app-avatar-has-tip")) return;
+      tip.classList.remove("visible");
+    };
+
+    document.addEventListener("mouseover", this._avatarMouseOver);
+    document.addEventListener("mouseout", this._avatarMouseOut);
+  }
+
   destroy() {
     if (this._offLangChange) this._offLangChange();
+    if (this._avatarMouseOver) document.removeEventListener("mouseover", this._avatarMouseOver);
+    if (this._avatarMouseOut) document.removeEventListener("mouseout", this._avatarMouseOut);
+    const tip = document.getElementById("app-avatar-tip");
+    if (tip) tip.remove();
   }
 }

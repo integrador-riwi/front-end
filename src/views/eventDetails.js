@@ -97,9 +97,6 @@ export default class EventDetails {
         <small class="text-muted">${t("eventDetails.type")}</small>
         <p class="fw-semibold mb-0">${event.event_type || t("eventDetails.na")}</p>
         
-        <small class="text-muted mt-3 d-block">${t("eventDetails.cohort")}</small>
-        <p class="fw-semibold mb-0">${event.cohort || t("eventDetails.na")}</p>
-        
         <small class="text-muted mt-3 d-block">${t("eventDetails.route")}</small>
         <p class="fw-semibold mb-0">${event.route || t("eventDetails.na")}</p>
       `;
@@ -127,7 +124,7 @@ export default class EventDetails {
     const app = document.getElementById("app");
 
     const mainContent = await fetch(
-      `../../pages/admin_event_details.html`,
+        `../../pages/admin_event_details.html`,
     ).then((r) => r.text());
 
     app.innerHTML = `
@@ -163,7 +160,7 @@ export default class EventDetails {
 
     if (!this.event) {
       eventContainer.innerHTML = this.renderError(
-        t("events.notFound") ?? t("events.notFound") ?? "Event not found",
+          t("events.notFound") ?? t("events.notFound") ?? "Event not found",
       );
       return;
     }

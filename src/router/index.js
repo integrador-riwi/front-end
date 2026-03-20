@@ -21,75 +21,16 @@ import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
 import FinalistsView from "../views/Finalists.js";
+import Landing from "../views/Landing.js";
 import {
   i18nReady,
   t,
-  toggleLang,
   onLangChange,
-  getLang,
 } from "../utils/i18n.js";
 
 await i18nReady;
 
-// ── Floating language toggle (always visible, all views) ──────────────────────
-function mountLangToggle() {
-  const existing = document.getElementById("floatingLangBtn");
-  if (existing) existing.remove();
 
-  const btn = document.createElement("button");
-  btn.id = "floatingLangBtn";
-  btn.textContent = t("nav.langToggle");
-  btn.title = t("nav.langLabel");
-  btn.style.cssText = `
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    background: var(--color-primary, #6b5cff);
-    color: #fff;
-    border: none;
-    border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-    transition: opacity 0.2s;
-  `;
-  btn.addEventListener("mouseenter", () => {
-    if (!btn.disabled) btn.style.opacity = "0.85";
-  });
-  btn.addEventListener("mouseleave", () => {
-    if (!btn.disabled) btn.style.opacity = "1";
-  });
-  btn.addEventListener("click", async () => {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    btn.style.cursor = "not-allowed";
-    try {
-      await toggleLang();
-    } finally {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-      btn.style.cursor = "pointer";
-    }
-  });
-  document.body.appendChild(btn);
-}
-
-mountLangToggle();
-// Update only the button label on lang change — no full re-mount needed
-onLangChange(() => {
-  const btn = document.getElementById("floatingLangBtn");
-  if (btn) {
-    btn.textContent = t("nav.langToggle");
-    btn.title = t("nav.langLabel");
-  } else {
-    mountLangToggle();
-  }
-});
 
 if (isAuthenticated()) {
   initSocket();
@@ -99,6 +40,7 @@ import QRVoting from "../views/EventVoting.js";
 import NotFoundView from "../views/NotFoundView.js";
 
 const ROUTE_PERMISSIONS = {
+  landing: "PUBLIC",
   login: "PUBLIC",
   dashboard: ["ADMIN", "STAFF"],
   events: ["ADMIN", "STAFF"],
@@ -142,6 +84,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   vote: "PUBLIC",
+  staffVote: "PUBLIC",
   finalists: ["ADMIN", "STAFF"],
 };
 
@@ -179,7 +122,7 @@ class App {
 
   getHomeRoute() {
     const user = getCurrentUser();
-    if (!user) return "login";
+    if (!user) return "landing";
 
     switch (user.role) {
       case "ADMIN":
@@ -196,7 +139,7 @@ class App {
     }
   }
 
-  init() {
+  async init() {
     const path = window.location.pathname;
 
     // Detect QR public voting route
@@ -206,14 +149,18 @@ class App {
       return;
     }
 
+    // Detect staff private voting route
+    if (path.startsWith("/staff-vote/")) {
+      const staffToken = path.split("/")[2];
+      this.navigate("staffVote", { staffToken });
+      return;
+    }
+
     if (path.startsWith("/profile/")) {
       const userId = path.split("/")[2];
       this.navigate("publicProfile", { userId });
       return;
     }
-
-    const user = getCurrentUser();
-    this.user = user;
 
     const params = new URLSearchParams(window.location.search);
     const githubSuccess = params.get("github");
@@ -223,7 +170,7 @@ class App {
       window.history.replaceState({}, "", "/");
 
       if (!isAuthenticated()) {
-        this.navigate("login");
+        this.navigate("landing");
         return;
       }
 
@@ -236,12 +183,51 @@ class App {
       return;
     }
 
+    // Sin token → landing directamente
     if (!isAuthenticated()) {
-      this.navigate("login");
+      this.navigate("landing");
       return;
     }
 
-    this.navigate(this.getHomeRoute());
+    // Hay token — verificar que sigue siendo válido
+    try {
+      const { getMe } = await import("../services/api.js");
+      const me = await getMe();
+      const user = me?.data ?? me;
+      if (user) {
+        const { saveUser } = await import("../utils/auth.js");
+        saveUser(user);
+        this.user = user;
+      }
+
+      // Intentar restaurar la última ruta visitada (persistida en sessionStorage)
+      const savedRoute = sessionStorage.getItem("lastRoute");
+      if (savedRoute) {
+        try {
+          const { route, params } = JSON.parse(savedRoute);
+          // Verificar que el rol del usuario tiene acceso a esa ruta
+          const permission = ROUTE_PERMISSIONS[route];
+          const userRole = (me?.data ?? me)?.role;
+          if (permission && (permission === "PUBLIC" || (Array.isArray(permission) && permission.includes(userRole)))) {
+            this.navigate(route, params || {});
+            return;
+          }
+        } catch {
+          // Si hay error parseando, ignorar y usar home por defecto
+        }
+      }
+
+      this.navigate(this.getHomeRoute());
+    } catch (err) {
+      // Si el token sigue en localStorage, el error fue transitorio (red, CORS, etc.)
+      // No cerrar sesión — redirigir al home de todas formas
+      // Solo ir a landing si apiFetch ya limpió el token (auth realmente falló)
+      if (isAuthenticated()) {
+        this.navigate(this.getHomeRoute());
+      } else {
+        this.navigate("landing");
+      }
+    }
   }
 
   async checkUserTeam() {
@@ -314,6 +300,12 @@ class App {
       this.historyStack.push({ route: this.currentRoute, params: this.currentParams });
     }
 
+    // Persistir la ruta actual para restaurarla si el usuario recarga
+    // Solo guardar rutas privadas (no landing/login/vote/staffVote)
+    const publicRoutes = ["landing", "login", "vote", "staffVote", "not-found"];
+    if (!publicRoutes.includes(route)) {
+      sessionStorage.setItem("lastRoute", JSON.stringify({ route, params }));
+    }
 
     this._renderView(route, params);
   }
@@ -328,6 +320,10 @@ class App {
   }
   _mountView(route, params = {}) {
     switch (route) {
+      case "landing":
+        this.currentView = new Landing(this);
+        break;
+
       case "login":
         this.currentView = new LoginView(this);
         break;
@@ -381,7 +377,7 @@ class App {
         break;
 
       case "profile":
-        this.currentView = new ProfileView(this);
+        this.currentView = new PublicProfileView(this, { userId: getCurrentUser()?.id_user });
         break;
 
       case "publicProfile":
@@ -395,6 +391,11 @@ class App {
 
       case "vote":
         this.currentView = new PublicVotingPage(this, params);
+        this.currentView.render(this.app);
+        return;
+
+      case "staffVote":
+        this.currentView = new PublicVotingPage(this, { ...params, isStaff: true });
         this.currentView.render(this.app);
         return;
       case "finalists":
