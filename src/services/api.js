@@ -157,6 +157,7 @@ export async function checkCedulaVoted(qrVoteId, documento) {
   });
 }
 
+export async function getQRImageById(qr_id) {
   return apiFetch(`/qr-votes/${qr_id}/image`, {
     method: "GET",
   });
