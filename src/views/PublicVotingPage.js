@@ -446,6 +446,9 @@ export default class PublicVotingPage {
       if (!hasMoved && dx < 8 && dy < 8) return;
       hasMoved = true;
 
+      // Prevent page scroll while dragging
+      e.preventDefault();
+
       if (!clone) {
         // Create clone now that we know it's a real drag
         const el = document.querySelector(`[data-id="${td.id}"][data-from="${td.from}"]`);
@@ -467,7 +470,7 @@ export default class PublicVotingPage {
       this._clearDragOver();
       const slot = getSlotAt(touch.clientX, touch.clientY);
       if (slot) slot.classList.add("v-slot--over");
-    }, { passive: true });
+    }, { passive: false });
 
     root.addEventListener("touchend", (e) => {
       this._clearDragOver();
