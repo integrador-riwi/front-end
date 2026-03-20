@@ -68,7 +68,7 @@ export default class FinalistsView {
             <span class="material-symbols-outlined podium-stars">stars</span>
           </div>` : avatarEl(team, position)}
           <h4 class="mt-2 mb-0 ${config.nameClass}">${team.team_name}</h4>
-          <p class="mb-0 podium-project-name">${team.name ?? ''}</p>
+          <p class="mb-0 podium-project-name">${team.project_name ?? team.name ?? ''}</p>
         </div>
 
         <!-- Podium block -->

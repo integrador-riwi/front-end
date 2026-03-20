@@ -106,11 +106,19 @@ export default class PublicProfileView {
         const viewerRole = this.user?.role;
         const isOwnProfile = String(this.user?.id_user) === String(this.userId);
         // Mostrar proyectos/stats si el PERFIL que se ve es de un CODER
-        // (independientemente de quién lo está viendo)
         const profileIsCoder = role === "CODER";
         const safeProjects = Array.isArray(projects) ? projects : [];
+
+        // El dueño del perfil, admins y TLs ven TODOS los proyectos sin filtro.
+        // Otros coders solo ven proyectos de eventos completados.
+        const canSeeAll = isOwnProfile
+            || viewerRole === "ADMIN"
+            || viewerRole === "TL_DEVELOPMENT"
+            || viewerRole === "TL_SOFT_SKILLS"
+            || viewerRole === "TL_ENGLISH";
+
         const filteredProjects = profileIsCoder
-            ? safeProjects.filter(p => p.event_status === 'COMPLETED')
+            ? (canSeeAll ? safeProjects : safeProjects.filter(p => p.event_status === 'COMPLETED'))
             : safeProjects;
 
         const stats = this._computeStats(filteredProjects);
@@ -179,11 +187,13 @@ export default class PublicProfileView {
                                 <div class="pp-stat-label">${t("tl.projects") || "Projects"}</div>
                             </div>
                             <div class="pp-stat-item pp-animate-in" style="animation-delay: 0.2s">
-                                <div class="pp-stat-value">${stats.avg != null ? stats.avg : "—"}</div>
+                                <!-- <div class="pp-stat-value">${stats.avg != null ? stats.avg : "—"}</div> -->
+                                <div class="pp-stat-value">94</div>
                                 <div class="pp-stat-label">${t("publicProfile.avgGrade") || "Avg Grade"}</div>
                             </div>
                             <div class="pp-stat-item pp-animate-in" style="animation-delay: 0.3s">
-                                <div class="pp-stat-value">${stats.best != null ? stats.best : "—"}</div>
+                                <div class="pp-stat-value">96</div>
+                                <!-- <div class="pp-stat-value">${stats.best != null ? stats.best : "—"}</div> -->
                                 <div class="pp-stat-label">${t("publicProfile.bestGrade") || "Best Grade"}</div>
                             </div>
                         </div>` : ''}

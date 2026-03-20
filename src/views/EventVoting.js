@@ -1,7 +1,7 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getEventRanking, calculateFinalists } from "../services/api-events.js";
-import { createQR, getQR, getVoteResults, apiFetch } from "../services/api.js";
+import { createQR, createStaffQR, getQR, getVoteResults, apiFetch, auditVotesByEvent } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
@@ -27,6 +27,9 @@ export default class QRVoting {
 
     this.voteResults = [];
     this.totalVotes = 0;
+
+    this.staffQrLink = null;
+    this.staffQrImage = null;
 
     this.pollingInterval = null;
   }
@@ -335,6 +338,142 @@ export default class QRVoting {
     });
   }
 
+  /* -------------------------- STAFF QR -------------------------- */
+
+  renderStaffQRSection() {
+    let container = document.getElementById("staff-qr-section");
+
+    // Si el div no existe en el template aún, lo creamos después del danger zone
+    if (!container) {
+      const dangerZone = document.getElementById("reset-votes-section");
+      if (!dangerZone) return;
+      container = document.createElement("div");
+      container.id = "staff-qr-section";
+      container.className = "mt-3";
+      dangerZone.insertAdjacentElement("afterend", container);
+    }
+
+    container.innerHTML = `
+      <div class="rounded-4 p-4" style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="material-symbols-outlined" style="color:#6b5cff;font-size:1.2rem;">lock</span>
+          <h3 class="fw-bold mb-0" style="color:#181e4b;font-size:1rem;">Staff Voting Link</h3>
+          <span class="badge rounded-pill ms-1" style="background:rgba(107,92,255,0.1);color:#6b5cff;font-size:0.7rem;">PRIVATE</span>
+        </div>
+        <p class="mb-3" style="color:#7b7fa8;font-size:0.83rem;">
+          Generate a private link for staff members only. This link is different from the public QR and won't be visible to the audience.
+        </p>
+
+        ${this.staffQrLink ? `
+          <!-- Link generado — oculto como contraseña -->
+          <div class="rounded-3 p-3 mb-3 d-flex align-items-center gap-2"
+               style="background:#f4f3ff;border:1px solid rgba(107,92,255,0.2);">
+            <span class="material-symbols-outlined flex-shrink-0" style="color:#6b5cff;font-size:1rem;">lock</span>
+            <span class="flex-grow-1" style="font-size:1rem;color:#181e4b;letter-spacing:3px;user-select:none;">
+              ••••••••••••••••••••••••••••••
+            </span>
+            <button id="copy-staff-link-btn"
+                    class="btn btn-sm flex-shrink-0 fw-bold d-flex align-items-center gap-1"
+                    style="background:rgba(107,92,255,0.1);color:#6b5cff;border:none;border-radius:8px;font-size:0.78rem;padding:5px 12px;">
+              <span class="material-symbols-outlined" style="font-size:0.95rem;">content_copy</span>
+              Copy link
+            </button>
+          </div>
+
+          <button id="regenerate-staff-qr-btn"
+                  class="btn btn-sm w-100 fw-bold"
+                  style="background:transparent;color:#7b7fa8;border:1px solid rgba(107,92,255,0.2);border-radius:8px;font-size:0.8rem;padding:6px;">
+            Regenerate Link
+          </button>
+
+        ` : `
+          <!-- Sin link aún -->
+          <button id="generate-staff-qr-btn"
+                  class="btn w-100 fw-bold"
+                  style="background:rgba(107,92,255,0.08);color:#6b5cff;border:1.5px dashed rgba(107,92,255,0.3);border-radius:10px;font-size:0.875rem;padding:10px;"
+                  ${!this.finalistsApproved ? "disabled title='Approve finalists first'" : ""}>
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">add_link</span>
+            Generate Staff Link
+          </button>
+          ${!this.finalistsApproved ? `
+            <p class="text-center mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">
+              Approve finalists before generating the staff link
+            </p>
+          ` : ""}
+        `}
+      </div>
+    `;
+
+    this._attachStaffQRHandlers();
+  }
+
+  _attachStaffQRHandlers() {
+    // Generar por primera vez
+    const generateBtn = document.getElementById("generate-staff-qr-btn");
+    if (generateBtn) {
+      generateBtn.addEventListener("click", () => this._generateStaffQR(generateBtn));
+    }
+
+    // Regenerar
+    const regenBtn = document.getElementById("regenerate-staff-qr-btn");
+    if (regenBtn) {
+      regenBtn.addEventListener("click", () => this._generateStaffQR(regenBtn));
+    }
+
+    // Copiar link
+    const copyBtn = document.getElementById("copy-staff-link-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(this.staffQrLink);
+          copyBtn.textContent = "Copied!";
+          copyBtn.style.background = "rgba(90,204,164,0.15)";
+          copyBtn.style.color = "#059669";
+          setTimeout(() => {
+            copyBtn.textContent = "Copy";
+            copyBtn.style.background = "rgba(107,92,255,0.1)";
+            copyBtn.style.color = "#6b5cff";
+          }, 2000);
+        } catch {
+          copyBtn.textContent = "Error";
+        }
+      });
+    }
+  }
+
+  async _generateStaffQR(triggerBtn) {
+    if (!this.finalistsApproved) return;
+
+    const expirationInput = document.getElementById("qr-expiration");
+    const expirationValue = expirationInput?.value;
+    if (!expirationValue) {
+      alert("Please select an expiration date first.");
+      return;
+    }
+
+    const originalHtml = triggerBtn.innerHTML;
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Generating…`;
+
+    try {
+      const eventId = getSelectedEvent();
+      const expirationDate = new Date(expirationValue).toISOString();
+
+      const response = await createStaffQR(eventId, expirationDate, this.finalists);
+      const data = response?.data ?? response;
+
+      this.staffQrLink  = data?.votePageUrl ?? data?.qrVote?.qr_code_url ?? null;
+      this.staffQrImage = data?.qrImage ?? null;
+
+      this.renderStaffQRSection();
+    } catch (err) {
+      console.error("Staff QR error:", err);
+      alert("Error generating staff link: " + (err?.message ?? "Unknown error"));
+      triggerBtn.disabled = false;
+      triggerBtn.innerHTML = originalHtml;
+    }
+  }
+
   handleResetVotes() {
     // Only show reset section for ADMIN
     const resetSection = document.getElementById("reset-votes-section");
@@ -365,9 +504,7 @@ export default class QRVoting {
       try {
         const eventId = getSelectedEvent();
 
-        // 👇 Ask backend teammate to implement this endpoint
-        // DELETE /api/qr-votes/event/:eventId/reset
-        await apiFetch(`/qr-votes/event/${eventId}/votes`, { method: 'DELETE' });
+      await apiFetch(`/qr-votes/event/${eventId}/reset`, { method: 'DELETE' });
 
         // Clear localStorage QR cache
         localStorage.removeItem(`qr_event_${eventId}`);
@@ -389,7 +526,7 @@ export default class QRVoting {
         this.updateDownloadButton(null);
         this.updateSubmitVotesButton();
 
-        btn.innerHTML = `✅ Votes reset successfully`;
+        btn.innerHTML = `Votes reset successfully`;
         btn.disabled  = false;
 
         // Reload ranking panel to reset approve state
@@ -561,7 +698,7 @@ export default class QRVoting {
       const res = await getVoteResults(eventId);
       this.voteResults = res?.results ?? res ?? [];
       this.totalVotes = this.voteResults.reduce(
-          (sum, t) => sum + (t.votes ?? t.vote_count ?? 0),
+          (sum, t) => sum + Number(t.total_votes ?? t.votes ?? t.vote_count ?? 0),
           0,
       );
     } catch (err) {
@@ -600,7 +737,7 @@ export default class QRVoting {
     }
 
     const sorted = [...filteredResults].sort(
-        (a, b) => (b.votes ?? b.vote_count ?? 0) - (a.votes ?? a.vote_count ?? 0),
+        (a, b) => Number(b.total_votes ?? b.votes ?? b.vote_count ?? 0) - Number(a.total_votes ?? a.votes ?? a.vote_count ?? 0),
     );
 
     const accentColors = [
@@ -699,7 +836,8 @@ export default class QRVoting {
         approveBtn.classList.remove("btn-success");
         approveBtn.classList.add("btn-secondary");
 
-        this.updateQrButtonState(); //
+        this.updateQrButtonState();
+        this.renderStaffQRSection();
 
         console.log("Finalists approved:", this.finalists);
       });
@@ -744,6 +882,13 @@ export default class QRVoting {
     this.updateQrButtonState();
     await this.loadExistingQR();
 
+    // Si ya hay un QR activo, los finalistas ya fueron aprobados en algún momento
+    if (this.qrActive) this.finalistsApproved = true;
+    this.renderStaffQRSection();
+
+    // Wire up audit button from template
+    document.getElementById("open-audit-btn")?.addEventListener("click", () => this.openAuditModal());
+
     await this.fetchVoteResults();
     this.renderResults();
     this.updateQrStatusPill();
@@ -758,6 +903,124 @@ export default class QRVoting {
         await this.fetchVoteResults();
         this.renderResults();
       }, 15000);
+    }
+  }
+
+  // ── Auditoría de votos ────────────────────────────────────────────────────
+  async openAuditModal() {
+    const eventId = getSelectedEvent();
+    if (!eventId) return;
+
+    let modal = document.getElementById("audit-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "audit-modal";
+      modal.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;";
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:780px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 Vote Audit</h5>
+          <button id="close-audit-modal" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
+        </div>
+        <div id="audit-modal-body" style="overflow-y:auto;padding:24px;flex:1;">
+          <div class="text-center py-4" style="color:#6b7280;">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Verifying HMAC signatures...
+          </div>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = "flex";
+    document.getElementById("close-audit-modal").addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+
+    try {
+      const { summary, votes } = await auditVotesByEvent(eventId);
+      const body = document.getElementById("audit-modal-body");
+
+      const verdictBadge = (status) => {
+        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ VALID</span>`;
+        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ NO SIGNATURE</span>`;
+        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ INVALID</span>`;
+      };
+
+      const invalidAlert = summary.invalid > 0
+        ? `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:.875rem;">
+             ⚠️ <strong>${summary.invalid} voto(s) con firma inválida detectados.</strong>
+             Estos votos pudieron haber sido modificados o insertados directamente en la base de datos.
+           </div>`
+        : "";
+
+      const noHashAlert = summary.no_hash > 0
+        ? `<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
+             ℹ️ <strong>${summary.no_hash} voto(s) sin firma HMAC.</strong>
+             Fueron registrados antes de activar el sistema de auditoría.
+           </div>`
+        : "";
+
+      const rows = votes.map((v, i) => `
+        <tr style="border-bottom:1px solid #f3f4f6;${v.status === "INVALID" ? "background:#fff5f5;" : ""}">
+          <td style="padding:8px 12px;color:#9ca3af;">${i + 1}</td>
+          <td style="padding:8px 12px;font-weight:600;">${v.project_name ?? "—"}</td>
+          <td style="padding:8px 12px;">
+            <span style="background:${v.voter_role === "STAFF" ? "#ede9fe" : "#e0f2fe"};color:${v.voter_role === "STAFF" ? "#7c3aed" : "#0369a1"};padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:700;">
+              ${v.voter_role}
+            </span>
+          </td>
+          <td style="padding:8px 12px;color:#6b7280;font-family:monospace;font-size:.75rem;">${v.voter_ip ?? "—"}</td>
+          <td style="padding:8px 12px;color:#6b7280;font-size:.75rem;">${v.voted_at ? new Date(v.voted_at).toLocaleString("es-CO") : "—"}</td>
+          <td style="padding:8px 12px;">${verdictBadge(v.status)}</td>
+        </tr>
+      `).join("");
+
+      body.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+          <div style="background:#d1fae5;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#065f46;">${summary.valid}</div>
+            <div style="font-size:.8rem;color:#065f46;font-weight:600;">Valid</div>
+          </div>
+          <div style="background:#fef3c7;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#92400e;">${summary.no_hash}</div>
+            <div style="font-size:.8rem;color:#92400e;font-weight:600;">No Signature</div>
+          </div>
+          <div style="background:#fee2e2;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#991b1b;">${summary.invalid}</div>
+            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">Invalid</div>
+          </div>
+        </div>
+        ${invalidAlert}
+        ${noHashAlert}
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+            <thead>
+              <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">#</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Project</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Role</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">IP</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Date</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          ${votes.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:24px 0;">No votes registered.</p>' : ""}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("audit-modal-body").innerHTML = `
+        <div style="color:#ef4444;text-align:center;padding:24px;">
+          Error loading audit: ${err.message}
+        </div>
+      `;
     }
   }
 }

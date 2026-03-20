@@ -1,0 +1,476 @@
+@import url("./root.css");
+
+/* ----------------------------------------------
+   3. Navbar
+---------------------------------------------- */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 16px var(--accent-glow);
+}
+
+.nav-brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--navy) !important;
+  letter-spacing: -0.03em; 
+}
+
+.nav-link-custom {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted) !important;
+  transition: color 0.2s;
+}
+.nav-link-custom:hover { color: var(--accent) !important; }
+
+.btn-primary-pill {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.6rem 1.6rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 18px var(--accent-glow);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.btn-primary-pill:hover {
+  transform: scale(0.96);
+  box-shadow: 0 6px 24px var(--accent-glow);
+  color: #fff;
+}
+
+
+/* ----------------------------------------------
+   4. Hero
+---------------------------------------------- */
+.hero-section { padding: 5rem 0 3rem; }
+
+.hero-heading {
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.09;
+  letter-spacing: -0.04em;
+}
+.hero-heading .accent { color: var(--accent); }
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 480px;
+}
+
+.btn-hero-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 6px 24px var(--accent-glow);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.18s;
+}
+.btn-hero-primary:hover { transform: scale(0.96); color: #fff; }
+
+.btn-hero-ghost {
+  background: rgba(107, 92, 255, 0.08);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-card);
+  border-radius: 9999px;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.btn-hero-ghost:hover {
+  background: rgba(107, 92, 255, 0.14);
+  color: var(--text-primary);
+}
+
+.hero-img-wrap {
+  background: var(--bg-panel);
+  border-radius: 1.5rem;
+  padding: 1rem;
+  box-shadow: 0 24px 80px rgba(107, 92, 255, 0.10);
+  border: 1px solid var(--border);
+}
+
+
+/* ----------------------------------------------
+   5. Stat Cards
+---------------------------------------------- */
+.stat-card {
+  border-radius: 1rem;
+  height: 12rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: none;
+  transition: transform 0.28s cubic-bezier(.34, 1.56, .64, 1),
+              box-shadow 0.28s ease;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(107, 92, 255, 0.14);
+}
+
+/* Themes */
+.stat-card--accent {
+  background: rgba(107, 92, 255, 0.12);
+  border: 1px solid var(--border-card);
+}
+.stat-card--mint {
+  background: rgba(90, 204, 164, 0.12);
+  border: 1px solid rgba(90, 204, 164, 0.28);
+}
+.stat-card--surface {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(107, 92, 255, 0.05);
+}
+
+/* Scoped colours */
+.stat-card--accent .stat-number,
+.stat-card--mint .stat-number,
+.stat-card--surface .stat-number    { color: var(--navy); }
+
+.stat-card--accent .stat-desc       { color: rgba(24, 30, 75, 0.75); font-size: 0.875rem; }
+.stat-card--mint .stat-desc         { color: rgba(24, 30, 75, 0.70); font-size: 0.75rem;  }
+.stat-card--surface .stat-desc      { color: var(--text-muted);      font-size: 0.75rem;  }
+
+.stat-card--accent  .material-symbols-outlined { color: var(--accent); }
+.stat-card--mint    .material-symbols-outlined { color: var(--mint);   }
+.stat-card--surface .material-symbols-outlined { color: var(--accent); }
+
+/* Badge */
+.stat-label-top {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(107, 92, 255, 0.60);
+}
+
+/* Numbers */
+.stat-number {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+.stat-number--sm { font-size: 1.5rem; }
+
+/* Icon bubble */
+.icon-bubble {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-bubble--dim { background: var(--accent-dim); }
+
+
+/* ----------------------------------------------
+   6. Shared Section Helpers
+---------------------------------------------- */
+.section-eyebrow {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+.section-sub {
+  color: var(--text-muted);
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+.section-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+
+/* ----------------------------------------------
+   7. Features / Bento Grid
+---------------------------------------------- */
+.features-section { padding: 0 0 6rem; }
+
+.bento-card {
+  border-radius: 1.25rem;
+  padding: 2.25rem;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  transition: transform 0.28s cubic-bezier(.34, 1.56, .64, 1),
+              box-shadow 0.28s ease;
+}
+.bento-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(107, 92, 255, 0.12);
+}
+
+.bento-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Accent (purple) */
+.bento-accent {
+  background: rgba(107, 92, 255, 0.10);
+  border: 1px solid var(--border-card);
+}
+.bento-accent .bento-icon     { background: var(--accent); color: #fff; }
+.bento-accent h3,
+.bento-accent p               { color: var(--navy); }
+.bento-accent .bento-body     { font-size: 1.05rem; line-height: 1.65; max-width: 22rem; }
+.bento-accent .glow-orb {
+  position: absolute;
+  bottom: -3rem; right: -3rem;
+  width: 10rem;  height: 10rem;
+  background: var(--accent-glow);
+  border-radius: 50%;
+  filter: blur(40px);
+  transition: transform 0.4s;
+}
+.bento-card:hover .glow-orb   { transform: scale(1.25); }
+
+/* Mint */
+.bento-mint {
+  background: rgba(90, 204, 164, 0.08);
+  border: 1px solid rgba(90, 204, 164, 0.25);
+}
+.bento-mint .bento-icon       { background: var(--mint); color: #fff; }
+.bento-mint h3,
+.bento-mint p                 { color: var(--navy); line-height: 1.65; }
+
+/* Plain */
+.bento-plain {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+.bento-plain .bento-icon      { background: transparent; }
+.bento-plain h3               { color: var(--text-primary); }
+.bento-plain p                { color: var(--text-muted); }
+
+/* Lilac */
+.bento-lilac {
+  background: rgba(234, 162, 252, 0.10);
+  border: 1px solid rgba(234, 162, 252, 0.28);
+}
+.bento-lilac .bento-icon      { background: var(--lilac); }
+.bento-lilac h3,
+.bento-lilac p                { color: var(--navy); }
+
+/* Gold */
+.bento-gold {
+  background: rgba(230, 202, 82, 0.12);
+  border: 1px solid rgba(230, 202, 82, 0.35);
+}
+.bento-gold h3                { color: var(--text-primary); }
+.bento-gold p                 { color: var(--text-muted); font-size: 0.875rem; }
+.bento-gold .icon-star {
+  font-size: 3rem;
+  color: var(--gold);
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Pills */
+.pill-tag {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.pill-tag--mint {
+  background: rgba(90, 204, 164, 0.15);
+  color: var(--mint);
+}
+
+.divider-mint {
+  border-top: 1px solid rgba(90, 204, 164, 0.25);
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+
+/* ----------------------------------------------
+   8. How It Works
+---------------------------------------------- */
+.how-section { padding: 0 0 6rem; }
+
+.how-heading {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+}
+
+.step-circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.step-circle.c-accent { background: var(--accent); color: #fff;        }
+.step-circle.c-mint   { background: var(--mint);   color: #fff;        }
+.step-circle.c-lilac  { background: var(--lilac);  color: var(--navy); }
+
+.step-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+.step-desc  { color: var(--text-muted); line-height: 1.65; }
+
+.how-img-wrap {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(107, 92, 255, 0.10);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.how-img-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top left, var(--accent-dim) 0%, transparent 70%);
+  z-index: 1;
+  pointer-events: none;
+}
+.how-img-wrap img { width: 100%; display: block; }
+
+
+/* ----------------------------------------------
+   9. Tech Stack
+---------------------------------------------- */
+.tech-section { padding: 0 0 6rem; }
+
+.tech-pill {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0.6rem 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tech-pill:hover {
+  border-color: var(--border-card);
+  box-shadow: 0 4px 16px var(--accent-dim);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot--js       { background: #eab308; }
+.dot--vite     { background: #a855f7; }
+.dot--node     { background: #22c55e; }
+.dot--bootstrap { background: #38bdf8; }
+.dot--postgres { background: #f97316; }
+
+
+/* ----------------------------------------------
+   10. CTA Banner
+---------------------------------------------- */
+.cta-section { padding: 0 0 5rem; }
+
+.cta-card {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--color-primary-dark) 100%);
+  border-radius: 1.75rem;
+  padding: 5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 80px var(--accent-glow);
+}
+.cta-card h2 {
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.cta-card p {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1.05rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.cta-inner { position: relative; z-index: 2; }
+
+.btn-cta {
+  background: #fff;
+  color: var(--accent);
+  border: none;
+  border-radius: 9999px;
+  padding: 1rem 2.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s;
+}
+.btn-cta:hover { transform: scale(1.05); color: var(--accent); }
+
+.cta-orb {
+  position: absolute;
+  width: 16rem;
+  height: 16rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  filter: blur(40px);
+}
+.cta-orb-tl { top: -5rem;    left: -5rem;  }
+.cta-orb-br { bottom: -5rem; right: -5rem; }
+
+
+/* ----------------------------------------------
+   11. Footer
+---------------------------------------------- */
+.site-footer {
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  padding: 3rem 0;
+}
+.footer-brand   { font-size: 1.15rem; font-weight: 800; color: var(--navy); }
+.footer-tagline { font-size: 0.82rem; color: var(--text-muted); }
+.footer-link {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-link:hover { color: var(--accent); }
+.footer-icon       { color: var(--text-dim); }

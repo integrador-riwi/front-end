@@ -17,7 +17,12 @@ export default class LoginView {
   render() {
     const app = document.getElementById("app");
     app.innerHTML = `
+      <button class="back-btn" id="backBtn">
+          <span class="material-icons-round" style="font-size:1.1rem">arrow_back</span>
+          ${t("common.back") || "Home"}
+      </button>
       <main class="login-shell">
+
 
         <!-- ── LEFT PANEL ── -->
         <section class="login-left d-none d-md-flex flex-column justify-content-center align-items-center">
@@ -127,6 +132,10 @@ export default class LoginView {
       this.password = e.target.value;
     });
     form.addEventListener("submit", (e) => this.handleLogin(e));
+
+    document.getElementById("backBtn")?.addEventListener("click", () => {
+      this.router.back();
+    });
   }
 
   async handleLogin(e) {
@@ -137,7 +146,7 @@ export default class LoginView {
 
     try {
       const response = await loginUser(this.email, this.password);
-      saveSession(response.data.token, response.data.user);
+      saveSession(response.data.token, response.data.refreshToken, response.data.user);
       this.router.init();
     } catch (err) {
       const errorMessage =
