@@ -1510,3 +1510,34 @@
     transform: rotate(360deg);
   }
 }
+/* ── Video & media previews ─────────────────────────────────────────────────── */
+.ct-media-preview {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Responsive iframe (YouTube / Vimeo) — 16:9 aspect ratio */
+.ct-video-preview:has(iframe) {
+  position: relative;
+  padding-top: 56.25%; /* 16:9 */
+  height: 0;
+}
+
+.ct-video-preview iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Native video (Cloudinary / direct file) */
+.ct-video-preview video {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 420px;
+}
