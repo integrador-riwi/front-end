@@ -8,3 +8,31 @@ body {
   font-family: 'Ubuntu', sans-serif;
 }
 
+/* Global Language Toggle Button */
+.global-lang-toggle-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--card-bg, #fff);
+  color: var(--text-color, #333);
+  border: 1px solid var(--border, #ccc);
+  border-radius: 30px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.global-lang-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--primary-color, #4a6ee0);
+  color: white;
+  border-color: var(--primary-color, #4a6ee0);
+}

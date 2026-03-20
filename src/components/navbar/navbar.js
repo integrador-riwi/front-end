@@ -121,9 +121,6 @@ export default class Navbar {
               ${icons.logout()}
               ${t("nav.signOut")}
             </button>
-            <button class="btn btn-sm lang-toggle-btn" id="langToggleBtn" title="${t("nav.langLabel")}" style="flex-shrink:0; font-size:0.75rem; font-weight:600; border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              ${t("nav.langToggle")}
-            </button>
           </div>
         </div>
 
@@ -253,13 +250,6 @@ export default class Navbar {
     overlay?.addEventListener("click", () => {
       this.closeSidebarMobile();
     });
-
-    // LANG TOGGLE
-    document
-        .getElementById("langToggleBtn")
-        ?.addEventListener("click", async () => {
-          await toggleLang();
-        });
   }
 
   destroy() {}

@@ -116,7 +116,7 @@ export default class DashboardView {
       return `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: var(--accent);"></div>
-          <p class="text-muted fw-medium">Loading Metrics...</p>
+          <p class="text-muted fw-medium">${t("dashboard.loadingMetrics") || "Loading Metrics..."}</p>
         </div>
       `;
     }
@@ -597,7 +597,7 @@ export default class DashboardView {
 
       const warnText = !canClose && missing.length > 0
           ? `<span class="small" style="color:var(--text-muted);font-size:0.72rem;">
-             ${missing.length} proyecto(s) sin cobertura completa
+             ${missing.length} ${t("dashboard.projectsMissingCoverage") || "proyecto(s) sin cobertura completa"}
            </span>`
           : "";
 

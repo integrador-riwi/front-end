@@ -101,6 +101,7 @@ class App {
     // Re-render the current view whenever the language changes.
     // Guard: register only once and skip auth checks on lang-triggered re-renders.
     this._langUnsubscribe = onLangChange(() => {
+      this.renderGlobalLangToggle();
       if (this.currentRoute) {
         this._renderView(this.currentRoute, this.currentParams);
       }
@@ -117,7 +118,28 @@ class App {
       }
     });
 
+    this.renderGlobalLangToggle();
     this.init();
+  }
+
+  renderGlobalLangToggle() {
+    let toggleBtn = document.getElementById("globalLangToggleBtn");
+    if (!toggleBtn) {
+      toggleBtn = document.createElement("button");
+      toggleBtn.id = "globalLangToggleBtn";
+      toggleBtn.className = "global-lang-toggle-btn shadow-sm";
+      document.body.appendChild(toggleBtn);
+      
+      toggleBtn.addEventListener("click", async () => {
+        const { toggleLang } = await import("../utils/i18n.js");
+        await toggleLang();
+      });
+    }
+    toggleBtn.innerHTML = `
+      <span class="material-symbols-outlined me-1" style="font-size: 1.1rem; line-height: 1;">language</span>
+      ${t("nav.langToggle")}
+    `;
+    toggleBtn.title = t("nav.langLabel");
   }
 
   getHomeRoute() {

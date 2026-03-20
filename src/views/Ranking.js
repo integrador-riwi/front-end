@@ -57,6 +57,7 @@ export default class Ranking {
     }
 
     await this._loadRanking(this.eventId);
+
   }
 
   // ── Data fetching ──────────────────────────────────────────────────────────
@@ -392,20 +393,21 @@ export default class Ranking {
     const maxScore = Math.max(...(this.rankingData?.ranking ?? []).map((t) => parseFloat(t.team_score) || 0), 1);
 
     const getRankIcon = (originalIndex) => {
-      const colors = ["#FFD700", "#C0C0C0", "#CD7F32", "#A5B4FC", "#A5B4FC"];
+      const colors = ["#FFD700", "#C0C0C0", "#CD7F32", "#A5B4FC", "#A5B4FC", "#A5B4FC"];
       const icons = [
         `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[0]}" stroke-width="2" class="rk-icon-rank"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7Z"/><path d="M19 16v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2"/></svg>`,
         `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[1]}" stroke-width="2" class="rk-icon-rank"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
         `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[2]}" stroke-width="2" class="rk-icon-rank"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
         `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[3]}" stroke-width="2" class="rk-icon-rank"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
         `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[4]}" stroke-width="2" class="rk-icon-rank"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+        `<svg viewBox="0 0 24 24" fill="none" stroke="${colors[5]}" stroke-width="2" class="rk-icon-rank"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
       ];
       return icons[originalIndex] || "";
     };
 
-    const podiumOrder = [3, 1, 0, 2, 4];
-    const top5Raw = (this.rankingData?.ranking ?? []).slice(0, 5);
-    const tableData = showPodium ? ranking.slice(5) : ranking;
+    const podiumOrder = [0, 1, 2, 3, 4, 5];
+    const top6Raw = (this.rankingData?.ranking ?? []).slice(0, 6);
+    const tableData = showPodium ? ranking.slice(6) : ranking;
 
     return `
       <div class="rk-content">
@@ -419,7 +421,7 @@ export default class Ranking {
   
           <div class="rk-podium-3d">
             ${podiumOrder.map(idx => {
-      const team = top5Raw[idx];
+      const team = top6Raw[idx];
       if (!team) return "";
       const isWinner = idx === 0;
       return `
