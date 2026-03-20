@@ -95,7 +95,6 @@ export default class PublicVotingPage {
           </svg>
         </div>
         <h2 class="v-modal-title">¡Voto registrado!</h2>
-        <p class="v-modal-team">${teamName}</p>
         <p class="v-modal-sub">Gracias por participar. Serás redirigido en unos segundos.</p>
         <div class="v-modal-countdown">
           <div class="v-modal-bar"><div class="v-modal-bar-fill" id="v-countdown-bar"></div></div>
