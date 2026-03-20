@@ -451,5 +451,4 @@ class App {
     this.currentView.render();
   }
 }
-
 new App();
