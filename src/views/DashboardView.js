@@ -129,9 +129,17 @@ export default class DashboardView {
     const evaluatedTeams = this.metrics?.evaluatedProjects ?? 0;
     const evalPercentage =
         totalTeams > 0 ? Math.round((evaluatedTeams / totalTeams) * 100) : 0;
+    const canEdit = this.user?.role === "ADMIN" && this.eventId;
 
     return `
       <div class="db-container">
+        ${canEdit ? `
+          <div class="d-flex justify-content-end">
+            <button id="db-edit-event-btn" class="btn btn-primary fw-semibold" style="background:#5548e2;border:none;">
+              ${t("eventDetails.edit")}
+            </button>
+          </div>
+        ` : ""}
         
         <div class="db-layout-main">
           
@@ -687,6 +695,12 @@ export default class DashboardView {
           e.preventDefault();
           this.router.navigate("ranking");
         });
+
+    document.getElementById("db-edit-event-btn")?.addEventListener("click", () => {
+      if (this.eventId) {
+        this.router.navigate("events/edit", { eventId: this.eventId });
+      }
+    });
 
     // ── Team search ────────────────────────────────────────────────────────
     const teamSearch = document.getElementById("db-team-search");

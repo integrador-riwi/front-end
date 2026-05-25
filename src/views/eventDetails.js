@@ -67,6 +67,7 @@ export default class EventDetails {
   renderEvent(event) {
     const title = event.title || event.name || "Untitled Event";
     const desc = event.description || t("common.noDescription");
+    const canEdit = this.user?.role === "ADMIN";
 
     return `
         <div class="col-lg-8">
@@ -78,7 +79,7 @@ export default class EventDetails {
             </div>
 
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <button class="btn btn-outline-accent me-2">${t("eventDetails.edit")}</button>
+            ${canEdit ? `<button id="edit-event-btn" class="btn btn-outline-accent me-2">${t("eventDetails.edit")}</button>` : ""}
         </div>
       `;
   }
@@ -180,6 +181,24 @@ export default class EventDetails {
       const route = e.currentTarget.dataset.route;
       if (route) {
         this.router.navigate(route);
+      }
+    });
+
+    const editBtn = document.getElementById("edit-event-btn");
+    editBtn?.addEventListener("click", () => {
+      if (this.eventId) {
+        this.router.navigate("events/edit", { eventId: this.eventId });
+      }
+    });
+
+    const editRubricsBtn = document.getElementById("edit-rubrics-btn");
+    if (this.user?.role !== "ADMIN") {
+      editRubricsBtn?.classList.add("d-none");
+      return;
+    }
+    editRubricsBtn?.addEventListener("click", () => {
+      if (this.eventId) {
+        this.router.navigate("events/edit", { eventId: this.eventId });
       }
     });
   }

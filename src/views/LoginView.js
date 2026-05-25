@@ -100,6 +100,12 @@ export default class LoginView {
                 }
               </button>
 
+              <div class="text-center mt-3">
+                <a href="#" id="registerLink" class="forgot-link">
+                  ${t("login.noAccount")}
+                </a>
+              </div>
+
             </form>
 
             <div class="accent-bar d-flex gap-1 mt-4">
@@ -135,6 +141,11 @@ export default class LoginView {
 
     document.getElementById("backBtn")?.addEventListener("click", () => {
       this.router.back();
+    });
+
+    document.getElementById("registerLink")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.router.navigate("register");
     });
   }
 

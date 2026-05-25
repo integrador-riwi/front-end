@@ -1,6 +1,7 @@
 import "../assets/styles/main.css";
 import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
+import RegisterView from "../views/RegisterView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
 import { initSocket } from "../services/socket.js";
@@ -42,9 +43,11 @@ import NotFoundView from "../views/NotFoundView.js";
 const ROUTE_PERMISSIONS = {
   landing: "PUBLIC",
   login: "PUBLIC",
+  register: "PUBLIC",
   dashboard: ["ADMIN", "STAFF"],
   events: ["ADMIN", "STAFF"],
   "events/create": ["ADMIN"],
+  "events/edit": ["ADMIN"],
   details: ["ADMIN", "STAFF"],
   projects: ["ADMIN", "STAFF"],
   browseProjects: ["CODER"],
@@ -328,6 +331,10 @@ class App {
         this.currentView = new LoginView(this);
         break;
 
+      case "register":
+        this.currentView = new RegisterView(this);
+        break;
+
       case "dashboard":
         this.currentView = new DashboardView(this, params);
         break;
@@ -337,7 +344,11 @@ class App {
         break;
 
       case "events/create":
-        this.currentView = new CreateEvent(this);
+        this.currentView = new CreateEvent(this, params);
+        break;
+
+      case "events/edit":
+        this.currentView = new CreateEvent(this, params);
         break;
 
       case "details":

@@ -19,6 +19,9 @@ function _processQueue(error, token = null) {
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${API_BASE_URL}${endpoint}`;
 
   const headers = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -29,7 +32,7 @@ export async function apiFetch(endpoint, options = {}) {
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(url, {
     ...options,
     headers,
     body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
@@ -106,10 +109,20 @@ export async function apiFetch(endpoint, options = {}) {
 }
 
 // Auth
+const REGISTER_API_BASE_URL =
+  "https://back-end-production-7f2c.up.railway.app/api";
+
 export async function loginUser(email, password) {
   return apiFetch("/auth/login", {
     method: "POST",
     body: { email, password },
+  });
+}
+
+export async function registerUser(payload) {
+  return apiFetch(`${REGISTER_API_BASE_URL}/auth/register`, {
+    method: "POST",
+    body: payload,
   });
 }
 

@@ -7,6 +7,14 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getGithubOrgs, getGithubAuthUrl } from "../services/api.js";
+import {
+  addEventRubrics,
+  deleteEventRubric,
+  getEventById,
+  getEventRubrics,
+  updateEvent,
+  updateEventRubric,
+} from "../services/api-events.js";
 import { toast } from "../components/Toast/index.js";
 import * as XLSX from "xlsx";
 
@@ -37,12 +45,18 @@ const ALL_CLANS = [
 ];
 
 export default class CreateEvent {
-  constructor(router) {
+  constructor(router, params = {}) {
     this.router = router;
     this.user = getUser();
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.loading = false;
+    this.isEdit = Boolean(params?.eventId);
+    this.eventId = params?.eventId ?? null;
+    this.event = null;
+    this._editLoaded = false;
+    this._originalRubrics = new Map();
+    this._loadedRubrics = null;
     this.targetClans = [];
     this.githubOrgs = [];
     this.githubConnected = false;
@@ -101,7 +115,7 @@ export default class CreateEvent {
       endDate: document.getElementById("ev-end-date")?.value
           ? `${document.getElementById("ev-end-date").value}T18:00:00`
           : null,
-      status: "UPCOMING",
+      status: this.event?.status ?? "UPCOMING",
       targetClans: this.targetClans.length > 0 ? this.targetClans : null,
     };
   }
@@ -194,6 +208,7 @@ export default class CreateEvent {
           description: crit.description || null,
           weight: crit.weight / 100, // convert percentage to 0-1
           grades: crit.levels.map((l) => ({
+            id_grade: l.id_grade ?? l.id,
             score: l.score,
             description: l.description,
             name: l.name,
@@ -247,6 +262,11 @@ export default class CreateEvent {
   // ── Submit ─────────────────────────────────────────────────────────────────
 
   async _handleSubmit() {
+    if (this.isEdit) {
+      await this._handleUpdate();
+      return;
+    }
+
     const err = this._validate();
     if (err) {
       toast.error(t("createEvent.validationError"), err);
@@ -274,6 +294,269 @@ export default class CreateEvent {
       );
     } finally {
       this._setLoading(false);
+    }
+  }
+
+  async _handleUpdate() {
+    const err = this._validate();
+    if (err) {
+      toast.error(t("createEvent.validationError"), err);
+      return;
+    }
+
+    if (!this.eventId) {
+      toast.error(t("common.errorTitle"), t("common.error"));
+      return;
+    }
+
+    this._setLoading(true);
+    try {
+      const body = {
+        ...this._getEventData(),
+      };
+
+      await updateEvent(this.eventId, body);
+
+      if (this.rubricMode === "platform") {
+        await this._syncRubrics();
+      }
+
+      toast.success(
+          t("createEvent.updateSuccessTitle") ?? "Event Updated!",
+          t("createEvent.updateSuccessMsg") ??
+          "The event has been updated successfully.",
+      );
+      setTimeout(() => this.router.navigate("details", { eventId: this.eventId }), 1200);
+    } catch (e) {
+      toast.error(
+          t("common.errorTitle"),
+          e.message ?? t("createEvent.errorUpdating") ?? "Error updating the event.",
+      );
+    } finally {
+      this._setLoading(false);
+    }
+  }
+
+  async _syncRubrics() {
+    const currentCriteria = this._getCurrentCriteria();
+    const existingIds = new Set([...this._originalRubrics.keys()]);
+    const currentIds = new Set(
+        currentCriteria
+            .filter((c) => c.crit?.id && existingIds.has(String(c.crit.id)))
+            .map((c) => String(c.crit.id)),
+    );
+
+    const toDelete = [...existingIds].filter((id) => !currentIds.has(id));
+    const toUpdate = currentCriteria.filter(
+        (c) => c.crit?.id && existingIds.has(String(c.crit.id)),
+    );
+    const toCreate = currentCriteria.filter(
+        (c) => !c.crit?.id || !existingIds.has(String(c.crit.id)),
+    );
+
+    if (toDelete.length > 0) {
+      await Promise.all(
+          toDelete.map((id) => deleteEventRubric(this.eventId, id)),
+      );
+    }
+
+    if (toUpdate.length > 0) {
+      await Promise.all(
+          toUpdate.map(({ area, crit }) =>
+              updateEventRubric(this.eventId, crit.id, this._buildRubricPayload(area, crit)),
+          ),
+      );
+    }
+
+    if (toCreate.length > 0) {
+      const rubrics = toCreate.map(({ area, crit }) =>
+          this._buildRubricPayload(area, crit),
+      );
+      await addEventRubrics(this.eventId, rubrics);
+    }
+  }
+
+  _getCurrentCriteria() {
+    const out = [];
+    for (const area of this.rubricAreas) {
+      for (const crit of area.criteria) {
+        out.push({ area, crit });
+      }
+    }
+    return out;
+  }
+
+  _buildRubricPayload(area, crit) {
+    return {
+      area: area.type,
+      name: crit.name || t("createEvent.untitledCriteria"),
+      description: crit.description || null,
+      weight: (crit.weight ?? 0) / 100,
+      grades: crit.levels.map((l) => ({
+        id_grade: l.id_grade ?? l.id,
+        score: l.score,
+        description: l.description,
+        name: l.name,
+      })),
+    };
+  }
+
+  async _loadEditData() {
+    if (!this.eventId) return;
+    if (this.event && this._loadedRubrics) {
+      this._applyEventToForm(this.event);
+      this._applyRubricsForEdit(this._loadedRubrics);
+      return;
+    }
+    if (this._editLoaded) return;
+    this._editLoaded = true;
+
+    try {
+      const eventRes = await getEventById(this.eventId);
+      this.event = eventRes?.data ?? eventRes;
+      this._applyEventToForm(this.event);
+      try {
+        const rubricsRes = await getEventRubrics(this.eventId);
+        this._loadedRubrics =
+            rubricsRes?.data?.rubrics ??
+            rubricsRes?.rubrics ??
+            rubricsRes?.data ??
+            rubricsRes ??
+            [];
+        this._applyRubricsForEdit(this._loadedRubrics);
+      } catch (rubricErr) {
+        toast.warning(
+            t("common.errorTitle"),
+            rubricErr?.message ?? "Could not load rubrics for this event.",
+        );
+      }
+    } catch (err) {
+      toast.error(
+          t("common.errorTitle"),
+          err?.message ?? t("createEvent.errorUpdating") ?? "Error loading event data.",
+      );
+    }
+  }
+
+  _applyEventToForm(event) {
+    if (!event) return;
+
+    const title = event.title ?? "";
+    const description = event.description ?? "";
+    const eventType = event.event_type ?? event.eventType ?? "CAPSTONE";
+    const route = event.route ?? "BASIC";
+    const maxTeam = event.max_team_size ?? event.maxTeamSize ?? 5;
+    const startDate = event.start_date ?? event.date ?? event.eventDate ?? null;
+    const endDate =
+        event.end_date ?? event.final_delivery_date ?? event.endDate ?? null;
+
+    const titleInput = document.getElementById("ev-title");
+    if (titleInput) titleInput.value = title;
+    const descInput = document.getElementById("ev-description");
+    if (descInput) descInput.value = description;
+    const typeSelect = document.getElementById("ev-type");
+    if (typeSelect) typeSelect.value = eventType;
+    const routeSelect = document.getElementById("ev-route");
+    if (routeSelect) routeSelect.value = route;
+    const maxInput = document.getElementById("ev-max-team");
+    if (maxInput) maxInput.value = maxTeam;
+    const startInput = document.getElementById("ev-start-date");
+    if (startInput) startInput.value = this._normalizeDate(startDate);
+    const endInput = document.getElementById("ev-end-date");
+    if (endInput) endInput.value = this._normalizeDate(endDate);
+
+    const clans = event.target_clans ?? event.targetClans ?? [];
+    this.targetClans = Array.isArray(clans) ? [...clans] : [];
+    this._rerenderClanPicker();
+
+    this.selectedGithubOrg = event.github_org ?? event.githubOrg ?? null;
+    this._syncGithubOrgSelection();
+  }
+
+  _applyRubricsForEdit(rubricsRes) {
+    const raw =
+        rubricsRes?.data?.rubrics ??
+        rubricsRes?.rubrics ??
+        rubricsRes?.data ??
+        rubricsRes ??
+        [];
+
+    const rubrics = Array.isArray(raw) ? raw : [];
+    this._originalRubrics.clear();
+
+    this.rubricAreas.forEach((a) => {
+      a.criteria = [];
+      a.weight = 0;
+      a.isExpanded = a.type === "DEVELOPMENT";
+    });
+
+    if (rubrics.length === 0) {
+      this.rubricMode = null;
+      this._rerenderRubricSection();
+      return;
+    }
+
+    rubrics.forEach((rubric) => {
+      const rubricId = rubric.id_rubric ?? rubric.id;
+      const areaType = this._mapArea(rubric.area ?? rubric.areaType ?? "");
+      const area = this.rubricAreas.find((a) => a.type === areaType);
+      if (!area) return;
+
+      const weight = rubric.weight ?? 0;
+      const weightPercent = weight <= 1 ? weight * 100 : weight;
+      const grades = rubric.grades ?? rubric.levels ?? [];
+      const levels = grades.map((g, index) => {
+        const score = g.score ?? 0;
+        return {
+          id_grade: g.id_grade ?? g.id,
+          score,
+          name: g.name ?? `Level ${index + 1}`,
+          description: g.description ?? "",
+          color: g.color ?? this._getLevelColor(score),
+        };
+      });
+
+      area.criteria.push({
+        id: rubricId,
+        name: rubric.name ?? "",
+        description: rubric.description ?? "",
+        weight: weightPercent,
+        isExpanded: false,
+        levels,
+      });
+      if (rubricId !== undefined && rubricId !== null) {
+        this._originalRubrics.set(String(rubricId), rubric);
+      }
+    });
+
+    this.rubricMode = "platform";
+    this._recalculateWeights();
+    this._rerenderRubricSection();
+  }
+
+  _normalizeDate(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "";
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  _getLevelColor(score) {
+    if (score >= 80) return "#52c41a";
+    if (score >= 60) return "#7cb305";
+    if (score >= 40) return "#faad14";
+    if (score >= 20) return "#ff7a45";
+    return "#ff4d4f";
+  }
+
+  _syncGithubOrgSelection() {
+    const select = document.getElementById("ev-github-org");
+    if (!select || !this.selectedGithubOrg) return;
+    if ([...select.options].some((opt) => opt.value === this.selectedGithubOrg)) {
+      select.value = this.selectedGithubOrg;
     }
   }
 
@@ -912,6 +1195,15 @@ export default class CreateEvent {
 
   async render() {
     const app = document.getElementById("app");
+    const titleLabel = this.isEdit
+        ? (t("createEvent.editTitle") ?? "Edit Event")
+        : t("createEvent.title");
+    const modeLabel = this.isEdit
+        ? (t("createEvent.editMode") ?? "Edit Mode")
+        : t("createEvent.draftMode");
+    const submitLabel = this.isEdit
+        ? (t("createEvent.updateBtn") ?? "Save Changes")
+        : t("createEvent.createBtn");
     app.innerHTML = `
       ${this.navbar.render()}
       <div class="container p-0 mx-0 mw-100">
@@ -921,8 +1213,8 @@ export default class CreateEvent {
             <!-- Event details card -->
             <section class="app-section p-4 p-md-5 mb-4 border-0 shadow-sm" style="border-radius: 12px; background: white;">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0">${t("createEvent.title")}</h5>
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">${t("createEvent.draftMode")}</span>
+                <h5 class="fw-bold mb-0">${titleLabel}</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">${modeLabel}</span>
               </div>
 
               <div class="row g-4">
@@ -987,7 +1279,7 @@ export default class CreateEvent {
             <div class="d-flex justify-content-end gap-3 mt-4">
               <button id="ce-back-btn" class="btn btn-light px-4 py-2 bg-white border fw-semibold cursor-pointer" type="button">${t("createEvent.cancel")}</button>
               <button id="ce-submit-btn" class="btn btn-primary px-5 py-2 fw-semibold cursor-pointer" type="button" style="background:#5548e2;border:none;">
-                ${t("createEvent.createBtn")}
+                ${submitLabel}
               </button>
             </div>
           </div>
@@ -1016,6 +1308,9 @@ export default class CreateEvent {
       this._attachRubricHandlers();
     }, 0);
 
+    if (this.isEdit) {
+      this._loadEditData();
+    }
     this._loadGithubOrgs();
   }
 
@@ -1035,7 +1330,12 @@ export default class CreateEvent {
         return;
       }
 
-      this.selectedGithubOrg = this.githubOrgs[0].login;
+      const preferredOrg = this.selectedGithubOrg;
+      this.selectedGithubOrg =
+          preferredOrg &&
+          this.githubOrgs.some((org) => org.login === preferredOrg)
+              ? preferredOrg
+              : this.githubOrgs[0].login;
       picker.innerHTML = `
         <div class="d-flex align-items-center gap-2 mb-2" style="font-size:0.85rem;color:var(--color-text-muted);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -1048,11 +1348,14 @@ export default class CreateEvent {
           ${t("createEvent.reposWillBeCreated")}
         </div>`;
 
-      document
-          .getElementById("ev-github-org")
-          ?.addEventListener("change", (e) => {
-            this.selectedGithubOrg = e.target.value;
-          });
+      const orgSelect = document.getElementById("ev-github-org");
+      if (orgSelect && this.selectedGithubOrg) {
+        orgSelect.value = this.selectedGithubOrg;
+      }
+
+      orgSelect?.addEventListener("change", (e) => {
+        this.selectedGithubOrg = e.target.value;
+      });
     } catch (err) {
       this.githubConnected = false;
       this.githubOrgs = [];
@@ -1080,8 +1383,10 @@ export default class CreateEvent {
     if (!btn) return;
     btn.disabled = on;
     btn.innerHTML = on
-        ? `<span class="spinner-border spinner-border-sm me-2"></span> ${t("noTeam.creating") ?? "Creating…"}`
-        : (t("createEvent.createBtn") ?? "Create Event");
+        ? `<span class="spinner-border spinner-border-sm me-2"></span> ${this.isEdit ? (t("createEvent.saving") ?? "Saving…") : (t("noTeam.creating") ?? "Creating…")}`
+        : (this.isEdit
+            ? (t("createEvent.updateBtn") ?? "Save Changes")
+            : (t("createEvent.createBtn") ?? "Create Event"));
   }
 
   _clearFeedback() {}
