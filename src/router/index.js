@@ -305,7 +305,7 @@ class App {
 
     // Persistir la ruta actual para restaurarla si el usuario recarga
     // Solo guardar rutas privadas (no landing/login/vote/staffVote)
-    const publicRoutes = ["landing", "login", "vote", "staffVote", "not-found"];
+    const publicRoutes = ["landing", "login", "register", "vote", "staffVote", "not-found"];
     if (!publicRoutes.includes(route)) {
       sessionStorage.setItem("lastRoute", JSON.stringify({ route, params }));
     }

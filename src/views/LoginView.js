@@ -158,6 +158,8 @@ export default class LoginView {
     try {
       const response = await loginUser(this.email, this.password);
       saveSession(response.data.token, response.data.refreshToken, response.data.user);
+      // Limpiar la última ruta guardada para que init() use el home correcto del rol
+      sessionStorage.removeItem("lastRoute");
       this.router.init();
     } catch (err) {
       const errorMessage =
