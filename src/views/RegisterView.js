@@ -111,11 +111,14 @@ export default class RegisterView {
                   <option value="Garabato" ${this.clan === "Garabato" ? "selected" : ""}>Garabato</option>
                   <option value="Micaela" ${this.clan === "Micaela" ? "selected" : ""}>Micaela</option>
                   <option value="Cayena" ${this.clan === "Cayena" ? "selected" : ""}>Cayena</option>
-                  <option value="Malecon" ${this.clan === "Malecon" ? "selected" : ""}>Malecon</option>
-                  <option value="Corissoz" ${this.clan === "Corissoz" ? "selected" : ""}>Corissoz</option>
+                  <option value="Malecón" ${this.clan === "Malecón" ? "selected" : ""}>Malecón</option>
+                  <option value="Cortissoz" ${this.clan === "Cortissoz" ? "selected" : ""}>Cortissoz</option>
                   <option value="Turing" ${this.clan === "Turing" ? "selected" : ""}>Turing</option>
                   <option value="Tesla" ${this.clan === "Tesla" ? "selected" : ""}>Tesla</option>
                   <option value="McCarthy" ${this.clan === "McCarthy" ? "selected" : ""}>McCarthy</option>
+                  <option value="Hamilton" ${this.clan === "Hamilton" ? "selected" : ""}>Hamilton</option>
+                  <option value="Thompson" ${this.clan === "Thompson" ? "selected" : ""}>Thompson</option>
+                  <option value="Nakamoto" ${this.clan === "Nakamoto" ? "selected" : ""}>Nakamoto</option>
                 </select>
               </div>
 

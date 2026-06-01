@@ -25,7 +25,11 @@ export default class EventsView {
 
       const response = await getEvents();
 
-      const data = response.data?.events || response.events || [];
+      const data =
+        (Array.isArray(response.data) ? response.data : null) ||
+        response.data?.events ||
+        response.events ||
+        (Array.isArray(response) ? response : []);
 
       if (Array.isArray(data)) {
         this.events = data.sort((a, b) => {

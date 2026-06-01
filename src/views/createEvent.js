@@ -42,6 +42,9 @@ const ALL_CLANS = [
   "Turing",
   "Tesla",
   "McCarthy",
+  "Hamilton",
+  "Thompson",
+  "Nakamoto",
 ];
 
 export default class CreateEvent {
