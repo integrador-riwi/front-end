@@ -21,10 +21,7 @@ export default class RegisterView {
   render() {
     const app = document.getElementById("app");
     app.innerHTML = `
-      <button class="back-btn" id="backBtn">
-          <span class="material-icons-round" style="font-size:1.1rem">arrow_back</span>
-          ${t("common.back") || "Back"}
-      </button>
+
       <main class="login-shell">
 
         <!-- ── LEFT PANEL ── -->
@@ -196,9 +193,6 @@ export default class RegisterView {
 
     form?.addEventListener("submit", (e) => this.handleRegister(e));
 
-    document.getElementById("backBtn")?.addEventListener("click", () => {
-      this.router.navigate("login");
-    });
 
     document.getElementById("loginLink")?.addEventListener("click", (e) => {
       e.preventDefault();

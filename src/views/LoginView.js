@@ -17,10 +17,7 @@ export default class LoginView {
   render() {
     const app = document.getElementById("app");
     app.innerHTML = `
-      <button class="back-btn" id="backBtn">
-          <span class="material-icons-round" style="font-size:1.1rem">arrow_back</span>
-          ${t("common.back") || "Home"}
-      </button>
+
       <main class="login-shell">
 
 
@@ -139,9 +136,6 @@ export default class LoginView {
     });
     form.addEventListener("submit", (e) => this.handleLogin(e));
 
-    document.getElementById("backBtn")?.addEventListener("click", () => {
-      this.router.back();
-    });
 
     document.getElementById("registerLink")?.addEventListener("click", (e) => {
       e.preventDefault();
