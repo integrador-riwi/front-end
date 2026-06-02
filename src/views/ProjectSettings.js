@@ -195,6 +195,9 @@ export default class ProjectSettings {
                 </div>
               </div>
 
+              <!-- Additional Repositories -->
+              ${this._renderAdditionalRepos()}
+
               <!-- Danger Zone -->
               <div class="cs-danger-card rounded-4 p-4">
                 <h2 class="cs-danger-title mb-1">${t("settings.dangerZone")}</h2>
@@ -297,6 +300,54 @@ export default class ProjectSettings {
              </button>`
         }
       </li>
+    `;
+  }
+
+  _renderAdditionalRepos() {
+    const repos = this.additionalRepos ?? [];
+    const repoItems = repos.map(
+      (r) => `
+      <li class="d-flex align-items-center gap-3" data-repo-id="${r.id}">
+        <div class="cs-avatar cs-avatar-color-0" style="background:var(--color-bg,#f3f4f8);color:var(--accent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </div>
+        <div class="flex-grow-1 overflow-hidden">
+          <p class="cs-member-name text-truncate mb-0">${escHtml(r.repo_name ?? r.label)}</p>
+          <p class="cs-member-role mb-0">${escHtml(r.label)}</p>
+        </div>
+        <button class="cs-btn-remove" data-repo-id="${r.id}" title="Delete repo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </li>`
+    ).join("");
+
+    return `
+      <div class="bg-white rounded-4 p-4 cs-card">
+        <h2 class="cs-card-title d-flex align-items-center gap-2 mb-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               style="width:18px;height:18px;color:var(--accent)">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+          Additional Repositories
+        </h2>
+
+        ${repos.length > 0
+          ? `<ul class="list-unstyled d-flex flex-column gap-3 mb-4" id="additionalReposList">${repoItems}</ul>`
+          : `<p class="cs-hint mb-4" id="additionalReposList">No additional repositories yet.</p>`
+        }
+
+        <div class="d-flex gap-2">
+          <input type="text" class="cs-input flex-grow-1" id="newRepoLabel"
+                 placeholder="Label (e.g. Frontend, Backend)" maxlength="50" />
+          <button class="cs-btn-primary" id="addRepoBtn" style="white-space:nowrap">
+            + Add Repo
+          </button>
+        </div>
+      </div>
     `;
   }
 
