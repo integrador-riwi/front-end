@@ -380,6 +380,13 @@ export default class ProjectSettings {
       ?.addEventListener("click", () => {
         this.inviteModal.open();
       });
+
+    document.getElementById("addRepoBtn")
+      ?.addEventListener("click", () => this.handleAddRepo());
+
+    document.querySelectorAll("#additionalReposList .cs-btn-remove").forEach((btn) => {
+      btn.addEventListener("click", () => this.handleDeleteRepo(btn.dataset.repoId));
+    });
   }
 
   // ─────────────────────────────────────────
@@ -455,6 +462,84 @@ export default class ProjectSettings {
     } catch (err) {
       this._showFeedback(err?.message ?? t("common.error"), "error");
     }
+  }
+
+  async handleAddRepo() {
+    const input = document.getElementById("newRepoLabel");
+    const label = input?.value.trim();
+    if (!label) {
+      toast.error("Error", "Enter a label for the repository.");
+      return;
+    }
+
+    const btn = document.getElementById("addRepoBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+
+    try {
+      const res = await createAdditionalRepo(this.team.id_team, label);
+      const newRepo = res?.data ?? res;
+      this.additionalRepos = [...(this.additionalRepos ?? []), newRepo];
+      input.value = "";
+      this._refreshRepoList();
+      toast.success("Done", "Repository created successfully.");
+    } catch (err) {
+      toast.error("Error", err?.message ?? "Could not create repository.");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "+ Add Repo"; }
+    }
+  }
+
+  async handleDeleteRepo(repoId) {
+    const confirmed = confirm("Delete this repository link? The GitHub repo will not be deleted.");
+    if (!confirmed) return;
+
+    try {
+      await deleteAdditionalRepo(this.team.id_team, repoId);
+      this.additionalRepos = this.additionalRepos.filter((r) => String(r.id) !== String(repoId));
+      this._refreshRepoList();
+      toast.success("Done", "Repository removed.");
+    } catch (err) {
+      toast.error("Error", err?.message ?? "Could not remove repository.");
+    }
+  }
+
+  _refreshRepoList() {
+    const container = document.getElementById("additionalReposList");
+    if (!container) return;
+
+    const repos = this.additionalRepos ?? [];
+    if (repos.length === 0) {
+      container.outerHTML = `<p class="cs-hint mb-4" id="additionalReposList">No additional repositories yet.</p>`;
+      return;
+    }
+
+    const isUl = container.tagName === "UL";
+    const ul = isUl ? container : document.createElement("ul");
+    ul.className = "list-unstyled d-flex flex-column gap-3 mb-4";
+    ul.id = "additionalReposList";
+    ul.innerHTML = repos.map((r) => `
+      <li class="d-flex align-items-center gap-3" data-repo-id="${r.id}">
+        <div class="cs-avatar cs-avatar-color-0" style="background:var(--color-bg,#f3f4f8);color:var(--accent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </div>
+        <div class="flex-grow-1 overflow-hidden">
+          <p class="cs-member-name text-truncate mb-0">${escHtml(r.repo_name ?? r.label)}</p>
+          <p class="cs-member-role mb-0">${escHtml(r.label)}</p>
+        </div>
+        <button class="cs-btn-remove" data-repo-id="${r.id}" title="Delete repo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </li>`).join("");
+
+    if (!isUl) container.replaceWith(ul);
+
+    ul.querySelectorAll(".cs-btn-remove").forEach((btn) => {
+      btn.addEventListener("click", () => this.handleDeleteRepo(btn.dataset.repoId));
+    });
   }
 
   handleCopyLink() {
