@@ -101,7 +101,8 @@ export default class ProjectSettings {
 
       try {
         const reposRes = await listAdditionalRepos(this.team.id_team);
-        this.additionalRepos = reposRes?.data ?? reposRes ?? [];
+        const reposData = reposRes?.data ?? reposRes;
+        this.additionalRepos = reposData?.additional ?? [];
       } catch {
         this.additionalRepos = [];
       }
