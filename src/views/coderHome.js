@@ -319,7 +319,7 @@ export default class CoderHome {
           setTimeout(() => {
             loadProjectBrief();
             if (projectId) loadComments(projectId, this.user);
-            if (projectId) loadMemberGrades(projectId, { members: this.team?.members ?? [] });
+            if (projectId && ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"].includes(this.user?.role)) loadMemberGrades(projectId, { members: this.team?.members ?? [] });
             if (projectId) initDeliverables(projectId, this);
             if (
                 projectId &&
