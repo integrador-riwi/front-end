@@ -488,6 +488,21 @@ export async function removeMember(teamId, userId) {
   return apiFetch(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
 }
 
+export async function listAdditionalRepos(teamId) {
+  return apiFetch(`/teams/${teamId}/repos`, { method: "GET" });
+}
+
+export async function createAdditionalRepo(teamId, label) {
+  return apiFetch(`/teams/${teamId}/repos`, {
+    method: "POST",
+    body: { label },
+  });
+}
+
+export async function deleteAdditionalRepo(teamId, repoId) {
+  return apiFetch(`/teams/${teamId}/repos/${repoId}`, { method: "DELETE" });
+}
+
 export async function searchSimilarProjects(
     query,
     limit = 3,
