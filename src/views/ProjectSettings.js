@@ -11,6 +11,9 @@ import {
   inviteMember,
   removeMember,
   getAvailableCoders,
+  listAdditionalRepos,
+  createAdditionalRepo,
+  deleteAdditionalRepo,
 } from "../services/api.js";
 
 export default class ProjectSettings {
@@ -22,6 +25,7 @@ export default class ProjectSettings {
     this.isLeader = params.isLeader ?? false;
     this.project = null;
     this.isSaving = false;
+    this.additionalRepos = [];
     this.inviteModal = new InviteModal({
       team: this.team,
       onMemberAdded: () => this._loadData().then(() => this._renderFull()),
@@ -93,6 +97,13 @@ export default class ProjectSettings {
         this.project = proj?.data ?? proj;
       } else {
         this.project = this.team?.project ?? null;
+      }
+
+      try {
+        const reposRes = await listAdditionalRepos(this.team.id_team);
+        this.additionalRepos = reposRes?.data ?? reposRes ?? [];
+      } catch {
+        this.additionalRepos = [];
       }
     } catch (e) {
       console.error("Error loading settings data:", e);
