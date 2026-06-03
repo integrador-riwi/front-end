@@ -160,7 +160,8 @@ export default class LoginView {
       if (!user.github_username) {
         toast.warning(
           "Perfil incompleto",
-          "Por favor configura tu cuenta de GitHub para completar tu perfil."
+          "Por favor configura tu cuenta de GitHub para completar tu perfil.",
+          { duration: 40000 }
         );
         this.router.navigate("profile");
         return;
