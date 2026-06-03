@@ -450,7 +450,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               </div>
               <div class="overflow-hidden">
                 <span class="ct-del-label d-block text-truncate">${item.label}</span>
-                ${item.desc ? \`<span class="d-block text-muted mb-1" style="font-size: 0.75rem; white-space: normal; line-height: 1.3;">\${item.desc}</span>\` : ""}
+                ${item.desc ? `<span class="d-block text-muted mb-1" style="font-size: 0.75rem; white-space: normal; line-height: 1.3;">${item.desc}</span>` : ""}
                 ${item.url && item.key === "repo_url"
             ? `
                   <a href="${item.url}" target="_blank" rel="noopener"
