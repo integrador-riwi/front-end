@@ -1,6 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
-import { getEvents } from "../services/api-events.js";
+import { getEvents, deleteEvent } from "../services/api-events.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
@@ -147,6 +147,16 @@ export default class EventsView {
                 </button>`
         : ""
     }
+            ${ isFinished && this.user?.role === "ADMIN" ? `
+              <button class="btn rounded-pill px-4 py-2 w-100 fw-semibold btn-delete-event"
+                      data-event-id="${eventId}"
+                      data-event-name="${title}"
+                      style="border: 2px solid #dc2626; color: #dc2626; background: transparent; transition: all 0.2s ease;"
+                      onmouseover="this.style.backgroundColor='#fef2f2'"
+                      onmouseout="this.style.background='transparent'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Eliminar
+              </button>` : "" }
           </div>
         </div>
       `;
@@ -309,6 +319,39 @@ export default class EventsView {
           localStorage.setItem("currentEventStatus", eventStatus ?? "");
           this.router.navigate("finalists");
         }
+      });
+    });
+
+    document.querySelectorAll(".btn-delete-event").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const eventId = e.currentTarget.dataset.eventId;
+        const eventName = e.currentTarget.dataset.eventName;
+
+        toast.warning(
+          "¿Eliminar evento?",
+          `"${eventName}" será eliminado permanentemente. Esta acción no se puede deshacer.`,
+          {
+            duration: 0,
+            action: {
+              label: "Sí, eliminar",
+              onClick: async () => {
+                try {
+                  await deleteEvent(eventId);
+                  toast.success("Evento eliminado", `"${eventName}" fue eliminado exitosamente.`);
+                  // Remove card from DOM without full re-render
+                  const card = e.currentTarget.closest(".bg-white.rounded-4");
+                  if (card) card.remove();
+                } catch (err) {
+                  toast.error("Error", err.response?.data?.message || "No se pudo eliminar el evento.");
+                }
+              }
+            },
+            action2: {
+              label: "Cancelar",
+              onClick: () => {}
+            }
+          }
+        );
       });
     });
 
