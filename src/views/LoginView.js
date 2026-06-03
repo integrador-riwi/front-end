@@ -151,9 +151,21 @@ export default class LoginView {
 
     try {
       const response = await loginUser(this.email, this.password);
-      saveSession(response.data.token, response.data.refreshToken, response.data.user);
+      const user = response.data.user;
+      saveSession(response.data.token, response.data.refreshToken, user);
+      
       // Limpiar la última ruta guardada para que init() use el home correcto del rol
       sessionStorage.removeItem("lastRoute");
+
+      if (!user.github_username) {
+        toast.warning(
+          "Perfil incompleto",
+          "Por favor configura tu cuenta de GitHub para completar tu perfil."
+        );
+        this.router.navigate("profile");
+        return;
+      }
+
       this.router.init();
     } catch (err) {
       const errorMessage =
