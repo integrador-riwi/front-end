@@ -118,7 +118,7 @@ export function renderCoderTeam({
               </svg>
               <h2 class="ct-section-title mb-0">Deliverables</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
-                ${deliverableCount(deliverables, repoUrl)}/4 submitted
+                ${deliverableCount(deliverables, repoUrl)}/5 submitted
               </span>
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
@@ -365,12 +365,27 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
         </svg>`,
-      label: "Pitch Video",
+      label: "Video Pitch (Español)",
+      desc: "Sube tu video a una plataforma como YouTube o Vimeo y pega el link.",
       url: d?.video_url ?? null,
       color: "var(--color-accent)",
       hasPreview: true,
       previewType: "video",
-      uploadType: "both", // supports file upload OR URL paste
+      uploadType: "url",
+    },
+    {
+      key: "presentation_url",
+      icon: `
+        <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+        </svg>`,
+      label: "Video Pitch (English)",
+      desc: "Sube tu video a una plataforma como YouTube o Vimeo y pega el link.",
+      url: d?.presentation_url ?? null,
+      color: "var(--color-accent)",
+      hasPreview: true,
+      previewType: "video",
+      uploadType: "url",
     },
     {
       key: "repo_url",
@@ -379,6 +394,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
           <path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>
         </svg>`,
       label: "Repository",
+      desc: "El repositorio del proyecto (se vincula automáticamente).",
       url: repoUrl,
       color: "var(--color-success)",
       hasPreview: false,
@@ -392,11 +408,12 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
         </svg>`,
       label: "Preview Photo",
+      desc: "Pon una captura de alguna vista principal de tu aplicativo para poder visualizar lo que se hizo.",
       url: d?.preview_photo_url ?? null,
       color: "var(--gold)",
       hasPreview: true,
       previewType: "image",
-      uploadType: "cloudinary", // image uses Cloudinary upload
+      uploadType: "cloudinary",
     },
     {
       key: "deploy_url",
@@ -405,6 +422,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
         </svg>`,
       label: "Deploy Link",
+      desc: "El link de la plataforma desplegada.",
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
       hasPreview: false,
@@ -432,6 +450,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
               </div>
               <div class="overflow-hidden">
                 <span class="ct-del-label d-block text-truncate">${item.label}</span>
+                ${item.desc ? \`<span class="d-block text-muted mb-1" style="font-size: 0.75rem; white-space: normal; line-height: 1.3;">\${item.desc}</span>\` : ""}
                 ${item.url && item.key === "repo_url"
             ? `
                   <a href="${item.url}" target="_blank" rel="noopener"
@@ -756,7 +775,7 @@ export function renderComment({ name, initial, time, text }) {
 
 function deliverableCount(d, repoUrl) {
   const repo = repoUrl ?? d?.repo_url ?? null;
-  return [d?.video_url, repo, d?.preview_photo_url, d?.deploy_url].filter(Boolean).length;
+  return [d?.video_url, d?.presentation_url, repo, d?.preview_photo_url, d?.deploy_url].filter(Boolean).length;
 }
 
 function gradeClass(g) {
@@ -1590,13 +1609,14 @@ export async function loadEvaluationPanel({
 export function initDeliverables(projectId) {
   const fieldMap = {
     video_url: "videoUrl",
+    presentation_url: "presentationUrl",
     preview_photo_url: "previewPhotoUrl",
     deploy_url: "deployUrl",
   };
 
-  const editableFields = ["video_url", "preview_photo_url", "deploy_url"];
+  const editableFields = ["video_url", "presentation_url", "preview_photo_url", "deploy_url"];
   const cloudinaryFields = ["preview_photo_url"]; // image upload
-  const videoFields = ["video_url"];               // video: upload OR URL
+  const videoFields = []; // disabled video upload for both pitches
 
   // ── Save field value to backend ───────────────────────────
   async function saveField(field, url, btnEl) {
@@ -1634,8 +1654,8 @@ export function initDeliverables(projectId) {
             const item = {
               key: field,
               url: url,
-              label: field === "video_url" ? "Pitch Video" : field === "preview_photo_url" ? "Preview Photo" : "Deploy Link",
-              uploadType: videoFields.includes(field) ? "both" : cloudinaryFields.includes(field) ? "cloudinary" : "url"
+              label: field === "video_url" ? "Video Pitch (Español)" : field === "presentation_url" ? "Video Pitch (English)" : field === "preview_photo_url" ? "Preview Photo" : "Deploy Link",
+              uploadType: cloudinaryFields.includes(field) ? "cloudinary" : "url"
             };
 
             actionsDiv.innerHTML = `
@@ -1741,14 +1761,14 @@ export function initDeliverables(projectId) {
   function _refreshDeliverableCount() {
     const badge = document.querySelector(".ct-deliverables-count");
     const done = document.querySelectorAll(".ct-deliverable-done").length;
-    if (badge) badge.textContent = `${done}/4 submitted`;
+    if (badge) badge.textContent = `${done}/5 submitted`;
     _updateSubmitBtn(done);
   }
 
   function _updateSubmitBtn(done) {
     const btn = document.getElementById("submitProjectBtn");
     if (!btn) return;
-    const allDone = done >= 4;
+    const allDone = done >= 5;
     btn.disabled = !allDone;
     btn.style.opacity = allDone ? "1" : "0.4";
     btn.style.cursor = allDone ? "pointer" : "not-allowed";
