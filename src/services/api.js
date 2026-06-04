@@ -110,7 +110,7 @@ export async function apiFetch(endpoint, options = {}) {
 
 // Auth
 const REGISTER_API_BASE_URL =
-  "https://back-end-production-7f2c.up.railway.app/api";
+  import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 export async function loginUser(email, password) {
   return apiFetch("/auth/login", {
