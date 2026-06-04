@@ -76,9 +76,7 @@ export default class LoginView {
               <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                   <label for="password" class="form-label field-label mb-0">${t("login.password")}</label>
-                  <a href="#" id="forgotPasswordLink" class="forgot-link" style="font-size:0.78rem;">
-                    ¿Olvidaste tu contraseña?
-                  </a>
+                  <!-- Forgot password link temporarily disabled -->
                 </div>
                 <div class="input-wrap">
                   <input id="password" type="password" class="form-control custom-input"
@@ -145,10 +143,7 @@ export default class LoginView {
       this.router.navigate("register");
     });
 
-    document.getElementById("forgotPasswordLink")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.router.navigate("forgotPassword");
-    });
+    // Forgot password listener temporarily disabled
   }
 
   async handleLogin(e) {
