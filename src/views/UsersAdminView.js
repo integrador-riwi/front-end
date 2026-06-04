@@ -37,7 +37,8 @@ export default class UsersAdminView {
     try {
       this.loading = true;
       const res = await getUsers({ limit: 1000 });
-      this.users = res.data ?? res;
+      // Depending on API response structure, users array might be nested in data.users
+      this.users = res.data?.users ?? res.users ?? (Array.isArray(res.data) ? res.data : []);
       this.groupUsersByClan();
     } catch (error) {
       console.error("Error loading users:", error);
