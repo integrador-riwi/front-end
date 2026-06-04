@@ -258,7 +258,7 @@ export default class CoderEventSelect {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              ${t("ces.expired") ?? "Event ended"}
+              Evento finalizado
             </div>`
                 : `<button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
               ${t("ces.select") ?? "Join this event"}
