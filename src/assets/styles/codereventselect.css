@@ -223,6 +223,25 @@
   transform: scale(0.98);
 }
 
+/* ── Expired badge (shown instead of join button for past events) ── */
+.ces-expired-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  background: #f4f6f9;
+  color: #9ca3b8;
+  border: 1.5px solid #e8ebf2;
+  border-radius: 10px;
+  font-family: "Ubuntu", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: auto;
+  cursor: default;
+}
+
 /* ── Empty state ── */
 .ces-empty {
   grid-column: 1 / -1;

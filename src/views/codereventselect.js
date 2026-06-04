@@ -188,6 +188,7 @@ export default class CoderEventSelect {
             : t("events.tbd");
     const startDate = fmt(event.date);
     const endDate = fmt(event.end_date);
+    const isExpired = event.end_date && new Date(event.end_date) < new Date();
 
     const typeColors = {
       CAPSTONE: { bg: "#f0f2ff", color: "#6b5cff", label: "Capstone" },
@@ -245,13 +246,27 @@ export default class CoderEventSelect {
         : ""
     }
         </div>
-        <button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
-          ${isTL ? (t("ces.review") ?? "Review this event") : (t("ces.select") ?? "Join this event")}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </button>
+        ${isTL
+            ? `<button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
+            ${t("ces.review") ?? "Review this event"}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>`
+            : isExpired
+                ? `<div class="ces-expired-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              ${t("ces.expired") ?? "Event ended"}
+            </div>`
+                : `<button class="ces-btn-join" data-event-id="${event.id}" data-event-title="${event.title}">
+              ${t("ces.select") ?? "Join this event"}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>`
+        }
       </article>
     </div>`;
   }
