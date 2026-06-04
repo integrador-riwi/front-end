@@ -9,6 +9,7 @@ import {
   getGithubStatus,
   getGithubAuthUrl,
   updateProfile,
+  changePassword,
 } from "../services/api.js";
 import { updateUser } from "../utils/auth.js";
 
@@ -201,6 +202,41 @@ export default class ProfileView {
               </div>
             </div>
 
+            <!-- Change Password Card -->
+            <div class="col-12">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
+                       style="width:18px;height:18px;flex-shrink:0">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <h2 class="profile-section-title mb-0">Cambiar contraseña</h2>
+                </div>
+                <form id="changePasswordForm" class="profile-form">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                      <label class="profile-label" for="currentPwd">Contraseña actual</label>
+                      <input id="currentPwd" type="password" class="profile-input" placeholder="••••••••" autocomplete="current-password" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="profile-label" for="newPwd">Nueva contraseña</label>
+                      <input id="newPwd" type="password" class="profile-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="profile-label" for="confirmPwd">Confirmar contraseña</label>
+                      <input id="confirmPwd" type="password" class="profile-input" placeholder="Repite la nueva" autocomplete="new-password" />
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <button type="submit" class="profile-btn" id="changePwdBtn">
+                      Actualizar contraseña
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
@@ -240,6 +276,47 @@ export default class ProfileView {
         this.render();
       }
     });
+
+    // Change-password form
+    document.getElementById("changePasswordForm")?.addEventListener("submit", (e) => this.handleChangePassword(e));
+  }
+
+  async handleChangePassword(event) {
+    event.preventDefault();
+    const currentPwd = document.getElementById("currentPwd")?.value ?? "";
+    const newPwd     = document.getElementById("newPwd")?.value ?? "";
+    const confirmPwd = document.getElementById("confirmPwd")?.value ?? "";
+
+    if (!currentPwd || !newPwd || !confirmPwd) {
+      toast.warning("Campos requeridos", "Por favor completa todos los campos.");
+      return;
+    }
+    if (newPwd.length < 6) {
+      toast.warning("Contraseña corta", "La nueva contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      toast.error("No coinciden", "Las contraseñas nuevas no coinciden.");
+      return;
+    }
+
+    const btn = document.getElementById("changePwdBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Actualizando..."; }
+
+    try {
+      await changePassword(currentPwd, newPwd);
+      toast.success("Éxito", "Tu contraseña fue actualizada correctamente.");
+      // Clear fields
+      ["currentPwd", "newPwd", "confirmPwd"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "No se pudo cambiar la contraseña.";
+      toast.error("Error", msg);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Actualizar contraseña"; }
+    }
   }
 
   async handleSave(event) {

@@ -2,6 +2,8 @@ import "../assets/styles/main.css";
 import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
 import RegisterView from "../views/RegisterView.js";
+import ForgotPasswordView from "../views/ForgotPasswordView.js";
+import ResetPasswordView from "../views/ResetPasswordView.js";
 import DashboardView from "../views/DashboardView.js";
 import { isAuthenticated } from "../utils/auth.js";
 import { initSocket } from "../services/socket.js";
@@ -89,6 +91,8 @@ const ROUTE_PERMISSIONS = {
   vote: "PUBLIC",
   staffVote: "PUBLIC",
   finalists: ["ADMIN", "STAFF"],
+  forgotPassword: "PUBLIC",
+  resetPassword:  "PUBLIC",
 };
 
 class App {
@@ -162,6 +166,12 @@ class App {
     if (path.startsWith("/profile/")) {
       const userId = path.split("/")[2];
       this.navigate("publicProfile", { userId });
+      return;
+    }
+
+    // Detect password-reset link from email
+    if (path === "/reset-password" || path.startsWith("/reset-password")) {
+      this.navigate("resetPassword");
       return;
     }
 
@@ -333,6 +343,14 @@ class App {
 
       case "register":
         this.currentView = new RegisterView(this);
+        break;
+
+      case "forgotPassword":
+        this.currentView = new ForgotPasswordView(this);
+        break;
+
+      case "resetPassword":
+        this.currentView = new ResetPasswordView(this);
         break;
 
       case "dashboard":

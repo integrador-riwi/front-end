@@ -525,3 +525,25 @@ export async function auditVotesByEvent(eventId) {
   const response = await apiFetch(`/qr-votes/event/${eventId}/audit`, { method: "GET" });
   return response;
 }
+
+// Password recovery
+export async function forgotPassword(email) {
+  return apiFetch("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function resetPassword(token, newPassword) {
+  return apiFetch("/auth/reset-password", {
+    method: "POST",
+    body: { token, newPassword },
+  });
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  return apiFetch("/auth/password", {
+    method: "PUT",
+    body: { currentPassword, newPassword },
+  });
+}
