@@ -175,9 +175,9 @@ export default class ProfileView {
                       </div>
                     </div>
                   </div>
-                  <div class="mt-4 border-top pt-3 text-center">
-                    <button id="showPasswordFormBtn" type="button" class="btn btn-sm btn-outline-secondary" style="border-radius:20px; font-weight:500;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;">
+                  <div class="mt-4 border-top pt-4">
+                    <button id="showPasswordFormBtn" type="button" class="profile-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                       </svg>
