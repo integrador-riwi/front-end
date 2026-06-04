@@ -20,6 +20,7 @@ import TLDashboardView from "../views/TLDashboardView.js";
 import BrowseProjects from "../views/BrowseProjects.js";
 import PublicProfileView from "../views/PublicProfileView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
+import UsersAdminView from "../views/UsersAdminView.js";
 import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
@@ -61,6 +62,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   ranking: ["ADMIN", "STAFF"],
+  users: ["ADMIN"],
   qr: ["ADMIN"],
   coderEventSelect: [
     "CODER",
@@ -367,6 +369,10 @@ class App {
 
       case "events/edit":
         this.currentView = new CreateEvent(this, params);
+        break;
+
+      case "users":
+        this.currentView = new UsersAdminView(this);
         break;
 
       case "details":

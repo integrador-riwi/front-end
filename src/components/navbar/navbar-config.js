@@ -10,6 +10,7 @@ const TL_BASE_LINKS = () => [
 const ADMIN_BASE_LINKS = () => [
   { label: t("nav.events"), route: "events", icon: "calendar" },
   { label: t("nav.newEvent"), route: "events/create", icon: "plus" },
+  { label: "Usuarios", route: "users", icon: "users" },
 ];
 
 const ADMIN_EVENT_LINKS = (eventStatus) => {

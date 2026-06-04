@@ -282,6 +282,22 @@ export async function getPublicProfile(userId) {
   return outer;
 }
 
+export const getUsers = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.role) query.append('role', params.role);
+  if (params.clan) query.append('clan', params.clan);
+  if (params.limit) query.append('limit', params.limit);
+  return apiFetch(`/users?${query.toString()}`, { method: 'GET' });
+};
+
+export const sendWelcomeEmailsToUsers = async (payload) => {
+  // payload: { userIds: [1, 2], clan: "Riwi-io-Medellin" }
+  return apiFetch('/users/welcome-email', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
 export async function updateProfile(profileData = {}) {
   const response = await apiFetch("/auth/profile", {
     method: "PUT",
