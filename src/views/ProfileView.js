@@ -175,6 +175,15 @@ export default class ProfileView {
                       </div>
                     </div>
                   </div>
+                  <div class="mt-4 border-top pt-3 text-center">
+                    <button id="showPasswordFormBtn" type="button" class="btn btn-sm btn-outline-secondary" style="border-radius:20px; font-weight:500;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                      Cambiar contraseña
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,9 +211,9 @@ export default class ProfileView {
               </div>
             </div>
 
-            <!-- Change Password Card -->
-            <div class="col-12">
-              <div class="bg-white rounded-4 p-4 ct-card-shadow text-start">
+            <!-- Change Password Card (Hidden by default, shown by button) -->
+            <div class="col-12" id="passwordCardContainer" style="display:none; transition: all 0.3s ease;">
+              <div class="bg-white rounded-4 p-4 ct-card-shadow text-start" style="border: 1px solid var(--color-primary);">
                 <div class="d-flex align-items-center gap-2 mb-3">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"
                        style="width:18px;height:18px;flex-shrink:0">
@@ -247,6 +256,20 @@ export default class ProfileView {
     if (this.errorMessage || this.successMessage) this._showBanner();
     if (!this._offLangChange) {
       this._offLangChange = onLangChange(() => this.render());
+    }
+
+    // Toggle Password Form
+    const showPwdBtn = document.getElementById("showPasswordFormBtn");
+    const pwdContainer = document.getElementById("passwordCardContainer");
+    if (showPwdBtn && pwdContainer) {
+      showPwdBtn.addEventListener("click", () => {
+        if (pwdContainer.style.display === "none") {
+          pwdContainer.style.display = "block";
+          pwdContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          pwdContainer.style.display = "none";
+        }
+      });
     }
   }
 
