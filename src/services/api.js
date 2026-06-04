@@ -294,7 +294,7 @@ export const sendWelcomeEmailsToUsers = async (payload) => {
   // payload: { userIds: [1, 2], clan: "Riwi-io-Medellin" }
   return apiFetch('/users/welcome-email', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: payload,
   });
 };
 
