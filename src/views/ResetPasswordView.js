@@ -282,11 +282,13 @@ export default class ResetPasswordView {
     // Back to login
     document.getElementById("backToLogin")?.addEventListener("click", (e) => {
       e.preventDefault();
+      window.history.replaceState({}, "", "/");
       this.router.navigate("login");
     });
 
     // Post-success button
     document.getElementById("goToLogin")?.addEventListener("click", () => {
+      window.history.replaceState({}, "", "/");
       this.router.navigate("login");
     });
 
@@ -327,6 +329,7 @@ export default class ResetPasswordView {
 
       // Wire success button after re-render
       document.getElementById("goToLogin")?.addEventListener("click", () => {
+        window.history.replaceState({}, "", "/");
         this.router.navigate("login");
       });
     } catch (err) {
