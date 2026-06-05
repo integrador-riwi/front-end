@@ -8,6 +8,7 @@ import {
   updateUser,
   updateUserPassword,
   updateUserStatus,
+  getTeams,
 } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { icons } from "../utils/icons.js";
@@ -87,6 +88,7 @@ export default class UsersAdminView {
     this.navbar = new Navbar(router);
     this.loading = true;
     this.users = [];
+    this.teams = [];
     this.selectedUsers = new Set();
     this.importRows = [];
     this.modal = null;
@@ -119,6 +121,16 @@ export default class UsersAdminView {
       this.loading = true;
       const res = await getUsers({ limit: 1000 });
       this.users = res.data?.users ?? res.users ?? (Array.isArray(res.data) ? res.data : []);
+
+      // Cargar lista de clanes/equipos desde backend para poblar selects
+      try {
+        const teamsRes = await getTeams({ limit: 1000 });
+        // teamsRes could be { data: { teams: [...] } } or array
+        this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
+      } catch (tErr) {
+        console.warn('No se pudieron cargar los equipos:', tErr);
+        this.teams = [...new Set(this.users.map(u => u.clan).filter(Boolean))];
+      }
     } catch (error) {
       console.error("Error loading users:", error);
       toast.error("Error", "No se pudieron cargar los usuarios.");
@@ -440,12 +452,27 @@ export default class UsersAdminView {
                 </select>
               </label>
               <label class="ua-label">Clan
-                <input class="ua-field" name="clan" value="${escapeHtml(user?.clan || "")}" placeholder="G3 (McCarthy)">
+                ${this.teams && this.teams.length > 0 ? `
+                  <select class="ua-field" name="clan">
+                    <option value="">-- Sin clan --</option>
+                    ${this.teams.map((t) => `<option value="${escapeHtml(t.name || t)}" ${(t.name === user?.clan || t === user?.clan) ? 'selected' : ''}>${escapeHtml(t.name || t)}</option>`).join("")}
+                  </select>
+                ` : `
+                  <input class="ua-field" name="clan" value="${escapeHtml(user?.clan || "")}" placeholder="G3 (McCarthy)">
+                `}
               </label>
             </div>
-            ${isEditing ? "" : `
+            ${isEditing ? `
+              <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+                <button class="ua-btn ua-btn-secondary" id="sendIndividualInviteBtn" type="button">Enviar invitaci&oacute;n</button>
+                <div style="flex:1"></div>
+              </div>
+            ` : `
               <label class="ua-label">Contrasena inicial
                 <input class="ua-field" name="password" placeholder="Opcional: se usa clan.riwi2026*">
+              </label>
+              <label style="margin-top:6px;display:flex;align-items:center;gap:8px;" class="ua-label">
+                <input type="checkbox" name="sendInvite" id="sendInviteCheckbox"> <span>Enviar invitaci&oacute;n individual al crear</span>
               </label>
             `}
             <p class="ua-form-note">
@@ -548,6 +575,11 @@ export default class UsersAdminView {
 
     document.getElementById("closeModalBtn")?.addEventListener("click", () => this.closeModal());
     document.getElementById("cancelModalBtn")?.addEventListener("click", () => this.closeModal());
+    document.getElementById("sendIndividualInviteBtn")?.addEventListener("click", () => {
+      const user = this.modal?.user;
+      if (!user) return;
+      this.sendIndividualInvite(user);
+    });
     document.getElementById("userForm")?.addEventListener("submit", (event) => this.submitUserForm(event));
     document.getElementById("passwordForm")?.addEventListener("submit", (event) => this.submitPasswordForm(event));
   }
@@ -599,8 +631,21 @@ export default class UsersAdminView {
         toast.success("Actualizado", "Usuario actualizado correctamente.");
       } else {
         payload.password = data.password?.trim() || buildClanPassword(payload.clan) || payload.documentNumber;
-        await createUser(payload);
+        const created = await createUser(payload);
         toast.success("Creado", "Usuario creado correctamente.");
+
+        // If checkbox sendInvite present, send invitation to the created user
+        const formData = new FormData(form);
+        const sendInvite = formData.get("sendInvite");
+        const createdUserId = created?.data?.user?.id_user ?? created?.user?.id_user ?? created?.id_user ?? null;
+        if (sendInvite && createdUserId) {
+          try {
+            await sendWelcomeEmailsToUsers({ userIds: [createdUserId] });
+            toast.success("Invitacion enviada", "Correo de bienvenida enviado.");
+          } catch (e) {
+            toast.error("Error", "No se pudo enviar la invitacion.");
+          }
+        }
       }
       this.closeModal(false);
       await this.loadUsers();

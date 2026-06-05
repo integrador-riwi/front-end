@@ -266,6 +266,17 @@ export async function createTeam(teamData) {
   });
 }
 
+export const getTeams = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.append('search', params.search);
+  if (params.page) query.append('page', params.page);
+  if (params.limit) query.append('limit', params.limit);
+  if (params.idEvent) query.append('idEvent', params.idEvent);
+  const queryStr = query.toString() ? `?${query.toString()}` : '';
+  const response = await apiFetch(`/teams${queryStr}`, { method: 'GET' });
+  return response.data ?? response;
+};
+
 export async function getMyProfile() {
   const response = await apiFetch("/auth/me", { method: "GET" });
   return response.data ?? response;
