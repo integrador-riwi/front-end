@@ -101,18 +101,6 @@ export default class BrowseProjects {
         .bp-card:hover .bp-card-img {
           transform: scale(1.05);
         }
-        .bp-grade-badge {
-          position: absolute;
-          top: 15px;
-          right: 15px;
-          padding: 6px 12px;
-          border-radius: 12px;
-          font-weight: 800;
-          font-size: 0.85rem;
-          backdrop-filter: blur(8px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          z-index: 2;
-        }
         .bp-team-badge {
           position: absolute;
           bottom: 15px;
@@ -245,14 +233,6 @@ export default class BrowseProjects {
         // Preview photo or placeholder
         const imgUrl = project.preview_photo_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
-        // Determine grade color
-        const grade = parseFloat(project.project_final_grade) || 0;
-        let gradeStyle = "";
-        if (grade >= 90) gradeStyle = "background: rgba(16, 185, 129, 0.9); color: white;"; // mint
-        else if (grade >= 75) gradeStyle = "background: rgba(107, 92, 255, 0.9); color: white;"; // primary
-        else if (grade >= 60) gradeStyle = "background: rgba(230, 202, 82, 0.9); color: var(--navy);"; // gold
-        else gradeStyle = "background: rgba(254, 101, 79, 0.9); color: white;"; // coral
-
         const teamName = project.team_name || "Unknown Team";
 
         const card = `
@@ -260,9 +240,6 @@ export default class BrowseProjects {
             <div class="bp-card">
               <div class="bp-card-img-wrap">
                 <img src="${imgUrl}" class="bp-card-img" alt="Preview Photo">
-                <div class="bp-grade-badge" style="${gradeStyle}">
-                  ${grade.toFixed(1)} <span style="font-size:0.7em; opacity:0.8;">/100</span>
-                </div>
                 <div class="bp-team-badge">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   ${teamName}
