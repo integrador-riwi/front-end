@@ -38,6 +38,9 @@ const actionIcons = {
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 16H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
   refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 0 1-15.6 6.1"/><path d="M3 12A9 9 0 0 1 18.6 5.9"/><path d="M21 5v7h-7"/><path d="M3 19v-7h7"/></svg>`,
   file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>`,
+  filter: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>`,
+  spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/><path d="M19 15l.8 2.7L22 18.5l-2.2.8L19 22l-.8-2.7-2.2-.8 2.2-.8L19 15z"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
 };
 
 const escapeHtml = (value = "") =>
@@ -152,6 +155,7 @@ export default class UsersAdminView {
     const stats = this.getStats();
     const clans = this.getClans();
     const filteredUsers = this.getFilteredUsers();
+    const importStats = this.getImportStats();
 
     root.innerHTML = `
       ${this.renderHeader(stats)}
@@ -159,11 +163,13 @@ export default class UsersAdminView {
       <section class="ua-workspace">
         <div class="ua-main-column">
           ${this.renderToolbar(clans, filteredUsers.length)}
+          ${this.renderBulkBar(filteredUsers.length)}
           ${this.renderUsersTable(filteredUsers)}
         </div>
         <aside class="ua-side-column">
           ${this.renderInvitePanel(clans)}
-          ${this.renderImportPanel()}
+          ${this.renderManualPanel()}
+          ${this.renderImportPanel(importStats)}
         </aside>
       </section>
       ${this.renderModal()}
@@ -185,9 +191,9 @@ export default class UsersAdminView {
     return `
       <header class="ua-header">
         <div>
-          <span class="ua-eyebrow">Administracion</span>
+          <span class="ua-eyebrow">Panel admin</span>
           <h1>Gestion de usuarios</h1>
-          <p>Controla usuarios, clanes, accesos e invitaciones desde un solo panel.</p>
+          <p>Administra altas, roles, clanes, accesos e invitaciones sin salir del flujo.</p>
         </div>
         <div class="ua-header-actions">
           <button class="ua-btn ua-btn-secondary" id="refreshUsersBtn" type="button">
@@ -209,18 +215,21 @@ export default class UsersAdminView {
 
   renderMetrics(stats) {
     const cards = [
-      { label: "Activos", value: stats.active, tone: "mint" },
-      { label: "Inactivos", value: stats.inactive, tone: "coral" },
-      { label: "Coders", value: stats.coders, tone: "accent" },
-      { label: "Clanes", value: stats.clans, tone: "gold" },
+      { label: "Activos", value: stats.active, tone: "mint", icon: icons.check() },
+      { label: "Inactivos", value: stats.inactive, tone: "coral", icon: icons.danger() },
+      { label: "Coders", value: stats.coders, tone: "accent", icon: icons.code() },
+      { label: "Clanes", value: stats.clans, tone: "gold", icon: icons.users() },
     ];
 
     return `
       <section class="ua-metrics">
         ${cards.map((card) => `
           <article class="ua-metric ua-tone-${card.tone}">
-            <span>${card.label}</span>
-            <strong>${card.value}</strong>
+            <div>
+              <span>${card.label}</span>
+              <strong>${card.value}</strong>
+            </div>
+            <span class="ua-metric-icon">${card.icon}</span>
           </article>
         `).join("")}
       </section>
@@ -234,10 +243,13 @@ export default class UsersAdminView {
           <span>${icons.users()}</span>
           <input id="userSearchInput" type="search" placeholder="Buscar por nombre o correo" value="${escapeHtml(this.filters.search)}">
         </div>
-        <select id="roleFilter" class="ua-control" aria-label="Filtrar por rol">
-          <option value="">Todos los roles</option>
-          ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
-        </select>
+        <div class="ua-filter-group">
+          <span class="ua-filter-icon">${actionIcons.filter}</span>
+          <select id="roleFilter" class="ua-control" aria-label="Filtrar por rol">
+            <option value="">Todos los roles</option>
+            ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
+          </select>
+        </div>
         <select id="clanFilter" class="ua-control" aria-label="Filtrar por clan">
           <option value="">Todos los clanes</option>
           ${clans.map((clan) => `<option value="${escapeHtml(clan)}" ${this.filters.clan === clan ? "selected" : ""}>${escapeHtml(clan)}</option>`).join("")}
@@ -247,11 +259,31 @@ export default class UsersAdminView {
           <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>Activos</option>
           <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>Inactivos</option>
         </select>
-        <button class="ua-btn ua-btn-secondary" id="sendSelectedBtn" type="button" ${this.selectedUsers.size === 0 ? "disabled" : ""}>
-          <span class="ua-btn-icon">${actionIcons.mail}</span>
-          Enviar seleccionados (${this.selectedUsers.size})
-        </button>
         <span class="ua-count">${count} resultados</span>
+      </section>
+    `;
+  }
+
+  renderBulkBar(count) {
+    if (this.selectedUsers.size === 0) {
+      return `
+        <section class="ua-bulk-bar ua-bulk-bar-muted">
+          <span class="ua-bulk-icon">${actionIcons.spark}</span>
+          <p>Selecciona usuarios en la tabla para enviar invitaciones individuales en lote.</p>
+        </section>
+      `;
+    }
+
+    return `
+      <section class="ua-bulk-bar">
+        <div>
+          <strong>${this.selectedUsers.size} seleccionados</strong>
+          <span>de ${count} usuarios visibles</span>
+        </div>
+        <button class="ua-btn ua-btn-primary" id="sendSelectedBtn" type="button">
+          <span class="ua-btn-icon">${actionIcons.mail}</span>
+          Enviar invitaciones
+        </button>
       </section>
     `;
   }
@@ -347,7 +379,7 @@ export default class UsersAdminView {
           <span class="ua-panel-icon">${actionIcons.mail}</span>
           <div>
             <h2>Invitaciones</h2>
-            <p>Envio grupal por clan o individual desde la tabla.</p>
+            <p>Envio por clan completo o por seleccion desde la tabla.</p>
           </div>
         </div>
         <label class="ua-label" for="inviteClanSelect">Clan</label>
@@ -363,10 +395,26 @@ export default class UsersAdminView {
     `;
   }
 
-  renderImportPanel() {
-    const validRows = this.importRows.filter((row) => row.status === "valid");
-    const duplicateRows = this.importRows.filter((row) => row.status === "duplicate");
-    const invalidRows = this.importRows.filter((row) => row.status === "invalid");
+  renderManualPanel() {
+    return `
+      <section class="ua-panel ua-panel-compact">
+        <div class="ua-panel-header">
+          <span class="ua-panel-icon ua-panel-icon-mint">${icons.plus()}</span>
+          <div>
+            <h2>Alta manual</h2>
+            <p>Crea un usuario puntual con rol, clan y documento.</p>
+          </div>
+        </div>
+        <button class="ua-btn ua-btn-secondary ua-full" id="manualCreateBtn" type="button">
+          <span class="ua-btn-icon">${icons.plus()}</span>
+          Crear desde formulario
+        </button>
+      </section>
+    `;
+  }
+
+  renderImportPanel(importStats) {
+    const { validRows, duplicateRows, invalidRows } = importStats;
 
     return `
       <section class="ua-panel">
@@ -374,8 +422,12 @@ export default class UsersAdminView {
           <span class="ua-panel-icon">${actionIcons.file}</span>
           <div>
             <h2>Importar XLSX</h2>
-            <p>Lee nombre, correo, documento y clan.</p>
+            <p>Valida duplicados por correo o documento antes de crear.</p>
           </div>
+        </div>
+        <div class="ua-import-schema">
+          <span>Columnas esperadas</span>
+          <strong>nombre, correo, documento, clan</strong>
         </div>
         <input id="xlsxInput" type="file" accept=".xlsx,.xls" hidden>
         <button class="ua-btn ua-btn-secondary ua-full" id="chooseXlsxBtn" type="button">
@@ -391,8 +443,11 @@ export default class UsersAdminView {
           <div class="ua-import-preview">
             ${this.importRows.slice(0, 6).map((row) => `
               <div class="ua-import-row is-${row.status}">
-                <strong>${escapeHtml(row.name || "Sin nombre")}</strong>
-                <span>${escapeHtml(row.email || row.reason)}</span>
+                <div>
+                  <strong>${escapeHtml(row.name || "Sin nombre")}</strong>
+                  <span>${escapeHtml(row.email || row.reason)}</span>
+                </div>
+                <small>Fila ${row.rowNumber}</small>
               </div>
             `).join("")}
           </div>
@@ -426,7 +481,7 @@ export default class UsersAdminView {
               <span class="ua-eyebrow">${isEditing ? "Editar" : "Crear"}</span>
               <h2 id="userModalTitle">${isEditing ? "Editar usuario" : "Nuevo usuario"}</h2>
             </div>
-            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">x</button>
+            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">${actionIcons.close}</button>
           </header>
           <form id="userForm" class="ua-form">
             <label class="ua-label">Nombre
@@ -463,16 +518,19 @@ export default class UsersAdminView {
               </label>
             </div>
             ${isEditing ? `
-              <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
-                <button class="ua-btn ua-btn-secondary" id="sendIndividualInviteBtn" type="button">Enviar invitaci&oacute;n</button>
-                <div style="flex:1"></div>
+              <div class="ua-inline-actions">
+                <button class="ua-btn ua-btn-secondary" id="sendIndividualInviteBtn" type="button">
+                  <span class="ua-btn-icon">${actionIcons.mail}</span>
+                  Enviar invitacion
+                </button>
               </div>
             ` : `
               <label class="ua-label">Contrasena inicial
                 <input class="ua-field" name="password" placeholder="Opcional: se usa clan.riwi2026*">
               </label>
-              <label style="margin-top:6px;display:flex;align-items:center;gap:8px;" class="ua-label">
-                <input type="checkbox" name="sendInvite" id="sendInviteCheckbox"> <span>Enviar invitaci&oacute;n individual al crear</span>
+              <label class="ua-check-label">
+                <input type="checkbox" name="sendInvite" id="sendInviteCheckbox">
+                <span>Enviar invitacion individual al crear</span>
               </label>
             `}
             <p class="ua-form-note">
@@ -499,7 +557,7 @@ export default class UsersAdminView {
               <span class="ua-eyebrow">Seguridad</span>
               <h2 id="passwordModalTitle">Cambiar contrasena</h2>
             </div>
-            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">x</button>
+            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">${actionIcons.close}</button>
           </header>
           <form id="passwordForm" class="ua-form">
             <p class="ua-modal-copy">${escapeHtml(user?.name || "")}</p>
@@ -519,6 +577,10 @@ export default class UsersAdminView {
   attachHandlers() {
     document.getElementById("refreshUsersBtn")?.addEventListener("click", () => this.loadUsers());
     document.getElementById("newUserBtn")?.addEventListener("click", () => {
+      this.modal = { type: "user", user: null };
+      this.paint();
+    });
+    document.getElementById("manualCreateBtn")?.addEventListener("click", () => {
       this.modal = { type: "user", user: null };
       this.paint();
     });
@@ -803,6 +865,14 @@ export default class UsersAdminView {
         reason,
       };
     });
+  }
+
+  getImportStats() {
+    return {
+      validRows: this.importRows.filter((row) => row.status === "valid"),
+      duplicateRows: this.importRows.filter((row) => row.status === "duplicate"),
+      invalidRows: this.importRows.filter((row) => row.status === "invalid"),
+    };
   }
 
   async createImportedUsers() {
