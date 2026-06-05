@@ -54,7 +54,7 @@
 
 .ua-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(150px, 190px);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: end;
   padding: 24px;
@@ -208,7 +208,7 @@
 
 .ua-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -281,6 +281,24 @@
 .ua-tone-gold .ua-metric-icon {
   color: #7a660c;
   background: rgba(230, 202, 82, 0.1);
+}
+
+.ua-tone-lilac {
+  box-shadow: inset 4px 0 0 var(--lilac);
+}
+
+.ua-tone-lilac .ua-metric-icon {
+  color: #8940a0;
+  background: rgba(234, 162, 252, 0.1);
+}
+
+.ua-tone-steel {
+  box-shadow: inset 4px 0 0 #6b7a99;
+}
+
+.ua-tone-steel .ua-metric-icon {
+  color: #4a5568;
+  background: rgba(107, 122, 153, 0.1);
 }
 
 .ua-workspace {
@@ -914,9 +932,10 @@
   }
 
   .ua-side-column {
+    order: -1;
     position: static;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -930,11 +949,6 @@
     justify-content: flex-start;
   }
 
-  .ua-header-summary {
-    border-left: 0;
-    padding-left: 0;
-  }
-
   .ua-toolbar {
     grid-template-columns: 1fr 180px 170px;
   }
@@ -945,6 +959,10 @@
 }
 
 @media (max-width: 1180px) {
+  .ua-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .ua-side-column {
     grid-template-columns: 1fr 1fr;
   }

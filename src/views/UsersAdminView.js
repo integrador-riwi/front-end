@@ -169,7 +169,6 @@ export default class UsersAdminView {
         </div>
         <aside class="ua-side-column">
           ${this.renderInvitePanel(clans)}
-          ${this.renderManualPanel()}
           ${this.renderImportPanel(importStats)}
         </aside>
       </section>
@@ -188,7 +187,7 @@ export default class UsersAdminView {
     `;
   }
 
-  renderHeader(stats) {
+  renderHeader() {
     return `
       <header class="ua-header">
         <div>
@@ -197,18 +196,10 @@ export default class UsersAdminView {
           <p>Administra altas, roles, clanes, accesos e invitaciones sin salir del flujo.</p>
         </div>
         <div class="ua-header-actions">
-          <button class="ua-btn ua-btn-secondary" id="refreshUsersBtn" type="button">
-            <span class="ua-btn-icon">${actionIcons.refresh}</span>
-            Actualizar
-          </button>
           <button class="ua-btn ua-btn-primary" id="newUserBtn" type="button">
             <span class="ua-btn-icon">${icons.plus()}</span>
             Nuevo usuario
           </button>
-        </div>
-        <div class="ua-header-summary">
-          <strong>${stats.total}</strong>
-          <span>usuarios registrados</span>
         </div>
       </header>
     `;
@@ -216,10 +207,12 @@ export default class UsersAdminView {
 
   renderMetrics(stats) {
     const cards = [
-      { label: "Activos", value: stats.active, tone: "mint", icon: icons.check() },
-      { label: "Inactivos", value: stats.inactive, tone: "coral", icon: icons.danger() },
-      { label: "Coders", value: stats.coders, tone: "accent", icon: icons.code() },
-      { label: "Clanes", value: stats.clans, tone: "gold", icon: icons.users() },
+      { label: "Coders", value: stats.roles.CODER, tone: "accent", icon: icons.code() },
+      { label: "TL Desarrollo", value: stats.roles.TL_DEVELOPMENT, tone: "mint", icon: icons.settings() },
+      { label: "TL Soft Skills", value: stats.roles.TL_SOFT_SKILLS, tone: "gold", icon: icons.bulb() },
+      { label: "TL Ingles", value: stats.roles.TL_ENGLISH, tone: "lilac", icon: icons.chat() },
+      { label: "Staff", value: stats.roles.STAFF, tone: "steel", icon: icons.blocks() },
+      { label: "Admins", value: stats.roles.ADMIN, tone: "coral", icon: icons.settings() },
     ];
 
     return `
@@ -379,24 +372,6 @@ export default class UsersAdminView {
         <button class="ua-btn ua-btn-primary ua-full" id="sendClanInviteBtn" type="button">
           <span class="ua-btn-icon">${actionIcons.mail}</span>
           Enviar a todo el clan
-        </button>
-      </section>
-    `;
-  }
-
-  renderManualPanel() {
-    return `
-      <section class="ua-panel ua-panel-compact">
-        <div class="ua-panel-header">
-          <span class="ua-panel-icon ua-panel-icon-mint">${icons.plus()}</span>
-          <div>
-            <h2>Alta manual</h2>
-            <p>Crea un usuario puntual con rol, clan y documento.</p>
-          </div>
-        </div>
-        <button class="ua-btn ua-btn-secondary ua-full" id="manualCreateBtn" type="button">
-          <span class="ua-btn-icon">${icons.plus()}</span>
-          Crear desde formulario
         </button>
       </section>
     `;
@@ -564,12 +539,7 @@ export default class UsersAdminView {
   }
 
   attachHandlers() {
-    document.getElementById("refreshUsersBtn")?.addEventListener("click", () => this.loadUsers());
     document.getElementById("newUserBtn")?.addEventListener("click", () => {
-      this.modal = { type: "user", user: null };
-      this.paint();
-    });
-    document.getElementById("manualCreateBtn")?.addEventListener("click", () => {
       this.modal = { type: "user", user: null };
       this.paint();
     });
@@ -928,15 +898,14 @@ export default class UsersAdminView {
   }
 
   getStats() {
-    const active = this.users.filter((user) => user.is_active).length;
-    const inactive = this.users.length - active;
+    const roles = Object.fromEntries(ROLES.map((role) => [role.value, 0]));
+
+    for (const user of this.users) {
+      if (roles[user.role] !== undefined) roles[user.role]++;
+    }
 
     return {
-      total: this.users.length,
-      active,
-      inactive,
-      coders: this.users.filter((user) => user.role === "CODER").length,
-      clans: this.getClans().length,
+      roles,
     };
   }
 
