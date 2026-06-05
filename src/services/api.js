@@ -286,8 +286,43 @@ export const getUsers = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.role) query.append('role', params.role);
   if (params.clan) query.append('clan', params.clan);
+  if (params.isActive !== undefined && params.isActive !== '') query.append('isActive', params.isActive);
+  if (params.search) query.append('search', params.search);
+  if (params.page) query.append('page', params.page);
   if (params.limit) query.append('limit', params.limit);
   return apiFetch(`/users?${query.toString()}`, { method: 'GET' });
+};
+
+export const createUser = async (payload) => {
+  return apiFetch('/users', {
+    method: 'POST',
+    body: payload,
+  });
+};
+
+export const updateUser = async (userId, payload) => {
+  return apiFetch(`/users/${userId}`, {
+    method: 'PUT',
+    body: payload,
+  });
+};
+
+export const updateUserPassword = async (userId, password) => {
+  return apiFetch(`/users/${userId}/password`, {
+    method: 'PUT',
+    body: { password },
+  });
+};
+
+export const updateUserStatus = async (userId, isActive) => {
+  return apiFetch(`/users/${userId}/status`, {
+    method: 'PUT',
+    body: { isActive },
+  });
+};
+
+export const deleteUser = async (userId) => {
+  return apiFetch(`/users/${userId}`, { method: 'DELETE' });
 };
 
 export const sendWelcomeEmailsToUsers = async (payload) => {
