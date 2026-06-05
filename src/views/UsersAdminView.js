@@ -101,6 +101,7 @@ export default class UsersAdminView {
       clan: "",
       isActive: "",
     };
+    this.searchPaintTimeout = null;
   }
 
   async render() {
@@ -245,16 +246,16 @@ export default class UsersAdminView {
         </div>
         <div class="ua-filter-group">
           <span class="ua-filter-icon">${actionIcons.filter}</span>
-          <select id="roleFilter" class="ua-control" aria-label="Filtrar por rol">
+          <select id="roleFilter" class="ua-control ua-select" aria-label="Filtrar por rol">
             <option value="">Todos los roles</option>
             ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
           </select>
         </div>
-        <select id="clanFilter" class="ua-control" aria-label="Filtrar por clan">
+        <select id="clanFilter" class="ua-control ua-select" aria-label="Filtrar por clan">
           <option value="">Todos los clanes</option>
           ${clans.map((clan) => `<option value="${escapeHtml(clan)}" ${this.filters.clan === clan ? "selected" : ""}>${escapeHtml(clan)}</option>`).join("")}
         </select>
-        <select id="statusFilter" class="ua-control" aria-label="Filtrar por estado">
+        <select id="statusFilter" class="ua-control ua-select" aria-label="Filtrar por estado">
           <option value="">Todos los estados</option>
           <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>Activos</option>
           <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>Inactivos</option>
@@ -312,7 +313,6 @@ export default class UsersAdminView {
               <th>Usuario</th>
               <th>Rol</th>
               <th>Clan</th>
-              <th>Documento</th>
               <th>Estado</th>
               <th class="ua-actions-col">Acciones</th>
             </tr>
@@ -328,13 +328,6 @@ export default class UsersAdminView {
   renderUserRow(user) {
     const role = ROLES.find((item) => item.value === user.role)?.label ?? user.role;
     const userId = String(user.id_user);
-    const initials = String(user.name || user.email || "?")
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase();
 
     return `
       <tr>
@@ -343,7 +336,6 @@ export default class UsersAdminView {
         </td>
         <td>
           <div class="ua-user-cell">
-            <span class="ua-avatar">${escapeHtml(initials)}</span>
             <div>
               <strong>${escapeHtml(user.name)}</strong>
               <span>${escapeHtml(user.email)}</span>
@@ -352,9 +344,6 @@ export default class UsersAdminView {
         </td>
         <td><span class="ua-role-pill">${escapeHtml(role)}</span></td>
         <td>${user.clan ? `<span class="ua-clan-pill">${escapeHtml(user.clan)}</span>` : `<span class="ua-muted">Sin clan</span>`}</td>
-        <td>
-          <span class="ua-doc">${escapeHtml(user.document_type || "CC")} ${escapeHtml(user.document_number || "")}</span>
-        </td>
         <td>
           <button class="ua-status ${user.is_active ? "is-active" : "is-inactive"}" data-action="toggle-status" data-userid="${userId}" type="button">
             ${user.is_active ? "Activo" : "Inactivo"}
@@ -383,7 +372,7 @@ export default class UsersAdminView {
           </div>
         </div>
         <label class="ua-label" for="inviteClanSelect">Clan</label>
-        <select id="inviteClanSelect" class="ua-field">
+        <select id="inviteClanSelect" class="ua-field ua-select">
           <option value="">Selecciona un clan</option>
           ${clans.map((clan) => `<option value="${escapeHtml(clan)}">${escapeHtml(clan)}</option>`).join("")}
         </select>
@@ -492,7 +481,7 @@ export default class UsersAdminView {
             </label>
             <div class="ua-form-grid">
               <label class="ua-label">Tipo documento
-                <select class="ua-field" name="documentType">
+                <select class="ua-field ua-select" name="documentType">
                   ${DOCUMENT_TYPES.map((type) => `<option value="${type}" ${(user?.document_type || "CC") === type ? "selected" : ""}>${type}</option>`).join("")}
                 </select>
               </label>
@@ -502,13 +491,13 @@ export default class UsersAdminView {
             </div>
             <div class="ua-form-grid">
               <label class="ua-label">Rol
-                <select class="ua-field" name="role">
+                <select class="ua-field ua-select" name="role">
                   ${ROLES.map((role) => `<option value="${role.value}" ${(user?.role || "CODER") === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
                 </select>
               </label>
               <label class="ua-label">Clan
                 ${this.teams && this.teams.length > 0 ? `
-                  <select class="ua-field" name="clan">
+                  <select class="ua-field ua-select" name="clan">
                     <option value="">-- Sin clan --</option>
                     ${this.teams.map((t) => `<option value="${escapeHtml(t.name || t)}" ${(t.name === user?.clan || t === user?.clan) ? 'selected' : ''}>${escapeHtml(t.name || t)}</option>`).join("")}
                   </select>
@@ -587,7 +576,7 @@ export default class UsersAdminView {
 
     document.getElementById("userSearchInput")?.addEventListener("input", (event) => {
       this.filters.search = event.target.value;
-      this.paint();
+      this.scheduleSearchPaint();
     });
     document.getElementById("roleFilter")?.addEventListener("change", (event) => {
       this.filters.role = event.target.value;
@@ -644,6 +633,20 @@ export default class UsersAdminView {
     });
     document.getElementById("userForm")?.addEventListener("submit", (event) => this.submitUserForm(event));
     document.getElementById("passwordForm")?.addEventListener("submit", (event) => this.submitPasswordForm(event));
+  }
+
+  scheduleSearchPaint() {
+    clearTimeout(this.searchPaintTimeout);
+    this.searchPaintTimeout = setTimeout(() => {
+      this.paint();
+      requestAnimationFrame(() => {
+        const input = document.getElementById("userSearchInput");
+        if (!input) return;
+        input.focus();
+        const cursorPosition = input.value.length;
+        input.setSelectionRange(cursorPosition, cursorPosition);
+      });
+    }, 180);
   }
 
   async handleUserAction(button) {
@@ -942,5 +945,7 @@ export default class UsersAdminView {
     if (repaint) this.paint();
   }
 
-  destroy() {}
+  destroy() {
+    clearTimeout(this.searchPaintTimeout);
+  }
 }
