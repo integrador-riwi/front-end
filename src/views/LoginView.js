@@ -100,11 +100,7 @@ export default class LoginView {
                 }
               </button>
 
-              <div class="text-center mt-3">
-                <a href="#" id="registerLink" class="forgot-link">
-                  ${t("login.noAccount")}
-                </a>
-              </div>
+            
 
             </form>
 
