@@ -14,7 +14,7 @@ let eventHandlers = {};
 
 const SOCKET_URL =
   import.meta.env.VITE_API_URL?.replace("/api", "") ||
-  "https://back-end-production-7f2c.up.railway.app";
+  "https://backend-production-2nd.up.railway.app";
 
 export function initSocket() {
   const token = getToken();
