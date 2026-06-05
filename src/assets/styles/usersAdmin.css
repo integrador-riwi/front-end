@@ -10,16 +10,16 @@
 }
 
 .ua-shell {
-  width: min(1480px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
   min-width: 0;
   margin: 0 auto;
-  padding: 28px 0 44px;
+  padding: 22px 0 36px;
 }
 
 .ua-root {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .ua-loading {
@@ -55,15 +55,15 @@
 .ua-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 28px;
+  gap: 20px;
   align-items: center;
-  padding: 34px 42px;
+  padding: 24px 28px;
   overflow: hidden;
 }
 
 .ua-eyebrow {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--accent);
   font-size: 0.76rem;
   font-weight: 900;
@@ -81,7 +81,7 @@
 }
 
 .ua-header h1 {
-  font-size: clamp(2.25rem, 4vw, 3.8rem);
+  font-size: clamp(2rem, 3.2vw, 2.9rem);
   line-height: 1.05;
 }
 
@@ -90,7 +90,7 @@
 .ua-empty p,
 .ua-modal-copy,
 .ua-form-note {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--text-muted);
 }
 
@@ -101,26 +101,6 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   min-width: 0;
-}
-
-.ua-header-summary {
-  border-left: 1px solid rgba(107, 122, 153, 0.18);
-  padding-left: 18px;
-}
-
-.ua-header-summary strong {
-  display: block;
-  color: var(--navy);
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.ua-header-summary span {
-  display: block;
-  margin-top: 6px;
-  color: var(--text-muted);
-  font-size: 0.86rem;
-  font-weight: 700;
 }
 
 .ua-btn,
@@ -146,9 +126,9 @@
 }
 
 .ua-header .ua-btn {
-  min-height: 70px;
-  padding: 0 28px;
-  font-size: 1.12rem;
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 0.96rem;
 }
 
 .ua-btn:hover:not(:disabled) {
@@ -215,17 +195,17 @@
 .ua-metrics {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .ua-metric {
-  min-height: 140px;
+  min-height: 104px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   border-radius: 8px;
-  padding: 28px 24px;
+  padding: 18px 16px;
   background: var(--color-surface);
   border: 1px solid rgba(107, 122, 153, 0.12);
 }
@@ -233,20 +213,20 @@
 .ua-metric span:not(.ua-metric-icon) {
   color: var(--text-muted);
   font-weight: 800;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
 }
 
 .ua-metric strong {
   display: block;
-  margin-top: 16px;
+  margin-top: 12px;
   color: var(--navy);
-  font-size: 2.7rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
 .ua-metric-icon {
-  width: 58px;
-  height: 58px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   border-radius: 8px;
   border: 1px solid currentColor;
@@ -310,11 +290,11 @@
 .ua-actions-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
 .ua-actions-grid .ua-panel {
-  min-height: 270px;
+  min-height: 0;
 }
 
 .ua-users-section {
@@ -322,26 +302,6 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.ua-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 18px;
-  align-items: start;
-}
-
-.ua-main-column,
-.ua-side-column {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.ua-side-column {
-  position: sticky;
-  top: 78px;
 }
 
 .ua-toolbar {
@@ -667,7 +627,7 @@
 }
 
 .ua-panel {
-  padding: 26px;
+  padding: 20px 22px;
 }
 
 .ua-panel-compact {
@@ -678,12 +638,12 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .ua-panel-icon {
-  width: 58px;
-  height: 58px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   border-radius: 8px;
   color: var(--accent);
@@ -697,11 +657,11 @@
 }
 
 .ua-panel h2 {
-  font-size: 1.18rem;
+  font-size: 1rem;
 }
 
 .ua-panel p {
-  font-size: 0.94rem;
+  font-size: 0.84rem;
   line-height: 1.35;
 }
 
@@ -950,15 +910,8 @@
 }
 
 @media (max-width: 1500px) {
-  .ua-workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .ua-side-column {
-    order: -1;
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .ua-shell {
+    width: min(1180px, calc(100% - 28px));
   }
 }
 
@@ -985,18 +938,10 @@
   .ua-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .ua-side-column {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 @media (max-width: 940px) {
   .ua-actions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ua-side-column {
     grid-template-columns: 1fr;
   }
 
@@ -1029,7 +974,6 @@
 
   .ua-metrics,
   .ua-toolbar,
-  .ua-side-column,
   .ua-form-grid {
     grid-template-columns: 1fr;
   }
