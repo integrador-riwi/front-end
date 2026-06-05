@@ -161,16 +161,14 @@ export default class UsersAdminView {
     root.innerHTML = `
       ${this.renderHeader(stats)}
       ${this.renderMetrics(stats)}
-      <section class="ua-workspace">
-        <div class="ua-main-column">
-          ${this.renderToolbar(clans, filteredUsers.length)}
-          ${this.renderBulkBar(filteredUsers.length)}
-          ${this.renderUsersTable(filteredUsers)}
-        </div>
-        <aside class="ua-side-column">
-          ${this.renderInvitePanel(clans)}
-          ${this.renderImportPanel(importStats)}
-        </aside>
+      <section class="ua-actions-grid">
+        ${this.renderInvitePanel(clans)}
+        ${this.renderImportPanel(importStats)}
+      </section>
+      <section class="ua-users-section">
+        ${this.renderToolbar(clans, filteredUsers.length)}
+        ${this.renderBulkBar(filteredUsers.length)}
+        ${this.renderUsersTable(filteredUsers)}
       </section>
       ${this.renderModal()}
     `;
@@ -211,7 +209,7 @@ export default class UsersAdminView {
       { label: "TL Desarrollo", value: stats.roles.TL_DEVELOPMENT, tone: "mint", icon: icons.settings() },
       { label: "TL Soft Skills", value: stats.roles.TL_SOFT_SKILLS, tone: "gold", icon: icons.bulb() },
       { label: "TL Ingles", value: stats.roles.TL_ENGLISH, tone: "lilac", icon: icons.chat() },
-      { label: "Staff", value: stats.roles.STAFF, tone: "steel", icon: icons.blocks() },
+      { label: "Staff", value: stats.roles.STAFF, tone: "muted", icon: icons.blocks() },
       { label: "Admins", value: stats.roles.ADMIN, tone: "coral", icon: icons.settings() },
     ];
 
