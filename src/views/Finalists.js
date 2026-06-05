@@ -7,6 +7,7 @@ import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/finalists.css";
 import { icons } from "../utils/icons.js";
+import { t, onLangChange } from "../utils/i18n.js";
 
 export default class FinalistsView {
   constructor(router) {
@@ -15,6 +16,7 @@ export default class FinalistsView {
     this.navbar = new Navbar(router);
     this.header = new Header(router);
     this.finalists = [];
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   /* -------------------------- FETCH -------------------------- */
@@ -39,8 +41,8 @@ export default class FinalistsView {
       return `
         <div class="text-center py-5" style="color:#7b7fa8;">
           <span class="material-symbols-outlined d-block mb-2" style="font-size:2.5rem;opacity:0.4;">emoji_events</span>
-          <p class="fw-bold mb-1">No finalists yet</p>
-          <p style="font-size:0.85rem;">Finalists will appear here once the voting is closed and calculated</p>
+          <p class="fw-bold mb-1">${t("finalistsPage.noFinalists")}</p>
+          <p style="font-size:0.85rem;">${t("finalistsPage.noFinalistsDesc")}</p>
         </div>`;
     }
 
@@ -66,19 +68,19 @@ export default class FinalistsView {
       return `
         <div class="podium-score-breakdown">
           <div class="podium-score-row">
-            <span class="podium-score-label">Score</span>
+            <span class="podium-score-label">${t("finalistsPage.score")}</span>
             <span class="podium-score-val">${nota}</span>
           </div>
           <div class="podium-score-row">
-            <span class="podium-score-label">Votes</span>
+            <span class="podium-score-label">${t("finalistsPage.votes")}</span>
             <span class="podium-score-val">${votos}</span>
           </div>
           <div class="podium-score-divider"></div>
           <div class="podium-score-row podium-score-total">
-            <span class="podium-score-label">Total</span>
+            <span class="podium-score-label">${t("finalistsPage.total")}</span>
             <span class="podium-score-val">${final}</span>
           </div>
-          <p class="podium-score-hint">Lower = better</p>
+          <p class="podium-score-hint">${t("finalistsPage.lowerBetter")}</p>
         </div>`;
     };
 
@@ -103,7 +105,7 @@ export default class FinalistsView {
             ${scoreBreakdown(team)}
             <div class="podium-sublabel justify-content-center">
               <span class="icon-md">${pos === '1st' ? icons.trophy() : icons.check()}</span>
-              ${pos === '1st' ? 'Champion' : 'Finalist'}
+              ${pos === '1st' ? t("finalistsPage.champion") : t("finalistsPage.finalist")}
             </div>
           </div>
         </div>`;
@@ -111,9 +113,9 @@ export default class FinalistsView {
 
     return `
       <div class="podium-row">
-        ${podiumCard(second, '2nd', 'podium-block-2nd', 'podium-medal-2nd', 'podium-number-2nd', 'podium-label-2nd', '2', 'Silver',   'military_tech',       0)}
-        ${podiumCard(first,  '1st', 'podium-block-1st', 'podium-medal-1st', 'podium-number-1st', 'podium-label-1st', '1', 'Winner',   'emoji_events',        1)}
-        ${podiumCard(third,  '3rd', 'podium-block-3rd', 'podium-medal-3rd', 'podium-number-3rd', 'podium-label-3rd', '3', 'Bronze',   'workspace_premium',   2)}
+        ${podiumCard(second, '2nd', 'podium-block-2nd', 'podium-medal-2nd', 'podium-number-2nd', 'podium-label-2nd', '2', t("finalistsPage.silver"),   'military_tech',       0)}
+        ${podiumCard(first,  '1st', 'podium-block-1st', 'podium-medal-1st', 'podium-number-1st', 'podium-label-1st', '1', t("finalistsPage.winner"),   'emoji_events',        1)}
+        ${podiumCard(third,  '3rd', 'podium-block-3rd', 'podium-medal-3rd', 'podium-number-3rd', 'podium-label-3rd', '3', t("finalistsPage.bronze"),   'workspace_premium',   2)}
       </div>`;
   }
 
@@ -133,7 +135,7 @@ export default class FinalistsView {
             <div id="podium-container" class="finalists-page">
               <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
                 <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
-                <p class="text-muted fw-medium">Loading Finalists...</p>
+                <p class="text-muted fw-medium">${t("finalistsPage.loading")}</p>
               </div>
             </div>
 
@@ -148,5 +150,9 @@ export default class FinalistsView {
     await this.fetchFinalists();
 
     document.getElementById("podium-container").innerHTML = this.renderPodium();
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
   }
 }

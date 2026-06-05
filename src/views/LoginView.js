@@ -77,7 +77,7 @@ export default class LoginView {
                 <div class="d-flex justify-content-between align-items-center mb-1">
                   <label for="password" class="form-label field-label mb-0">${t("login.password")}</label>
                   <a href="#" id="forgotPasswordLink" class="forgot-link" style="font-size:0.78rem;">
-                    ¿Olvidaste tu contraseña?
+                    ${t("login.forgot")}
                   </a>
                 </div>
                 <div class="input-wrap">
@@ -99,12 +99,6 @@ export default class LoginView {
                     : t("login.submit")
                 }
               </button>
-
-              <div class="text-center mt-3">
-                <a href="#" id="registerLink" class="forgot-link">
-                  ${t("login.noAccount")}
-                </a>
-              </div>
 
             </form>
 
@@ -139,11 +133,6 @@ export default class LoginView {
     });
     form.addEventListener("submit", (e) => this.handleLogin(e));
 
-
-    document.getElementById("registerLink")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.router.navigate("register");
-    });
 
     document.getElementById("forgotPasswordLink")?.addEventListener("click", (e) => {
       e.preventDefault();

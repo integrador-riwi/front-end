@@ -290,7 +290,7 @@ export default class PublicProfileView {
         btn.addEventListener("click", async () => {
             try {
                 btn.disabled = true;
-                btn.querySelector(".pp-github-label").textContent = "Connecting...";
+                btn.querySelector(".pp-github-label").textContent = t("profile.githubConnecting");
                 const url = await getGithubAuthUrl();
                 if (!url) throw new Error("Could not get GitHub URL");
                 window.location.href = typeof url === "string" ? url : url?.url ?? url;
@@ -371,12 +371,12 @@ export default class PublicProfileView {
                 display.style.display = "block";
             } catch (err) {
                 console.error("Error saving description:", err);
-                saveBtn.textContent = "Error — retry";
+                saveBtn.textContent = t("profile.retrySave");
                 saveBtn.disabled = false;
             } finally {
                 this.isSavingDesc = false;
                 saveBtn.disabled = false;
-                saveBtn.textContent = "Save";
+                saveBtn.textContent = t("common.save");
             }
         });
     }

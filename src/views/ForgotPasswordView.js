@@ -1,5 +1,6 @@
 import { forgotPassword } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/login.css";
 
 /**
@@ -12,6 +13,7 @@ export default class ForgotPasswordView {
     this.router = router;
     this.loading = false;
     this.sent = false;
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   render() {
@@ -27,12 +29,12 @@ export default class ForgotPasswordView {
           <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
-              Te enviaremos un enlace seguro para que puedas restablecer tu contraseña en menos de un minuto.
+              ${t("forgotPassword.leftDesc")}
             </p>
             <div class="left-tags d-flex flex-wrap justify-content-center gap-2 mt-4">
-              <span class="tag tag-lilac">Seguro</span>
-              <span class="tag tag-mint">Privado</span>
-              <span class="tag tag-gold">Simple</span>
+              <span class="tag tag-lilac">${t("forgotPassword.tagSecure")}</span>
+              <span class="tag tag-mint">${t("forgotPassword.tagPrivate")}</span>
+              <span class="tag tag-gold">${t("forgotPassword.tagSimple")}</span>
             </div>
           </div>
         </section>
@@ -67,17 +69,17 @@ export default class ForgotPasswordView {
   _renderForm() {
     return `
       <header class="form-header mb-4">
-        <p class="form-eyebrow">Recuperación de acceso</p>
-        <h2 class="form-title">¿Olvidaste tu contraseña?</h2>
-        <p class="form-subtitle">Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+        <p class="form-eyebrow">${t("forgotPassword.eyebrow")}</p>
+        <h2 class="form-title">${t("forgotPassword.title")}</h2>
+        <p class="form-subtitle">${t("forgotPassword.subtitle")}</p>
       </header>
 
       <form id="forgotForm" novalidate>
         <div class="mb-4">
-          <label for="email" class="form-label field-label">Correo electrónico</label>
+          <label for="email" class="form-label field-label">${t("forgotPassword.email")}</label>
           <div class="input-wrap">
             <input id="email" type="email" class="form-control custom-input"
-                   placeholder="name@correo.com" autocomplete="email" required />
+                   placeholder="${t("forgotPassword.emailPlaceholder")}" autocomplete="email" required />
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
               <polyline points="22,6 12,13 2,6"/>
@@ -89,12 +91,12 @@ export default class ForgotPasswordView {
                 ${this.loading ? "disabled" : ""}>
           ${this.loading
             ? `<span class="login-spinner"></span>`
-            : "Enviar enlace de recuperación"}
+            : t("forgotPassword.submit")}
         </button>
 
         <div class="text-center mt-3">
           <a href="#" id="backToLogin" class="forgot-link">
-            ← Volver al inicio de sesión
+            ← ${t("forgotPassword.backToLogin")}
           </a>
         </div>
       </form>
@@ -117,10 +119,9 @@ export default class ForgotPasswordView {
           </svg>
         </div>
 
-        <h2 class="form-title mb-2">Revisa tu correo</h2>
+        <h2 class="form-title mb-2">${t("forgotPassword.successTitle")}</h2>
         <p class="form-subtitle mb-4">
-          Si existe una cuenta con ese correo, recibirás un enlace de recuperación en los próximos minutos.
-          El enlace expira en <strong>15 minutos</strong>.
+          ${t("forgotPassword.successText")}
         </p>
 
         <div style="
@@ -128,12 +129,12 @@ export default class ForgotPasswordView {
           border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; text-align: left;
         ">
           <p style="margin:0; font-size:0.82rem; color: var(--text-muted); line-height:1.6;">
-            💡 <strong>Tip:</strong> Revisa también tu carpeta de spam o correo no deseado.
+            <strong>Tip:</strong> ${t("forgotPassword.tip")}
           </p>
         </div>
 
         <a href="#" id="backToLogin" class="btn btn-submit w-100" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">
-          Volver al inicio de sesión
+          ${t("forgotPassword.backToLogin")}
         </a>
       </div>
     `;
@@ -154,7 +155,7 @@ export default class ForgotPasswordView {
     const email = document.getElementById("email")?.value?.trim();
 
     if (!email) {
-      toast.warning("Campo requerido", "Por favor ingresa tu correo electrónico.");
+      toast.warning(t("forgotPassword.requiredTitle"), t("forgotPassword.requiredMsg"));
       return;
     }
 
@@ -174,5 +175,7 @@ export default class ForgotPasswordView {
     }
   }
 
-  destroy() {}
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
+  }
 }

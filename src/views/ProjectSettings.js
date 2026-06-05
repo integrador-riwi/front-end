@@ -321,7 +321,7 @@ export default class ProjectSettings {
           }
           <p class="cs-member-role mb-0">${escHtml(r.label)}</p>
         </div>
-        <button class="cs-btn-remove" data-repo-id="${r.id_repo}" title="Delete repo">
+        <button class="cs-btn-remove" data-repo-id="${r.id_repo}" title="${t("settings.deleteRepo")}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -336,19 +336,19 @@ export default class ProjectSettings {
                style="width:18px;height:18px;color:var(--accent)">
             <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
           </svg>
-          Additional Repositories
+          ${t("settings.additionalRepos")}
         </h2>
 
         ${repos.length > 0
           ? `<ul class="list-unstyled d-flex flex-column gap-3 mb-4" id="additionalReposList">${repoItems}</ul>`
-          : `<p class="cs-hint mb-4" id="additionalReposList">No additional repositories yet.</p>`
+          : `<p class="cs-hint mb-4" id="additionalReposList">${t("settings.noAdditionalRepos")}</p>`
         }
 
         <div class="d-flex gap-2">
           <input type="text" class="cs-input flex-grow-1" id="newRepoLabel"
-                 placeholder="Label (e.g. Frontend, Backend)" maxlength="50" />
+                 placeholder="${t("settings.repoLabelPlaceholder")}" maxlength="50" />
           <button class="cs-btn-primary" id="addRepoBtn" style="white-space:nowrap">
-            + Add Repo
+            + ${t("settings.addRepo")}
           </button>
         </div>
       </div>
@@ -427,7 +427,7 @@ export default class ProjectSettings {
         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
           <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-        </svg> Save Changes`;
+        </svg> ${t("settings.saveChanges")}`;
       }
     }
   }
@@ -472,12 +472,12 @@ export default class ProjectSettings {
     const input = document.getElementById("newRepoLabel");
     const label = input?.value.trim();
     if (!label) {
-      toast.error("Error", "Enter a label for the repository.");
+      toast.error(t("common.errorTitle"), t("settings.repoLabelRequired"));
       return;
     }
 
     const btn = document.getElementById("addRepoBtn");
-    if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+    if (btn) { btn.disabled = true; btn.textContent = t("settings.creatingRepo"); }
 
     try {
       const res = await createAdditionalRepo(this.team.id_team, label);
@@ -485,25 +485,25 @@ export default class ProjectSettings {
       this.additionalRepos = [...(this.additionalRepos ?? []), newRepo];
       input.value = "";
       this._refreshRepoList();
-      toast.success("Done", "Repository created successfully.");
+      toast.success(t("common.successTitle"), t("settings.repoCreated"));
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not create repository.");
+      toast.error(t("common.errorTitle"), err?.message ?? t("settings.repoCreateError"));
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = "+ Add Repo"; }
+      if (btn) { btn.disabled = false; btn.textContent = `+ ${t("settings.addRepo")}`; }
     }
   }
 
   async handleDeleteRepo(repoId) {
-    const confirmed = confirm("Delete this repository link? The GitHub repo will not be deleted.");
+    const confirmed = confirm(t("settings.deleteRepoConfirm"));
     if (!confirmed) return;
 
     try {
       await deleteAdditionalRepo(this.team.id_team, repoId);
       this.additionalRepos = this.additionalRepos.filter((r) => String(r.id_repo) !== String(repoId));
       this._refreshRepoList();
-      toast.success("Done", "Repository removed.");
+      toast.success(t("common.successTitle"), t("settings.repoRemoved"));
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not remove repository.");
+      toast.error(t("common.errorTitle"), err?.message ?? t("settings.repoRemoveError"));
     }
   }
 
@@ -513,7 +513,7 @@ export default class ProjectSettings {
 
     const repos = this.additionalRepos ?? [];
     if (repos.length === 0) {
-      container.outerHTML = `<p class="cs-hint mb-4" id="additionalReposList">No additional repositories yet.</p>`;
+      container.outerHTML = `<p class="cs-hint mb-4" id="additionalReposList">${t("settings.noAdditionalRepos")}</p>`;
       return;
     }
 
@@ -535,7 +535,7 @@ export default class ProjectSettings {
           }
           <p class="cs-member-role mb-0">${escHtml(r.label)}</p>
         </div>
-        <button class="cs-btn-remove" data-repo-id="${r.id_repo}" title="Delete repo">
+        <button class="cs-btn-remove" data-repo-id="${r.id_repo}" title="${t("settings.deleteRepo")}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>

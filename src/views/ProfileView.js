@@ -181,7 +181,7 @@ export default class ProfileView {
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                       </svg>
-                      Cambiar contraseña
+                      ${t("profile.changePassword")}
                     </button>
                   </div>
                 </div>
@@ -220,26 +220,26 @@ export default class ProfileView {
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
-                  <h2 class="profile-section-title mb-0">Cambiar contraseña</h2>
+                  <h2 class="profile-section-title mb-0">${t("profile.changePassword")}</h2>
                 </div>
                 <form id="changePasswordForm" class="profile-form">
                   <div class="row g-3">
                     <div class="col-12 col-md-4">
-                      <label class="profile-label" for="currentPwd">Contraseña actual</label>
+                      <label class="profile-label" for="currentPwd">${t("profile.currentPassword")}</label>
                       <input id="currentPwd" type="password" class="profile-input" placeholder="••••••••" autocomplete="current-password" />
                     </div>
                     <div class="col-12 col-md-4">
-                      <label class="profile-label" for="newPwd">Nueva contraseña</label>
-                      <input id="newPwd" type="password" class="profile-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                      <label class="profile-label" for="newPwd">${t("profile.newPassword")}</label>
+                      <input id="newPwd" type="password" class="profile-input" placeholder="${t("profile.newPasswordPlaceholder")}" autocomplete="new-password" />
                     </div>
                     <div class="col-12 col-md-4">
-                      <label class="profile-label" for="confirmPwd">Confirmar contraseña</label>
-                      <input id="confirmPwd" type="password" class="profile-input" placeholder="Repite la nueva" autocomplete="new-password" />
+                      <label class="profile-label" for="confirmPwd">${t("profile.confirmPassword")}</label>
+                      <input id="confirmPwd" type="password" class="profile-input" placeholder="${t("profile.confirmPasswordPlaceholder")}" autocomplete="new-password" />
                     </div>
                   </div>
                   <div class="mt-3">
                     <button type="submit" class="profile-btn" id="changePwdBtn">
-                      Actualizar contraseña
+                      ${t("profile.updatePassword")}
                     </button>
                   </div>
                 </form>
@@ -311,34 +311,34 @@ export default class ProfileView {
     const confirmPwd = document.getElementById("confirmPwd")?.value ?? "";
 
     if (!currentPwd || !newPwd || !confirmPwd) {
-      toast.warning("Campos requeridos", "Por favor completa todos los campos.");
+      toast.warning(t("profile.passwordRequiredTitle"), t("profile.passwordRequiredMsg"));
       return;
     }
     if (newPwd.length < 6) {
-      toast.warning("Contraseña corta", "La nueva contraseña debe tener al menos 6 caracteres.");
+      toast.warning(t("profile.passwordShortTitle"), t("profile.passwordShortMsg"));
       return;
     }
     if (newPwd !== confirmPwd) {
-      toast.error("No coinciden", "Las contraseñas nuevas no coinciden.");
+      toast.error(t("profile.passwordMismatchTitle"), t("profile.passwordMismatchMsg"));
       return;
     }
 
     const btn = document.getElementById("changePwdBtn");
-    if (btn) { btn.disabled = true; btn.textContent = "Actualizando..."; }
+    if (btn) { btn.disabled = true; btn.textContent = t("profile.updatingPassword"); }
 
     try {
       await changePassword(currentPwd, newPwd);
-      toast.success("Éxito", "Tu contraseña fue actualizada correctamente.");
+      toast.success(t("profile.passwordUpdatedTitle"), t("profile.passwordUpdatedMsg"));
       // Clear fields
       ["currentPwd", "newPwd", "confirmPwd"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
       });
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "No se pudo cambiar la contraseña.";
-      toast.error("Error", msg);
+      const msg = err?.response?.data?.message || err?.message || t("profile.passwordChangeError");
+      toast.error(t("common.errorTitle"), msg);
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = "Actualizar contraseña"; }
+      if (btn) { btn.disabled = false; btn.textContent = t("profile.updatePassword"); }
     }
   }
 

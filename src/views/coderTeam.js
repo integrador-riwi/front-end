@@ -1,5 +1,6 @@
 import { toast } from "../components/Toast/index.js";
 import { uploadToCloudinary } from "../services/upload.js";
+import { t } from "../utils/i18n.js";
 
 
 export function renderCoderTeam({
@@ -14,7 +15,7 @@ export function renderCoderTeam({
   const grade = project?.grade ?? null;
   const dueDate = project?.final_delivery_date ?? "TBD";
   const projectName = project?.name ?? teamName;
-  const projectDesc = project?.description ?? "No description yet.";
+  const projectDesc = project?.description ?? t("coderTeam.noDescriptionYet");
   const isSubmitted = !!project?.submitted_at;
 
   const deliverables = project
@@ -43,25 +44,25 @@ export function renderCoderTeam({
             <div class="d-flex flex-wrap gap-4 pt-3 mt-3 ct-stats-divider">
 
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Due Date</span>
+                <span class="ct-stat-label">${t("coderTeam.dueDate")}</span>
                 <span class="ct-stat-value">Mon, Mar 9 2026</span>
               </div>
 
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Repo Link</span>
+                <span class="ct-stat-label">${t("coderTeam.repoLink")}</span>
                 ${repoUrl
       ? `<a href="${repoUrl}" target="_blank" rel="noopener" class="ct-stat-value ct-repo-link" style="color: var(--color-primary); text-decoration: none;">
                         <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-right:4px;">
                           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                         </svg>
-                        View Repo
+                        ${t("coderTeam.viewRepo")}
                        </a>`
-      : `<span class="ct-stat-value" style="opacity: 0.5;">No link</span>`
+      : `<span class="ct-stat-value" style="opacity: 0.5;">${t("coderTeam.noLink")}</span>`
     }
               </div>
 
               <div class="d-flex flex-column gap-1">
-                <span class="ct-stat-label">Team</span>
+                <span class="ct-stat-label">${t("coderTeam.team")}</span>
                 <div class="ct-mini-avatars mt-1">
                   ${members
       .slice(0, 3)
@@ -92,7 +93,7 @@ export function renderCoderTeam({
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                <h2 class="ct-section-title mb-0">Activity</h2>
+                <h2 class="ct-section-title mb-0">${t("coderTeam.activity")}</h2>
               </div>
               <a id="downloadBriefBtn" href="#" download="crudactivity-supcrud.md"
                  class="ct-btn-download d-flex align-items-center gap-2">
@@ -102,7 +103,7 @@ export function renderCoderTeam({
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Download
+                ${t("coderTeam.download")}
               </a>
             </div>
             <div id="project-brief-content" class="ct-brief-preview"></div>
@@ -116,9 +117,9 @@ export function renderCoderTeam({
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Deliverables</h2>
+              <h2 class="ct-section-title mb-0">${t("coderTeam.deliverables")}</h2>
               <span class="ms-auto ct-deliverables-count" style="font-size:0.78rem;color:var(--text-muted);">
-                ${deliverableCount(deliverables, repoUrl)}/5 submitted
+                ${t("coderTeam.submittedCount", { done: deliverableCount(deliverables, repoUrl) })}
               </span>
             </div>
             ${renderDeliverables(deliverables, repoUrl, canEdit)}
@@ -129,7 +130,7 @@ export function renderCoderTeam({
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
-                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+                <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("coderTeam.projectSubmitted")}</span>
               </div>
             `
       : canEdit
@@ -138,7 +139,7 @@ export function renderCoderTeam({
                 class="btn w-100 mt-3"
                 style="background:var(--color-primary);color:#fff;border-radius:10px;font-size:0.875rem;font-weight:600;padding:10px;opacity:0.4;cursor:not-allowed;"
                 disabled>
-                Submit Project
+                ${t("coderTeam.submitProject")}
               </button>
             `
         : ""
@@ -153,7 +154,7 @@ export function renderCoderTeam({
                    style="width:16px;height:16px;flex-shrink:0">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              Comments
+              ${t("coderTeam.comments")}
             </h2>
 
             <div class="d-flex gap-3 align-items-start mb-2">
@@ -162,10 +163,10 @@ export function renderCoderTeam({
       : `<div class="ct-avatar-sm flex-shrink-0">${user?.name?.charAt(0) ?? "U"}</div>`
     }
               <textarea id="commentInput" class="ct-comment-input flex-grow-1"
-                        placeholder="Share your thoughts..."></textarea>
+                        placeholder="${t("coderTeam.commentPlaceholder")}"></textarea>
             </div>
             <div class="d-flex justify-content-end mb-4 ps-5">
-              <button class="ct-btn-post" id="postCommentBtn">Post Comment</button>
+              <button class="ct-btn-post" id="postCommentBtn">${t("coderTeam.postComment")}</button>
             </div>
 
             <div class="d-flex flex-column gap-3" id="commentsList"></div>
@@ -177,7 +178,7 @@ export function renderCoderTeam({
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
-              <h2 class="ct-section-title mb-0">Evaluate Team</h2>
+              <h2 class="ct-section-title mb-0">${t("coderTeam.evaluateTeam")}</h2>
             </div>
             <div id="tl-rubrics-container">
               <div class="ct-brief-loading"><span class="ct-spinner"></span></div>
@@ -186,7 +187,7 @@ export function renderCoderTeam({
               id="submitEvaluationsBtn"
               class="btn w-100 mt-3 d-none"
               style="background: var(--color-primary); color: #fff; border-radius: 10px; font-size: 0.875rem; font-weight: 600; padding: 10px;">
-              Submit Evaluations
+              ${t("coderTeam.submitEvaluations")}
             </button>
             <div id="eval-feedback" class="mt-2" style="font-size:0.82rem;"></div>
           </div>
@@ -198,7 +199,7 @@ export function renderCoderTeam({
           <div class="bg-white rounded-4 p-4 ct-card-shadow d-flex flex-column" style="max-height:88vh;overflow-y:auto;">
             
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border) !important;">
-                <h2 class="ct-section-title mb-0">Project Info & Settings</h2>
+                <h2 class="ct-section-title mb-0">${t("coderTeam.projectInfo")}</h2>
                 ${isLeader
       ? `
                 <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 btn-project-settings" data-route="projectSettings" style="border-color: var(--color-primary); color: var(--color-primary); border-radius: 8px;">
@@ -206,14 +207,14 @@ export function renderCoderTeam({
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    Settings
+                    ${t("coderTeam.settings")}
                 </button>
                 `
       : ""
     }
             </div>
 
-            <h2 class="ct-section-title mb-3">Project Team</h2>
+            <h2 class="ct-section-title mb-3">${t("coderTeam.projectTeam")}</h2>
             <ul class="list-unstyled d-flex flex-column gap-1 mb-0">
               ${members
       .map(
@@ -229,7 +230,7 @@ export function renderCoderTeam({
           }
                   <div class="overflow-hidden">
                     <p class="ct-member-name text-truncate mb-0 fw-bold">${m.name}</p>
-                    <p class="ct-member-role mb-0" style="font-size: 0.75rem; opacity: 0.7;">${m.team_role ?? m.role ?? "Member"}</p>
+                    <p class="ct-member-role mb-0" style="font-size: 0.75rem; opacity: 0.7;">${m.team_role ?? m.role ?? t("coderTeam.member")}</p>
                   </div>
                 </li>
               `,
@@ -248,7 +249,7 @@ export function renderCoderTeam({
                 <line x1="19" y1="8" x2="19" y2="14"/>
                 <line x1="22" y1="11" x2="16" y2="11"/>
               </svg>
-              Add Member
+              ${t("coderTeam.addMember")}
             </button>
             `
       : ""
@@ -264,7 +265,7 @@ export function renderCoderTeam({
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Leave Team
+              ${t("coderTeam.leaveTeam")}
             </button>
             `
       : ""
@@ -333,7 +334,7 @@ function _renderVideoPreview(url) {
     <div class="ct-media-preview ct-video-preview mt-2">
       <video controls preload="metadata" style="width:100%;height:100%;display:block;background:#000;">
         <source src="${embed.src}" />
-        Your browser does not support the video tag.
+        ${t("coderTeam.browserNoVideo")}
       </video>
     </div>
   `;
@@ -345,7 +346,7 @@ function _renderImagePreview(url) {
     <div class="ct-media-preview ct-image-preview mt-2" style="border-radius:10px;overflow:hidden;max-height:220px;background:var(--bg);">
       <img
         src="${url}"
-        alt="Project preview"
+        alt="${t("coderTeam.imageAlt")}"
         style="width:100%;height:220px;object-fit:cover;display:block;cursor:pointer;"
         onclick="window.open('${url}','_blank')"
         onerror="this.parentElement.style.display='none'"
@@ -365,8 +366,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
         </svg>`,
-      label: "Video Pitch (Español)",
-      desc: "Sube tu video a una plataforma como YouTube o Vimeo y pega el link.",
+      label: t("coderTeam.deliverableVideoEs"),
+      desc: t("coderTeam.deliverableVideoDesc"),
       url: d?.video_url ?? null,
       color: "var(--color-accent)",
       hasPreview: true,
@@ -379,8 +380,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
         </svg>`,
-      label: "Video Pitch (English)",
-      desc: "Sube tu video a una plataforma como YouTube o Vimeo y pega el link.",
+      label: t("coderTeam.deliverableVideoEn"),
+      desc: t("coderTeam.deliverableVideoDesc"),
       url: d?.presentation_url ?? null,
       color: "var(--color-accent)",
       hasPreview: true,
@@ -393,8 +394,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>
         </svg>`,
-      label: "Repository",
-      desc: "El repositorio del proyecto (se vincula automáticamente).",
+      label: t("coderTeam.deliverableRepo"),
+      desc: t("coderTeam.deliverableRepoDesc"),
       url: repoUrl,
       color: "var(--color-success)",
       hasPreview: false,
@@ -407,8 +408,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
         </svg>`,
-      label: "Preview Photo",
-      desc: "Pon una captura de alguna vista principal de tu aplicativo para poder visualizar lo que se hizo.",
+      label: t("coderTeam.deliverablePhoto"),
+      desc: t("coderTeam.deliverablePhotoDesc"),
       url: d?.preview_photo_url ?? null,
       color: "var(--gold)",
       hasPreview: true,
@@ -421,8 +422,8 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
         <svg class="ct-del-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
         </svg>`,
-      label: "Deploy Link",
-      desc: "El link de la plataforma desplegada.",
+      label: t("coderTeam.deliverableDeploy"),
+      desc: t("coderTeam.deliverableDeployDesc"),
       url: d?.deploy_url ?? null,
       color: "var(--color-primary)",
       hasPreview: false,
@@ -461,7 +462,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                 `
             : `
                   <span class="ct-del-status ${item.url ? "ct-status-done" : "ct-status-pending"}">
-                    ${item.url ? "Submitted" : "Pending"}
+                    ${item.url ? t("coderTeam.submitted") : t("coderTeam.pending")}
                   </span>
                 `
           }
@@ -472,10 +473,10 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
             <div class="ct-deliverable-actions d-flex align-items-center gap-2 flex-shrink-0 flex-wrap justify-content-end">
               ${item.url
             ? `
-                <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
+                <a href="${item.url}" target="_blank" rel="noopener" class="ct-btn-open">${t("coderTeam.open")}</a>
                 ${canEdit && item.key !== "repo_url"
               ? `
-                  <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="Edit">
+                  <button class="ct-btn-icon ct-btn-edit" data-field="${item.key}" title="${t("coderTeam.edit")}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -519,9 +520,9 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
 function _renderUploadControl(item) {
   if (item.uploadType === "cloudinary") {
     return `
-      <label class="ct-btn-upload-styled" title="Upload image">
+      <label class="ct-btn-upload-styled" title="${t("coderTeam.uploadImage")}">
         <i class="bi bi-cloud-arrow-up"></i>
-        <span>Upload Photo</span>
+        <span>${t("coderTeam.uploadPhoto")}</span>
         <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
       </label>
     `;
@@ -535,15 +536,15 @@ function _renderUploadControl(item) {
             <i class="bi bi-link-45deg"></i> URL
           </button>
           <button type="button" class="ct-video-tab" data-tab="file">
-            <i class="bi bi-upload"></i> Upload
+            <i class="bi bi-upload"></i> ${t("coderTeam.upload")}
           </button>
         </div>
         <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
           <div class="ct-edit-input-group">
-            <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="Paste YouTube or Vimeo URL…" />
+            <input type="url" class="ct-edit-input ct-url-input" data-field="${item.key}" placeholder="${t("coderTeam.pasteVideoUrl")}" />
             <div class="ct-edit-actions">
-              <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}" title="Save">
-                <i class="bi bi-check-lg"></i> Send
+              <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}" title="${t("coderTeam.save")}">
+                <i class="bi bi-check-lg"></i> ${t("coderTeam.send")}
               </button>
             </div>
           </div>
@@ -551,10 +552,10 @@ function _renderUploadControl(item) {
         <div class="ct-video-panel ct-video-panel-file d-none">
           <label class="ct-btn-upload-styled">
             <i class="bi bi-camera-video"></i>
-            <span>Choose video file</span>
+            <span>${t("coderTeam.chooseVideoFile")}</span>
             <input type="file" class="ct-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
           </label>
-          <p class="text-center mt-2 mb-0" style="font-size:0.7rem;color:var(--text-muted);">MP4, WebM, MOV supported</p>
+          <p class="text-center mt-2 mb-0" style="font-size:0.7rem;color:var(--text-muted);">${t("coderTeam.supportedVideo")}</p>
         </div>
       </div>
     `;
@@ -563,7 +564,7 @@ function _renderUploadControl(item) {
   // Default: URL input
   return `
     <div class="ct-edit-input-group">
-      <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="Paste URL…" />
+      <input type="url" class="ct-url-input" data-field="${item.key}" placeholder="${t("coderTeam.pasteUrl")}" />
       <div class="ct-edit-actions">
         <button class="ct-btn-save-edit ct-btn-submit" data-field="${item.key}">
           <i class="bi bi-send-fill"></i>
@@ -579,12 +580,12 @@ function _renderEditControl(item) {
     return `
       <div class="p-3 w-100">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Edit Photo</span>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">${t("coderTeam.editPhoto")}</span>
           <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
         </div>
         <label class="ct-btn-upload-styled w-100">
           <i class="bi bi-image-fill"></i>
-          <span>Replace Image</span>
+          <span>${t("coderTeam.replaceImage")}</span>
           <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="image/*" />
         </label>
       </div>
@@ -597,7 +598,7 @@ function _renderEditControl(item) {
         <div class="d-flex align-items-center justify-content-between mb-3">
           <div class="ct-video-tabs d-flex gap-1">
             <button type="button" class="ct-video-tab active" data-tab="url"><i class="bi bi-link-45deg"></i> URL</button>
-            <button type="button" class="ct-video-tab" data-tab="file"><i class="bi bi-upload"></i> File</button>
+            <button type="button" class="ct-video-tab" data-tab="file"><i class="bi bi-upload"></i> ${t("coderTeam.file")}</button>
           </div>
           <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
         </div>
@@ -605,10 +606,10 @@ function _renderEditControl(item) {
         <div class="ct-video-panel ct-video-panel-url d-flex align-items-center gap-2">
           <div class="ct-edit-input-group">
             <input type="url" class="ct-edit-input ct-url-input ct-edit-input" data-field="${item.key}"
-                   value="${item.url ?? ""}" placeholder="Paste video URL…" />
+                   value="${item.url ?? ""}" placeholder="${t("coderTeam.pasteVideo")}" />
             <div class="ct-edit-actions">
               <button class="ct-btn-save-edit ct-edit-submit" data-field="${item.key}">
-                <i class="bi bi-check-lg"></i> Save
+                <i class="bi bi-check-lg"></i> ${t("coderTeam.save")}
               </button>
             </div>
           </div>
@@ -616,7 +617,7 @@ function _renderEditControl(item) {
         <div class="ct-video-panel ct-video-panel-file d-none">
           <label class="ct-btn-upload-styled">
             <i class="bi bi-camera-video"></i>
-            <span>Replace with video file</span>
+            <span>${t("coderTeam.chooseVideoFile")}</span>
             <input type="file" class="ct-cloudinary-input ct-edit-cloudinary-input d-none" data-field="${item.key}" accept="video/*" />
           </label>
         </div>
@@ -627,19 +628,19 @@ function _renderEditControl(item) {
   return `
     <div class="p-3 w-100">
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Update ${item.label}</span>
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">${t("coderTeam.updateItem", { label: item.label })}</span>
         <button class="ct-btn-cancel-edit ct-edit-cancel" data-field="${item.key}"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="ct-edit-input-group">
         <input type="url" class="ct-edit-input ct-url-input ct-edit-input" data-field="${item.key}"
-               value="${item.url ?? ""}" placeholder="Enter new URL…" />
+               value="${item.url ?? ""}" placeholder="${t("coderTeam.enterNewUrl")}" />
         <div class="ct-edit-actions">
           <button class="ct-btn-save-edit ct-edit-submit" data-field="${item.key}">
-            <i class="bi bi-check-lg"></i> Save
+            <i class="bi bi-check-lg"></i> ${t("coderTeam.save")}
           </button>
         </div>
       </div>
-      <button class="ct-edit-cancel" data-field="${item.key}">Cancel</button>
+      <button class="ct-edit-cancel" data-field="${item.key}">${t("coderTeam.cancel")}</button>
     </div>
   `;
 }
@@ -655,12 +656,12 @@ function _formatCommentTime(dateStr) {
   const now = new Date();
   const diffMs = now - d;
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 1) return t("coderTeam.justNow");
+  if (diffMin < 60) return t("coderTeam.minutesAgo", { count: diffMin });
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
+  if (diffH < 24) return t("coderTeam.hoursAgo", { count: diffH });
   const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return `${diffD}d ago`;
+  if (diffD < 7) return t("coderTeam.daysAgo", { count: diffD });
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -677,12 +678,12 @@ function _renderReply(reply, currentUserId) {
       <div class="flex-grow-1">
         <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
           <div class="d-flex align-items-center gap-2">
-            <span class="ct-comment-author">${reply.author_name ?? "Unknown"}</span>
+            <span class="ct-comment-author">${reply.author_name ?? t("coderTeam.unknown")}</span>
             <span class="ct-comment-time">${time}</span>
           </div>
           ${isOwner
       ? `
-            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="Delete reply"
+            <button class="ct-btn-delete-comment" data-comment-id="${reply.id_comment}" title="${t("coderTeam.deleteReply")}"
               style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
           `
       : ""
@@ -710,17 +711,17 @@ function _renderComment(comment, currentUserId) {
         <div class="flex-grow-1">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
             <div class="d-flex align-items-center gap-2">
-              <span class="ct-comment-author">${comment.author_name ?? "Unknown"}</span>
+              <span class="ct-comment-author">${comment.author_name ?? t("coderTeam.unknown")}</span>
               <span class="ct-comment-time">${time}</span>
             </div>
             <div class="d-flex align-items-center gap-2">
               <button class="ct-btn-reply" data-comment-id="${comment.id_comment}"
                 style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;font-weight:600;padding:2px 6px;border-radius:6px;transition:background 0.15s;">
-                Reply
+                ${t("coderTeam.reply")}
               </button>
               ${isOwner
       ? `
-                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="Delete comment"
+                <button class="ct-btn-delete-comment" data-comment-id="${comment.id_comment}" title="${t("coderTeam.deleteComment")}"
                   style="background:none;border:none;cursor:pointer;color:#ccc;font-size:0.75rem;padding:2px 6px;border-radius:6px;transition:color 0.15s;">✕</button>
               `
       : ""
@@ -733,12 +734,12 @@ function _renderComment(comment, currentUserId) {
           <div class="ct-reply-box d-none mt-2" id="reply-box-${comment.id_comment}">
             <div class="d-flex gap-2 align-items-start">
               <textarea class="ct-comment-input flex-grow-1" style="min-height:54px;font-size:0.82rem;"
-                        placeholder="Write a reply..." id="reply-input-${comment.id_comment}"></textarea>
+                        placeholder="${t("coderTeam.writeReply")}" id="reply-input-${comment.id_comment}"></textarea>
               <div class="d-flex flex-column gap-1">
                 <button class="ct-btn-post ct-btn-post-reply" style="padding:7px 14px;font-size:0.8rem;"
-                        data-parent-id="${comment.id_comment}">Send</button>
+                        data-parent-id="${comment.id_comment}">${t("coderTeam.send")}</button>
                 <button class="ct-btn-cancel-reply" data-comment-id="${comment.id_comment}"
-                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">Cancel</button>
+                  style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.78rem;text-align:center;">${t("coderTeam.cancel")}</button>
               </div>
             </div>
           </div>
@@ -786,10 +787,10 @@ function gradeClass(g) {
 }
 
 function gradeLabel(g) {
-  if (g >= 90) return "Excellent";
-  if (g >= 75) return "Good";
-  if (g >= 60) return "Average";
-  return "Below Average";
+  if (g >= 90) return t("coderTeam.gradeExcellent");
+  if (g >= 75) return t("coderTeam.gradeGood");
+  if (g >= 60) return t("coderTeam.gradeAverage");
+  return t("coderTeam.gradeBelow");
 }
 
 function formatDate(dateStr) {
@@ -821,7 +822,7 @@ export async function loadComments(projectId, user) {
 
   function renderAll(comments) {
     if (comments.length === 0) {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">No comments yet. Be the first!</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:1rem 0;">${t("coderTeam.noComments")}</p>`;
       return;
     }
     list.innerHTML = comments
@@ -841,7 +842,7 @@ export async function loadComments(projectId, user) {
       const comments = await getComments(projectId);
       renderAll(Array.isArray(comments) ? comments : []);
     } catch {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">Could not load comments.</p>`;
+      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;">${t("coderTeam.commentsLoadError")}</p>`;
     }
   }
 
@@ -858,17 +859,17 @@ export async function loadComments(projectId, user) {
     if (!text) return;
 
     activeBtn.disabled = true;
-    activeBtn.textContent = "Posting...";
+    activeBtn.textContent = t("coderTeam.posting");
 
     try {
       await postComment({ projectId, comment: text });
       activeInput.value = "";
       await refresh();
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not post comment.");
+      toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.postError"));
     } finally {
       activeBtn.disabled = false;
-      activeBtn.textContent = "Post Comment";
+      activeBtn.textContent = t("coderTeam.postComment");
     }
   });
 
@@ -909,7 +910,7 @@ export async function loadComments(projectId, user) {
         if (!text) return;
 
         btn.disabled = true;
-        btn.textContent = "Sending...";
+        btn.textContent = t("coderTeam.sending");
 
         try {
           await postComment({
@@ -919,9 +920,9 @@ export async function loadComments(projectId, user) {
           });
           await refresh();
         } catch (err) {
-          toast.error("Error", err?.message ?? "Could not post reply.");
+          toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.replyError"));
           btn.disabled = false;
-          btn.textContent = "Send";
+          btn.textContent = t("coderTeam.send");
         }
       });
     });
@@ -929,14 +930,14 @@ export async function loadComments(projectId, user) {
     list.querySelectorAll(".ct-btn-delete-comment").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const commentId = btn.dataset.commentId;
-        if (!confirm("Delete this comment?")) return;
+        if (!confirm(t("coderTeam.deleteCommentConfirm"))) return;
 
         btn.disabled = true;
         try {
           await deleteComment(commentId);
           await refresh();
         } catch (err) {
-          toast.error("Error", err?.message ?? "Could not delete comment.");
+          toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.deleteCommentError"));
           btn.disabled = false;
         }
       });
@@ -969,7 +970,7 @@ export async function loadProjectBrief() {
       btn.href = URL.createObjectURL(blob);
     }
   } catch (e) {
-    container.innerHTML = "<p>Error loading Activity.</p>";
+    container.innerHTML = `<p>${t("coderTeam.activityLoadError")}</p>`;
   }
 }
 
@@ -1052,10 +1053,10 @@ export async function loadMemberGrades(projectId, context = {}) {
 
     // Compute grade tier — uses CSS variables to stay palette-loyal
     const getTier = (g) => {
-      if (g >= 90) return { label: "Excellent", colorVar: "var(--mint)", bg: "rgba(90,204,164,0.12)", border: "rgba(90,204,164,0.3)", chipClass: "ct-grade-chip ct-grade-excellent", barSuf: "ct-grade-excellent" };
-      if (g >= 75) return { label: "Good", colorVar: "var(--accent)", bg: "rgba(107,92,255,0.10)", border: "rgba(107,92,255,0.28)", chipClass: "ct-grade-chip ct-grade-good", barSuf: "ct-grade-good" };
-      if (g >= 60) return { label: "Average", colorVar: "var(--gold)", bg: "rgba(230,202,82,0.12)", border: "rgba(230,202,82,0.3)", chipClass: "ct-grade-chip ct-grade-average", barSuf: "ct-grade-average" };
-      return { label: "Below Avg", colorVar: "var(--coral)", bg: "rgba(254,101,79,0.12)", border: "rgba(254,101,79,0.3)", chipClass: "ct-grade-chip ct-grade-low", barSuf: "ct-grade-low" };
+      if (g >= 90) return { label: t("coderTeam.gradeExcellent"), colorVar: "var(--mint)", bg: "rgba(90,204,164,0.12)", border: "rgba(90,204,164,0.3)", chipClass: "ct-grade-chip ct-grade-excellent", barSuf: "ct-grade-excellent" };
+      if (g >= 75) return { label: t("coderTeam.gradeGood"), colorVar: "var(--accent)", bg: "rgba(107,92,255,0.10)", border: "rgba(107,92,255,0.28)", chipClass: "ct-grade-chip ct-grade-good", barSuf: "ct-grade-good" };
+      if (g >= 60) return { label: t("coderTeam.gradeAverage"), colorVar: "var(--gold)", bg: "rgba(230,202,82,0.12)", border: "rgba(230,202,82,0.3)", chipClass: "ct-grade-chip ct-grade-average", barSuf: "ct-grade-average" };
+      return { label: t("coderTeam.gradeBelowShort"), colorVar: "var(--coral)", bg: "rgba(254,101,79,0.12)", border: "rgba(254,101,79,0.3)", chipClass: "ct-grade-chip ct-grade-low", barSuf: "ct-grade-low" };
     };
 
     const projTier = getTier(projectGrade);
@@ -1124,7 +1125,7 @@ export async function loadMemberGrades(projectId, context = {}) {
               <span class="mg-score-value" style="color:${isPending ? 'var(--text-dim)' : memberTier.colorVar};">
                 ${isPending ? "—" : Math.round(globalScore)}
               </span>
-              <span class="mg-score-unit">pts</span>
+              <span class="mg-score-unit">${t("coderTeam.pts")}</span>
             </div>
             ${isPending ? '' : '<span class="material-icons-round mg-chevron">expand_more</span>'}
           </div>
@@ -1138,16 +1139,16 @@ export async function loadMemberGrades(projectId, context = {}) {
       <div class="mg-wrapper">
         <div class="ct-hero-card p-4 mb-3" style="border-radius:20px; ${isPending ? 'background: linear-gradient(135deg, #7b7fa8, #181e4b);' : ''}">
           <div style="position:relative;z-index:2;">
-            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? 'Fase de Evaluación' : (isPartial ? 'Nota Acumulada' : 'Rendimiento Global')}</div>
+            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? t("coderTeam.evaluationPhase") : (isPartial ? t("coderTeam.accumulatedGrade") : t("coderTeam.globalPerformance"))}</div>
             <div class="mg-hero-score-row">
-              <span class="mg-hero-score">${isPending ? 'En Progreso' : projectGrade.toFixed(1)}</span>
+              <span class="mg-hero-score">${isPending ? t("coderTeam.inProgress") : projectGrade.toFixed(1)}</span>
               ${isPending ? '' : '<span class="mg-hero-denom">/100</span>'}
             </div>
             ${isPending ? `
               <div class="mt-3 p-2 rounded-3" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);">
                 <div class="d-flex align-items-center gap-2 small text-white">
                   <span class="material-icons-round" style="font-size:1rem;">info</span>
-                  <span>Esperando evaluaciones del equipo...</span>
+                  <span>${t("coderTeam.waitingEvaluations")}</span>
                 </div>
               </div>
             ` : `
@@ -1155,11 +1156,11 @@ export async function loadMemberGrades(projectId, context = {}) {
                 <div class="ct-grade-bar ${projTier.barSuf} mg-hero-fill" style="width:${Math.min(100, projectGrade)}%;"></div>
               </div>
             `}
-            <div class="ct-stat-label mt-2" style="color: rgba(255,255,255,0.6);">${results.length} participant${results.length !== 1 ? "s" : ""}</div>
+            <div class="ct-stat-label mt-2" style="color: rgba(255,255,255,0.6);">${t("coderTeam.participants", { count: results.length, plural: results.length !== 1 ? "s" : "" })}</div>
           </div>
         </div>
         <div class="mg-members-section">
-          <div class="ct-section-title mb-2 px-1">Team Performance</div>
+          <div class="ct-section-title mb-2 px-1">${t("coderTeam.teamPerformance")}</div>
           <div id="mg-members-list">${membersHtml}</div>
         </div>
       </div>
@@ -1227,7 +1228,7 @@ export async function loadMemberGrades(projectId, context = {}) {
     attachMemberClickHandlers();
 
   } catch (err) {
-    console.warn("Grades not available yet:", err?.message);
+    console.warn(t("coderTeam.gradesUnavailable"), err?.message);
   }
 }
 
@@ -1340,12 +1341,12 @@ export async function loadEvaluationPanel({
     ]);
     if (allowedArea) rubrics = rubrics.filter((r) => r.area === allowedArea);
   } catch (err) {
-    container.innerHTML = `<p class="text-muted small">Could not load rubrics.</p>`;
+    container.innerHTML = `<p class="text-muted small">${t("coderTeam.rubricsLoadError")}</p>`;
     return;
   }
 
   if (!rubrics.length) {
-    container.innerHTML = `<p class="text-muted small">No rubrics configured.</p>`;
+    container.innerHTML = `<p class="text-muted small">${t("coderTeam.noRubrics")}</p>`;
     return;
   }
 
@@ -1387,26 +1388,26 @@ export async function loadEvaluationPanel({
       <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
         <div class="text-center mb-4">
           <div class="material-icons-round mb-3" style="font-size: 3.5rem; color: var(--mint);">verified</div>
-          <h3 class="fw-bold mb-2">Evaluación Finalizada</h3>
-          <p class="text-muted">Has completado satisfactoriamente las evaluaciones del equipo.</p>
+          <h3 class="fw-bold mb-2">${t("coderTeam.evaluationFinished")}</h3>
+          <p class="text-muted">${t("coderTeam.evaluationFinishedDesc")}</p>
         </div>
         
         <div class="row align-items-center g-4">
            <div class="col-md-5">
              <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
-               <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">Promedio Área</div>
+               <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.areaAverage")}</div>
                <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
              </div>
            </div>
            <div class="col-md-7">
              <div class="ps-md-4 border-start">
-               <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">Desglose por Miembro</div>
+               <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.memberBreakdown")}</div>
                ${membersBreakdown}
              </div>
            </div>
         </div>
         
-        <p class="mt-4 pt-4 border-top text-center small text-muted">Consulta la <b>Nota Acumulada</b> en el panel lateral para más detalles.</p>
+        <p class="mt-4 pt-4 border-top text-center small text-muted">${t("coderTeam.accumulatedNoteHint")}</p>
       </div>`;
     submitBtn.classList.add("d-none");
     loadMemberGrades(projectId, { members: evaluableMembers, rubrics, existingEvals });
@@ -1457,11 +1458,11 @@ export async function loadEvaluationPanel({
                data-member-id="${member.id_user}"
                data-score="${g.score}">
             <div class="eval-card-bar" style="background: ${color}"></div>
-            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">LEVEL ${g.score}</span>
-            <div class="eval-level-name">${g.name || 'Level'}</div>
-            <div class="eval-level-desc">${g.description || 'No description available for this level.'}</div>
+            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">${t("coderTeam.level", { score: g.score })}</span>
+            <div class="eval-level-name">${g.name || t("coderTeam.level", { score: "" })}</div>
+            <div class="eval-level-desc">${g.description || t("coderTeam.noLevelDescription")}</div>
             <div class="eval-card-footer">
-              <span class="eval-card-pts">Pts: ${g.score}</span>
+              <span class="eval-card-pts">${t("coderTeam.pts")}: ${g.score}</span>
               <div class="eval-selection-circle"></div>
             </div>
           </div>
@@ -1473,7 +1474,7 @@ export async function loadEvaluationPanel({
           <div class="d-flex justify-content-between align-items-end mb-3">
             <div>
               <h4 class="eval-rubric-title">${rubric.name}</h4>
-              <div class="eval-rubric-meta">${rubric.area} • WEIGHT: ${rubric.weight}</div>
+              <div class="eval-rubric-meta">${rubric.area} • ${t("coderTeam.weight")}: ${rubric.weight}</div>
             </div>
             <div class="eval-pts-badge" id="pts-badge-${rubric.id_rubric}-${member.id_user}">
                PTS: ${existing ? existing.score : '--'}
@@ -1486,7 +1487,7 @@ export async function loadEvaluationPanel({
             <textarea class="eval-feedback-textarea"
                       data-rubric-id="${rubric.id_rubric}"
                       data-member-id="${member.id_user}"
-                      placeholder="Add specific feedback for ${rubric.name} (optional)...">${existing?.feedback ?? ""}</textarea>
+                      placeholder="${t("coderTeam.feedbackPlaceholder", { rubric: rubric.name })}">${existing?.feedback ?? ""}</textarea>
             <div class="eval-feedback-icon">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
             </div>
@@ -1504,11 +1505,11 @@ export async function loadEvaluationPanel({
             <img src="${avatar}" class="eval-member-avatar" alt="${member.name}">
             <div class="eval-member-info">
               <h4 class="mb-1 fw-bold">${member.name}</h4>
-              <span class="eval-role-badge">${member.team_role || 'Member'}</span>
+              <span class="eval-role-badge">${member.team_role || t("coderTeam.member")}</span>
             </div>
           </div>
           <div class="eval-score-container">
-            <div class="eval-score-label" style="text-align:right;">Average Score</div>
+            <div class="eval-score-label" style="text-align:right;">${t("coderTeam.averageScore")}</div>
             <div class="eval-score-value" style="text-align:right;">
               <span id="member-score-${member.id_user}">${Math.round(initScore)}</span>
               <span class="eval-score-total">/100</span>
@@ -1539,7 +1540,7 @@ export async function loadEvaluationPanel({
       card.classList.add('selected');
 
       const badge = document.getElementById(`pts-badge-${rubricId}-${memberId}`);
-      if (badge) badge.textContent = `PTS: ${score}`;
+      if (badge) badge.textContent = `${t("coderTeam.pts")}: ${score}`;
 
       _calculateMemberTotal(memberId);
     });
@@ -1567,18 +1568,18 @@ export async function loadEvaluationPanel({
     });
 
     if (!valid) {
-      toast.error('Evaluation Incomplete', 'Please select a level for all rubrics before submitting.');
+      toast.error(t("coderTeam.evaluationIncompleteTitle"), t("coderTeam.evaluationIncompleteMsg"));
       return;
     }
 
     submitBtn.disabled = true;
     const originalText = submitBtn.textContent;
-    submitBtn.textContent = "Saving Evaluations...";
+    submitBtn.textContent = t("coderTeam.savingEvaluations");
 
     try {
       await submitEvaluations(projectId, evaluations);
       try { await calculateProjectGrades(projectId); } catch (_) { }
-      toast.success('Success', 'Evaluations saved successfully.');
+      toast.success(t("common.successTitle"), t("coderTeam.evaluationsSaved"));
       
       // Refresh sidebar grades immediately
       loadMemberGrades(projectId, { 
@@ -1592,9 +1593,9 @@ export async function loadEvaluationPanel({
         }))
       });
 
-      submitBtn.textContent = "Update Evaluations";
+      submitBtn.textContent = t("coderTeam.updateEvaluations");
     } catch (err) {
-      toast.error('Error', err?.message ?? "Failed to save evaluations.");
+      toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.evaluationsSaveError"));
       submitBtn.textContent = originalText;
     } finally {
       submitBtn.disabled = false;
@@ -1645,7 +1646,7 @@ export function initDeliverables(projectId) {
           const statusEl = row.querySelector(".ct-del-status");
           if (statusEl) {
             statusEl.className = "ct-del-status ct-status-done";
-            statusEl.textContent = "Submitted";
+            statusEl.textContent = t("coderTeam.submitted");
           }
 
           // Update the actions area with the post-submit controls
@@ -1654,14 +1655,14 @@ export function initDeliverables(projectId) {
             const item = {
               key: field,
               url: url,
-              label: field === "video_url" ? "Video Pitch (Español)" : field === "presentation_url" ? "Video Pitch (English)" : field === "preview_photo_url" ? "Preview Photo" : "Deploy Link",
+              label: field === "video_url" ? t("coderTeam.deliverableVideoEs") : field === "presentation_url" ? t("coderTeam.deliverableVideoEn") : field === "preview_photo_url" ? t("coderTeam.deliverablePhoto") : t("coderTeam.deliverableDeploy"),
               uploadType: cloudinaryFields.includes(field) ? "cloudinary" : "url"
             };
 
             actionsDiv.innerHTML = `
               <div class="d-flex align-items-center gap-2">
-                <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">Open</a>
-                <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="Edit">
+                <a href="${url}" target="_blank" rel="noopener" class="ct-btn-open">${t("coderTeam.open")}</a>
+                <button class="ct-btn-icon ct-btn-edit" data-field="${field}" title="${t("coderTeam.edit")}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -1687,7 +1688,7 @@ export function initDeliverables(projectId) {
 
       _refreshDeliverableCount();
     } catch (err) {
-      toast.error("Error", err?.message ?? "Could not save deliverable.");
+      toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.deliverableSaveError"));
       if (btnEl) {
         btnEl.innerHTML = original;
         btnEl.disabled = false;
@@ -1732,7 +1733,7 @@ export function initDeliverables(projectId) {
       "afterend",
       `<div id="${progressId}" class="mt-2 w-100">
         <div class="d-flex justify-content-between mb-1" style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
-          <span>${isVideo ? "Video" : "Image"} Uploading…</span>
+          <span>${t("coderTeam.uploading", { type: isVideo ? t("coderTeam.video") : t("coderTeam.image") })}</span>
           <span id="${progressId}-pct">0%</span>
         </div>
         <div class="progress" style="height: 5px; border-radius: 99px; background:#edf2f7; overflow:hidden;">
@@ -1751,17 +1752,17 @@ export function initDeliverables(projectId) {
 
       document.getElementById(progressId)?.remove();
       await saveField(field, url, null);
-      toast.success("Upload complete", isVideo ? "Video uploaded successfully." : "Image uploaded successfully.");
+      toast.success(t("coderTeam.uploadComplete"), isVideo ? t("coderTeam.videoUploaded") : t("coderTeam.imageUploaded"));
     } catch (err) {
       document.getElementById(progressId)?.remove();
-      toast.error("Upload failed", err?.message ?? "Could not upload file.");
+      toast.error(t("coderTeam.uploadFailed"), err?.message ?? t("coderTeam.uploadError"));
     }
   }
 
   function _refreshDeliverableCount() {
     const badge = document.querySelector(".ct-deliverables-count");
     const done = document.querySelectorAll(".ct-deliverable-done").length;
-    if (badge) badge.textContent = `${done}/5 submitted`;
+    if (badge) badge.textContent = t("coderTeam.submittedCount", { done });
     _updateSubmitBtn(done);
   }
 
@@ -1784,13 +1785,13 @@ export function initDeliverables(projectId) {
     btn.addEventListener("click", async () => {
       if (
         !confirm(
-          "Submit your project for evaluation? This action cannot be undone — you won't be able to edit deliverables or change team members after this.",
+          t("coderTeam.submitProjectConfirm"),
         )
       )
         return;
 
       btn.disabled = true;
-      btn.textContent = "Submitting…";
+      btn.textContent = t("coderTeam.submitting");
 
       try {
         const { submitProject } = await import("../services/api.js");
@@ -1803,7 +1804,7 @@ export function initDeliverables(projectId) {
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">Project submitted — under review</span>
+            <span style="font-size:0.82rem;font-weight:600;color:var(--color-success);">${t("coderTeam.projectSubmitted")}</span>
           </div>
         `,
         );
@@ -1820,9 +1821,9 @@ export function initDeliverables(projectId) {
         document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
-        toast.error("Error", err?.message ?? "Could not submit project.");
+        toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.submitProjectError"));
         btn.disabled = false;
-        btn.textContent = "Submit Project";
+        btn.textContent = t("coderTeam.submitProject");
       }
     });
   }
