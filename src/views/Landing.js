@@ -1,4 +1,5 @@
 import { icons } from "../utils/icons.js";
+import { clearStoredSession } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/navbar.css"
 import "../assets/styles/landing.css";
@@ -15,8 +16,7 @@ export default class Landing {
   render() {
     // Limpiar sesión solo cuando la landing realmente se muestra
     // (logout o usuario sin sesión) — NO al importar el módulo
-    localStorage.clear();
-    sessionStorage.clear();
+    clearStoredSession();
 
     const app = document.getElementById("app");
 

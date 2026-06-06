@@ -159,8 +159,7 @@ export default class Header {
     });
 
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
-      logout();
-      this.router.navigate("login");
+      logout(this.router);
     });
   }
 }

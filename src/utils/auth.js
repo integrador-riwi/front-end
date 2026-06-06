@@ -1,5 +1,21 @@
 import { initSocket, disconnectSocket } from "../services/socket.js";
 
+const PERSISTED_STORAGE_KEYS = ["teamup_lang"];
+
+function preserveLocalStorage(keys) {
+  return keys.reduce((values, key) => {
+    const value = localStorage.getItem(key);
+    if (value !== null) values[key] = value;
+    return values;
+  }, {});
+}
+
+function restoreLocalStorage(values) {
+  Object.entries(values).forEach(([key, value]) => {
+    localStorage.setItem(key, value);
+  });
+}
+
 export const setToken = (token) => {
   localStorage.setItem("token", token);
 };
@@ -16,10 +32,17 @@ export const getRefreshToken = () => {
   return localStorage.getItem("refreshToken");
 };
 
+export const clearStoredSession = () => {
+  const persistedValues = preserveLocalStorage(PERSISTED_STORAGE_KEYS);
+
+  disconnectSocket();
+  sessionStorage.clear();
+  localStorage.clear();
+  restoreLocalStorage(persistedValues);
+};
+
 export const clearAuth = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
+  clearStoredSession();
 };
 
 export const isAuthenticated = () => {
@@ -36,6 +59,7 @@ export function saveUser(user) {
 }
 
 export function saveSession(token, refreshToken, user) {
+  clearStoredSession();
   localStorage.setItem("token", token);
   localStorage.setItem("refreshToken", refreshToken);
   localStorage.setItem("user", JSON.stringify(user));
@@ -43,10 +67,13 @@ export function saveSession(token, refreshToken, user) {
 }
 
 export function clearSession(router) {
-  disconnectSocket();
-  clearAuth();
-  sessionStorage.removeItem("lastRoute");
+  clearStoredSession();
   if (router) {
+    router.user = null;
+    router.hasTeam = false;
+    router.currentParams = {};
+    router.currentRoute = null;
+    router.historyStack = [];
     router.navigate("login");
   }
 }
