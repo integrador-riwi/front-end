@@ -162,6 +162,71 @@
   transform: scale(1.06);
 }
 
+.cs-btn-close-team {
+  padding: 10px 16px;
+  border: 1px solid rgba(185, 28, 28, 0.28);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
+  font-family: var(--main-font);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.cs-btn-close-team:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+  transform: translateY(-1px);
+}
+
+.cs-btn-close-team:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.cs-btn-reopen-team {
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: #fff;
+  color: #047857;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-family: var(--main-font);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.cs-btn-reopen-team:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.cs-btn-reopen-team:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.cs-closed-team-note {
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 10px;
+  padding: 11px 12px;
+}
+
+.cs-closed-team-note strong {
+  display: block;
+  color: #991b1b;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.cs-closed-team-note span {
+  display: block;
+  color: #7f1d1d;
+  font-size: 0.76rem;
+}
+
 .cs-btn-copy {
   padding: 10px 16px;
   border: 1.5px solid var(--border);

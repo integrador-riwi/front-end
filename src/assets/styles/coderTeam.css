@@ -744,6 +744,40 @@
   background: var(--accent-dim);
 }
 
+.ct-team-closed-note {
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.ct-team-closed-note strong {
+  display: block;
+  color: #991b1b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.ct-team-closed-note span {
+  display: block;
+  color: #7f1d1d;
+  font-size: 0.76rem;
+}
+
+.ct-btn-reopen-team {
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: #fff;
+  color: #047857;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.ct-btn-reopen-team:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
 /* ══════════════════════════════════════════════════
    PENDING INVITATIONS BANNER
 ══════════════════════════════════════════════════ */
@@ -887,6 +921,66 @@
   text-align: center;
   padding: 1rem 0;
   margin: 0;
+}
+
+.invite-close-team-section,
+.invite-closed-team-notice {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.invite-close-team-section strong,
+.invite-closed-team-notice strong {
+  display: block;
+  color: #991b1b;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.invite-close-team-section span,
+.invite-closed-team-notice span {
+  display: block;
+  color: #7f1d1d;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.invite-btn-close-team,
+.invite-btn-reopen-team {
+  border: 1px solid rgba(185, 28, 28, 0.28);
+  background: #fff;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.invite-btn-reopen-team {
+  border-color: rgba(34, 197, 94, 0.28);
+  color: #047857;
+}
+
+.invite-btn-close-team:hover:not(:disabled),
+.invite-btn-reopen-team:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.invite-btn-reopen-team:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.invite-btn-close-team:disabled,
+.invite-btn-reopen-team:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .invite-error {

@@ -31,6 +31,7 @@ export function renderCoderTeam({
 
   const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
+  const isClosed = !!team.closed_at;
 
   return `
     <div class="container-xl px-3 px-md-4 py-4">
@@ -240,7 +241,7 @@ export function renderCoderTeam({
       .join("")}
             </ul>
 
-            ${isLeader && !isSubmitted
+            ${isLeader && !isSubmitted && !isClosed
       ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
@@ -253,6 +254,19 @@ export function renderCoderTeam({
               </svg>
               Add Member
             </button>
+            `
+      : ""
+    }
+
+            ${isLeader && isClosed
+      ? `
+            <div class="ct-team-closed-note mt-3">
+              <strong>Equipo cerrado</strong>
+              <span>Ya no acepta nuevos participantes.</span>
+              <button class="ct-btn-reopen-team mt-2" id="reopenTeamBtn" type="button">
+                Reabrir equipo
+              </button>
+            </div>
             `
       : ""
     }

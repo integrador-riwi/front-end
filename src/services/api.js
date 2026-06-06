@@ -541,6 +541,10 @@ export async function closeTeam(teamId) {
   return apiFetch(`/teams/${teamId}/close`, { method: "POST" });
 }
 
+export async function reopenTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/reopen`, { method: "POST" });
+}
+
 export async function updateProject(projectId, data) {
   return apiFetch(`/projects/${projectId}`, {
     method: "PUT",

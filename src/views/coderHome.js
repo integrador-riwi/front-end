@@ -79,6 +79,17 @@ export default class CoderHome {
     this.inviteModal = new InviteModal({
       team: this.team,
       onMemberAdded: () => this.init().then(() => this.render()),
+      canCloseTeam: true,
+      onTeamClosed: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at };
+        this.inviteModal.setTeam(this.team);
+        this.render();
+      },
+      onTeamReopened: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at ?? null };
+        this.inviteModal.setTeam(this.team);
+        this.render();
+      },
     });
 
     // Store form values to prevent clearing on re-render
@@ -906,6 +917,10 @@ export default class CoderHome {
 
     // ── Add member button → open modal (leader only) ──
     document.getElementById("addMemberBtn")?.addEventListener("click", () => {
+      this._openInviteModal();
+    });
+
+    document.getElementById("reopenTeamBtn")?.addEventListener("click", () => {
       this._openInviteModal();
     });
 
