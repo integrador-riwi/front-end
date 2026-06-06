@@ -319,6 +319,9 @@ export default class UsersAdminView {
   renderUserRow(user) {
     const role = ROLES.find((item) => item.value === user.role)?.label ?? user.role;
     const userId = String(user.id_user);
+    const githubUsername = user.github_username ? `@${String(user.github_username).replace(/^@/, "")}` : "GitHub sin conectar";
+    const avatarUrl = user.github_avatar_url;
+    const initial = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
 
     return `
       <tr>
@@ -326,12 +329,19 @@ export default class UsersAdminView {
           <input class="user-select" data-userid="${userId}" type="checkbox" ${this.selectedUsers.has(userId) ? "checked" : ""} aria-label="Seleccionar ${escapeHtml(user.name)}">
         </td>
         <td>
-          <div class="ua-user-cell">
-            <div>
+          <button class="ua-user-cell ua-user-profile-link" data-profile-userid="${userId}" type="button">
+            ${avatarUrl
+              ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
+              : `<span class="ua-user-avatar ua-user-avatar-fallback">${escapeHtml(initial)}</span>`
+            }
+            <div class="ua-user-info">
               <strong>${escapeHtml(user.name)}</strong>
               <span>${escapeHtml(user.email)}</span>
+              <small class="${user.github_username ? "ua-github-user" : "ua-github-missing"}">
+                ${escapeHtml(githubUsername)}
+              </small>
             </div>
-          </div>
+          </button>
         </td>
         <td><span class="ua-role-pill">${escapeHtml(role)}</span></td>
         <td>${user.clan ? `<span class="ua-clan-pill">${escapeHtml(user.clan)}</span>` : `<span class="ua-muted">Sin clan</span>`}</td>
@@ -585,6 +595,15 @@ export default class UsersAdminView {
         if (event.currentTarget.checked) this.selectedUsers.add(userId);
         else this.selectedUsers.delete(userId);
         this.paint();
+      });
+    });
+
+    document.querySelectorAll("[data-profile-userid]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.router.navigate("publicProfile", {
+          userId: event.currentTarget.dataset.profileUserid,
+        });
       });
     });
 
