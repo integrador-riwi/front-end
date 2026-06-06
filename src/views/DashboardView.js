@@ -44,6 +44,7 @@ export default class DashboardView {
     this.navbar.attachEventHandlers();
     if (this.header.mountBreadcrumb) this.header.mountBreadcrumb();
     if (this.header.attachEventHandlers) this.header.attachEventHandlers();
+    this._initAvatarTooltip();
 
     this._offLangChange = onLangChange(() => this._paint());
 
@@ -380,11 +381,17 @@ export default class DashboardView {
 
       const avatarsHtml = members.slice(0, 5).map(m =>
           m.github_avatar_url
-              ? `<img src="${m.github_avatar_url}" alt="${m.name}" title="${m.name}"
-                  style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid white;margin-left:-6px;flex-shrink:0;">`
-              : `<div title="${m.name}"
-                  style="width:26px;height:26px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;margin-left:-6px;flex-shrink:0;">
-               ${(m.name ?? "?").charAt(0).toUpperCase()}
+              ? `<img src="${this._esc(m.github_avatar_url)}" alt="${this._esc(m.name)}"
+                  class="app-avatar-has-tip ct-member-clickable"
+                  data-tip-name="${this._esc(m.name)}"
+                  data-user-id="${this._esc(m.id_user)}"
+                  style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid white;margin-left:-6px;flex-shrink:0;cursor:pointer;">`
+              : `<div
+                  class="app-avatar-has-tip ct-member-clickable"
+                  data-tip-name="${this._esc(m.name)}"
+                  data-user-id="${this._esc(m.id_user)}"
+                  style="width:26px;height:26px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;margin-left:-6px;flex-shrink:0;cursor:pointer;">
+               ${this._esc((m.name ?? "?").charAt(0).toUpperCase())}
              </div>`
       ).join("");
       const extraMembers = members.length > 5
@@ -414,10 +421,13 @@ export default class DashboardView {
       }).join("");
 
       return `
-        <tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+        <tr class="db-team-row" data-team-id="${this._esc(team.id_team)}" tabindex="0"
+            style="border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;"
+            onmouseover="this.style.background='var(--accent-dim)'"
+            onmouseout="this.style.background='transparent'">
           <td style="padding:12px 16px;vertical-align:middle;min-width:160px;">
-            <div style="font-weight:700;color:var(--navy);font-size:0.875rem;">${team.name}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${team.description ?? ""}</div>
+            <div style="font-weight:700;color:var(--navy);font-size:0.875rem;">${this._esc(team.name)}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${this._esc(team.description ?? "")}</div>
           </td>
           <td style="padding:12px 16px;vertical-align:middle;">
             <div style="display:flex;align-items:center;margin-left:6px;">
@@ -727,6 +737,27 @@ export default class DashboardView {
       });
     }
 
+    const teamsTable = document.getElementById("db-teams-table-wrap");
+    if (teamsTable && !teamsTable.dataset.teamNavAttached) {
+      teamsTable.dataset.teamNavAttached = "true";
+
+      teamsTable.addEventListener("click", (e) => {
+        if (e.target.closest(".ct-member-clickable")) return;
+        const row = e.target.closest(".db-team-row[data-team-id]");
+        if (!row) return;
+        this.router.navigate("teamDetail", { teamId: row.dataset.teamId });
+      });
+
+      teamsTable.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        if (e.target.closest(".ct-member-clickable")) return;
+        const row = e.target.closest(".db-team-row[data-team-id]");
+        if (!row) return;
+        e.preventDefault();
+        this.router.navigate("teamDetail", { teamId: row.dataset.teamId });
+      });
+    }
+
     // ── Close evaluations ──────────────────────────────────────────────────
     document.getElementById("btn-close-evals")?.addEventListener("click", async () => {
       const btn = document.getElementById("btn-close-evals");
@@ -827,7 +858,49 @@ export default class DashboardView {
     });
   }
 
+  _initAvatarTooltip() {
+    if (document.getElementById("app-avatar-tip")) return;
+
+    const tip = document.createElement("span");
+    tip.id = "app-avatar-tip";
+    document.body.appendChild(tip);
+
+    this._avatarMouseOver = (e) => {
+      const avatar = e.target.closest(".app-avatar-has-tip");
+      if (!avatar) return;
+      tip.textContent = avatar.dataset.tipName ?? "";
+      tip.classList.add("visible");
+      const rect = avatar.getBoundingClientRect();
+      tip.style.left = `${rect.left + rect.width / 2 - tip.offsetWidth / 2}px`;
+      tip.style.top = `${rect.top - tip.offsetHeight - 8}px`;
+    };
+
+    this._avatarMouseOut = (e) => {
+      if (!e.target.closest(".app-avatar-has-tip")) return;
+      tip.classList.remove("visible");
+    };
+
+    document.addEventListener("mouseover", this._avatarMouseOver);
+    document.addEventListener("mouseout", this._avatarMouseOut);
+  }
+
+  _esc(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   destroy() {
     if (this._offLangChange) this._offLangChange();
+    if (this._avatarMouseOver) {
+      document.removeEventListener("mouseover", this._avatarMouseOver);
+    }
+    if (this._avatarMouseOut) {
+      document.removeEventListener("mouseout", this._avatarMouseOut);
+    }
+    const tip = document.getElementById("app-avatar-tip");
+    if (tip) tip.remove();
   }
 }
