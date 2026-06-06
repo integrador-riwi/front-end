@@ -128,7 +128,7 @@ export default class UsersAdminView {
 
       // Cargar lista de clanes/equipos desde backend para poblar selects
       try {
-        const teamsRes = await getTeams({ limit: 1000 });
+        const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true });
         // teamsRes could be { data: { teams: [...] } } or array
         this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
       } catch (tErr) {

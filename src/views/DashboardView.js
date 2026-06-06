@@ -68,7 +68,7 @@ export default class DashboardView {
         apiFetch(`/events/${this.eventId}`, { method: "GET" }),
         getEventEvalCoverage(this.eventId),
         getTeamEvalCounts(this.eventId),
-        apiFetch(`/teams?idEvent=${this.eventId}&limit=100&includeSubmitted=true`, { method: "GET" }),
+        apiFetch(`/teams?idEvent=${this.eventId}&limit=100&includeSubmitted=true&includeClosed=true`, { method: "GET" }),
       ]);
 
       if (metricsRes.status === "fulfilled") {

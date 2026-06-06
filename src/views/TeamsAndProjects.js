@@ -5,7 +5,8 @@ import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/projects.css";
 import "../assets/styles/components.css";
-import { apiFetch, searchProjectsSemantic } from "../services/api.js";
+import { apiFetch, closeTeam, searchProjectsSemantic } from "../services/api.js";
+import { toast } from "../components/Toast/index.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
 import { getTeamsByEvent } from "../services/api.js";
 import { getSelectedEvent } from "../utils/helpers.js";
@@ -152,7 +153,7 @@ export default class Teams {
     if (this.allTeams.length === 0) {
       this.showLoading(teamsContainer);
 
-      const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true`, { method: "GET" });
+      const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true&includeClosed=true`, { method: "GET" });
       const totalTeams = fetchTeams.data.teams;
 
       if (!totalTeams || totalTeams.length === 0) {
@@ -218,6 +219,18 @@ export default class Teams {
 
       const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
       const imgSrc = team.preview_photo_url || fallbackImg;
+      const isClosed = !!team.closed_at;
+      const closedBadge = isClosed
+        ? `<span style="font-size:0.68rem;background:rgba(239,68,68,0.09);color:#b91c1c;border:1px solid rgba(239,68,68,0.22);padding:2px 8px;border-radius:20px;font-weight:700;">Cerrado</span>`
+        : "";
+      const closeAction = this.isAdmin
+        ? isClosed
+          ? `<span style="font-size:0.78rem;color:var(--text-muted);font-weight:700;">No aparece en open</span>`
+          : `<button class="td-close-team-btn" data-action="close-team" data-team-id="${team.id_team}" type="button" title="Cerrar equipo">
+              <span class="material-icons-round" style="font-size:0.95rem;vertical-align:middle;">lock</span>
+              Cerrar equipo
+            </button>`
+        : "";
 
       const card = `
         <div class="col-12 col-md-6 col-lg-4">
@@ -235,14 +248,19 @@ export default class Teams {
               />
             </div>
             <div class="p-4">
-              <h5 class="app-card-title">${team.name}</h5>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="app-card-title mb-0">${team.name}</h5>
+                ${closedBadge}
+              </div>
               <p class="app-card-text text-break">${team.description ?? ""}</p>
               ${this._renderAreaCounts(team)}
-              <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
                 <div class="app-avatar-group">
                   ${membersIcons}
                 </div>
-                ${
+                <div class="d-flex align-items-center gap-2" style="flex-wrap:wrap;justify-content:flex-end;">
+                  ${closeAction}
+                  ${
           this.isAdmin
               ? `<span class="td-view-detail-hint">
                        <span class="material-icons-round" style="font-size:1rem;vertical-align:middle;">open_in_new</span>
@@ -250,6 +268,7 @@ export default class Teams {
                      </span>`
               : ""
       }
+                </div>
               </div>
             </div>
           </div>
@@ -264,6 +283,14 @@ export default class Teams {
       this._gridListenersAttached = true;
 
       container.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-action='close-team']");
+        if (closeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          this._handleCloseTeam(closeBtn.dataset.teamId);
+          return;
+        }
+
         const card = e.target.closest("[data-team-id]");
         if (!card) return;
         this.router.navigate("teamDetail", { teamId: card.dataset.teamId });
@@ -528,7 +555,7 @@ export default class Teams {
       this.showLoading(teamsContainer);
 
       const fetchTeams = await apiFetch(
-          `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}&includeSubmitted=true`,
+          `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}&includeSubmitted=true&includeClosed=true`,
           { method: "GET" },
       );
       const totalTeams = fetchTeams.data.teams;
@@ -564,7 +591,7 @@ export default class Teams {
                 <th style="width:24%;">${t("teamsProjects.team")}</th>
                 <th style="width:30%;">${t("teamsProjects.desc")}</th>
                 <th style="width:18%;">${t("teamsProjects.members")}</th>
-                ${this.isAdmin ? `<th style="width:28%;">Area Grades</th>` : ""}
+                ${this.isAdmin ? `<th style="width:18%;">Area Grades</th><th style="width:10%;">Acción</th>` : ""}
               </tr>
             </thead>
             <tbody id="teamsTableBody"></tbody>
@@ -578,11 +605,23 @@ export default class Teams {
     teams.forEach((team) => {
       const members = team.members ?? [];
       const membersIcons = this.renderAvatars(members);
+      const isClosed = !!team.closed_at;
+      const closedBadge = isClosed
+        ? `<span style="font-size:0.65rem;background:rgba(239,68,68,0.09);color:#b91c1c;border:1px solid rgba(239,68,68,0.22);padding:1px 6px;border-radius:20px;font-weight:700;margin-left:4px;">Cerrado</span>`
+        : "";
+      const actionCell = this.isAdmin
+        ? isClosed
+          ? `<span style="font-size:0.76rem;color:var(--text-muted);font-weight:700;">Cerrado</span>`
+          : `<button class="td-close-team-btn td-close-team-btn--compact" data-action="close-team" data-team-id="${team.id_team}" type="button" title="Cerrar equipo">
+              <span class="material-icons-round" style="font-size:0.88rem;vertical-align:middle;">lock</span>
+              Cerrar
+            </button>`
+        : "";
 
       const row = `
         <tr ${this.isAdmin ? `class="td-clickable" data-team-id="${team.id_team}" style="cursor:pointer;" title="${t("teamsProjects.viewDetail")}"` : ""}>
           <td style="vertical-align:middle;">
-            <strong style="font-size:0.88rem;">${team.name}</strong>
+            <strong style="font-size:0.88rem;">${team.name}</strong>${closedBadge}
           </td>
           <td style="vertical-align:middle;font-size:0.82rem;color:var(--text-muted);">
             ${team.description ?? ""}
@@ -591,6 +630,7 @@ export default class Teams {
             <div class="app-avatar-group">${membersIcons}</div>
           </td>
           ${this.isAdmin ? `<td style="vertical-align:middle;">${this._renderAreaCounts(team)}</td>` : ""}
+          ${this.isAdmin ? `<td style="vertical-align:middle;">${actionCell}</td>` : ""}
         </tr>
       `;
 
@@ -600,6 +640,14 @@ export default class Teams {
     if (this.isAdmin && !this._listListenersAttached) {
       this._listListenersAttached = true;
       teamsContainer.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-action='close-team']");
+        if (closeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          this._handleCloseTeam(closeBtn.dataset.teamId);
+          return;
+        }
+
         const row = e.target.closest("[data-team-id]");
         if (!row) return;
         this.router.navigate("teamDetail", { teamId: row.dataset.teamId });
@@ -704,6 +752,69 @@ export default class Teams {
   _injectAdminHintStyle() {
     // Show the semantic search toggle only for admins
     document.getElementById("semanticToggleWrap")?.classList.remove("d-none");
+
+    if (document.getElementById("td-close-team-style")) return;
+    const style = document.createElement("style");
+    style.id = "td-close-team-style";
+    style.textContent = `
+      .td-close-team-btn {
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        background: rgba(239, 68, 68, 0.08);
+        color: #b91c1c;
+        border-radius: 8px;
+        padding: 5px 9px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+      }
+
+      .td-close-team-btn:hover {
+        background: rgba(239, 68, 68, 0.14);
+      }
+
+      .td-close-team-btn:disabled {
+        cursor: wait;
+        opacity: 0.68;
+      }
+
+      .td-close-team-btn--compact {
+        padding: 5px 8px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  async _handleCloseTeam(teamId) {
+    const team = this.allTeams.find((item) => String(item.id_team) === String(teamId));
+    const name = team?.name ?? "este equipo";
+    const confirmed = confirm(`¿Cerrar ${name}? Ya no aparecerá en la lista de equipos open ni aceptará nuevas solicitudes.`);
+    if (!confirmed) return;
+
+    const buttons = document.querySelectorAll(`[data-action="close-team"][data-team-id="${teamId}"]`);
+    buttons.forEach((btn) => {
+      btn.disabled = true;
+      btn.textContent = "Cerrando...";
+    });
+
+    try {
+      const res = await closeTeam(teamId);
+      const closedAt = res?.data?.team?.closed_at ?? res?.team?.closed_at ?? new Date().toISOString();
+      this.allTeams = this.allTeams.map((item) =>
+        String(item.id_team) === String(teamId) ? { ...item, closed_at: closedAt } : item,
+      );
+      this._applyFilters();
+      toast.success("Equipo cerrado", "Ya no aparecerá en la lista open.");
+    } catch (err) {
+      toast.error("Error", err?.message ?? "No se pudo cerrar el equipo.");
+      buttons.forEach((btn) => {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-icons-round" style="font-size:0.88rem;vertical-align:middle;">lock</span>Cerrar`;
+      });
+    }
   }
 
   destroy() {

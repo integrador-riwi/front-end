@@ -81,7 +81,7 @@ export default class TLDashboardView {
 
     try {
       const res = await apiFetch(
-          `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true`,
+          `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true&includeClosed=true`,
           { method: "GET" },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
