@@ -6,7 +6,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
-import { apiFetch, getTeamEvalCounts } from "../services/api.js";
+import { apiFetch, getTeamEvalCounts, listAdditionalRepos } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
 import {
@@ -104,8 +104,12 @@ export default class TLDashboardView {
       this.allTeams = await Promise.all(
           raw.map(async (team) => {
             try {
-              const detail = await apiFetch(`/teams/${team.id_team}`, { method: "GET" });
+              const [detail, reposRes] = await Promise.all([
+                apiFetch(`/teams/${team.id_team}`, { method: "GET" }),
+                listAdditionalRepos(team.id_team).catch(() => null),
+              ]);
               const full = detail?.data ?? detail;
+              const reposData = reposRes?.data ?? reposRes;
               const projectId = full.project?.id_project ?? null;
 
               let _alreadyEvaluated = false;
@@ -126,6 +130,7 @@ export default class TLDashboardView {
                 ...team,
                 members: full.members ?? [],
                 project: full.project ?? null,
+                additionalRepos: reposData?.additional ?? [],
                 preview_photo_url: full.project?.preview_photo_url ?? null,
                 description: full.project?.description ?? team.description ?? "",
                 _alreadyEvaluated,
