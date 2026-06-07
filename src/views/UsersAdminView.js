@@ -322,6 +322,11 @@ export default class UsersAdminView {
   renderUserRow(user) {
     const role = roleLabel(user.role);
     const userId = String(user.id_user);
+    const githubUsername = user.github_username
+      ? `@${String(user.github_username).replace(/^@/, "")}`
+      : t("usersAdmin.github.missing");
+    const avatarUrl = user.github_avatar_url;
+    const initial = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
 
     return `
       <tr>
@@ -329,12 +334,24 @@ export default class UsersAdminView {
           <input class="user-select" data-userid="${userId}" type="checkbox" ${this.selectedUsers.has(userId) ? "checked" : ""} aria-label="${t("usersAdmin.selectUser", { name: user.name })}">
         </td>
         <td>
-          <div class="ua-user-cell">
-            <div>
+          <button
+            class="ua-user-cell ua-user-profile-link"
+            data-profile-userid="${userId}"
+            type="button"
+            title="${t("usersAdmin.github.viewProfile", { name: user.name })}"
+          >
+            ${avatarUrl
+              ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
+              : `<span class="ua-user-avatar ua-user-avatar-fallback">${escapeHtml(initial)}</span>`
+            }
+            <div class="ua-user-info">
               <strong>${escapeHtml(user.name)}</strong>
               <span>${escapeHtml(user.email)}</span>
+              <small class="${user.github_username ? "ua-github-user" : "ua-github-missing"}">
+                ${escapeHtml(githubUsername)}
+              </small>
             </div>
-          </div>
+          </button>
         </td>
         <td><span class="ua-role-pill">${escapeHtml(role)}</span></td>
         <td>${user.clan ? `<span class="ua-clan-pill">${escapeHtml(user.clan)}</span>` : `<span class="ua-muted">${t("usersAdmin.noClan")}</span>`}</td>
@@ -588,6 +605,15 @@ export default class UsersAdminView {
         if (event.currentTarget.checked) this.selectedUsers.add(userId);
         else this.selectedUsers.delete(userId);
         this.paint();
+      });
+    });
+
+    document.querySelectorAll("[data-profile-userid]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.router.navigate("publicProfile", {
+          userId: event.currentTarget.dataset.profileUserid,
+        });
       });
     });
 
@@ -888,7 +914,8 @@ export default class UsersAdminView {
       const matchesSearch = !search
         || normalizeText(user.name).includes(search)
         || normalizeText(user.email).includes(search)
-        || normalizeText(user.document_number).includes(search);
+        || normalizeText(user.document_number).includes(search)
+        || normalizeText(user.github_username).includes(search);
       const matchesRole = !this.filters.role || user.role === this.filters.role;
       const matchesClan = !this.filters.clan || user.clan === this.filters.clan;
       const matchesStatus = this.filters.isActive === "" || String(user.is_active) === this.filters.isActive;

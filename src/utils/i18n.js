@@ -106,6 +106,10 @@ const resources = {
           password: "Cambiar contraseña",
           delete: "Eliminar usuario",
         },
+        github: {
+          missing: "GitHub sin conectar",
+          viewProfile: "Ver perfil público de {{name}}",
+        },
         invites: {
           title: "Invitaciones",
           description: "Envío por clan completo o por selección desde la tabla.",
@@ -1276,6 +1280,10 @@ const resources = {
           edit: "Edit user",
           password: "Change password",
           delete: "Delete user",
+        },
+        github: {
+          missing: "GitHub not connected",
+          viewProfile: "View {{name}} public profile",
         },
         invites: {
           title: "Invitations",
