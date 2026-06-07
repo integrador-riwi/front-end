@@ -4,7 +4,7 @@ import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
 import { getUser } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
-import { apiFetch } from "../services/api.js";
+import { apiFetch, listAdditionalRepos } from "../services/api.js";
 import {
   renderCoderTeam,
   loadComments,
@@ -51,8 +51,12 @@ export default class TeamDetailView {
     const main = document.getElementById("teamDetailMain");
 
     try {
-      const res = await apiFetch(`/teams/${this.teamId}`, { method: "GET" });
+      const [res, reposRes] = await Promise.all([
+        apiFetch(`/teams/${this.teamId}`, { method: "GET" }),
+        listAdditionalRepos(this.teamId).catch(() => null),
+      ]);
       const data = res?.data ?? res;
+      const reposData = reposRes?.data ?? reposRes;
 
       const team = {
         id_team: data.id_team,
@@ -60,6 +64,7 @@ export default class TeamDetailView {
         id_event: data.id_event,
         members: data.members ?? [],
         project: data.project ?? null,
+        additionalRepos: reposData?.additional ?? [],
       };
 
       const html = renderCoderTeam({

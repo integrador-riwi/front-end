@@ -23,6 +23,7 @@ import InviteModal from "../components/inviteModal/InviteModal.js";
 import {
   createTeam as createTeamRequest,
   apiFetch,
+  listAdditionalRepos,
   getAvailableCoders,
   inviteMember,
   acceptInvitation,
@@ -78,6 +79,17 @@ export default class CoderHome {
     this.inviteModal = new InviteModal({
       team: this.team,
       onMemberAdded: () => this.init().then(() => this.render()),
+      canCloseTeam: true,
+      onTeamClosed: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at };
+        this.inviteModal.setTeam(this.team);
+        this.render();
+      },
+      onTeamReopened: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at ?? null };
+        this.inviteModal.setTeam(this.team);
+        this.render();
+      },
     });
 
     // Store form values to prevent clearing on re-render
@@ -146,16 +158,19 @@ export default class CoderHome {
         // No fallback — if no team matches the selected event, show the no-team view
 
         if (teamBasic) {
-          // Fetch full team details (members, project) in a single request
-          const detail = await apiFetch(`/teams/${teamBasic.id_team}`, {
-            method: "GET",
-          });
+          // Fetch full team details plus secondary repositories for deliverables.
+          const [detail, reposRes] = await Promise.all([
+            apiFetch(`/teams/${teamBasic.id_team}`, { method: "GET" }),
+            listAdditionalRepos(teamBasic.id_team).catch(() => null),
+          ]);
           const full = detail?.data ?? detail;
+          const reposData = reposRes?.data ?? reposRes;
 
           this.team = {
             ...full,
             members: full.members ?? [],
             project: full.project ?? null,
+            additionalRepos: reposData?.additional ?? [],
           };
 
           const currentUserId = this.user?.id_user;
@@ -902,6 +917,10 @@ export default class CoderHome {
 
     // ── Add member button → open modal (leader only) ──
     document.getElementById("addMemberBtn")?.addEventListener("click", () => {
+      this._openInviteModal();
+    });
+
+    document.getElementById("reopenTeamBtn")?.addEventListener("click", () => {
       this._openInviteModal();
     });
 

@@ -272,6 +272,8 @@ export const getTeams = async (params = {}) => {
   if (params.page) query.append('page', params.page);
   if (params.limit) query.append('limit', params.limit);
   if (params.idEvent) query.append('idEvent', params.idEvent);
+  if (params.includeSubmitted !== undefined) query.append('includeSubmitted', params.includeSubmitted);
+  if (params.includeClosed !== undefined) query.append('includeClosed', params.includeClosed);
   const queryStr = query.toString() ? `?${query.toString()}` : '';
   const response = await apiFetch(`/teams${queryStr}`, { method: 'GET' });
   return response.data ?? response;
@@ -533,6 +535,14 @@ export async function updateTeam(teamId, data) {
     method: "PUT",
     body: data,
   });
+}
+
+export async function closeTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/close`, { method: "POST" });
+}
+
+export async function reopenTeam(teamId) {
+  return apiFetch(`/teams/${teamId}/reopen`, { method: "POST" });
 }
 
 export async function updateProject(projectId, data) {

@@ -17,6 +17,9 @@ export function renderCoderTeam({
   const projectName = project?.name ?? teamName;
   const projectDesc = project?.description ?? t("coderTeam.noDescriptionYet");
   const isSubmitted = !!project?.submitted_at;
+  const additionalRepos = normalizeAdditionalRepos(
+    team.additionalRepos ?? team.additional_repos ?? team.additional ?? [],
+  );
 
   const deliverables = project
     ? {
@@ -29,6 +32,7 @@ export function renderCoderTeam({
 
   const repoUrl = project?.repo_url ?? null;
   const canEdit = isLeader && !isSubmitted;
+  const isClosed = !!team.closed_at;
 
   return `
     <div class="container-xl px-3 px-md-4 py-4">
@@ -122,7 +126,7 @@ export function renderCoderTeam({
                 ${t("coderTeam.submittedCount", { done: deliverableCount(deliverables, repoUrl) })}
               </span>
             </div>
-            ${renderDeliverables(deliverables, repoUrl, canEdit)}
+            ${renderDeliverables(deliverables, repoUrl, canEdit, additionalRepos)}
 
             ${isSubmitted
       ? `
@@ -238,7 +242,7 @@ export function renderCoderTeam({
       .join("")}
             </ul>
 
-            ${isLeader && !isSubmitted
+            ${isLeader && !isSubmitted && !isClosed
       ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
@@ -251,6 +255,19 @@ export function renderCoderTeam({
               </svg>
               ${t("coderTeam.addMember")}
             </button>
+            `
+      : ""
+    }
+
+            ${isLeader && isClosed
+      ? `
+            <div class="ct-team-closed-note mt-3">
+              <strong>Equipo cerrado</strong>
+              <span>Ya no acepta nuevos participantes.</span>
+              <button class="ct-btn-reopen-team mt-2" id="reopenTeamBtn" type="button">
+                Reabrir equipo
+              </button>
+            </div>
             `
       : ""
     }
@@ -358,7 +375,7 @@ function _renderImagePreview(url) {
 // ─────────────────────────────────────────────────────────────
 // Deliverables
 // ─────────────────────────────────────────────────────────────
-function renderDeliverables(d, repoUrl, canEdit = false) {
+function renderDeliverables(d, repoUrl, canEdit = false, additionalRepos = []) {
   const items = [
     {
       key: "video_url",
@@ -401,6 +418,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       hasPreview: false,
       previewType: null,
       uploadType: "readonly",
+      additionalRepos,
     },
     {
       key: "preview_photo_url",
@@ -457,7 +475,7 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
                   <a href="${item.url}" target="_blank" rel="noopener"
                      class="ct-del-status ct-status-done text-truncate d-block"
                      style="max-width:180px; font-size:0.75rem;">
-                    ${item.url}
+                    ${escHtml(item.url)}
                   </a>
                 `
             : `
@@ -504,6 +522,11 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
 
           </div>
 
+          ${item.key === "repo_url" && item.additionalRepos?.length
+            ? renderAdditionalRepos(item.additionalRepos)
+            : ""
+          }
+
           <!-- Media previews (shown below the row) -->
           ${item.url && item.hasPreview && item.previewType === "video" ? `<div class="px-3 pb-3">${_renderVideoPreview(item.url)}</div>` : ""}
           ${item.url && item.hasPreview && item.previewType === "image" ? `<div class="px-3 pb-3">${_renderImagePreview(item.url)}</div>` : ""}
@@ -514,6 +537,84 @@ function renderDeliverables(d, repoUrl, canEdit = false) {
       .join("")}
     </div>
   `;
+}
+
+function normalizeAdditionalRepos(repos) {
+  if (!Array.isArray(repos)) return [];
+  return repos
+    .map((repo) => ({
+      id: repo.id_repo ?? repo.id ?? repo.repo_name ?? repo.label,
+      label: repo.label || repo.repo_name || "Additional repo",
+      repoName: repo.repo_name || repo.label || "repository",
+      url: repo.repo_url || null,
+    }))
+    .filter((repo) => repo.url || repo.repoName || repo.label);
+}
+
+function renderAdditionalRepos(repos) {
+  return `
+    <div class="ct-additional-repos px-3 pb-3">
+      <div class="ct-additional-repos-header">
+        <span>Additional repositories</span>
+        <small>${repos.length}</small>
+      </div>
+      <div class="ct-additional-repos-grid">
+        ${repos.map((repo) => {
+          const label = repo.label || repo.repoName;
+          const title = repo.repoName && repo.repoName !== label ? repo.repoName : label;
+          return repo.url
+            ? `
+              <a href="${escAttr(repo.url)}" target="_blank" rel="noopener" class="ct-additional-repo-chip" title="${escAttr(title)}">
+                ${repoIcon()}
+                <span>
+                  <strong>${escHtml(label)}</strong>
+                  <small>${escHtml(compactRepoUrl(repo.url))}</small>
+                </span>
+              </a>
+            `
+            : `
+              <span class="ct-additional-repo-chip ct-additional-repo-chip-muted" title="${escAttr(title)}">
+                ${repoIcon()}
+                <span>
+                  <strong>${escHtml(label)}</strong>
+                  <small>Pending link</small>
+                </span>
+              </span>
+            `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function repoIcon() {
+  return `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 18l6-6-6-6"/>
+      <path d="M8 6l-6 6 6 6"/>
+    </svg>
+  `;
+}
+
+function compactRepoUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname}${parsed.pathname}`.replace(/\/$/, "");
+  } catch {
+    return url;
+  }
+}
+
+function escHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escAttr(value) {
+  return escHtml(value).replace(/'/g, "&#39;");
 }
 
 // Render the appropriate upload control for pending state

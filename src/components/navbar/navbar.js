@@ -186,8 +186,7 @@ export default class Navbar {
     // LOGOUT
     document.querySelectorAll(".logout-btn")?.forEach((e) => {
       e.addEventListener("click", () => {
-        logout();
-        this.router.navigate("login");
+        logout(this.router);
       });
     });
 

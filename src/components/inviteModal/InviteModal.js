@@ -1,6 +1,8 @@
 import {
   getAvailableCoders,
   inviteMember,
+  closeTeam,
+  reopenTeam,
   getTeamJoinRequests,
   acceptJoinRequest,
   rejectJoinRequest,
@@ -16,9 +18,18 @@ import { t } from "../../utils/i18n.js";
  *   modal.open();
  */
 export default class InviteModal {
-  constructor({ team, onMemberAdded = null } = {}) {
+  constructor({
+    team,
+    onMemberAdded = null,
+    canCloseTeam = false,
+    onTeamClosed = null,
+    onTeamReopened = null,
+  } = {}) {
     this.team = team;
     this.onMemberAdded = onMemberAdded;
+    this.canCloseTeam = canCloseTeam;
+    this.onTeamClosed = onTeamClosed;
+    this.onTeamReopened = onTeamReopened;
     this._debounceTimer = null;
     this._el = null;
   }
@@ -39,9 +50,10 @@ export default class InviteModal {
 
   open() {
     if (!this._el) return;
+    this._syncTeamCloseState();
     this._el.style.display = "flex";
     this._el.querySelector("#inviteSearchInput")?.focus();
-    this._loadJoinRequests();
+    if (!this.team?.closed_at) this._loadJoinRequests();
   }
 
   close() {
@@ -57,6 +69,7 @@ export default class InviteModal {
   /** Call this if the team reference changes after construction */
   setTeam(team) {
     this.team = team;
+    this._syncTeamCloseState();
   }
 
   // ── Private ────────────────────────────────────────
@@ -70,6 +83,24 @@ export default class InviteModal {
             <button id="inviteModalClose" class="invite-modal-close" aria-label="${t("invite.closeModal")}">✕</button>
           </div>
           <div class="invite-modal-body">
+            <div id="inviteCloseTeamSection" class="invite-close-team-section" style="display:none;">
+              <div>
+                <strong>Cerrar equipo</strong>
+                <span>Oculta el equipo de la lista open y bloquea nuevas invitaciones o solicitudes.</span>
+              </div>
+              <button id="inviteCloseTeamBtn" class="invite-btn-close-team" type="button">
+                Cerrar equipo
+              </button>
+            </div>
+            <div id="inviteClosedTeamNotice" class="invite-closed-team-notice" style="display:none;">
+              <div>
+                <strong>Equipo cerrado</strong>
+                <span>Este equipo ya no acepta nuevos participantes.</span>
+              </div>
+              <button id="inviteReopenTeamBtn" class="invite-btn-reopen-team" type="button">
+                Reabrir equipo
+              </button>
+            </div>
             <div id="joinRequestsSection" class="join-requests-section" style="display:none;">
               <h4 style="font-size:0.9rem;margin-bottom:0.5rem;color:#6366f1;">📥 ${t("invite.pendingJoinRequests")}</h4>
               <div id="joinRequestsList" class="join-requests-list"></div>
@@ -91,6 +122,8 @@ export default class InviteModal {
     const modal = backdrop.querySelector(".invite-modal");
     const closeBtn = backdrop.querySelector("#inviteModalClose");
     const searchInput = backdrop.querySelector("#inviteSearchInput");
+    const closeTeamBtn = backdrop.querySelector("#inviteCloseTeamBtn");
+    const reopenTeamBtn = backdrop.querySelector("#inviteReopenTeamBtn");
 
     // Close only when clicking the backdrop itself
     backdrop.addEventListener("click", (e) => {
@@ -114,6 +147,107 @@ export default class InviteModal {
         400,
       );
     });
+
+    closeTeamBtn?.addEventListener("click", () => this._closeTeam());
+    reopenTeamBtn?.addEventListener("click", () => this._reopenTeam());
+  }
+
+  _syncTeamCloseState() {
+    if (!this._el) return;
+
+    const canClose = this.canCloseTeam && this.team?.id_team;
+    const isClosed = !!this.team?.closed_at;
+    const closeSection = this._el.querySelector("#inviteCloseTeamSection");
+    const closedNotice = this._el.querySelector("#inviteClosedTeamNotice");
+    const closeBtn = this._el.querySelector("#inviteCloseTeamBtn");
+    const reopenBtn = this._el.querySelector("#inviteReopenTeamBtn");
+    const searchInput = this._el.querySelector("#inviteSearchInput");
+    const codersList = this._el.querySelector("#inviteCodersList");
+    const requestsSection = this._el.querySelector("#joinRequestsSection");
+
+    if (closeSection) {
+      closeSection.style.display = canClose && !isClosed ? "flex" : "none";
+    }
+    if (closedNotice) {
+      closedNotice.style.display = canClose && isClosed ? "flex" : "none";
+    }
+    if (closeBtn && !isClosed) {
+      closeBtn.disabled = false;
+      closeBtn.textContent = "Cerrar equipo";
+    }
+    if (reopenBtn && isClosed) {
+      reopenBtn.disabled = false;
+      reopenBtn.textContent = "Reabrir equipo";
+    }
+    if (searchInput) {
+      searchInput.disabled = isClosed;
+      searchInput.style.display = isClosed ? "none" : "";
+    }
+    if (codersList && isClosed) {
+      codersList.innerHTML = `<p class="invite-hint">El equipo está cerrado.</p>`;
+    } else if (codersList && !isClosed) {
+      codersList.innerHTML = `<p class="invite-hint">${t("invite.searchHint")}</p>`;
+    }
+    if (requestsSection && isClosed) {
+      requestsSection.style.display = "none";
+    }
+  }
+
+  async _closeTeam() {
+    if (!this.team?.id_team || this.team.closed_at) return;
+
+    const confirmed = confirm(
+      `¿Cerrar ${this.team.name ?? "este equipo"}? Ya no aceptará nuevos participantes.`,
+    );
+    if (!confirmed) return;
+
+    const btn = this._el.querySelector("#inviteCloseTeamBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cerrando...";
+    }
+
+    try {
+      const res = await closeTeam(this.team.id_team);
+      const closedAt =
+        res?.data?.team?.closed_at ?? res?.team?.closed_at ?? new Date().toISOString();
+      this.team = { ...this.team, closed_at: closedAt };
+      this._syncTeamCloseState();
+      this.onTeamClosed?.(this.team);
+      toast.success("Equipo cerrado", "Ya no aparecerá como open.");
+    } catch (err) {
+      toast.error("Error", err?.message ?? "No se pudo cerrar el equipo.");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Cerrar equipo";
+      }
+    }
+  }
+
+  async _reopenTeam() {
+    if (!this.team?.id_team || !this.team.closed_at) return;
+
+    const btn = this._el.querySelector("#inviteReopenTeamBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Reabriendo...";
+    }
+
+    try {
+      const res = await reopenTeam(this.team.id_team);
+      const reopenedTeam = res?.data?.team ?? res?.team ?? {};
+      this.team = { ...this.team, ...reopenedTeam, closed_at: null };
+      this._syncTeamCloseState();
+      this._loadJoinRequests();
+      this.onTeamReopened?.(this.team);
+      toast.success("Equipo reabierto", "Ya puede recibir participantes otra vez.");
+    } catch (err) {
+      toast.error("Error", err?.message ?? "No se pudo reabrir el equipo.");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Reabrir equipo";
+      }
+    }
   }
 
   async _loadJoinRequests() {
@@ -207,6 +341,11 @@ export default class InviteModal {
     const listEl = this._el.querySelector("#inviteCodersList");
     if (!listEl || !this.team) return;
 
+    if (this.team.closed_at) {
+      listEl.innerHTML = `<p class="invite-hint">El equipo está cerrado.</p>`;
+      return;
+    }
+
     if (!query.trim()) {
       listEl.innerHTML = `<p class="invite-hint">${t("invite.searchHint")}</p>`;
       return;
@@ -257,6 +396,11 @@ export default class InviteModal {
   async _sendInvite(btn) {
     const userId = btn.dataset.userId;
     if (!this.team?.id_team || !userId) return;
+
+    if (this.team.closed_at) {
+      this._showError("El equipo está cerrado y no acepta nuevos participantes.");
+      return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = `<span class="invite-btn-spinner"></span>`;

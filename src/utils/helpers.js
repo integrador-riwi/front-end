@@ -1,3 +1,5 @@
+import { clearSession } from "./auth.js";
+
 //Login form helpers
 export function renderErrorBox(message) {
   if (!message) return "";
@@ -41,9 +43,8 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-export const logout = () => {
-  sessionStorage.clear();
-  localStorage.clear();
+export const logout = (router) => {
+  clearSession(router);
 };
 
 export const getEventIdFromUrl = () => {

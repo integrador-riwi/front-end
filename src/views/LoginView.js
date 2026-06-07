@@ -1,4 +1,4 @@
-import { saveSession } from "../utils/auth.js";
+import { clearStoredSession, saveSession } from "../utils/auth.js";
 import { loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
@@ -147,12 +147,10 @@ export default class LoginView {
     this.render();
 
     try {
+      clearStoredSession();
       const response = await loginUser(this.email, this.password);
       const user = response.data.user;
       saveSession(response.data.token, response.data.refreshToken, user);
-      
-      // Limpiar la última ruta guardada para que init() use el home correcto del rol
-      sessionStorage.removeItem("lastRoute");
 
       if (!user.github_username) {
         toast.warning(

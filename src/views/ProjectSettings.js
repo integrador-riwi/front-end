@@ -8,6 +8,8 @@ import {
   apiFetch,
   updateTeam,
   updateProject,
+  closeTeam,
+  reopenTeam,
   inviteMember,
   removeMember,
   getAvailableCoders,
@@ -29,6 +31,15 @@ export default class ProjectSettings {
     this.inviteModal = new InviteModal({
       team: this.team,
       onMemberAdded: () => this._loadData().then(() => this._renderFull()),
+      canCloseTeam: true,
+      onTeamClosed: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at };
+        this._renderFull();
+      },
+      onTeamReopened: (team) => {
+        this.team = { ...this.team, closed_at: team.closed_at ?? null };
+        this._renderFull();
+      },
     });
   }
 
@@ -120,6 +131,7 @@ export default class ProjectSettings {
     const repoUrl =
       this.project?.repo_url ?? this.team?.project?.repo_url ?? "";
     const members = this.team?.members ?? [];
+    const isClosed = !!this.team?.closed_at;
 
     app.innerHTML = `
       ${this.navbar.render()}
@@ -226,17 +238,32 @@ export default class ProjectSettings {
                 <p class="cs-card-sub mb-4">${t("settings.manageMembers")}</p>
 
                 <!-- Invite button -->
-                <button class="cs-btn-primary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
-                        id="openInviteModalBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                       style="width:15px;height:15px">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <line x1="19" y1="8" x2="19" y2="14"/>
-                    <line x1="22" y1="11" x2="16" y2="11"/>
-                  </svg>
-                  ${t("settings.inviteMember")}
-                </button>
+                ${isClosed
+                  ? `<div class="cs-closed-team-note mb-4">
+                      <strong>Equipo cerrado</strong>
+                      <span>Ya no acepta nuevos participantes.</span>
+                      <button class="cs-btn-reopen-team mt-2" id="reopenTeamBtn" type="button">
+                        Reabrir equipo
+                      </button>
+                    </div>`
+                  : `
+                    <button class="cs-btn-primary w-100 mb-2 d-flex align-items-center justify-content-center gap-2"
+                            id="openInviteModalBtn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                           style="width:15px;height:15px">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <line x1="19" y1="8" x2="19" y2="14"/>
+                        <line x1="22" y1="11" x2="16" y2="11"/>
+                      </svg>
+                      ${t("settings.inviteMember")}
+                    </button>
+                    <button class="cs-btn-close-team w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
+                            id="closeTeamBtn">
+                      Cerrar equipo
+                    </button>
+                  `
+                }
 
                 <!-- Members -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -369,6 +396,12 @@ export default class ProjectSettings {
       .getElementById("deleteProjectBtn")
       ?.addEventListener("click", () => this.handleDelete());
     document
+      .getElementById("closeTeamBtn")
+      ?.addEventListener("click", () => this.handleCloseTeam());
+    document
+      .getElementById("reopenTeamBtn")
+      ?.addEventListener("click", () => this.handleReopenTeam());
+    document
       .getElementById("copyInviteLinkBtn")
       ?.addEventListener("click", () => this.handleCopyLink());
 
@@ -447,6 +480,62 @@ export default class ProjectSettings {
       this.router.navigate("coderHome");
     } catch (err) {
       this._showFeedback(err?.message ?? t("common.error"), "error");
+    }
+  }
+
+  async handleCloseTeam() {
+    if (!this.team?.id_team || this.team.closed_at) return;
+
+    const confirmed = confirm(
+      `¿Cerrar ${this.team.name ?? "este equipo"}? Ya no aceptará nuevos participantes.`,
+    );
+    if (!confirmed) return;
+
+    const btn = document.getElementById("closeTeamBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cerrando...";
+    }
+
+    try {
+      const res = await closeTeam(this.team.id_team);
+      const closedAt =
+        res?.data?.team?.closed_at ?? res?.team?.closed_at ?? new Date().toISOString();
+      this.team = { ...this.team, closed_at: closedAt };
+      this.inviteModal.setTeam(this.team);
+      toast.success("Equipo cerrado", "Ya no aparecerá como open.");
+      this._renderFull();
+    } catch (err) {
+      toast.error("Error", err?.message ?? "No se pudo cerrar el equipo.");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Cerrar equipo";
+      }
+    }
+  }
+
+  async handleReopenTeam() {
+    if (!this.team?.id_team || !this.team.closed_at) return;
+
+    const btn = document.getElementById("reopenTeamBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Reabriendo...";
+    }
+
+    try {
+      const res = await reopenTeam(this.team.id_team);
+      const reopenedTeam = res?.data?.team ?? res?.team ?? {};
+      this.team = { ...this.team, ...reopenedTeam, closed_at: null };
+      this.inviteModal.setTeam(this.team);
+      toast.success("Equipo reabierto", "Ya puede recibir participantes otra vez.");
+      this._renderFull();
+    } catch (err) {
+      toast.error("Error", err?.message ?? "No se pudo reabrir el equipo.");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Reabrir equipo";
+      }
     }
   }
 

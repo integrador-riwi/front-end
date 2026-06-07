@@ -131,7 +131,7 @@ export default class UsersAdminView {
 
       // Cargar lista de clanes/equipos desde backend para poblar selects
       try {
-        const teamsRes = await getTeams({ limit: 1000 });
+        const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true });
         // teamsRes could be { data: { teams: [...] } } or array
         this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
       } catch (tErr) {
@@ -327,6 +327,7 @@ export default class UsersAdminView {
       : t("usersAdmin.github.missing");
     const avatarUrl = user.github_avatar_url;
     const initial = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
+    const profileTitle = t("usersAdmin.github.viewProfile", { name: user.name });
 
     return `
       <tr>
@@ -338,7 +339,7 @@ export default class UsersAdminView {
             class="ua-user-cell ua-user-profile-link"
             data-profile-userid="${userId}"
             type="button"
-            title="${t("usersAdmin.github.viewProfile", { name: user.name })}"
+            title="${escapeHtml(profileTitle)}"
           >
             ${avatarUrl
               ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
