@@ -328,26 +328,26 @@ export default class EventsView {
         const eventName = e.currentTarget.dataset.eventName;
 
         toast.warning(
-          "¿Eliminar evento?",
-          `"${eventName}" será eliminado permanentemente. Esta acción no se puede deshacer.`,
+          t("events.deleteTitle"),
+          t("events.deleteConfirm", { name: eventName }),
           {
             duration: 0,
             action: {
-              label: "Sí, eliminar",
+              label: t("events.deleteAction"),
               onClick: async () => {
                 try {
                   await deleteEvent(eventId);
-                  toast.success("Evento eliminado", `"${eventName}" fue eliminado exitosamente.`);
+                  toast.success(t("events.deleteSuccessTitle"), t("events.deleteSuccessMsg", { name: eventName }));
                   // Remove card from DOM without full re-render
                   const card = e.currentTarget.closest(".bg-white.rounded-4");
                   if (card) card.remove();
                 } catch (err) {
-                  toast.error("Error", err.response?.data?.message || "No se pudo eliminar el evento.");
+                  toast.error(t("common.errorTitle"), err.response?.data?.message || t("events.deleteError"));
                 }
               }
             },
             action2: {
-              label: "Cancelar",
+              label: t("common.cancel"),
               onClick: () => {}
             }
           }

@@ -347,7 +347,7 @@ export default class InviteModal {
     }
 
     if (!query.trim()) {
-      listEl.innerHTML = `<p class="invite-hint">Escribe para buscar coders disponibles.</p>`;
+      listEl.innerHTML = `<p class="invite-hint">${t("invite.searchHint")}</p>`;
       return;
     }
 

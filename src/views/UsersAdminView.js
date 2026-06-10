@@ -12,6 +12,7 @@ import {
 } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { icons } from "../utils/icons.js";
+import { t } from "../utils/i18n.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/usersAdmin.css";
 
@@ -85,6 +86,8 @@ const findKey = (keys, candidates) =>
     return candidates.some((candidate) => normalizedKey.includes(normalizeText(candidate)));
   });
 
+const roleLabel = (role) => t(`usersAdmin.roles.${role}`) || role;
+
 export default class UsersAdminView {
   constructor(router) {
     this.router = router;
@@ -132,12 +135,12 @@ export default class UsersAdminView {
         // teamsRes could be { data: { teams: [...] } } or array
         this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
       } catch (tErr) {
-        console.warn('No se pudieron cargar los equipos:', tErr);
+        console.warn(t("usersAdmin.console.teamsLoadError"), tErr);
         this.teams = [...new Set(this.users.map(u => u.clan).filter(Boolean))];
       }
     } catch (error) {
       console.error("Error loading users:", error);
-      toast.error("Error", "No se pudieron cargar los usuarios.");
+      toast.error(t("common.errorTitle"), t("usersAdmin.toast.loadUsersError"));
     } finally {
       this.loading = false;
       this.paint();
@@ -180,7 +183,7 @@ export default class UsersAdminView {
     return `
       <div class="ua-loading">
         <div class="ce-spinner ua-spinner"></div>
-        <p>Cargando usuarios...</p>
+        <p>${t("usersAdmin.loading")}</p>
       </div>
     `;
   }
@@ -189,14 +192,14 @@ export default class UsersAdminView {
     return `
       <header class="ua-header">
         <div>
-          <span class="ua-eyebrow">Panel admin</span>
-          <h1>Gestion de usuarios</h1>
-          <p>Administra altas, roles, clanes, accesos e invitaciones sin salir del flujo.</p>
+          <span class="ua-eyebrow">${t("usersAdmin.eyebrow")}</span>
+          <h1>${t("usersAdmin.title")}</h1>
+          <p>${t("usersAdmin.subtitle")}</p>
         </div>
         <div class="ua-header-actions">
           <button class="ua-btn ua-btn-primary" id="newUserBtn" type="button">
             <span class="ua-btn-icon">${icons.plus()}</span>
-            Nuevo usuario
+            ${t("usersAdmin.newUser")}
           </button>
         </div>
       </header>
@@ -205,12 +208,12 @@ export default class UsersAdminView {
 
   renderMetrics(stats) {
     const cards = [
-      { label: "Coders", value: stats.roles.CODER, tone: "accent", icon: icons.code() },
-      { label: "TL Desarrollo", value: stats.roles.TL_DEVELOPMENT, tone: "mint", icon: icons.settings() },
-      { label: "TL Soft Skills", value: stats.roles.TL_SOFT_SKILLS, tone: "gold", icon: icons.bulb() },
-      { label: "TL Ingles", value: stats.roles.TL_ENGLISH, tone: "lilac", icon: icons.chat() },
-      { label: "Staff", value: stats.roles.STAFF, tone: "muted", icon: icons.blocks() },
-      { label: "Admins", value: stats.roles.ADMIN, tone: "coral", icon: icons.settings() },
+      { label: roleLabel("CODER"), value: stats.roles.CODER, tone: "accent", icon: icons.code() },
+      { label: roleLabel("TL_DEVELOPMENT"), value: stats.roles.TL_DEVELOPMENT, tone: "mint", icon: icons.settings() },
+      { label: roleLabel("TL_SOFT_SKILLS"), value: stats.roles.TL_SOFT_SKILLS, tone: "gold", icon: icons.bulb() },
+      { label: roleLabel("TL_ENGLISH"), value: stats.roles.TL_ENGLISH, tone: "lilac", icon: icons.chat() },
+      { label: roleLabel("STAFF"), value: stats.roles.STAFF, tone: "muted", icon: icons.blocks() },
+      { label: roleLabel("ADMIN"), value: stats.roles.ADMIN, tone: "coral", icon: icons.settings() },
     ];
 
     return `
@@ -233,25 +236,25 @@ export default class UsersAdminView {
       <section class="ua-toolbar">
         <div class="ua-search">
           <span>${icons.users()}</span>
-          <input id="userSearchInput" type="search" placeholder="Buscar por nombre o correo" value="${escapeHtml(this.filters.search)}">
+          <input id="userSearchInput" type="search" placeholder="${t("usersAdmin.searchPlaceholder")}" value="${escapeHtml(this.filters.search)}">
         </div>
         <div class="ua-filter-group">
           <span class="ua-filter-icon">${actionIcons.filter}</span>
-          <select id="roleFilter" class="ua-control ua-select" aria-label="Filtrar por rol">
-            <option value="">Todos los roles</option>
-            ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
+          <select id="roleFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByRole")}">
+            <option value="">${t("usersAdmin.allRoles")}</option>
+            ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${roleLabel(role.value)}</option>`).join("")}
           </select>
         </div>
-        <select id="clanFilter" class="ua-control ua-select" aria-label="Filtrar por clan">
-          <option value="">Todos los clanes</option>
+        <select id="clanFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByClan")}">
+          <option value="">${t("usersAdmin.allClans")}</option>
           ${clans.map((clan) => `<option value="${escapeHtml(clan)}" ${this.filters.clan === clan ? "selected" : ""}>${escapeHtml(clan)}</option>`).join("")}
         </select>
-        <select id="statusFilter" class="ua-control ua-select" aria-label="Filtrar por estado">
-          <option value="">Todos los estados</option>
-          <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>Activos</option>
-          <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>Inactivos</option>
+        <select id="statusFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByStatus")}">
+          <option value="">${t("usersAdmin.allStatuses")}</option>
+          <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>${t("usersAdmin.active")}</option>
+          <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>${t("usersAdmin.inactive")}</option>
         </select>
-        <span class="ua-count">${count} resultados</span>
+        <span class="ua-count">${t("usersAdmin.results", { count })}</span>
       </section>
     `;
   }
@@ -261,7 +264,7 @@ export default class UsersAdminView {
       return `
         <section class="ua-bulk-bar ua-bulk-bar-muted">
           <span class="ua-bulk-icon">${actionIcons.spark}</span>
-          <p>Selecciona usuarios en la tabla para enviar invitaciones individuales en lote.</p>
+          <p>${t("usersAdmin.bulkHint")}</p>
         </section>
       `;
     }
@@ -269,12 +272,12 @@ export default class UsersAdminView {
     return `
       <section class="ua-bulk-bar">
         <div>
-          <strong>${this.selectedUsers.size} seleccionados</strong>
-          <span>de ${count} usuarios visibles</span>
+          <strong>${t("usersAdmin.selectedCount", { count: this.selectedUsers.size })}</strong>
+          <span>${t("usersAdmin.visibleUsers", { count })}</span>
         </div>
         <button class="ua-btn ua-btn-primary" id="sendSelectedBtn" type="button">
           <span class="ua-btn-icon">${actionIcons.mail}</span>
-          Enviar invitaciones
+          ${t("usersAdmin.sendInvitations")}
         </button>
       </section>
     `;
@@ -285,8 +288,8 @@ export default class UsersAdminView {
       return `
         <section class="ua-empty">
           <span>${icons.users()}</span>
-          <h2>No hay usuarios para estos filtros</h2>
-          <p>Ajusta la busqueda o crea un usuario nuevo.</p>
+          <h2>${t("usersAdmin.emptyTitle")}</h2>
+          <p>${t("usersAdmin.emptyDescription")}</p>
         </section>
       `;
     }
@@ -299,13 +302,13 @@ export default class UsersAdminView {
           <thead>
             <tr>
               <th class="ua-check-col">
-                <input id="selectVisibleUsers" type="checkbox" ${allVisibleSelected ? "checked" : ""} aria-label="Seleccionar usuarios visibles">
+                <input id="selectVisibleUsers" type="checkbox" ${allVisibleSelected ? "checked" : ""} aria-label="${t("usersAdmin.selectVisible")}">
               </th>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Clan</th>
-              <th>Estado</th>
-              <th class="ua-actions-col">Acciones</th>
+              <th>${t("usersAdmin.table.user")}</th>
+              <th>${t("usersAdmin.table.role")}</th>
+              <th>${t("usersAdmin.table.clan")}</th>
+              <th>${t("usersAdmin.table.status")}</th>
+              <th class="ua-actions-col">${t("usersAdmin.table.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -317,19 +320,27 @@ export default class UsersAdminView {
   }
 
   renderUserRow(user) {
-    const role = ROLES.find((item) => item.value === user.role)?.label ?? user.role;
+    const role = roleLabel(user.role);
     const userId = String(user.id_user);
-    const githubUsername = user.github_username ? `@${String(user.github_username).replace(/^@/, "")}` : "GitHub sin conectar";
+    const githubUsername = user.github_username
+      ? `@${String(user.github_username).replace(/^@/, "")}`
+      : t("usersAdmin.github.missing");
     const avatarUrl = user.github_avatar_url;
     const initial = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
+    const profileTitle = t("usersAdmin.github.viewProfile", { name: user.name });
 
     return `
       <tr>
         <td class="ua-check-col">
-          <input class="user-select" data-userid="${userId}" type="checkbox" ${this.selectedUsers.has(userId) ? "checked" : ""} aria-label="Seleccionar ${escapeHtml(user.name)}">
+          <input class="user-select" data-userid="${userId}" type="checkbox" ${this.selectedUsers.has(userId) ? "checked" : ""} aria-label="${t("usersAdmin.selectUser", { name: user.name })}">
         </td>
         <td>
-          <button class="ua-user-cell ua-user-profile-link" data-profile-userid="${userId}" type="button">
+          <button
+            class="ua-user-cell ua-user-profile-link"
+            data-profile-userid="${userId}"
+            type="button"
+            title="${escapeHtml(profileTitle)}"
+          >
             ${avatarUrl
               ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
               : `<span class="ua-user-avatar ua-user-avatar-fallback">${escapeHtml(initial)}</span>`
@@ -344,18 +355,18 @@ export default class UsersAdminView {
           </button>
         </td>
         <td><span class="ua-role-pill">${escapeHtml(role)}</span></td>
-        <td>${user.clan ? `<span class="ua-clan-pill">${escapeHtml(user.clan)}</span>` : `<span class="ua-muted">Sin clan</span>`}</td>
+        <td>${user.clan ? `<span class="ua-clan-pill">${escapeHtml(user.clan)}</span>` : `<span class="ua-muted">${t("usersAdmin.noClan")}</span>`}</td>
         <td>
           <button class="ua-status ${user.is_active ? "is-active" : "is-inactive"}" data-action="toggle-status" data-userid="${userId}" type="button">
-            ${user.is_active ? "Activo" : "Inactivo"}
+            ${user.is_active ? t("usersAdmin.active") : t("usersAdmin.inactive")}
           </button>
         </td>
         <td>
           <div class="ua-row-actions">
-            <button class="ua-icon-btn" data-action="send" data-userid="${userId}" type="button" title="Enviar invitacion">${actionIcons.mail}</button>
-            <button class="ua-icon-btn" data-action="edit" data-userid="${userId}" type="button" title="Editar usuario">${icons.edit()}</button>
-            <button class="ua-icon-btn" data-action="password" data-userid="${userId}" type="button" title="Cambiar contrasena">${actionIcons.lock}</button>
-            <button class="ua-icon-btn ua-icon-danger" data-action="delete" data-userid="${userId}" type="button" title="Eliminar usuario">${actionIcons.trash}</button>
+            <button class="ua-icon-btn" data-action="send" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.send")}">${actionIcons.mail}</button>
+            <button class="ua-icon-btn" data-action="edit" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.edit")}">${icons.edit()}</button>
+            <button class="ua-icon-btn" data-action="password" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.password")}">${actionIcons.lock}</button>
+            <button class="ua-icon-btn ua-icon-danger" data-action="delete" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.delete")}">${actionIcons.trash}</button>
           </div>
         </td>
       </tr>
@@ -368,18 +379,18 @@ export default class UsersAdminView {
         <div class="ua-panel-header">
           <span class="ua-panel-icon">${actionIcons.mail}</span>
           <div>
-            <h2>Invitaciones</h2>
-            <p>Envio por clan completo o por seleccion desde la tabla.</p>
+            <h2>${t("usersAdmin.invites.title")}</h2>
+            <p>${t("usersAdmin.invites.description")}</p>
           </div>
         </div>
-        <label class="ua-label" for="inviteClanSelect">Clan</label>
+        <label class="ua-label" for="inviteClanSelect">${t("usersAdmin.clan")}</label>
         <select id="inviteClanSelect" class="ua-field ua-select">
-          <option value="">Selecciona un clan</option>
+          <option value="">${t("usersAdmin.selectClan")}</option>
           ${clans.map((clan) => `<option value="${escapeHtml(clan)}">${escapeHtml(clan)}</option>`).join("")}
         </select>
         <button class="ua-btn ua-btn-primary ua-full" id="sendClanInviteBtn" type="button">
           <span class="ua-btn-icon">${actionIcons.mail}</span>
-          Enviar a todo el clan
+          ${t("usersAdmin.invites.sendClan")}
         </button>
       </section>
     `;
@@ -393,40 +404,40 @@ export default class UsersAdminView {
         <div class="ua-panel-header">
           <span class="ua-panel-icon">${actionIcons.file}</span>
           <div>
-            <h2>Importar XLSX</h2>
-            <p>Valida duplicados por correo o documento antes de crear.</p>
+            <h2>${t("usersAdmin.import.title")}</h2>
+            <p>${t("usersAdmin.import.description")}</p>
           </div>
         </div>
         <div class="ua-import-schema">
-          <span>Columnas esperadas</span>
-          <strong>nombre, correo, documento, clan</strong>
+          <span>${t("usersAdmin.import.expectedColumns")}</span>
+          <strong>${t("usersAdmin.import.columns")}</strong>
         </div>
         <input id="xlsxInput" type="file" accept=".xlsx,.xls" hidden>
         <button class="ua-btn ua-btn-secondary ua-full" id="chooseXlsxBtn" type="button">
           <span class="ua-btn-icon">${icons.upload()}</span>
-          Seleccionar archivo
+          ${t("usersAdmin.import.chooseFile")}
         </button>
         ${this.importRows.length > 0 ? `
           <div class="ua-import-stats">
-            <span><strong>${validRows.length}</strong> listos</span>
-            <span><strong>${duplicateRows.length}</strong> repetidos</span>
-            <span><strong>${invalidRows.length}</strong> incompletos</span>
+            <span><strong>${validRows.length}</strong> ${t("usersAdmin.import.ready")}</span>
+            <span><strong>${duplicateRows.length}</strong> ${t("usersAdmin.import.duplicates")}</span>
+            <span><strong>${invalidRows.length}</strong> ${t("usersAdmin.import.incomplete")}</span>
           </div>
           <div class="ua-import-preview">
             ${this.importRows.slice(0, 6).map((row) => `
               <div class="ua-import-row is-${row.status}">
                 <div>
-                  <strong>${escapeHtml(row.name || "Sin nombre")}</strong>
-                  <span>${escapeHtml(row.email || row.reason)}</span>
+                  <strong>${escapeHtml(row.name || t("usersAdmin.import.noName"))}</strong>
+                  <span>${escapeHtml(row.email || (row.reasonKey ? t(row.reasonKey) : row.reason))}</span>
                 </div>
-                <small>Fila ${row.rowNumber}</small>
+                <small>${t("usersAdmin.import.row", { row: row.rowNumber })}</small>
               </div>
             `).join("")}
           </div>
           <button class="ua-btn ua-btn-primary ua-full" id="createImportedUsersBtn" type="button" ${validRows.length === 0 ? "disabled" : ""}>
-            Crear ${validRows.length} usuarios
+            ${t("usersAdmin.import.createUsers", { count: validRows.length })}
           </button>
-          <button class="ua-text-btn" id="clearImportBtn" type="button">Limpiar importacion</button>
+          <button class="ua-text-btn" id="clearImportBtn" type="button">${t("usersAdmin.import.clear")}</button>
         ` : ""}
       </section>
     `;
@@ -450,38 +461,38 @@ export default class UsersAdminView {
         <section class="ua-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
           <header class="ua-modal-header">
             <div>
-              <span class="ua-eyebrow">${isEditing ? "Editar" : "Crear"}</span>
-              <h2 id="userModalTitle">${isEditing ? "Editar usuario" : "Nuevo usuario"}</h2>
+              <span class="ua-eyebrow">${isEditing ? t("usersAdmin.modal.editMode") : t("usersAdmin.modal.createMode")}</span>
+              <h2 id="userModalTitle">${isEditing ? t("usersAdmin.modal.editTitle") : t("usersAdmin.modal.createTitle")}</h2>
             </div>
-            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">${actionIcons.close}</button>
+            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="${t("usersAdmin.close")}">${actionIcons.close}</button>
           </header>
           <form id="userForm" class="ua-form">
-            <label class="ua-label">Nombre
+            <label class="ua-label">${t("usersAdmin.form.name")}
               <input class="ua-field" name="name" value="${escapeHtml(user?.name || "")}" required>
             </label>
-            <label class="ua-label">Correo
+            <label class="ua-label">${t("usersAdmin.form.email")}
               <input class="ua-field" name="email" type="email" value="${escapeHtml(user?.email || "")}" required>
             </label>
             <div class="ua-form-grid">
-              <label class="ua-label">Tipo documento
+              <label class="ua-label">${t("usersAdmin.form.documentType")}
                 <select class="ua-field ua-select" name="documentType">
                   ${DOCUMENT_TYPES.map((type) => `<option value="${type}" ${(user?.document_type || "CC") === type ? "selected" : ""}>${type}</option>`).join("")}
                 </select>
               </label>
-              <label class="ua-label">Documento
+              <label class="ua-label">${t("usersAdmin.form.documentNumber")}
                 <input class="ua-field" name="documentNumber" value="${escapeHtml(user?.document_number || "")}" required>
               </label>
             </div>
             <div class="ua-form-grid">
-              <label class="ua-label">Rol
+              <label class="ua-label">${t("usersAdmin.form.role")}
                 <select class="ua-field ua-select" name="role">
-                  ${ROLES.map((role) => `<option value="${role.value}" ${(user?.role || "CODER") === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
+                  ${ROLES.map((role) => `<option value="${role.value}" ${(user?.role || "CODER") === role.value ? "selected" : ""}>${roleLabel(role.value)}</option>`).join("")}
                 </select>
               </label>
-              <label class="ua-label">Clan
+              <label class="ua-label">${t("usersAdmin.form.clan")}
                 ${this.teams && this.teams.length > 0 ? `
                   <select class="ua-field ua-select" name="clan">
-                    <option value="">-- Sin clan --</option>
+                    <option value="">${t("usersAdmin.noClanOption")}</option>
                     ${this.teams.map((t) => `<option value="${escapeHtml(t.name || t)}" ${(t.name === user?.clan || t === user?.clan) ? 'selected' : ''}>${escapeHtml(t.name || t)}</option>`).join("")}
                   </select>
                 ` : `
@@ -493,24 +504,24 @@ export default class UsersAdminView {
               <div class="ua-inline-actions">
                 <button class="ua-btn ua-btn-secondary" id="sendIndividualInviteBtn" type="button">
                   <span class="ua-btn-icon">${actionIcons.mail}</span>
-                  Enviar invitacion
+                  ${t("usersAdmin.modal.sendInvite")}
                 </button>
               </div>
             ` : `
-              <label class="ua-label">Contrasena inicial
-                <input class="ua-field" name="password" placeholder="Opcional: se usa clan.riwi2026*">
+              <label class="ua-label">${t("usersAdmin.form.initialPassword")}
+                <input class="ua-field" name="password" placeholder="${t("usersAdmin.form.initialPasswordPlaceholder")}">
               </label>
               <label class="ua-check-label">
                 <input type="checkbox" name="sendInvite" id="sendInviteCheckbox">
-                <span>Enviar invitacion individual al crear</span>
+                <span>${t("usersAdmin.form.sendInviteOnCreate")}</span>
               </label>
             `}
             <p class="ua-form-note">
-              ${clanPassword ? `Con el clan actual, la invitacion mostrara: ${escapeHtml(clanPassword)}` : "La invitacion necesita un clan valido para calcular la contrasena."}
+              ${clanPassword ? t("usersAdmin.form.passwordPreview", { password: escapeHtml(clanPassword) }) : t("usersAdmin.form.passwordNeedsClan")}
             </p>
             <footer class="ua-modal-actions">
-              <button class="ua-btn ua-btn-secondary" id="cancelModalBtn" type="button">Cancelar</button>
-              <button class="ua-btn ua-btn-primary" type="submit">${isEditing ? "Guardar cambios" : "Crear usuario"}</button>
+              <button class="ua-btn ua-btn-secondary" id="cancelModalBtn" type="button">${t("common.cancel")}</button>
+              <button class="ua-btn ua-btn-primary" type="submit">${isEditing ? t("usersAdmin.modal.saveChanges") : t("usersAdmin.modal.createUser")}</button>
             </footer>
           </form>
         </section>
@@ -526,19 +537,19 @@ export default class UsersAdminView {
         <section class="ua-modal ua-modal-small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
           <header class="ua-modal-header">
             <div>
-              <span class="ua-eyebrow">Seguridad</span>
-              <h2 id="passwordModalTitle">Cambiar contrasena</h2>
+              <span class="ua-eyebrow">${t("usersAdmin.password.security")}</span>
+              <h2 id="passwordModalTitle">${t("usersAdmin.password.title")}</h2>
             </div>
-            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="Cerrar">${actionIcons.close}</button>
+            <button class="ua-icon-btn" id="closeModalBtn" type="button" title="${t("usersAdmin.close")}">${actionIcons.close}</button>
           </header>
           <form id="passwordForm" class="ua-form">
             <p class="ua-modal-copy">${escapeHtml(user?.name || "")}</p>
-            <label class="ua-label">Nueva contrasena
+            <label class="ua-label">${t("usersAdmin.password.newPassword")}
               <input class="ua-field" name="password" value="${escapeHtml(suggestedPassword)}" required minlength="6">
             </label>
             <footer class="ua-modal-actions">
-              <button class="ua-btn ua-btn-secondary" id="cancelModalBtn" type="button">Cancelar</button>
-              <button class="ua-btn ua-btn-primary" type="submit">Actualizar</button>
+              <button class="ua-btn ua-btn-secondary" id="cancelModalBtn" type="button">${t("common.cancel")}</button>
+              <button class="ua-btn ua-btn-primary" type="submit">${t("usersAdmin.password.update")}</button>
             </footer>
           </form>
         </section>
@@ -680,11 +691,11 @@ export default class UsersAdminView {
     try {
       if (this.modal?.user) {
         await updateUser(this.modal.user.id_user, payload);
-        toast.success("Actualizado", "Usuario actualizado correctamente.");
+        toast.success(t("usersAdmin.toast.updatedTitle"), t("usersAdmin.toast.updatedMessage"));
       } else {
         payload.password = data.password?.trim() || buildClanPassword(payload.clan) || payload.documentNumber;
         const created = await createUser(payload);
-        toast.success("Creado", "Usuario creado correctamente.");
+        toast.success(t("usersAdmin.toast.createdTitle"), t("usersAdmin.toast.createdMessage"));
 
         // If checkbox sendInvite present, send invitation to the created user
         const formData = new FormData(form);
@@ -693,16 +704,16 @@ export default class UsersAdminView {
         if (sendInvite && createdUserId) {
           try {
             await sendWelcomeEmailsToUsers({ userIds: [createdUserId] });
-            toast.success("Invitacion enviada", "Correo de bienvenida enviado.");
+            toast.success(t("usersAdmin.toast.inviteSentTitle"), t("usersAdmin.toast.welcomeEmailSent"));
           } catch (e) {
-            toast.error("Error", "No se pudo enviar la invitacion.");
+            toast.error(t("common.errorTitle"), t("usersAdmin.toast.inviteError"));
           }
         }
       }
       this.closeModal(false);
       await this.loadUsers();
     } catch (error) {
-      toast.error("Error", error.message || "No se pudo guardar el usuario.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.saveError"));
     }
   }
 
@@ -712,43 +723,46 @@ export default class UsersAdminView {
 
     try {
       await updateUserPassword(this.modal.user.id_user, password);
-      toast.success("Actualizado", "Contrasena actualizada correctamente.");
+      toast.success(t("usersAdmin.toast.updatedTitle"), t("usersAdmin.toast.passwordUpdated"));
       this.closeModal();
     } catch (error) {
-      toast.error("Error", error.message || "No se pudo actualizar la contrasena.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.passwordError"));
     }
   }
 
   async toggleUser(user) {
     try {
       await updateUserStatus(user.id_user, !user.is_active);
-      toast.success("Estado actualizado", `${user.name} ahora esta ${user.is_active ? "inactivo" : "activo"}.`);
+      toast.success(
+        t("usersAdmin.toast.statusUpdatedTitle"),
+        t(user.is_active ? "usersAdmin.toast.nowInactive" : "usersAdmin.toast.nowActive", { name: user.name }),
+      );
       await this.loadUsers();
     } catch (error) {
-      toast.error("Error", error.message || "No se pudo cambiar el estado.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.statusError"));
     }
   }
 
   async deleteUser(user) {
-    const ok = confirm(`Eliminar a ${user.name} es una accion permanente. ¿Quieres continuar?`);
+    const ok = confirm(t("usersAdmin.confirm.delete", { name: user.name }));
     if (!ok) return;
 
     try {
       await deleteUser(user.id_user);
       this.selectedUsers.delete(String(user.id_user));
-      toast.success("Eliminado", "Usuario eliminado correctamente.");
+      toast.success(t("usersAdmin.toast.deletedTitle"), t("usersAdmin.toast.deletedMessage"));
       await this.loadUsers();
     } catch (error) {
-      toast.error("Error", error.message || "No se pudo eliminar el usuario.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.deleteError"));
     }
   }
 
   async sendIndividualInvite(user) {
     try {
       const response = await sendWelcomeEmailsToUsers({ userIds: [user.id_user] });
-      toast.success("Invitacion enviada", response.data?.message || response.message || "Correo enviado.");
+      toast.success(t("usersAdmin.toast.inviteSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.emailSent"));
     } catch (error) {
-      toast.error("Error", error.message || "No se pudo enviar la invitacion.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.inviteError"));
     }
   }
 
@@ -758,29 +772,29 @@ export default class UsersAdminView {
 
     try {
       const response = await sendWelcomeEmailsToUsers({ userIds });
-      toast.success("Invitaciones enviadas", response.data?.message || response.message || "Correos enviados.");
+      toast.success(t("usersAdmin.toast.invitesSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.emailsSent"));
       this.selectedUsers.clear();
       this.paint();
     } catch (error) {
-      toast.error("Error", error.message || "No se pudieron enviar las invitaciones.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.invitesError"));
     }
   }
 
   async sendClanInvites() {
     const clan = document.getElementById("inviteClanSelect")?.value;
     if (!clan) {
-      toast.warning("Selecciona un clan", "Elige un clan para enviar invitaciones.");
+      toast.warning(t("usersAdmin.toast.selectClanTitle"), t("usersAdmin.toast.selectClanMessage"));
       return;
     }
 
-    const ok = confirm(`Se enviara el correo de bienvenida a todo el clan ${clan}. ¿Continuar?`);
+    const ok = confirm(t("usersAdmin.confirm.sendClan", { clan }));
     if (!ok) return;
 
     try {
       const response = await sendWelcomeEmailsToUsers({ clan });
-      toast.success("Invitaciones enviadas", response.data?.message || response.message || `Correos enviados a ${clan}.`);
+      toast.success(t("usersAdmin.toast.invitesSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.clanEmailsSent", { clan }));
     } catch (error) {
-      toast.error("Error", error.message || "No se pudieron enviar las invitaciones.");
+      toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.invitesError"));
     }
   }
 
@@ -797,7 +811,7 @@ export default class UsersAdminView {
       this.paint();
     } catch (error) {
       console.error("Error reading xlsx:", error);
-      toast.error("Archivo invalido", "No se pudo leer el archivo XLSX.");
+      toast.error(t("usersAdmin.toast.invalidFileTitle"), t("usersAdmin.toast.invalidFileMessage"));
     } finally {
       event.target.value = "";
     }
@@ -829,14 +843,14 @@ export default class UsersAdminView {
       const documentType = String(row[documentTypeKey] || "CC").trim().toUpperCase() || "CC";
 
       let status = "valid";
-      let reason = "";
+      let reasonKey = "";
 
       if (!email || !documentNumber || !name) {
         status = "invalid";
-        reason = "Faltan nombre, correo o documento";
+        reasonKey = "usersAdmin.import.missingFields";
       } else if (existingEmails.has(email) || existingDocuments.has(documentNumber) || fileEmails.has(email) || fileDocuments.has(documentNumber)) {
         status = "duplicate";
-        reason = "Ya existe por correo o documento";
+        reasonKey = "usersAdmin.import.duplicateReason";
       }
 
       if (email) fileEmails.add(email);
@@ -852,7 +866,7 @@ export default class UsersAdminView {
         clan,
         password: buildClanPassword(clan) || documentNumber,
         status,
-        reason,
+        reasonKey,
       };
     });
   }
@@ -889,7 +903,7 @@ export default class UsersAdminView {
       }
     }
 
-    toast.success("Importacion finalizada", `${created} usuarios creados, ${failed} con error.`);
+    toast.success(t("usersAdmin.toast.importDoneTitle"), t("usersAdmin.toast.importDoneMessage", { created, failed }));
     this.importRows = [];
     await this.loadUsers();
   }
@@ -901,7 +915,8 @@ export default class UsersAdminView {
       const matchesSearch = !search
         || normalizeText(user.name).includes(search)
         || normalizeText(user.email).includes(search)
-        || normalizeText(user.document_number).includes(search);
+        || normalizeText(user.document_number).includes(search)
+        || normalizeText(user.github_username).includes(search);
       const matchesRole = !this.filters.role || user.role === this.filters.role;
       const matchesClan = !this.filters.clan || user.clan === this.filters.clan;
       const matchesStatus = this.filters.isActive === "" || String(user.is_active) === this.filters.isActive;

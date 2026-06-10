@@ -67,7 +67,7 @@ export default class PublicVotingPage {
     const first = this.podium[0];
     if (!first) return;
     const btn = document.getElementById("submit-vote-btn");
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="v-spinner"></span> Submitting…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<span class="v-spinner"></span> ${t("publicVoting.submitting")}`; }
     try {
       const qrVoteId = JSON.parse(sessionStorage.getItem("qrVoteId"));
       const key = this.isStaff
@@ -92,14 +92,14 @@ export default class PublicVotingPage {
       console.error(e);
       if (btn) { btn.disabled = false; btn.innerHTML = this._btnLabel(); }
       const msg = e?.message?.includes('cédula')
-        ? 'Esta cédula ya registró un voto. No es posible votar dos veces.'
+        ? t("publicVoting.alreadyVotedDocument")
         : (t("publicVoting.voteError") || "Error submitting vote.");
       this.showToast(msg);
     }
   }
 
   _btnLabel() {
-    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Submit my ranking`;
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${t("publicVoting.submitRanking")}`;
   }
 
   showSuccess(teamName) {
@@ -113,9 +113,9 @@ export default class PublicVotingPage {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h2 class="v-modal-title">¡Voto registrado!</h2>
+        <h2 class="v-modal-title">${t("publicVoting.modalTitle")}</h2>
         <p class="v-modal-team">${teamName}</p>
-        <p class="v-modal-sub">Gracias por participar. Serás redirigido en unos segundos.</p>
+        <p class="v-modal-sub">${t("publicVoting.modalSub")}</p>
         <div class="v-modal-countdown">
           <div class="v-modal-bar"><div class="v-modal-bar-fill" id="v-countdown-bar"></div></div>
           <span class="v-modal-seconds" id="v-countdown-num">5</span>
@@ -175,7 +175,7 @@ export default class PublicVotingPage {
           <div class="v-slot-pos">${labels[pos]}</div>
           <div class="v-slot-avatar v-avatar--${colorIdx}">${team.team_name?.[0]?.toUpperCase() ?? "?"}</div>
           <div class="v-slot-name">${team.team_name}</div>
-          <button class="v-slot-remove" data-slot="${pos}" title="Remove">
+          <button class="v-slot-remove" data-slot="${pos}" title="${t("publicVoting.remove")}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
@@ -191,7 +191,7 @@ export default class PublicVotingPage {
             <path d="M12 5v14M5 12l7 7 7-7"/>
           </svg>
         </div>
-        <span class="v-slot-hint">Drop here</span>
+        <span class="v-slot-hint">${t("publicVoting.dropHere")}</span>
       </div>`;
   }
 
@@ -262,8 +262,8 @@ export default class PublicVotingPage {
             </svg>
           </div>
           <div class="v-header-text">
-            <h1 class="v-title">TeamUp Voting</h1>
-            <p class="v-subtitle">Ingresa tus datos para continuar</p>
+            <h1 class="v-title">${t("publicVoting.identityTitle")}</h1>
+            <p class="v-subtitle">${t("publicVoting.identitySubtitle")}</p>
           </div>
         </div>
 
@@ -275,18 +275,18 @@ export default class PublicVotingPage {
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </div>
-            <h2 class="v-identity-title">Identifícate para votar</h2>
-            <p class="v-identity-sub">Estos datos son necesarios para validar tu participación</p>
+            <h2 class="v-identity-title">${t("publicVoting.identifyTitle")}</h2>
+            <p class="v-identity-sub">${t("publicVoting.identifySub")}</p>
 
             <div class="v-identity-form" id="identity-form">
               <div class="v-field">
-                <label class="v-label" for="id-documento">Número de cédula</label>
+                <label class="v-label" for="id-documento">${t("publicVoting.document")}</label>
                 <input
                   class="v-input"
                   id="id-documento"
                   type="text"
                   inputmode="numeric"
-                  placeholder="Ej: 1234567890"
+                  placeholder="${t("publicVoting.documentPlaceholder")}"
                   maxlength="12"
                   autocomplete="off"
                 />
@@ -294,12 +294,12 @@ export default class PublicVotingPage {
               </div>
 
               <div class="v-field">
-                <label class="v-label" for="id-nombre">Nombre completo</label>
+                <label class="v-label" for="id-nombre">${t("publicVoting.name")}</label>
                 <input
                   class="v-input"
                   id="id-nombre"
                   type="text"
-                  placeholder="Ej: Juan Pérez"
+                  placeholder="${t("publicVoting.namePlaceholder")}"
                   maxlength="80"
                   autocomplete="off"
                 />
@@ -307,7 +307,7 @@ export default class PublicVotingPage {
               </div>
 
               <button class="v-submit" id="identity-submit-btn" disabled>
-                Continuar a votar
+                ${t("publicVoting.continue")}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
@@ -331,8 +331,8 @@ export default class PublicVotingPage {
       const docOk  = /^\d{6,12}$/.test(doc);
       const nameOk = name.length >= 3;
 
-      errDoc.textContent  = doc.length > 0 && !docOk  ? "Ingresa entre 6 y 12 dígitos numéricos" : "";
-      errName.textContent = name.length > 0 && !nameOk ? "Ingresa al menos 3 caracteres" : "";
+      errDoc.textContent  = doc.length > 0 && !docOk  ? t("publicVoting.documentError") : "";
+      errName.textContent = name.length > 0 && !nameOk ? t("publicVoting.nameError") : "";
 
       submitBtn.disabled = !(docOk && nameOk);
     };
@@ -352,14 +352,14 @@ export default class PublicVotingPage {
 
       // Verificar si la cédula ya votó antes de mostrar el podio
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span class="v-spinner"></span> Verificando…`;
+      submitBtn.innerHTML = `<span class="v-spinner"></span> ${t("publicVoting.verifying")}`;
 
       try {
         const res = await checkCedulaVoted(this.qrVoteId, doc);
         if (res?.already_voted) {
-          errDoc.textContent = "Esta cédula ya registró un voto en esta sesión.";
+          errDoc.textContent = t("publicVoting.alreadyVotedSession");
           submitBtn.disabled = false;
-          submitBtn.innerHTML = `Continuar a votar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>`;
+          submitBtn.innerHTML = `${t("publicVoting.continue")} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>`;
           return;
         }
       } catch (_) {
@@ -500,7 +500,7 @@ export default class PublicVotingPage {
             ${this.bench.map((team, i) => this.renderBenchCard(team, i)).join("")}
           </div>`;
       } else {
-        benchSection.innerHTML = `<p class="v-bench-label v-bench-label--done">All teams placed on the podium</p>`;
+        benchSection.innerHTML = `<p class="v-bench-label v-bench-label--done">${t("publicVoting.allTeamsPlaced")}</p>`;
       }
     }
 
@@ -509,7 +509,7 @@ export default class PublicVotingPage {
     if (btn) {
       btn.disabled = !podiumComplete || voted;
       btn.className = `v-submit${!podiumComplete || voted ? " v-submit--done" : ""}`;
-      btn.innerHTML = voted ? "✓ Already voted" : !podiumComplete ? "Fill all 3 podium spots to vote" : this._btnLabel();
+      btn.innerHTML = voted ? `✓ ${t("publicVoting.alreadyVoted")}` : !podiumComplete ? t("publicVoting.fillPodium") : this._btnLabel();
     }
 
     this.attachDragDrop();
@@ -695,7 +695,7 @@ export default class PublicVotingPage {
     await this.fetchRanking();
 
     if (!this.isStaff && !this.event) {
-      container.innerHTML = `<div class="v-empty"><h2>Event not found</h2><p>This event doesn't exist or is no longer available.</p></div>`;
+      container.innerHTML = `<div class="v-empty"><h2>${t("publicVoting.eventNotFoundTitle")}</h2><p>${t("publicVoting.eventNotFoundDesc")}</p></div>`;
       return;
     }
 

@@ -1,5 +1,6 @@
 import { resetPassword } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import { t, onLangChange } from "../utils/i18n.js";
 import "../assets/styles/login.css";
 
 /**
@@ -16,6 +17,7 @@ export default class ResetPasswordView {
     this.tokenMissing = false;
     this.showPassword = false;
     this.showConfirm = false;
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   render() {
@@ -36,7 +38,7 @@ export default class ResetPasswordView {
           <div class="left-content text-center px-5">
             <h1 class="left-title">TeamUp</h1>
             <p class="left-desc">
-              Crea una contraseña segura. Te recomendamos combinar letras, números y símbolos.
+              ${t("resetPassword.leftDesc")}
             </p>
           </div>
         </section>
@@ -105,21 +107,21 @@ export default class ResetPasswordView {
   _renderForm() {
     return `
       <header class="form-header mb-4">
-        <p class="form-eyebrow">Seguridad de cuenta</p>
-        <h2 class="form-title">Nueva contraseña</h2>
-        <p class="form-subtitle">Crea una contraseña segura para tu cuenta de TeamUp.</p>
+        <p class="form-eyebrow">${t("resetPassword.eyebrow")}</p>
+        <h2 class="form-title">${t("resetPassword.title")}</h2>
+        <p class="form-subtitle">${t("resetPassword.subtitle")}</p>
       </header>
 
       <form id="resetForm" novalidate>
 
         <!-- New Password -->
         <div class="mb-3">
-          <label for="newPassword" class="form-label field-label">Nueva contraseña</label>
+          <label for="newPassword" class="form-label field-label">${t("resetPassword.newPassword")}</label>
           <div class="input-wrap" style="position:relative;">
             <input id="newPassword" type="password" class="form-control custom-input"
-                   placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+                   placeholder="${t("resetPassword.newPlaceholder")}" autocomplete="new-password"
                    style="padding-right: 46px;" />
-            <button type="button" class="rp-toggle-eye" id="toggleNew" title="Mostrar contraseña">
+            <button type="button" class="rp-toggle-eye" id="toggleNew" title="${t("resetPassword.showPassword")}">
               <svg id="eyeNew" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
@@ -134,12 +136,12 @@ export default class ResetPasswordView {
 
         <!-- Confirm Password -->
         <div class="mb-4">
-          <label for="confirmPassword" class="form-label field-label">Confirmar contraseña</label>
+          <label for="confirmPassword" class="form-label field-label">${t("resetPassword.confirmPassword")}</label>
           <div class="input-wrap" style="position:relative;">
             <input id="confirmPassword" type="password" class="form-control custom-input"
-                   placeholder="Repite tu contraseña" autocomplete="new-password"
+                   placeholder="${t("resetPassword.confirmPlaceholder")}" autocomplete="new-password"
                    style="padding-right: 46px;" />
-            <button type="button" class="rp-toggle-eye" id="toggleConfirm" title="Mostrar contraseña">
+            <button type="button" class="rp-toggle-eye" id="toggleConfirm" title="${t("resetPassword.showPassword")}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
@@ -152,11 +154,11 @@ export default class ResetPasswordView {
                 ${this.loading ? "disabled" : ""}>
           ${this.loading
             ? `<span class="login-spinner"></span>`
-            : "Establecer nueva contraseña"}
+            : t("resetPassword.submit")}
         </button>
 
         <div class="text-center mt-3">
-          <a href="#" id="backToLogin" class="forgot-link">← Volver al inicio de sesión</a>
+          <a href="#" id="backToLogin" class="forgot-link">← ${t("resetPassword.backToLogin")}</a>
         </div>
       </form>
     `;
@@ -178,13 +180,13 @@ export default class ResetPasswordView {
           </svg>
         </div>
 
-        <h2 class="form-title mb-2">¡Contraseña actualizada!</h2>
+        <h2 class="form-title mb-2">${t("resetPassword.successTitle")}</h2>
         <p class="form-subtitle mb-4">
-          Tu contraseña fue cambiada exitosamente. Por seguridad, todas tus sesiones activas han sido cerradas.
+          ${t("resetPassword.successText")}
         </p>
 
         <button id="goToLogin" class="btn btn-submit w-100">
-          Iniciar sesión
+          ${t("resetPassword.login")}
         </button>
       </div>
     `;
@@ -206,13 +208,13 @@ export default class ResetPasswordView {
           </svg>
         </div>
 
-        <h2 class="form-title mb-2">Enlace inválido</h2>
+        <h2 class="form-title mb-2">${t("resetPassword.invalidTitle")}</h2>
         <p class="form-subtitle mb-4">
-          Este enlace de recuperación es inválido o ya expiró. Por favor solicita uno nuevo.
+          ${t("resetPassword.invalidText")}
         </p>
 
         <a href="#" id="requestNew" class="btn btn-submit w-100" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">
-          Solicitar nuevo enlace
+          ${t("resetPassword.requestNew")}
         </a>
       </div>
     `;
@@ -249,11 +251,11 @@ export default class ResetPasswordView {
       const pct   = (score / 5) * 100;
       const map   = [
         { color: "#e2e8f0", label: "" },
-        { color: "#fe654f", label: "Muy débil" },
-        { color: "#f59e0b", label: "Débil" },
-        { color: "#e6ca52", label: "Aceptable" },
-        { color: "#5acca4", label: "Fuerte" },
-        { color: "#10b981", label: "Muy fuerte" },
+        { color: "#fe654f", label: t("resetPassword.strength.veryWeak") },
+        { color: "#f59e0b", label: t("resetPassword.strength.weak") },
+        { color: "#e6ca52", label: t("resetPassword.strength.acceptable") },
+        { color: "#5acca4", label: t("resetPassword.strength.strong") },
+        { color: "#10b981", label: t("resetPassword.strength.veryStrong") },
       ];
       const tier = map[score] || map[0];
       strengthBar.style.width   = `${pct}%`;
@@ -266,10 +268,10 @@ export default class ResetPasswordView {
     const checkMatch = () => {
       if (!confPwd.value) { matchHint.textContent = ""; return; }
       if (newPwd.value === confPwd.value) {
-        matchHint.textContent = "✓ Las contraseñas coinciden";
+        matchHint.textContent = `✓ ${t("resetPassword.match")}`;
         matchHint.style.color = "var(--mint, #5acca4)";
       } else {
-        matchHint.textContent = "✗ Las contraseñas no coinciden";
+        matchHint.textContent = `✗ ${t("resetPassword.mismatch")}`;
         matchHint.style.color = "var(--coral, #fe654f)";
       }
     };
@@ -306,15 +308,15 @@ export default class ResetPasswordView {
     const confPwd = document.getElementById("confirmPassword")?.value ?? "";
 
     if (!newPwd || !confPwd) {
-      toast.warning("Campos requeridos", "Por favor completa ambos campos.");
+      toast.warning(t("resetPassword.requiredTitle"), t("resetPassword.requiredMsg"));
       return;
     }
     if (newPwd.length < 6) {
-      toast.warning("Contraseña corta", "La contraseña debe tener al menos 6 caracteres.");
+      toast.warning(t("resetPassword.shortTitle"), t("resetPassword.shortMsg"));
       return;
     }
     if (newPwd !== confPwd) {
-      toast.error("No coinciden", "Las contraseñas no coinciden. Verifica e intenta de nuevo.");
+      toast.error(t("resetPassword.mismatchTitle"), t("resetPassword.mismatchMsg"));
       return;
     }
 
@@ -334,11 +336,13 @@ export default class ResetPasswordView {
       });
     } catch (err) {
       this.loading = false;
-      const msg = err?.response?.data?.message || err?.message || "Ocurrió un error. Intenta de nuevo.";
-      toast.error("Error", msg);
+      const msg = err?.response?.data?.message || err?.message || t("resetPassword.genericError");
+      toast.error(t("common.errorTitle"), msg);
       this.render();
     }
   }
 
-  destroy() {}
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
+  }
 }

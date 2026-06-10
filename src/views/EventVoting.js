@@ -11,6 +11,7 @@ import { getSelectedEvent } from "../utils/helpers.js";
 import defaultLogo from "../assets/logo.svg";
 import { initSocket, on, off } from "../services/socket.js";
 import { icons } from "../utils/icons.js";
+import { t, onLangChange } from "../utils/i18n.js";
 
 export default class QRVoting {
   constructor(router) {
@@ -33,6 +34,7 @@ export default class QRVoting {
     this.staffQrId = null;
 
     this.pollingInterval = null;
+    this._offLangChange = onLangChange(() => this.render());
   }
 
   /* -------------------------- RANKING -------------------------- */
@@ -64,7 +66,7 @@ export default class QRVoting {
     if (!pill) return;
 
     if (this.qrActive) {
-      pill.textContent = "Active";
+      pill.textContent = t("qrVoting.active");
       pill.classList.remove("bg-inactive");
       pill.classList.add("bg-active");
       this.updateSubmitVotesButton();
@@ -72,7 +74,7 @@ export default class QRVoting {
       if (votingBanner) votingBanner.style.display = "none";
       if (resultsSection) resultsSection.style.display = "block";
     } else {
-      pill.textContent = "Inactive";
+      pill.textContent = t("qrVoting.inactive");
       pill.classList.remove("bg-active");
       pill.classList.add("bg-inactive");
       this.updateSubmitVotesButton();
@@ -91,7 +93,7 @@ export default class QRVoting {
 
     if (this.qrActive) {
       btn.disabled = false;
-      btn.innerText = "Disable QR";
+      btn.innerText = t("qrVoting.disableQr");
       btn.classList.remove("btn-primary-custom", "btn-secondary");
       btn.classList.add("btn-primary-disabled");
       return;
@@ -110,8 +112,8 @@ export default class QRVoting {
       btn.classList.remove("btn-primary-custom");
       btn.classList.add("btn-secondary");
       btn.title = !this.finalistsApproved
-          ? "Approve finalists first"
-          : "Select an expiration date first";
+          ? t("qrVoting.approveFinalistsFirst")
+          : t("qrVoting.selectExpirationFirst");
     }
   }
 
@@ -196,7 +198,7 @@ export default class QRVoting {
 
         const btn = document.getElementById("generate-qr-btn");
         if (btn) {
-          btn.innerText = "Disable QR";
+          btn.innerText = t("qrVoting.disableQr");
           btn.classList.remove("btn-primary-custom");
           btn.classList.add("btn-primary-disabled");
         }
@@ -248,7 +250,7 @@ export default class QRVoting {
       downloadBtn.disabled = true;
       downloadBtn.classList.remove("btn-primary-custom");
       downloadBtn.classList.add("btn-secondary");
-      downloadBtn.title = "Generate a QR first";
+      downloadBtn.title = t("qrVoting.generateQrFirst");
       downloadBtn.onclick = null;
     }
   }
@@ -270,7 +272,7 @@ export default class QRVoting {
 
           // Validar que exista staff link generado
           if (!this.staffQrLink) {
-            alert("You must generate the Staff Voting Link before disabling the QR.");
+            alert(t("qrVoting.mustGenerateStaff"));
             return;
           }
 
@@ -280,12 +282,12 @@ export default class QRVoting {
           );
           const uniqueStaffVoters = Math.round(totalStaffVotes / 3);
           if (uniqueStaffVoters < 1) {
-            alert("At least 1 staff vote must be registered before disabling the QR.");
+            alert(t("qrVoting.staffVoteRequired"));
             return;
           }
 
           btn.disabled = true;
-          btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Disabling...`;
+          btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t("qrVoting.disabling")}`;
 
           try {
             // Desactivar el QR en la DB
@@ -307,7 +309,7 @@ export default class QRVoting {
           off("vote:new");
 
           btn.disabled = false;
-          btn.innerText = "Generate QR";
+          btn.innerText = t("qrVoting.generateQr");
           btn.classList.remove("btn-primary-disabled");
           btn.classList.add("btn-primary-custom");
 
@@ -318,7 +320,7 @@ export default class QRVoting {
 
         const expirationValue = expirationInput?.value;
         if (!expirationValue) {
-          alert("Please select a QR expiration date.");
+          alert(t("qrVoting.qrExpirationRequired"));
           return;
         }
 
@@ -327,7 +329,7 @@ export default class QRVoting {
         btn.disabled = true;
         btn.innerHTML = `
           <span class="spinner-border spinner-border-sm me-2"></span>
-          Generating QR...
+          ${t("qrVoting.generatingQr")}
         `;
 
         const eventId = getSelectedEvent();
@@ -352,7 +354,7 @@ export default class QRVoting {
 
         localStorage.setItem(`qr_event_${eventId}`, qrSrc);
 
-        btn.innerText = "Disable QR";
+        btn.innerText = t("qrVoting.disableQr");
         btn.classList.remove("btn-primary-custom");
         btn.classList.add("btn-primary-disabled");
 
@@ -360,7 +362,7 @@ export default class QRVoting {
         this.updateDownloadButton(qrSrc);
       } catch (err) {
         console.error("QR error:", err);
-        alert("Error generating QR");
+        alert(t("qrVoting.qrError"));
       } finally {
         btn.disabled = false;
       }
@@ -385,14 +387,14 @@ export default class QRVoting {
 
     btn.addEventListener("click", async () => {
       const confirmed = confirm(
-          "Are you sure you want to close voting and calculate winners? This cannot be undone.",
+          t("qrVoting.closeConfirm"),
       );
       if (!confirmed) return;
 
       btn.disabled = true;
       btn.innerHTML = `
       <span class="spinner-border spinner-border-sm me-2"></span>
-      Calculating winners...
+      ${t("qrVoting.calculatingWinners")}
     `;
 
       try {
@@ -401,7 +403,7 @@ export default class QRVoting {
 
         console.log("Finalists calculated:", result);
 
-        btn.innerHTML = `<span class="icon-md align-items-center">${icons.checked()}</span> Winners calculated!`;
+        btn.innerHTML = `<span class="icon-md align-items-center">${icons.checked()}</span> ${t("qrVoting.winnersCalculated")}`;
         btn.classList.remove("btn-approve");
         btn.classList.add("btn-secondary");
 
@@ -414,8 +416,8 @@ export default class QRVoting {
             <span class="material-symbols-outlined" style="color:#5acca4;">check_circle</span>
           </div>
           <div>
-            <div class="fw-bold" style="color:#5acca4;">Voting closed successfully!</div>
-            <div style="color:#7b7fa8;font-size:0.85rem;">Winners have been calculated. Go to the Finalists page to see the podium.</div>
+            <div class="fw-bold" style="color:#5acca4;">${t("qrVoting.closedSuccessTitle")}</div>
+            <div style="color:#7b7fa8;font-size:0.85rem;">${t("qrVoting.closedSuccessDesc")}</div>
           </div>
         </div>
       `;
@@ -426,14 +428,14 @@ export default class QRVoting {
         if (err?.response?.status === 409 || err?.message?.includes("once")) {
           btn.innerHTML = `  <span class="d-flex align-items-center gap-2">
                               <span class="icon-md">${icons.danger()}</span>
-                              <span>Already calculated</span>
+                              <span>${t("qrVoting.alreadyCalculated")}</span>
                             </span>`;
           btn.classList.remove("btn-approve");
           btn.classList.add("btn-secondary");
         } else {
-          alert("Error calculating winners: " + err.message);
+          alert(t("qrVoting.errorCalculating", { message: err.message }));
           btn.disabled = false;
-          btn.innerHTML = `Submit Votes & Calculate Winners`;
+          btn.innerHTML = t("qrVoting.submitVotes");
         }
       }
     });
@@ -458,11 +460,11 @@ export default class QRVoting {
       <div class="rounded-4 p-4" style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);">
         <div class="d-flex align-items-center gap-2 mb-3">
           <span class="material-symbols-outlined" style="color:#6b5cff;font-size:1.2rem;">lock</span>
-          <h3 class="fw-bold mb-0" style="color:#181e4b;font-size:1rem;">Staff Voting Link</h3>
-          <span class="badge rounded-pill ms-1" style="background:rgba(107,92,255,0.1);color:#6b5cff;font-size:0.7rem;">PRIVATE</span>
+          <h3 class="fw-bold mb-0" style="color:#181e4b;font-size:1rem;">${t("qrVoting.staffLinkTitle")}</h3>
+          <span class="badge rounded-pill ms-1" style="background:rgba(107,92,255,0.1);color:#6b5cff;font-size:0.7rem;">${t("qrVoting.private")}</span>
         </div>
         <p class="mb-3" style="color:#7b7fa8;font-size:0.83rem;">
-          Generate a private link for staff members only. This link is different from the public QR and won't be visible to the audience.
+          ${t("qrVoting.staffLinkDesc")}
         </p>
 
         ${this.staffQrLink ? `
@@ -472,7 +474,7 @@ export default class QRVoting {
             <div style="background:#fff;border:1.5px solid rgba(107,92,255,0.15);border-radius:12px;padding:12px;display:inline-block;">
               <img src="${this.staffQrImage}" alt="Staff QR" style="width:180px;height:180px;display:block;border-radius:6px;"/>
             </div>
-            <p class="mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">Muestra este QR solo al staff</p>
+            <p class="mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">${t("qrVoting.staffQrHint")}</p>
           </div>` : ""}
 
           <!-- Link generado — oculto como contraseña -->
@@ -481,17 +483,17 @@ export default class QRVoting {
             <span class="staff-link-dots">••••••••••••••••••••••••</span>
             <button id="copy-staff-link-btn" class="staff-link-copy-btn">
               <span class="material-symbols-outlined">content_copy</span>
-              Copy
+              ${t("qrVoting.copy")}
             </button>
           </div>
 
           <div class="d-flex gap-2">
             <button id="regenerate-staff-qr-btn" class="staff-link-regen-btn" style="flex:1;">
-              Regenerate Link
+              ${t("qrVoting.regenerateLink")}
             </button>
             <button id="disable-staff-qr-btn" class="staff-link-regen-btn"
                     style="flex:1;color:#fe654f;border-color:rgba(254,101,79,0.25);">
-              Disable Link
+              ${t("qrVoting.disableLink")}
             </button>
           </div>
 
@@ -500,13 +502,13 @@ export default class QRVoting {
           <button id="generate-staff-qr-btn"
                   class="btn w-100 fw-bold"
                   style="background:rgba(107,92,255,0.08);color:#6b5cff;border:1.5px dashed rgba(107,92,255,0.3);border-radius:10px;font-size:0.875rem;padding:10px;"
-                  ${!this.finalistsApproved ? "disabled title='Approve finalists first'" : ""}>
+                  ${!this.finalistsApproved ? `disabled title="${t("qrVoting.approveFinalistsFirst")}"` : ""}>
             <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">add_link</span>
-            Generate Staff Link
+            ${t("qrVoting.generateStaffLink")}
           </button>
           ${!this.finalistsApproved ? `
             <p class="text-center mt-2 mb-0" style="font-size:0.75rem;color:#7b7fa8;">
-              Approve finalists before generating the staff link
+              ${t("qrVoting.approveBeforeStaff")}
             </p>
           ` : ""}
         `}
@@ -533,9 +535,9 @@ export default class QRVoting {
     const disableBtn = document.getElementById("disable-staff-qr-btn");
     if (disableBtn) {
       disableBtn.addEventListener("click", async () => {
-        if (!confirm("Are you sure you want to disable the staff voting link?")) return;
+        if (!confirm(t("qrVoting.disableStaffConfirm"))) return;
         disableBtn.disabled = true;
-        disableBtn.textContent = "Disabling…";
+        disableBtn.textContent = t("qrVoting.disabling");
         try {
           if (this.staffQrId) {
             localStorage.removeItem(`qr_staff_${this.staffQrId}`);
@@ -548,7 +550,7 @@ export default class QRVoting {
         } catch (err) {
           console.error("Failed to disable staff QR:", err);
           disableBtn.disabled = false;
-          disableBtn.textContent = "Disable Link";
+          disableBtn.textContent = t("qrVoting.disableLink");
         }
       });
     }
@@ -559,16 +561,16 @@ export default class QRVoting {
       copyBtn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(this.staffQrLink);
-          copyBtn.textContent = "Copied!";
+          copyBtn.textContent = t("qrVoting.copied");
           copyBtn.style.background = "rgba(90,204,164,0.15)";
           copyBtn.style.color = "#059669";
           setTimeout(() => {
-            copyBtn.textContent = "Copy";
+            copyBtn.textContent = t("qrVoting.copy");
             copyBtn.style.background = "rgba(107,92,255,0.1)";
             copyBtn.style.color = "#6b5cff";
           }, 2000);
         } catch {
-          copyBtn.textContent = "Error";
+          copyBtn.textContent = t("common.errorTitle");
         }
       });
     }
@@ -580,13 +582,13 @@ export default class QRVoting {
     const expirationInput = document.getElementById("qr-expiration");
     const expirationValue = expirationInput?.value;
     if (!expirationValue) {
-      alert("Please select an expiration date first.");
+      alert(t("qrVoting.selectExpirationFirst"));
       return;
     }
 
     const originalHtml = triggerBtn.innerHTML;
     triggerBtn.disabled = true;
-    triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Generating…`;
+    triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t("qrVoting.generating")}`;
 
     try {
       const eventId = getSelectedEvent();
@@ -607,7 +609,7 @@ export default class QRVoting {
       this.renderStaffQRSection();
     } catch (err) {
       console.error("Staff QR error:", err);
-      alert("Error generating staff link: " + (err?.message ?? "Unknown error"));
+      alert(t("qrVoting.staffLinkError", { message: err?.message ?? t("qrVoting.unknownError") }));
       triggerBtn.disabled = false;
       triggerBtn.innerHTML = originalHtml;
     }
@@ -630,14 +632,14 @@ export default class QRVoting {
 
     btn.addEventListener("click", async () => {
       const confirmed = confirm(
-          "⚠️ This will permanently delete ALL votes for this event. Are you sure?"
+          t("qrVoting.resetConfirm")
       );
       if (!confirmed) return;
 
       btn.disabled  = true;
       btn.innerHTML = `
       <span class="spinner-border spinner-border-sm me-2"></span>
-      Resetting...
+      ${t("qrVoting.resetting")}
     `;
 
       try {
@@ -665,7 +667,7 @@ export default class QRVoting {
         this.updateDownloadButton(null);
         this.updateSubmitVotesButton();
 
-        btn.innerHTML = `Votes reset successfully`;
+        btn.innerHTML = t("qrVoting.resetSuccess");
         btn.disabled  = false;
 
         // Reload ranking panel to reset approve state
@@ -673,17 +675,61 @@ export default class QRVoting {
 
       } catch (err) {
         console.error("Failed to reset votes:", err);
-        alert("Error resetting votes: " + err.message);
+        alert(t("qrVoting.resetError", { message: err.message }));
         btn.disabled  = false;
         btn.innerHTML = `
         <span class="material-symbols-outlined align-middle me-1" style="font-size:16px;">restart_alt</span>
-        Reset Votes
+        ${t("qrVoting.resetVotes")}
       `;
       }
     });
   }
 
   /* -------------------------- RENDER RANKING -------------------------- */
+
+  renderVotingTemplate() {
+    const replacements = {
+      "How to run a voting session": t("qrVoting.template.instructionsTitle"),
+      "Review Ranking": t("qrVoting.template.reviewRankingTitle"),
+      "Check the event ranking and select how many finalists will compete in the vote.": t("qrVoting.template.reviewRankingDesc"),
+      "Approve Finalists": t("qrVoting.template.approveFinalistsTitle"),
+      "Click \"Approve Finalists\" to lock in the teams that will be voted on by the audience.": t("qrVoting.template.approveFinalistsDesc"),
+      "Set Expiration & Generate QR": t("qrVoting.template.generateTitle"),
+      "Set a date and time for when voting closes, then generate the QR code for the audience.": t("qrVoting.template.generateDesc"),
+      "Close & Submit Votes": t("qrVoting.template.closeTitle"),
+      "Once voting is done, disable the QR and click \"Submit Votes\" to calculate the winners.": t("qrVoting.template.closeDesc"),
+      "Voting Status:": t("qrVoting.template.status"),
+      "Inactive": t("qrVoting.inactive"),
+      "Scan to Vote": t("qrVoting.template.scanTitle"),
+      "Audience access link": t("qrVoting.template.audienceLink"),
+      "QR Expiration Date": t("qrVoting.template.expirationDate"),
+      "Generate QR": t("qrVoting.generateQr"),
+      "Download": t("qrVoting.download"),
+      "Close Voting Session": t("qrVoting.template.closeSession"),
+      "This will calculate the final winners and close the event. This action cannot be undone.": t("qrVoting.template.closeSessionDesc"),
+      "Submit Votes & Calculate Winners": t("qrVoting.submitVotes"),
+      "⚠️ Danger Zone": t("qrVoting.template.dangerZone"),
+      "Reset all votes and allow a new voting session. This will permanently delete all current votes.": t("qrVoting.template.dangerDesc"),
+      "Reset Votes": t("qrVoting.resetVotes"),
+      "Finalist Selection": t("qrVoting.template.finalistSelection"),
+      "Select active teams": t("qrVoting.template.selectActiveTeams"),
+      "Manage All Teams": t("qrVoting.template.manageAllTeams"),
+      "Live Voting Results": t("qrVoting.template.liveResults"),
+      "Real-time audience feedback and rankings": t("qrVoting.template.liveResultsDesc"),
+      "🔐 Audit Votes": `🔐 ${t("qrVoting.template.auditVotes")}`,
+      "Total Votes Cast": t("qrVoting.template.totalVotesCast"),
+      "Voting Closed": t("qrVoting.template.votingClosed"),
+      "These are the final results — no more votes can be submitted.": t("qrVoting.template.votingClosedDesc"),
+      "No votes yet": t("qrVoting.noVotesYet"),
+      "Results will appear here in real time": t("qrVoting.resultsRealtime"),
+    };
+
+    let html = template;
+    Object.entries(replacements).forEach(([from, to]) => {
+      html = html.split(from).join(to);
+    });
+    return html;
+  }
 
   renderRankingPanel() {
     const container = document.getElementById("ranking-container");
@@ -703,11 +749,11 @@ export default class QRVoting {
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between mb-4">
       <div>
-        <h2 class="fw-bold mb-1" style="color:#181e4b;font-size:1.1rem;">Event Ranking</h2>
-        <p class="mb-0" style="color:#7b7fa8;font-size:0.85rem;">Top performing teams</p>
+        <h2 class="fw-bold mb-1" style="color:#181e4b;font-size:1.1rem;">${t("qrVoting.eventRanking")}</h2>
+        <p class="mb-0" style="color:#7b7fa8;font-size:0.85rem;">${t("qrVoting.topTeams")}</p>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <span style="color:#7b7fa8;font-size:0.85rem;">Finalists:</span>
+        <span style="color:#7b7fa8;font-size:0.85rem;">${t("qrVoting.finalists")}</span>
         <select id="finalists-count" class="form-select form-select-sm"
                 style="width:auto;border-color:rgba(107,92,255,0.3);color:#181e4b;font-size:0.85rem;">
           <option value="3">Top 3</option>
@@ -770,7 +816,7 @@ export default class QRVoting {
                   ? `
                 <div>
                   <span class="ranking-finalist-badge badge rounded-pill fw-bold text-uppercase">
-                    ✓ Finalist
+                    ✓ ${t("qrVoting.finalist")}
                   </span>
                 </div>`
                   : ""
@@ -791,12 +837,12 @@ export default class QRVoting {
              style="background:rgba(90,204,164,0.1);border:1px solid rgba(90,204,164,0.3);">
           <span class="material-symbols-outlined" style="color:#5acca4;font-size:1rem;">check_circle</span>
           <span style="color:#059669;font-size:0.85rem;font-weight:700;">
-            ${this.finalists.length} finalist${this.finalists.length !== 1 ? "s" : ""} approved
+            ${t("qrVoting.finalistsApprovedCount", { count: this.finalists.length, plural: this.finalists.length !== 1 ? "s" : "" })}
           </span>
         </div>` : `<div></div>`}
       <button class="btn btn-approve fw-bold px-4 py-2 rounded-3" id="approve-finalists-btn"
               ${this.finalistsApproved ? "disabled" : ""}>
-        ${this.finalistsApproved ? "Finalists Approved" : "Approve Finalists"}
+        ${this.finalistsApproved ? t("qrVoting.finalistsApproved") : t("qrVoting.approveFinalists")}
       </button>
     </div>
   `;
@@ -819,11 +865,6 @@ export default class QRVoting {
         this.renderResults();
       });
     }, 2000);
-  }
-
-  destroy() {
-    off("vote:new");
-    this.stopPolling();
   }
 
   startPolling() {
@@ -888,8 +929,8 @@ export default class QRVoting {
       container.innerHTML = `
       <div class="text-center py-5 result-empty">
         <span class="material-symbols-outlined d-block mb-2">how_to_vote</span>
-        <p class="mb-0 fw-bold">No votes yet</p>
-        <p class="mb-0 results-empty-sub">Results will appear here in real time</p>
+        <p class="mb-0 fw-bold">${t("qrVoting.noVotesYet")}</p>
+        <p class="mb-0 results-empty-sub">${t("qrVoting.resultsRealtime")}</p>
       </div>`;
       return;
     }
@@ -988,7 +1029,7 @@ export default class QRVoting {
         this.finalistsApproved = true;
 
         approveBtn.disabled = true;
-        approveBtn.innerHTML = `Finalists Approved`;
+        approveBtn.innerHTML = t("qrVoting.finalistsApproved");
         approveBtn.classList.remove("btn-success");
         approveBtn.classList.add("btn-secondary");
 
@@ -1011,7 +1052,7 @@ export default class QRVoting {
     <div style="display:flex;flex-direction:column;width:100%">
       ${this.header.render()}
       <main class="dashboard-main">
-        ${template}
+        ${this.renderVotingTemplate()}
       </main>
     </div>
     `;
@@ -1025,7 +1066,7 @@ export default class QRVoting {
       rankingContainer.innerHTML = `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 200px; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
-          <p class="text-muted fw-medium">Loading Voting...</p>
+          <p class="text-muted fw-medium">${t("qrVoting.loadingVoting")}</p>
         </div>
       `;
     }
@@ -1088,13 +1129,13 @@ export default class QRVoting {
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;width:100%;max-width:780px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
         <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 Vote Audit</h5>
+          <h5 style="margin:0;font-weight:700;font-size:1.1rem;">🔐 ${t("qrVoting.audit.title")}</h5>
           <button id="close-audit-modal" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
         </div>
         <div id="audit-modal-body" style="overflow-y:auto;padding:24px;flex:1;">
           <div class="text-center py-4" style="color:#6b7280;">
             <div class="spinner-border spinner-border-sm me-2"></div>
-            Verifying HMAC signatures...
+            ${t("qrVoting.audit.verifying")}
           </div>
         </div>
       </div>
@@ -1113,22 +1154,22 @@ export default class QRVoting {
       const body = document.getElementById("audit-modal-body");
 
       const verdictBadge = (status) => {
-        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ VALID</span>`;
-        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ NO SIGNATURE</span>`;
-        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ INVALID</span>`;
+        if (status === "VALID")    return `<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✓ ${t("qrVoting.audit.validBadge")}</span>`;
+        if (status === "NO_HASH")  return `<span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">⚠ ${t("qrVoting.audit.noSignatureBadge")}</span>`;
+        return                            `<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">✗ ${t("qrVoting.audit.invalidBadge")}</span>`;
       };
 
       const invalidAlert = summary.invalid > 0
           ? `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:.875rem;">
-             ⚠️ <strong>${summary.invalid} voto(s) con firma inválida detectados.</strong>
-             Estos votos pudieron haber sido modificados o insertados directamente en la base de datos.
+             <strong>${t("qrVoting.audit.invalidAlert", { count: summary.invalid })}</strong>
+             ${t("qrVoting.audit.invalidAlertDesc")}
            </div>`
           : "";
 
       const noHashAlert = summary.no_hash > 0
           ? `<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
-             ℹ️ <strong>${summary.no_hash} voto(s) sin firma HMAC.</strong>
-             Fueron registrados antes de activar el sistema de auditoría.
+             <strong>${t("qrVoting.audit.noHashAlert", { count: summary.no_hash })}</strong>
+             ${t("qrVoting.audit.noHashAlertDesc")}
            </div>`
           : "";
 
@@ -1153,15 +1194,15 @@ export default class QRVoting {
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
           <div style="background:#d1fae5;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#065f46;">${summary.valid}</div>
-            <div style="font-size:.8rem;color:#065f46;font-weight:600;">Valid</div>
+            <div style="font-size:.8rem;color:#065f46;font-weight:600;">${t("qrVoting.audit.valid")}</div>
           </div>
           <div style="background:#fef3c7;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#92400e;">${summary.no_hash}</div>
-            <div style="font-size:.8rem;color:#92400e;font-weight:600;">No Signature</div>
+            <div style="font-size:.8rem;color:#92400e;font-weight:600;">${t("qrVoting.audit.noSignature")}</div>
           </div>
           <div style="background:#fee2e2;border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:#991b1b;">${summary.invalid}</div>
-            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">Invalid</div>
+            <div style="font-size:.8rem;color:#991b1b;font-weight:600;">${t("qrVoting.audit.invalid")}</div>
           </div>
         </div>
         ${invalidAlert}
@@ -1171,26 +1212,32 @@ export default class QRVoting {
             <thead>
               <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">#</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Project</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Role</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Cédula</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Nombre</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.project")}</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.role")}</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.document")}</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.name")}</th>
                 <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">IP</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Date</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">Status</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.date")}</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:700;color:#374151;">${t("qrVoting.audit.status")}</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          ${votes.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:24px 0;">No votes registered.</p>' : ""}
+          ${votes.length === 0 ? `<p style="text-align:center;color:#9ca3af;padding:24px 0;">${t("qrVoting.audit.noVotes")}</p>` : ""}
         </div>
       `;
     } catch (err) {
       document.getElementById("audit-modal-body").innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:24px;">
-          Error loading audit: ${err.message}
+          ${t("qrVoting.audit.error", { message: err.message })}
         </div>
       `;
     }
+  }
+
+  destroy() {
+    if (this._offLangChange) this._offLangChange();
+    off("vote:new");
+    this.stopPolling();
   }
 }

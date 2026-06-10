@@ -586,8 +586,8 @@ export default class CreateEvent {
     document.body.removeChild(link);
 
     toast.success(
-        "Descarga iniciada",
-        "La plantilla se descargó correctamente.",
+        t("createEvent.templateDownloadTitle"),
+        t("createEvent.templateDownloadMsg"),
     );
   }
 
@@ -645,7 +645,7 @@ export default class CreateEvent {
       if (crit) {
         crit.levels.push({
           score: 0,
-          name: "New Level",
+          name: t("createEvent.newLevel"),
           description: "",
           color: "#1890ff",
         });
@@ -694,11 +694,11 @@ export default class CreateEvent {
           }
         }
         toast.error(
-            "Format Error",
-            "Could not find 'Area' and 'Criterio' columns.",
+            t("createEvent.formatErrorTitle"),
+            t("createEvent.missingRubricColumns"),
         );
       } catch (err) {
-        toast.error("Import Error", "Failed to process file.");
+        toast.error(t("createEvent.importErrorTitle"), t("createEvent.importProcessError"));
       }
     };
     reader.readAsArrayBuffer(file);
@@ -721,7 +721,7 @@ export default class CreateEvent {
     // Check for missing columns
     const missingCols = requiredCols.filter((c) => colIdx(c) === -1);
     if (missingCols.length > 0) {
-      toast.error("Format Error", `Missing columns: ${missingCols.join(", ")}`);
+      toast.error(t("createEvent.formatErrorTitle"), t("createEvent.missingColumns", { columns: missingCols.join(", ") }));
       return;
     }
 
@@ -809,10 +809,10 @@ export default class CreateEvent {
 
     if (errors.length > 0) {
       toast.error(
-          "Validation Failed",
+          t("createEvent.validationFailed"),
           errors.slice(0, 3).join("<br>") +
           (errors.length > 3
-              ? `<br>...and ${errors.length - 3} more errors.`
+              ? `<br>${t("createEvent.moreErrors", { count: errors.length - 3 })}`
               : ""),
       );
       return;
@@ -820,8 +820,8 @@ export default class CreateEvent {
 
     if (Math.abs(totalWeight - 100) > 0.1) {
       toast.error(
-          "Weight Error",
-          `Total weight in Excel is ${totalWeight}%. It must be exactly 100%.`,
+          t("createEvent.weightError"),
+          t("createEvent.excelWeightError", { weight: totalWeight }),
       );
       return;
     }
@@ -1048,7 +1048,7 @@ export default class CreateEvent {
                         <input type="number" id="weight-${crit.id}" class="form-control crit-input text-end fw-bold" style="border-radius: 8px 0 0 8px; border: 1.5px solid #e2e8f0; background: #f8fafc;" placeholder="0" value="${crit.weight}">
                         <span class="input-group-text bg-light border" style="border-radius: 0 8px 8px 0; border-color: #e2e8f0; font-weight: 700; color: #64748b;">%</span>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger border-0 mt-2 btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}" title="Remove Criteria">
+                    <button class="btn btn-sm btn-outline-danger border-0 mt-2 btn-rm-crit" data-area="${area.id}" data-crit="${crit.id}" title="${t("createEvent.removeCriteria")}">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         <span class="ms-1 small fw-bold">${t("common.delete") ?? "Delete"}</span>
                     </button>
@@ -1064,10 +1064,10 @@ export default class CreateEvent {
                                 <span class="badge rounded-pill" style="background-color: ${lvl.color}20; color: ${lvl.color}; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; padding: 4px 10px;">
                                     LVL ${index + 1} • ${lvl.score} PTS
                                 </span>
-                                <input type="color" class="form-control form-control-color p-0 border-0 bg-transparent lvl-input" style="width:20px;height:20px; cursor: pointer;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}" title="Customize Color">
+                                <input type="color" class="form-control form-control-color p-0 border-0 bg-transparent lvl-input" style="width:20px;height:20px; cursor: pointer;" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="color" value="${lvl.color}" title="${t("createEvent.customizeColor")}">
                             </div>
                             <input type="text" class="form-control form-control-sm fw-bold bg-white mb-2 lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="name" value="${lvl.name}" placeholder="${t("createEvent.levelName")}">
-                            <label class="text-muted small fw-bold text-uppercase mb-1 mt-2" style="font-size: 0.6rem;">Performance Description <span class="text-danger">*</span></label>
+                            <label class="text-muted small fw-bold text-uppercase mb-1 mt-2" style="font-size: 0.6rem;">${t("createEvent.performanceDescription")} <span class="text-danger">*</span></label>
                             <textarea class="form-control form-control-sm bg-white lvl-input" style="border-radius: 6px; border: 1.5px solid #e2e8f0; font-size: 0.8rem; min-height: 80px; resize: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="description" placeholder="${t("createEvent.levelPerf")}" rows="3">${lvl.description}</textarea>
                             <input type="hidden" class="lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
                         </div>
@@ -1369,8 +1369,8 @@ export default class CreateEvent {
       } catch (_) {}
 
       toast.warning(
-          "GitHub required",
-          "You must connect your GitHub account to create an event.",
+          t("createEvent.githubRequiredTitle"),
+          t("createEvent.githubRequiredMsg"),
       );
 
       if (submitBtn) {
