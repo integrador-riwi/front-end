@@ -1,6 +1,8 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
+import * as XLSX from "xlsx";
 import { getEventById } from "../services/api-events.js";
+import { apiFetch } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
@@ -68,6 +70,7 @@ export default class EventDetails {
     const title = event.title || event.name || "Untitled Event";
     const desc = event.description || t("common.noDescription");
     const canEdit = this.user?.role === "ADMIN";
+    const canReport = ["ADMIN", "STAFF"].includes(this.user?.role);
 
     return `
         <div class="col-lg-8">
@@ -79,6 +82,7 @@ export default class EventDetails {
             </div>
 
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            ${canReport ? `<button id="event-teams-report-btn" class="btn btn-primary me-2" style="background:var(--accent);border-color:var(--accent);">${t("dashboard.teamsReport")}</button>` : ""}
             ${canEdit ? `<button id="edit-event-btn" class="btn btn-outline-accent me-2">${t("eventDetails.edit")}</button>` : ""}
         </div>
       `;
@@ -191,6 +195,29 @@ export default class EventDetails {
       }
     });
 
+    const reportBtn = document.getElementById("event-teams-report-btn");
+    reportBtn?.addEventListener("click", async () => {
+      const originalText = reportBtn.textContent;
+      reportBtn.disabled = true;
+      reportBtn.textContent = t("dashboard.generatingExcel");
+
+      try {
+        const teams = await this.fetchAllTeamsForReport();
+        if (!teams.length) {
+          toast.info(t("dashboard.reportEmptyTitle"), t("dashboard.reportEmptyMsg"));
+          return;
+        }
+        this.downloadTeamsExcel(teams);
+        toast.success(t("dashboard.excelReadyTitle"), t("dashboard.excelReadyMsg"));
+      } catch (err) {
+        console.error("Teams Excel report error:", err);
+        toast.error(t("common.errorTitle"), err?.message ?? t("dashboard.excelError"));
+      } finally {
+        reportBtn.disabled = false;
+        reportBtn.textContent = originalText;
+      }
+    });
+
     const editRubricsBtn = document.getElementById("edit-rubrics-btn");
     if (this.user?.role !== "ADMIN") {
       editRubricsBtn?.classList.add("d-none");
@@ -201,6 +228,118 @@ export default class EventDetails {
         this.router.navigate("events/edit", { eventId: this.eventId });
       }
     });
+  }
+
+  async fetchAllTeamsForReport() {
+    const limit = 100;
+    let page = 1;
+    let totalPages = 1;
+    const teams = [];
+
+    do {
+      const response = await apiFetch(
+        `/teams?idEvent=${encodeURIComponent(this.eventId)}&page=${page}&limit=${limit}&includeSubmitted=true&includeClosed=true`,
+        { method: "GET" },
+      );
+      const payload = response?.data ?? response ?? {};
+      teams.push(...(payload.teams ?? []));
+      totalPages = payload.pagination?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
+
+    return teams;
+  }
+
+  downloadTeamsExcel(teams) {
+    const workbook = XLSX.utils.book_new();
+    const sortedTeams = [...teams].sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? ""), "es", { sensitivity: "base" }),
+    );
+    const eventName = this.event?.title || this.event?.event_name || this.eventName || "Evento";
+    const createdAt = new Date();
+    const createdDate = this.formatReportDateForFile(createdAt);
+
+    const teamsRows = sortedTeams.map((team, index) => {
+      const members = team.members ?? [];
+      const leader = members.find((member) => member.team_role === "LEADER");
+      const clans = [...new Set(members.map((member) => member.clan).filter(Boolean))];
+      const memberNames = members.length
+        ? members.map((member) => member.name || "Integrante sin nombre").join(", ")
+        : "Sin integrantes registrados";
+
+      return {
+        "#": index + 1,
+        "ID equipo": team.id_team ?? "",
+        "Equipo": team.name || "Equipo sin nombre",
+        "Descripción": String(team.description ?? "").trim() || "Sin descripción registrada",
+        "Total integrantes": this.teamMemberCount(team),
+        "Integrantes": memberNames,
+        "Líder": leader?.name || "Sin líder registrado",
+        "Clanes": clans.length ? clans.join(", ") : "Sin clan registrado",
+        "Estado": team.closed_at ? "Cerrado" : "Abierto",
+        "Fecha de creación del equipo": this.formatReportDate(team.created_at),
+      };
+    });
+
+    const teamsSheet = XLSX.utils.json_to_sheet(teamsRows);
+    teamsSheet["!cols"] = [
+      { wch: 6 },
+      { wch: 10 },
+      { wch: 28 },
+      { wch: 60 },
+      { wch: 18 },
+      { wch: 60 },
+      { wch: 28 },
+      { wch: 36 },
+      { wch: 14 },
+      { wch: 22 },
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, teamsSheet, "Equipos");
+    workbook.Props = {
+      Title: `Reporte de equipos - ${eventName} - ${createdDate}`,
+      Subject: "Reporte de equipos por evento",
+      Author: "TeamUp",
+      Company: "TeamUp",
+      CreatedDate: createdAt,
+    };
+
+    XLSX.writeFile(workbook, `${this.fileSafeName(`reporte-equipos-${eventName}-${createdDate}`)}.xlsx`);
+  }
+
+  teamMemberCount(team) {
+    if (Array.isArray(team.members)) return team.members.length;
+    const count = Number(team.member_count);
+    return Number.isFinite(count) ? count : 0;
+  }
+
+  formatReportDate(value) {
+    if (!value) return "No registrada";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "No registrada";
+    return date.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  formatReportDateForFile(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  fileSafeName(value) {
+    return String(value ?? "reporte")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase()
+      .slice(0, 90) || "reporte-equipos";
   }
 
   destroy() {
