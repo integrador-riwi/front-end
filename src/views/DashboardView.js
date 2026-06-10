@@ -1,10 +1,12 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
+import * as XLSX from "xlsx";
 import { getUser } from "../utils/auth.js";
 import { apiFetch, getEventEvalCoverage, closeEventEvaluations, reopenEventEvaluations, getTeamEvalCounts } from "../services/api.js";
 import { icons } from "../utils/icons.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import logoUrl from "../assets/logo.svg";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -21,6 +23,7 @@ export default class DashboardView {
     this.metrics = null;
     this.ranking = [];
     this.status = null;
+    this.eventInfo = null;
     this.eventStatus = null;
     this.evalCoverage = null; // { evaluations_closed, canClose, missing[] }
     this.teamEvalCounts = []; // [{ id_team, team_name, areas: { DEVELOPMENT: N, ... } }]
@@ -82,7 +85,8 @@ export default class DashboardView {
         this.status = statusRes.value?.data ?? null;
       }
       if (eventRes.status === "fulfilled") {
-        this.eventStatus = eventRes.value?.status ?? eventRes.value?.data?.status ?? null;
+        this.eventInfo = eventRes.value?.data ?? eventRes.value ?? null;
+        this.eventStatus = this.eventInfo?.status ?? eventRes.value?.status ?? null;
         localStorage.setItem("currentEventStatus", this.eventStatus ?? "");
       }
       if (coverageRes.status === "fulfilled") {
@@ -134,13 +138,17 @@ export default class DashboardView {
 
     return `
       <div class="db-container">
-        ${canEdit ? `
-          <div class="d-flex justify-content-end">
+        <div class="d-flex justify-content-end gap-2 flex-wrap">
+          <button id="db-teams-excel-btn" class="btn fw-semibold d-inline-flex align-items-center gap-2" style="background:var(--accent);border:1px solid var(--accent);color:white;">
+            <span class="material-icons-round" style="font-size:1rem;">table_view</span>
+            <span>${t("dashboard.teamsReport")}</span>
+          </button>
+          ${canEdit ? `
             <button id="db-edit-event-btn" class="btn btn-primary fw-semibold" style="background:#5548e2;border:none;">
               ${t("eventDetails.edit")}
             </button>
-          </div>
-        ` : ""}
+          ` : ""}
+        </div>
         
         <div class="db-layout-main">
           
@@ -712,6 +720,32 @@ export default class DashboardView {
       }
     });
 
+    document.getElementById("db-teams-excel-btn")?.addEventListener("click", async () => {
+      const btn = document.getElementById("db-teams-excel-btn");
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `
+        <span class="spinner-border spinner-border-sm" style="width:.85rem;height:.85rem;"></span>
+        <span>${t("dashboard.generatingExcel")}</span>
+      `;
+
+      try {
+        const teams = await this._fetchAllTeamsForReport();
+        if (!teams.length) {
+          toast.info(t("dashboard.reportEmptyTitle"), t("dashboard.reportEmptyMsg"));
+          return;
+        }
+        this._downloadTeamsExcel(teams);
+        toast.success(t("dashboard.excelReadyTitle"), t("dashboard.excelReadyMsg"));
+      } catch (err) {
+        console.error("Teams Excel report error:", err);
+        toast.error(t("common.errorTitle"), err?.message ?? t("dashboard.excelError"));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+
     // ── Team search ────────────────────────────────────────────────────────
     const teamSearch = document.getElementById("db-team-search");
     if (teamSearch) {
@@ -890,6 +924,659 @@ export default class DashboardView {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  async _fetchAllTeamsForReport() {
+    const limit = 100;
+    let page = 1;
+    let totalPages = 1;
+    const teams = [];
+
+    do {
+      const response = await apiFetch(
+        `/teams?idEvent=${encodeURIComponent(this.eventId)}&page=${page}&limit=${limit}&includeSubmitted=true&includeClosed=true`,
+        { method: "GET" },
+      );
+      const payload = response?.data ?? response ?? {};
+      const pageTeams = payload.teams ?? [];
+      teams.push(...pageTeams);
+      totalPages = payload.pagination?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
+
+    this.allTeams = teams;
+    return teams;
+  }
+
+  _downloadTeamsExcel(teams) {
+    const workbook = XLSX.utils.book_new();
+    const sortedTeams = [...teams].sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? ""), "es", { sensitivity: "base" }),
+    );
+    const event = this.eventInfo ?? {};
+    const eventName = event.title || event.event_name || this.eventName || "Evento";
+    const createdAt = new Date();
+    const createdDate = this._formatReportDateForFile(createdAt);
+
+    const teamsRows = sortedTeams.map((team, index) => {
+      const members = team.members ?? [];
+      const leader = members.find((member) => member.team_role === "LEADER");
+      const clans = [...new Set(members.map((member) => member.clan).filter(Boolean))];
+      const memberNames = members.length
+        ? members.map((member) => member.name || "Integrante sin nombre").join(", ")
+        : "Sin integrantes registrados";
+
+      return {
+        "#": index + 1,
+        "ID equipo": team.id_team ?? "",
+        "Equipo": team.name || "Equipo sin nombre",
+        "Descripción": String(team.description ?? "").trim() || "Sin descripción registrada",
+        "Total integrantes": this._teamMemberCount(team),
+        "Integrantes": memberNames,
+        "Líder": leader?.name || "Sin líder registrado",
+        "Clanes": clans.length ? clans.join(", ") : "Sin clan registrado",
+        "Estado": team.closed_at ? "Cerrado" : "Abierto",
+        "Fecha de creación del equipo": this._formatReportDate(team.created_at),
+      };
+    });
+
+    const teamsSheet = XLSX.utils.json_to_sheet(teamsRows);
+
+    teamsSheet["!cols"] = [
+      { wch: 6 },
+      { wch: 10 },
+      { wch: 28 },
+      { wch: 60 },
+      { wch: 18 },
+      { wch: 60 },
+      { wch: 28 },
+      { wch: 36 },
+      { wch: 14 },
+      { wch: 22 },
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, teamsSheet, "Equipos");
+
+    workbook.Props = {
+      Title: `Reporte de equipos - ${eventName} - ${createdDate}`,
+      Subject: "Reporte de equipos por evento",
+      Author: "TeamUp",
+      Company: "TeamUp",
+      CreatedDate: createdAt,
+    };
+
+    XLSX.writeFile(workbook, `${this._fileSafeName(`reporte-equipos-${eventName}-${createdDate}`)}.xlsx`);
+  }
+
+  _buildTeamsReportHtml(teams) {
+    const sortedTeams = [...teams].sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? ""), "es", { sensitivity: "base" }),
+    );
+    const event = this.eventInfo ?? {};
+    const eventName = event.title || event.event_name || this.eventName || "Evento";
+    const generatedAt = new Date().toLocaleString("es-CO", {
+      dateStyle: "long",
+      timeStyle: "short",
+    });
+    const logoSrc = new URL(logoUrl, window.location.origin).href;
+    const totalTeams = sortedTeams.length;
+    const totalMembers = sortedTeams.reduce((sum, team) => sum + this._teamMemberCount(team), 0);
+    const closedTeams = sortedTeams.filter((team) => team.closed_at).length;
+    const teamsWithoutDescription = sortedTeams.filter((team) => !String(team.description ?? "").trim()).length;
+    const emptyTeams = sortedTeams.filter((team) => this._teamMemberCount(team) === 0).length;
+    const averageMembers = totalTeams > 0 ? (totalMembers / totalTeams).toFixed(1) : "0";
+    const clanCounts = new Map();
+
+    sortedTeams.forEach((team) => {
+      (team.members ?? []).forEach((member) => {
+        const clan = member.clan || "Sin clan";
+        clanCounts.set(clan, (clanCounts.get(clan) ?? 0) + 1);
+      });
+    });
+
+    const topClans = [...clanCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6);
+
+    const eventMeta = [
+      event.route ? `Ruta: ${event.route}` : null,
+      event.cohort ? `Cohorte: ${event.cohort}` : null,
+      event.max_team_size ? `Máximo por equipo: ${event.max_team_size}` : null,
+      event.status ? `Estado: ${this._reportStatusLabel(event.status)}` : null,
+    ].filter(Boolean);
+
+    return `<!doctype html>
+      <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Reporte de equipos - ${this._esc(eventName)}</title>
+          <style>
+            :root {
+              --accent: #6b5cff;
+              --navy: #181e4b;
+              --lilac: #eaa2fc;
+              --mint: #5acca4;
+              --coral: #fe654f;
+              --gold: #e6ca52;
+              --ink: #263052;
+              --muted: #6f759a;
+              --soft: #f4f3ff;
+              --line: rgba(107, 92, 255, 0.16);
+            }
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              background: #eef1f7;
+              color: var(--ink);
+              font-family: Ubuntu, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              line-height: 1.45;
+            }
+            .page {
+              width: min(1120px, calc(100% - 32px));
+              margin: 24px auto;
+              background: #fff;
+              border-radius: 18px;
+              overflow: hidden;
+              box-shadow: 0 18px 50px rgba(24, 30, 75, 0.12);
+            }
+            .hero {
+              position: relative;
+              padding: 34px 38px;
+              color: white;
+              background:
+                linear-gradient(120deg, rgba(24, 30, 75, 0.96), rgba(107, 92, 255, 0.92)),
+                radial-gradient(circle at 90% 20%, rgba(90, 204, 164, 0.45), transparent 28%);
+            }
+            .hero::after {
+              content: "";
+              position: absolute;
+              right: 0;
+              bottom: 0;
+              width: 42%;
+              height: 8px;
+              background: linear-gradient(90deg, var(--mint), var(--lilac), var(--coral), var(--gold));
+            }
+            .brand-row {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 24px;
+              margin-bottom: 28px;
+            }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              font-weight: 800;
+              letter-spacing: .02em;
+            }
+            .brand img {
+              width: 44px;
+              height: 44px;
+              border-radius: 11px;
+              background: white;
+              padding: 5px;
+            }
+            .generated {
+              color: rgba(255, 255, 255, 0.78);
+              font-size: 12px;
+              text-align: right;
+            }
+            h1 {
+              margin: 0 0 8px;
+              font-size: 36px;
+              line-height: 1.08;
+              letter-spacing: 0;
+            }
+            .event-name {
+              margin: 0;
+              color: rgba(255, 255, 255, 0.86);
+              font-size: 16px;
+              max-width: 820px;
+            }
+            .event-meta {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+              margin-top: 18px;
+            }
+            .pill {
+              display: inline-flex;
+              align-items: center;
+              border-radius: 999px;
+              padding: 7px 11px;
+              background: rgba(255, 255, 255, 0.12);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              color: rgba(255, 255, 255, 0.9);
+              font-size: 12px;
+              font-weight: 700;
+            }
+            .content { padding: 30px 38px 38px; }
+            .summary {
+              display: grid;
+              grid-template-columns: repeat(5, minmax(0, 1fr));
+              gap: 12px;
+              margin-bottom: 24px;
+            }
+            .metric {
+              border: 1px solid var(--line);
+              border-radius: 14px;
+              padding: 15px;
+              background: linear-gradient(180deg, #fff, #fbfbff);
+              min-height: 96px;
+            }
+            .metric span {
+              display: block;
+              color: var(--muted);
+              font-size: 11px;
+              font-weight: 800;
+              text-transform: uppercase;
+            }
+            .metric strong {
+              display: block;
+              margin-top: 10px;
+              color: var(--navy);
+              font-size: 28px;
+              line-height: 1;
+            }
+            .manager-grid {
+              display: grid;
+              grid-template-columns: 1.15fr .85fr;
+              gap: 16px;
+              margin-bottom: 26px;
+            }
+            .panel {
+              border: 1px solid var(--line);
+              border-radius: 14px;
+              padding: 18px;
+              background: var(--soft);
+            }
+            .panel h2 {
+              margin: 0 0 12px;
+              color: var(--navy);
+              font-size: 16px;
+            }
+            .insights {
+              display: grid;
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+              gap: 10px;
+            }
+            .insight {
+              background: #fff;
+              border: 1px solid var(--line);
+              border-radius: 12px;
+              padding: 12px;
+            }
+            .insight strong {
+              display: block;
+              color: var(--navy);
+              font-size: 20px;
+            }
+            .insight span {
+              color: var(--muted);
+              font-size: 12px;
+            }
+            .clans {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+            }
+            .clan {
+              border-radius: 999px;
+              padding: 7px 10px;
+              background: white;
+              border: 1px solid var(--line);
+              color: var(--navy);
+              font-size: 12px;
+              font-weight: 700;
+            }
+            .section-title {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 12px;
+              margin: 10px 0 16px;
+            }
+            .section-title h2 {
+              margin: 0;
+              color: var(--navy);
+              font-size: 20px;
+            }
+            .print-btn {
+              border: 0;
+              border-radius: 999px;
+              padding: 10px 16px;
+              background: var(--accent);
+              color: white;
+              font-weight: 800;
+              cursor: pointer;
+            }
+            .team-list {
+              display: grid;
+              gap: 14px;
+            }
+            .team-card {
+              border: 1px solid var(--line);
+              border-radius: 16px;
+              overflow: hidden;
+              background: #fff;
+              break-inside: avoid;
+            }
+            .team-head {
+              display: grid;
+              grid-template-columns: 44px 1fr auto;
+              align-items: center;
+              gap: 14px;
+              padding: 16px 18px;
+              border-bottom: 1px solid var(--line);
+              background: linear-gradient(90deg, rgba(107, 92, 255, 0.08), rgba(90, 204, 164, 0.08));
+            }
+            .number {
+              width: 36px;
+              height: 36px;
+              display: grid;
+              place-items: center;
+              border-radius: 10px;
+              background: var(--accent);
+              color: white;
+              font-weight: 900;
+            }
+            .team-title h3 {
+              margin: 0;
+              color: var(--navy);
+              font-size: 17px;
+            }
+            .team-title p {
+              margin: 4px 0 0;
+              color: var(--muted);
+              font-size: 12px;
+            }
+            .status {
+              border-radius: 999px;
+              padding: 7px 11px;
+              font-size: 11px;
+              font-weight: 900;
+              text-transform: uppercase;
+            }
+            .status.open { background: rgba(90, 204, 164, 0.15); color: #1a8f6c; }
+            .status.closed { background: rgba(254, 101, 79, 0.13); color: #d94831; }
+            .team-body {
+              display: grid;
+              grid-template-columns: 1fr 1.2fr;
+              gap: 18px;
+              padding: 18px;
+            }
+            .description h4,
+            .members h4 {
+              margin: 0 0 8px;
+              color: var(--navy);
+              font-size: 12px;
+              text-transform: uppercase;
+            }
+            .description p {
+              margin: 0;
+              color: var(--ink);
+              font-size: 13px;
+            }
+            .empty {
+              color: var(--muted);
+              font-style: italic;
+            }
+            .member-list {
+              display: grid;
+              gap: 8px;
+            }
+            .member {
+              display: grid;
+              grid-template-columns: 32px 1fr auto;
+              align-items: center;
+              gap: 9px;
+              border: 1px solid rgba(24, 30, 75, 0.08);
+              border-radius: 11px;
+              padding: 8px;
+              background: #fcfcff;
+            }
+            .avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              object-fit: cover;
+              background: rgba(107, 92, 255, 0.12);
+              color: var(--accent);
+              display: grid;
+              place-items: center;
+              font-weight: 900;
+              font-size: 12px;
+            }
+            .member-name {
+              color: var(--navy);
+              font-weight: 800;
+              font-size: 13px;
+            }
+            .member-meta {
+              color: var(--muted);
+              font-size: 11px;
+            }
+            .role {
+              color: var(--accent);
+              background: rgba(107, 92, 255, 0.1);
+              border-radius: 999px;
+              padding: 5px 8px;
+              font-size: 10px;
+              font-weight: 900;
+              text-transform: uppercase;
+            }
+            @media (max-width: 860px) {
+              .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .manager-grid,
+              .team-body { grid-template-columns: 1fr; }
+              .team-head { grid-template-columns: 38px 1fr; }
+              .status { grid-column: 2; justify-self: start; }
+            }
+            @media print {
+              body { background: white; }
+              .page {
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+              }
+              .print-btn { display: none; }
+              .content { padding: 22px; }
+              .hero { padding: 26px 22px; }
+              .summary { grid-template-columns: repeat(5, 1fr); }
+              .team-card { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <article class="page">
+            <header class="hero">
+              <div class="brand-row">
+                <div class="brand">
+                  <img src="${logoSrc}" alt="TeamUp">
+                  <span>TeamUp</span>
+                </div>
+                <div class="generated">
+                  Generado el<br>
+                  <strong>${this._esc(generatedAt)}</strong>
+                </div>
+              </div>
+              <h1>Reporte de equipos</h1>
+              <p class="event-name">${this._esc(eventName)}</p>
+              ${eventMeta.length ? `<div class="event-meta">${eventMeta.map((item) => `<span class="pill">${this._esc(item)}</span>`).join("")}</div>` : ""}
+            </header>
+
+            <main class="content">
+              <section class="summary" aria-label="Resumen ejecutivo">
+                ${this._reportMetric("Equipos", totalTeams)}
+                ${this._reportMetric("Integrantes", totalMembers)}
+                ${this._reportMetric("Promedio por equipo", averageMembers)}
+                ${this._reportMetric("Equipos abiertos", totalTeams - closedTeams)}
+                ${this._reportMetric("Equipos cerrados", closedTeams)}
+              </section>
+
+              <section class="manager-grid">
+                <div class="panel">
+                  <h2>Lectura rápida para manager</h2>
+                  <div class="insights">
+                    ${this._reportInsight(teamsWithoutDescription, "equipos sin descripción")}
+                    ${this._reportInsight(emptyTeams, "equipos sin integrantes")}
+                    ${this._reportInsight(this._largestTeamSize(sortedTeams), "integrantes en el equipo más grande")}
+                  </div>
+                </div>
+                <div class="panel">
+                  <h2>Distribución por clan</h2>
+                  <div class="clans">
+                    ${topClans.length
+                      ? topClans.map(([clan, count]) => `<span class="clan">${this._esc(clan)} · ${count}</span>`).join("")
+                      : `<span class="empty">Sin información de clan disponible</span>`}
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div class="section-title">
+                  <h2>Detalle de equipos</h2>
+                  <button class="print-btn" type="button" onclick="window.print()">Imprimir / Guardar PDF</button>
+                </div>
+                <div class="team-list">
+                  ${sortedTeams.map((team, index) => this._reportTeamCard(team, index)).join("")}
+                </div>
+              </section>
+            </main>
+          </article>
+        </body>
+      </html>`;
+  }
+
+  _reportMetric(label, value) {
+    return `
+      <div class="metric">
+        <span>${this._esc(label)}</span>
+        <strong>${this._esc(value)}</strong>
+      </div>`;
+  }
+
+  _reportInsight(value, label) {
+    return `
+      <div class="insight">
+        <strong>${this._esc(value)}</strong>
+        <span>${this._esc(label)}</span>
+      </div>`;
+  }
+
+  _reportTeamCard(team, index) {
+    const members = team.members ?? [];
+    const memberCount = this._teamMemberCount(team);
+    const description = String(team.description ?? "").trim();
+    const isClosed = !!team.closed_at;
+
+    return `
+      <article class="team-card">
+        <div class="team-head">
+          <div class="number">${index + 1}</div>
+          <div class="team-title">
+            <h3>${this._esc(team.name || "Equipo sin nombre")}</h3>
+            <p>${memberCount} integrante${memberCount === 1 ? "" : "s"}</p>
+          </div>
+          <span class="status ${isClosed ? "closed" : "open"}">${isClosed ? "Cerrado" : "Abierto"}</span>
+        </div>
+        <div class="team-body">
+          <div class="description">
+            <h4>Descripción</h4>
+            <p class="${description ? "" : "empty"}">${description ? this._esc(description) : "Sin descripción registrada."}</p>
+          </div>
+          <div class="members">
+            <h4>Integrantes</h4>
+            <div class="member-list">
+              ${members.length
+                ? members.map((member) => this._reportMember(member)).join("")
+                : `<p class="empty">No hay integrantes registrados.</p>`}
+            </div>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  _reportMember(member) {
+    const initial = String(member.name ?? member.email ?? "?").charAt(0).toUpperCase();
+    const clan = member.clan || "Sin clan";
+    const role = this._reportRoleLabel(member.team_role);
+
+    return `
+      <div class="member">
+        ${member.github_avatar_url
+          ? `<img class="avatar" src="${this._esc(member.github_avatar_url)}" alt="${this._esc(member.name)}">`
+          : `<div class="avatar">${this._esc(initial)}</div>`}
+        <div>
+          <div class="member-name">${this._esc(member.name || "Integrante sin nombre")}</div>
+          <div class="member-meta">${this._esc(clan)}</div>
+        </div>
+        <span class="role">${this._esc(role)}</span>
+      </div>`;
+  }
+
+  _reportRoleLabel(role) {
+    const roles = {
+      LEADER: "Líder",
+      DEVELOPER: "Integrante",
+      MEMBER: "Integrante",
+    };
+    return roles[role] ?? "Integrante";
+  }
+
+  _reportStatusLabel(status) {
+    const statuses = {
+      UPCOMING: "Próximo",
+      IN_PROGRESS: "En progreso",
+      FINISHED: "Finalizado",
+      COMPLETED: "Completado",
+    };
+    return statuses[status] ?? status;
+  }
+
+  _formatReportDate(value) {
+    if (!value) return "No registrada";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "No registrada";
+    return date.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  _formatReportDateForFile(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  _fileSafeName(value) {
+    return String(value ?? "reporte")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase()
+      .slice(0, 90) || "reporte-equipos";
+  }
+
+  _largestTeamSize(teams) {
+    return teams.reduce((max, team) => {
+      const size = this._teamMemberCount(team);
+      return Math.max(max, size);
+    }, 0);
+  }
+
+  _teamMemberCount(team) {
+    if (Array.isArray(team.members)) return team.members.length;
+    const count = Number(team.member_count);
+    return Number.isFinite(count) ? count : 0;
   }
 
   destroy() {
