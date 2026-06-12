@@ -186,16 +186,6 @@ export default class PublicProfileView {
                                 <div class="pp-stat-value">${stats.count}</div>
                                 <div class="pp-stat-label">${t("tl.projects") || "Projects"}</div>
                             </div>
-                            <div class="pp-stat-item pp-animate-in" style="animation-delay: 0.2s">
-                                <!-- <div class="pp-stat-value">${stats.avg != null ? stats.avg : "—"}</div> -->
-                                <div class="pp-stat-value">94</div>
-                                <div class="pp-stat-label">${t("publicProfile.avgGrade") || "Avg Grade"}</div>
-                            </div>
-                            <div class="pp-stat-item pp-animate-in" style="animation-delay: 0.3s">
-                                <div class="pp-stat-value">96</div>
-                                <!-- <div class="pp-stat-value">${stats.best != null ? stats.best : "—"}</div> -->
-                                <div class="pp-stat-label">${t("publicProfile.bestGrade") || "Best Grade"}</div>
-                            </div>
                         </div>` : ''}
 
                         <!-- Description -->
