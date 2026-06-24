@@ -357,6 +357,7 @@
 .ua-toolbar-row .ua-control {
   flex: 0 0 auto;
   min-width: 120px;
+  width: auto;
 }
 
 .ua-toolbar-event-row {
