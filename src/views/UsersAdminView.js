@@ -670,6 +670,10 @@ export default class UsersAdminView {
       this.filters.teamStatus = "";
       this.eventTeamMemberIds = null;
       if (this.filters.event) {
+        // Automatically switch role filter to CODER if we are about to use team filters
+        if (!this.filters.role) {
+          this.filters.role = "CODER";
+        }
         this.loadEventTeamMembers(this.filters.event);
       } else {
         this.paint();
@@ -1033,11 +1037,16 @@ export default class UsersAdminView {
       // Team-membership filter (requires a selected event)
       let matchesTeamStatus = true;
       if (this.filters.event && this.filters.teamStatus) {
-        const inEventTeam = this.eventTeamMemberIds
-          ? this.eventTeamMemberIds.has(String(user.id_user))
-          : false;
-        if (this.filters.teamStatus === "in-team") matchesTeamStatus = inEventTeam;
-        else if (this.filters.teamStatus === "no-team") matchesTeamStatus = !inEventTeam;
+        // Only CODERs can be in teams. If they filter by team status, hide all non-coders.
+        if (user.role !== "CODER") {
+          matchesTeamStatus = false;
+        } else {
+          const inEventTeam = this.eventTeamMemberIds
+            ? this.eventTeamMemberIds.has(String(user.id_user))
+            : false;
+          if (this.filters.teamStatus === "in-team") matchesTeamStatus = inEventTeam;
+          else if (this.filters.teamStatus === "no-team") matchesTeamStatus = !inEventTeam;
+        }
       }
 
       return matchesSearch && matchesRole && matchesClan && matchesStatus && matchesGithub && matchesTeamStatus;
