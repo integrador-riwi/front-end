@@ -10,7 +10,6 @@ import {
   updateUserStatus,
   getTeams,
   getEvents,
-  getTeamsByEvent,
 } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { icons } from "../utils/icons.js";
@@ -166,13 +165,21 @@ export default class UsersAdminView {
       return;
     }
     try {
-      const res = await getTeamsByEvent(eventId);
-      const teams = res?.teams ?? res?.data?.teams ?? (Array.isArray(res) ? res : []);
+      // Use getTeams with idEvent + includeSubmitted/includeClosed so we see ALL
+      // team memberships for the event, regardless of project status.
+      const res = await getTeams({
+        idEvent: eventId,
+        includeSubmitted: true,
+        includeClosed: true,
+        limit: 1000,
+      });
+      // getTeams returns response.data ?? response  →  { teams: [...], pagination }
+      const teams = res?.teams ?? (Array.isArray(res) ? res : []);
       const ids = new Set();
       for (const team of teams) {
         const members = team.members ?? [];
         for (const m of members) {
-          ids.add(String(m.id_user));
+          if (m?.id_user != null) ids.add(String(m.id_user));
         }
       }
       this.eventTeamMemberIds = ids;
@@ -268,50 +275,68 @@ export default class UsersAdminView {
   }
 
   renderToolbar(clans, count) {
-    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive || this.filters.github || this.filters.search || this.filters.event || this.filters.teamStatus;
+    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive
+      || this.filters.github || this.filters.search || this.filters.event || this.filters.teamStatus;
+    const eventActive = Boolean(this.filters.event);
+    const loadingTeams = eventActive && this.eventTeamMemberIds === null;
+
     return `
       <section class="ua-toolbar">
-        <div class="ua-search">
-          <span>${icons.users()}</span>
-          <input id="userSearchInput" type="search" placeholder="${t("usersAdmin.searchPlaceholder")}" value="${escapeHtml(this.filters.search)}">
-        </div>
-        <div class="ua-filter-group">
-          <span class="ua-filter-icon">${actionIcons.filter}</span>
-          <select id="roleFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByRole")}">
-            <option value="">${t("usersAdmin.allRoles")}</option>
-            ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${roleLabel(role.value)}</option>`).join("")}
+        <!-- Row 1: search + basic filters -->
+        <div class="ua-toolbar-row">
+          <div class="ua-search">
+            <span>${icons.users()}</span>
+            <input id="userSearchInput" type="search" placeholder="${t("usersAdmin.searchPlaceholder")}" value="${escapeHtml(this.filters.search)}">
+          </div>
+          <div class="ua-filter-group">
+            <span class="ua-filter-icon">${actionIcons.filter}</span>
+            <select id="roleFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByRole")}">
+              <option value="">${t("usersAdmin.allRoles")}</option>
+              ${ROLES.map((role) => `<option value="${role.value}" ${this.filters.role === role.value ? "selected" : ""}>${roleLabel(role.value)}</option>`).join("")}
+            </select>
+          </div>
+          <select id="clanFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByClan")}">
+            <option value="">${t("usersAdmin.allClans")}</option>
+            ${clans.map((clan) => `<option value="${escapeHtml(clan)}" ${this.filters.clan === clan ? "selected" : ""}>${escapeHtml(clan)}</option>`).join("")}
           </select>
+          <select id="statusFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByStatus")}">
+            <option value="">${t("usersAdmin.allStatuses")}</option>
+            <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>${t("usersAdmin.active")}</option>
+            <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>${t("usersAdmin.inactive")}</option>
+          </select>
+          <select id="githubFilter" class="ua-control ua-select" aria-label="Filtrar por GitHub">
+            <option value="">Todos (GitHub)</option>
+            <option value="linked" ${this.filters.github === "linked" ? "selected" : ""}>Con GitHub</option>
+            <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
+          </select>
+          <span class="ua-count">${t("usersAdmin.results", { count })}</span>
+          ${hasActiveFilters ? `
+            <button id="clearFiltersBtn" class="ua-btn ua-btn-ghost ua-btn-sm" type="button" title="Limpiar filtros">
+              ${actionIcons.close} Limpiar
+            </button>
+          ` : ""}
         </div>
-        <select id="clanFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByClan")}">
-          <option value="">${t("usersAdmin.allClans")}</option>
-          ${clans.map((clan) => `<option value="${escapeHtml(clan)}" ${this.filters.clan === clan ? "selected" : ""}>${escapeHtml(clan)}</option>`).join("")}
-        </select>
-        <select id="statusFilter" class="ua-control ua-select" aria-label="${t("usersAdmin.filterByStatus")}">
-          <option value="">${t("usersAdmin.allStatuses")}</option>
-          <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>${t("usersAdmin.active")}</option>
-          <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>${t("usersAdmin.inactive")}</option>
-        </select>
-        <select id="githubFilter" class="ua-control ua-select" aria-label="Filtrar por GitHub">
-          <option value="">Todos (GitHub)</option>
-          <option value="linked" ${this.filters.github === "linked" ? "selected" : ""}>Con GitHub</option>
-          <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
-        </select>
-        <div class="ua-toolbar-divider"></div>
-        <select id="eventFilter" class="ua-control ua-select ua-event-select" aria-label="Filtrar por evento">
-          <option value="">Todos los eventos</option>
-          ${this.events.map((ev) => `<option value="${escapeHtml(String(ev.id))}" ${this.filters.event === String(ev.id) ? "selected" : ""}>${escapeHtml(ev.title ?? ev.event_name ?? ev.id)}</option>`).join("")}
-        </select>
-        <select id="teamStatusFilter" class="ua-control ua-select" aria-label="Estado en evento" ${!this.filters.event ? "disabled" : ""}>
-          <option value="">Todos (equipo)</option>
-          <option value="in-team" ${this.filters.teamStatus === "in-team" ? "selected" : ""}>Con equipo</option>
-          <option value="no-team" ${this.filters.teamStatus === "no-team" ? "selected" : ""}>Sin equipo</option>
-        </select>
-        ${hasActiveFilters ? `
-          <button id="clearFiltersBtn" class="ua-btn ua-btn-ghost ua-btn-sm" type="button" title="Limpiar filtros">
-            ${actionIcons.close} Limpiar
-          </button>
-        ` : ""}
-        <span class="ua-count">${t("usersAdmin.results", { count })}</span>
+
+        <!-- Row 2: event cross-filter -->
+        <div class="ua-toolbar-row ua-toolbar-event-row">
+          <span class="ua-event-label">${actionIcons.spark} Filtro por evento:</span>
+          <select id="eventFilter" class="ua-control ua-select ua-event-select" aria-label="Filtrar por evento">
+            <option value="">Todos los eventos</option>
+            ${this.events.map((ev) => `<option value="${escapeHtml(String(ev.id))}" ${this.filters.event === String(ev.id) ? "selected" : ""}>${escapeHtml(ev.title ?? ev.event_name ?? String(ev.id))}</option>`).join("")}
+          </select>
+          <select id="teamStatusFilter" class="ua-control ua-select" aria-label="Estado en evento" ${!eventActive ? "disabled" : ""}>
+            <option value="">Todos (equipo)</option>
+            <option value="in-team" ${this.filters.teamStatus === "in-team" ? "selected" : ""}>Con equipo</option>
+            <option value="no-team" ${this.filters.teamStatus === "no-team" ? "selected" : ""}>Sin equipo</option>
+          </select>
+          ${loadingTeams ? `<span class="ua-event-hint ua-event-loading">Cargando equipos…</span>` : ""}
+          ${eventActive && !loadingTeams ? `
+            <span class="ua-event-hint">
+              ${this.eventTeamMemberIds ? this.eventTeamMemberIds.size : 0} coder(s) en equipo en este evento
+            </span>
+          ` : ""}
+          ${!eventActive ? `<span class="ua-event-hint">Selecciona un evento para filtrar por equipo</span>` : ""}
+        </div>
       </section>
     `;
   }
