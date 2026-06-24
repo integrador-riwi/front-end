@@ -9,6 +9,8 @@ import {
   updateUserPassword,
   updateUserStatus,
   getTeams,
+  getEvents,
+  getTeamsByEvent,
 } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { icons } from "../utils/icons.js";
@@ -104,7 +106,12 @@ export default class UsersAdminView {
       clan: "",
       isActive: "",
       github: "",
+      event: "",
+      teamStatus: "",
     };
+    this.events = [];
+    // Set of id_user (strings) who belong to a team in the currently-selected event
+    this.eventTeamMemberIds = null;
     this.searchPaintTimeout = null;
   }
 
@@ -127,13 +134,17 @@ export default class UsersAdminView {
   async loadUsers() {
     try {
       this.loading = true;
-      const res = await getUsers({ limit: 1000 });
-      this.users = res.data?.users ?? res.users ?? (Array.isArray(res.data) ? res.data : []);
+      const [usersRes, eventsRes] = await Promise.all([
+        getUsers({ limit: 1000 }),
+        getEvents().catch(() => null),
+      ]);
+      this.users = usersRes.data?.users ?? usersRes.users ?? (Array.isArray(usersRes.data) ? usersRes.data : []);
+      const eventsData = eventsRes?.data ?? eventsRes;
+      this.events = eventsData?.events ?? (Array.isArray(eventsData) ? eventsData : []);
 
       // Cargar lista de clanes/equipos desde backend para poblar selects
       try {
         const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true });
-        // teamsRes could be { data: { teams: [...] } } or array
         this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
       } catch (tErr) {
         console.warn(t("usersAdmin.console.teamsLoadError"), tErr);
@@ -146,6 +157,30 @@ export default class UsersAdminView {
       this.loading = false;
       this.paint();
     }
+  }
+
+  async loadEventTeamMembers(eventId) {
+    if (!eventId) {
+      this.eventTeamMemberIds = null;
+      this.paint();
+      return;
+    }
+    try {
+      const res = await getTeamsByEvent(eventId);
+      const teams = res?.teams ?? res?.data?.teams ?? (Array.isArray(res) ? res : []);
+      const ids = new Set();
+      for (const team of teams) {
+        const members = team.members ?? [];
+        for (const m of members) {
+          ids.add(String(m.id_user));
+        }
+      }
+      this.eventTeamMemberIds = ids;
+    } catch (err) {
+      console.warn("Could not load event teams:", err);
+      this.eventTeamMemberIds = null;
+    }
+    this.paint();
   }
 
   paint() {
@@ -233,7 +268,7 @@ export default class UsersAdminView {
   }
 
   renderToolbar(clans, count) {
-    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive || this.filters.github || this.filters.search;
+    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive || this.filters.github || this.filters.search || this.filters.event || this.filters.teamStatus;
     return `
       <section class="ua-toolbar">
         <div class="ua-search">
@@ -260,6 +295,16 @@ export default class UsersAdminView {
           <option value="">Todos (GitHub)</option>
           <option value="linked" ${this.filters.github === "linked" ? "selected" : ""}>Con GitHub</option>
           <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
+        </select>
+        <div class="ua-toolbar-divider"></div>
+        <select id="eventFilter" class="ua-control ua-select ua-event-select" aria-label="Filtrar por evento">
+          <option value="">Todos los eventos</option>
+          ${this.events.map((ev) => `<option value="${escapeHtml(String(ev.id))}" ${this.filters.event === String(ev.id) ? "selected" : ""}>${escapeHtml(ev.title ?? ev.event_name ?? ev.id)}</option>`).join("")}
+        </select>
+        <select id="teamStatusFilter" class="ua-control ua-select" aria-label="Estado en evento" ${!this.filters.event ? "disabled" : ""}>
+          <option value="">Todos (equipo)</option>
+          <option value="in-team" ${this.filters.teamStatus === "in-team" ? "selected" : ""}>Con equipo</option>
+          <option value="no-team" ${this.filters.teamStatus === "no-team" ? "selected" : ""}>Sin equipo</option>
         </select>
         ${hasActiveFilters ? `
           <button id="clearFiltersBtn" class="ua-btn ua-btn-ghost ua-btn-sm" type="button" title="Limpiar filtros">
@@ -595,8 +640,23 @@ export default class UsersAdminView {
       this.filters.github = event.target.value;
       this.paint();
     });
+    document.getElementById("eventFilter")?.addEventListener("change", (event) => {
+      this.filters.event = event.target.value;
+      this.filters.teamStatus = "";
+      this.eventTeamMemberIds = null;
+      if (this.filters.event) {
+        this.loadEventTeamMembers(this.filters.event);
+      } else {
+        this.paint();
+      }
+    });
+    document.getElementById("teamStatusFilter")?.addEventListener("change", (event) => {
+      this.filters.teamStatus = event.target.value;
+      this.paint();
+    });
     document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
-      this.filters = { search: "", role: "", clan: "", isActive: "", github: "" };
+      this.filters = { search: "", role: "", clan: "", isActive: "", github: "", event: "", teamStatus: "" };
+      this.eventTeamMemberIds = null;
       this.paint();
     });
 
@@ -945,7 +1005,17 @@ export default class UsersAdminView {
         || (this.filters.github === "linked" && hasGithub)
         || (this.filters.github === "unlinked" && !hasGithub);
 
-      return matchesSearch && matchesRole && matchesClan && matchesStatus && matchesGithub;
+      // Team-membership filter (requires a selected event)
+      let matchesTeamStatus = true;
+      if (this.filters.event && this.filters.teamStatus) {
+        const inEventTeam = this.eventTeamMemberIds
+          ? this.eventTeamMemberIds.has(String(user.id_user))
+          : false;
+        if (this.filters.teamStatus === "in-team") matchesTeamStatus = inEventTeam;
+        else if (this.filters.teamStatus === "no-team") matchesTeamStatus = !inEventTeam;
+      }
+
+      return matchesSearch && matchesRole && matchesClan && matchesStatus && matchesGithub && matchesTeamStatus;
     });
   }
 

@@ -331,11 +331,40 @@
 
 .ua-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(140px, 160px) minmax(140px, 170px) minmax(120px, 140px) minmax(130px, 150px) auto auto;
+  grid-template-columns:
+    minmax(200px, 1fr)
+    minmax(130px, 150px)
+    minmax(130px, 160px)
+    minmax(110px, 130px)
+    minmax(120px, 140px)
+    4px
+    minmax(160px, 220px)
+    minmax(120px, 140px)
+    auto
+    auto;
   gap: 10px;
   align-items: center;
   padding: 12px;
   min-width: 0;
+  flex-wrap: wrap;
+}
+
+.ua-toolbar-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(107, 122, 153, 0.18);
+  justify-self: center;
+}
+
+.ua-event-select {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.ua-control:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .ua-search,
