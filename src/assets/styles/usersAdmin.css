@@ -383,6 +383,10 @@
 .ua-event-select {
   font-weight: 800;
   min-width: 200px !important;
+  max-width: 320px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .ua-event-hint {
