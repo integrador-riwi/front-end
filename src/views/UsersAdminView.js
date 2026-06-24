@@ -165,23 +165,32 @@ export default class UsersAdminView {
       return;
     }
     try {
-      // Use getTeams with idEvent + includeSubmitted/includeClosed so we see ALL
-      // team memberships for the event, regardless of project status.
-      const res = await getTeams({
-        idEvent: eventId,
-        includeSubmitted: true,
-        includeClosed: true,
-        limit: 1000,
-      });
-      // getTeams returns response.data ?? response  →  { teams: [...], pagination }
-      const teams = res?.teams ?? (Array.isArray(res) ? res : []);
       const ids = new Set();
-      for (const team of teams) {
-        const members = team.members ?? [];
-        for (const m of members) {
-          if (m?.id_user != null) ids.add(String(m.id_user));
+      let currentPage = 1;
+      let totalPages = 1;
+
+      while (currentPage <= totalPages) {
+        const res = await getTeams({
+          idEvent: eventId,
+          includeSubmitted: true,
+          includeClosed: true,
+          limit: 100,
+          page: currentPage,
+        });
+
+        const teams = res?.teams ?? res?.data?.teams ?? (Array.isArray(res) ? res : []);
+        for (const team of teams) {
+          const members = team.members ?? [];
+          for (const m of members) {
+            if (m?.id_user != null) ids.add(String(m.id_user));
+          }
         }
+
+        const pagination = res?.pagination ?? res?.data?.pagination;
+        totalPages = pagination?.totalPages || 1;
+        currentPage++;
       }
+
       this.eventTeamMemberIds = ids;
     } catch (err) {
       console.warn("Could not load event teams:", err);
