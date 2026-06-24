@@ -103,6 +103,7 @@ export default class UsersAdminView {
       role: "",
       clan: "",
       isActive: "",
+      github: "",
     };
     this.searchPaintTimeout = null;
   }
@@ -232,6 +233,7 @@ export default class UsersAdminView {
   }
 
   renderToolbar(clans, count) {
+    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive || this.filters.github || this.filters.search;
     return `
       <section class="ua-toolbar">
         <div class="ua-search">
@@ -254,6 +256,16 @@ export default class UsersAdminView {
           <option value="true" ${this.filters.isActive === "true" ? "selected" : ""}>${t("usersAdmin.active")}</option>
           <option value="false" ${this.filters.isActive === "false" ? "selected" : ""}>${t("usersAdmin.inactive")}</option>
         </select>
+        <select id="githubFilter" class="ua-control ua-select" aria-label="Filtrar por GitHub">
+          <option value="">Todos (GitHub)</option>
+          <option value="linked" ${this.filters.github === "linked" ? "selected" : ""}>Con GitHub</option>
+          <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
+        </select>
+        ${hasActiveFilters ? `
+          <button id="clearFiltersBtn" class="ua-btn ua-btn-ghost ua-btn-sm" type="button" title="Limpiar filtros">
+            ${actionIcons.close} Limpiar
+          </button>
+        ` : ""}
         <span class="ua-count">${t("usersAdmin.results", { count })}</span>
       </section>
     `;
@@ -577,6 +589,14 @@ export default class UsersAdminView {
     });
     document.getElementById("statusFilter")?.addEventListener("change", (event) => {
       this.filters.isActive = event.target.value;
+      this.paint();
+    });
+    document.getElementById("githubFilter")?.addEventListener("change", (event) => {
+      this.filters.github = event.target.value;
+      this.paint();
+    });
+    document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
+      this.filters = { search: "", role: "", clan: "", isActive: "", github: "" };
       this.paint();
     });
 
@@ -920,8 +940,12 @@ export default class UsersAdminView {
       const matchesRole = !this.filters.role || user.role === this.filters.role;
       const matchesClan = !this.filters.clan || user.clan === this.filters.clan;
       const matchesStatus = this.filters.isActive === "" || String(user.is_active) === this.filters.isActive;
+      const hasGithub = Boolean(user.github_username);
+      const matchesGithub = !this.filters.github
+        || (this.filters.github === "linked" && hasGithub)
+        || (this.filters.github === "unlinked" && !hasGithub);
 
-      return matchesSearch && matchesRole && matchesClan && matchesStatus;
+      return matchesSearch && matchesRole && matchesClan && matchesStatus && matchesGithub;
     });
   }
 

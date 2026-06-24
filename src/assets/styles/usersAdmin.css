@@ -161,6 +161,31 @@
   background: rgba(107, 92, 255, 0.06);
 }
 
+.ua-btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(107, 122, 153, 0.2);
+  font-weight: 700;
+}
+
+.ua-btn-ghost:hover:not(:disabled) {
+  border-color: rgba(254, 101, 79, 0.4);
+  color: var(--coral);
+  background: rgba(254, 101, 79, 0.06);
+}
+
+.ua-btn-sm {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  gap: 5px;
+}
+
+.ua-btn-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
 .ua-btn-icon,
 .ua-panel-icon,
 .ua-filter-icon,
@@ -306,7 +331,7 @@
 
 .ua-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(150px, 170px) minmax(150px, 180px) minmax(130px, 150px) auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(140px, 160px) minmax(140px, 170px) minmax(120px, 140px) minmax(130px, 150px) auto auto;
   gap: 10px;
   align-items: center;
   padding: 12px;
