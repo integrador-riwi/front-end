@@ -357,6 +357,11 @@
 .ua-toolbar-row .ua-control {
   flex: 0 0 auto;
   min-width: 120px;
+  width: auto;
+}
+
+.ua-toolbar-row .ua-select {
+  min-width: 170px;
 }
 
 .ua-toolbar-event-row {
@@ -471,6 +476,9 @@
   background-size: 5px 5px, 5px 5px, 1px 22px;
   background-repeat: no-repeat;
   font-weight: 700;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .ua-select:hover {
