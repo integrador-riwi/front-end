@@ -290,7 +290,8 @@ export default class CoderEventSelect {
           localStorage.setItem("currentEventName", event.title || event.name);
         }
 
-        const destination = TL_ROLES.includes(this.user?.role)
+        const userRole = this.app.user?.role;
+        const destination = TL_ROLES.includes(userRole)
             ? "tlDashboard"
             : "coderHome";
         this.app.navigate(destination, { selectedEvent: event });

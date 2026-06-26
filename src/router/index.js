@@ -71,8 +71,8 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
     "ADMIN",
   ],
-  coderHome: ["CODER", "TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"],
-  projectSettings: ["CODER", "TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH"],
+  coderHome: ["CODER"],
+  projectSettings: ["CODER"],
   profile: [
     "ADMIN",
     "STAFF",
