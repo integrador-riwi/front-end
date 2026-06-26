@@ -410,9 +410,6 @@ export default class TLDashboardView {
     if (!hasProject) {
       content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">info</span> ${t("tl.noProject")}`;
       disabled = "disabled"; cls = "tld-eval-btn"; title = "";
-    } else if (!isSubmitted) {
-      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">hourglass_empty</span> ${t("tl.notSubmitted")}`;
-      disabled = "disabled"; cls = "tld-eval-btn"; title = "";
     } else if (evalsClosed) {
       content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">lock</span> ${t("tl.evalsClosed") || "Evaluations closed"}`;
       disabled = "disabled"; cls = "tld-eval-btn tld-eval-btn--locked"; title = t("tl.evalsClosedHint") || "";
