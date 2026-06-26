@@ -360,6 +360,10 @@
   width: auto;
 }
 
+.ua-toolbar-row .ua-select {
+  min-width: 170px;
+}
+
 .ua-toolbar-event-row {
   padding-top: 8px;
   border-top: 1px solid rgba(107, 122, 153, 0.1);
@@ -472,6 +476,9 @@
   background-size: 5px 5px, 5px 5px, 1px 22px;
   background-repeat: no-repeat;
   font-weight: 700;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .ua-select:hover {
