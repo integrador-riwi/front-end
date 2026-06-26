@@ -395,6 +395,7 @@ export default class CreateEvent {
       name: crit.name || t("createEvent.untitledCriteria"),
       description: crit.description || null,
       weight: (crit.weight ?? 0) / 100,
+      active: true,
       grades: crit.levels.map((l) => ({
         id_grade: l.id_grade ?? l.id,
         score: l.score,
@@ -603,19 +604,25 @@ export default class CreateEvent {
         levels: [
           {
             score: 0,
+            name: "No hay entrega",
+            description: "No se presentó evidencia o no aplica.",
+            color: "#8c8c8c",
+          },
+          {
+            score: 20,
             name: "Insatisfactorio",
             description: "",
             color: "#ff4d4f",
           },
           {
-            score: 25,
+            score: 40,
             name: "Necesitas Mejorar",
             description: "",
             color: "#ff7a45",
           },
-          { score: 50, name: "Bueno", description: "", color: "#faad14" },
+          { score: 60, name: "Bueno", description: "", color: "#faad14" },
           {
-            score: 75,
+            score: 80,
             name: "Satisfactorio",
             description: "",
             color: "#7cb305",
@@ -739,6 +746,14 @@ export default class CreateEvent {
     const errors = [];
     const newCriteria = [];
 
+    // Map existing criteria to reuse IDs and avoid unique constraint errors on update
+    const oldCriteriaMap = new Map();
+    this.rubricAreas.forEach(a => {
+      a.criteria.forEach(c => {
+        if (c.id) oldCriteriaMap.set(`${a.type}_${c.name.trim().toLowerCase()}`, c);
+      });
+    });
+
     rows.forEach((row, rowIndex) => {
       const areaVal = String(row[idxArea] || "").trim();
       const name = String(row[idxName] || "").trim();
@@ -756,24 +771,30 @@ export default class CreateEvent {
       const levels = [
         {
           score: 0,
+          name: "No hay entrega",
+          description: "No se presentó evidencia o no aplica.",
+          color: "#8c8c8c",
+        },
+        {
+          score: 20,
           name: "Insatisfactorio",
           description: String(row[idxL1] || "").trim(),
           color: "#ff4d4f",
         },
         {
-          score: 25,
+          score: 40,
           name: "Necesitas Mejorar",
           description: String(row[idxL2] || "").trim(),
           color: "#ff7a45",
         },
         {
-          score: 50,
+          score: 60,
           name: "Bueno",
           description: String(row[idxL3] || "").trim(),
           color: "#faad14",
         },
         {
-          score: 75,
+          score: 80,
           name: "Satisfactorio",
           description: String(row[idxL4] || "").trim(),
           color: "#7cb305",
@@ -794,10 +815,22 @@ export default class CreateEvent {
       });
 
       totalWeight += weight;
+      
+      const key = `${areaType}_${name.trim().toLowerCase()}`;
+      const oldCrit = oldCriteriaMap.get(key);
+      const critId = oldCrit ? oldCrit.id : this._generateId();
+
+      if (oldCrit && oldCrit.levels) {
+        levels.forEach(lvl => {
+          const oldLvl = oldCrit.levels.find(l => l.score === lvl.score);
+          if (oldLvl) lvl.id_grade = oldLvl.id_grade ?? oldLvl.id;
+        });
+      }
+
       newCriteria.push({
         areaType,
         data: {
-          id: this._generateId(),
+          id: critId,
           name,
           description: desc,
           weight,
