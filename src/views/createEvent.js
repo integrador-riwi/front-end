@@ -744,6 +744,14 @@ export default class CreateEvent {
     let totalWeight = 0;
     const errors = [];
     const newCriteria = [];
+    
+    // Map existing criteria to reuse IDs and avoid unique constraint errors on update
+    const oldCriteriaMap = new Map();
+    this.rubricAreas.forEach(a => {
+      a.criteria.forEach(c => {
+        if (c.id) oldCriteriaMap.set(`${a.type}_${c.name.trim().toLowerCase()}`, c.id);
+      });
+    });
 
     rows.forEach((row, rowIndex) => {
       const areaVal = String(row[idxArea] || "").trim();
@@ -806,10 +814,14 @@ export default class CreateEvent {
       });
 
       totalWeight += weight;
+      
+      const key = `${areaType}_${name.trim().toLowerCase()}`;
+      const critId = oldCriteriaMap.get(key) || this._generateId();
+
       newCriteria.push({
         areaType,
         data: {
-          id: this._generateId(),
+          id: critId,
           name,
           description: desc,
           weight,
