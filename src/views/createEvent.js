@@ -717,7 +717,6 @@ export default class CreateEvent {
       "criterio",
       "descripcion_criterio",
       "peso_criterio",
-      "no_hay_entrega",
       "insatisfactorio",
       "necesitas_mejorar",
       "bueno",
@@ -736,7 +735,6 @@ export default class CreateEvent {
     const idxName = colIdx("criterio");
     const idxDesc = colIdx("descripcion_criterio");
     const idxWeight = colIdx("peso_criterio");
-    const idxL0 = colIdx("no_hay_entrega");
     const idxL1 = colIdx("insatisfactorio");
     const idxL2 = colIdx("necesitas_mejorar");
     const idxL3 = colIdx("bueno");
@@ -765,7 +763,7 @@ export default class CreateEvent {
         {
           score: 0,
           name: "No hay entrega",
-          description: String(row[idxL0] || "").trim() || "No se presentó evidencia o no aplica.",
+          description: "No se presentó evidencia o no aplica.",
           color: "#8c8c8c",
         },
         {
