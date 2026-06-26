@@ -1559,8 +1559,8 @@ export async function loadEvaluationPanel({
                data-member-id="${member.id_user}"
                data-score="${g.score}">
             <div class="eval-card-bar" style="background: ${color}"></div>
-            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">${t("coderTeam.level", { score: g.score })}</span>
-            <div class="eval-level-name">${g.name || t("coderTeam.level", { score: "" })}</div>
+            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">puntos: ${g.score}</span>
+            <div class="eval-level-name">${g.name || ""}</div>
             <div class="eval-level-desc">${g.description || t("coderTeam.noLevelDescription")}</div>
             <div class="eval-card-footer">
               <span class="eval-card-pts">${t("coderTeam.pts")}: ${g.score}</span>

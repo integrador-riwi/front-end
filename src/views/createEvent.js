@@ -603,19 +603,25 @@ export default class CreateEvent {
         levels: [
           {
             score: 0,
+            name: "No hay entrega",
+            description: "No se presentó evidencia o no aplica.",
+            color: "#8c8c8c",
+          },
+          {
+            score: 20,
             name: "Insatisfactorio",
             description: "",
             color: "#ff4d4f",
           },
           {
-            score: 25,
+            score: 40,
             name: "Necesitas Mejorar",
             description: "",
             color: "#ff7a45",
           },
-          { score: 50, name: "Bueno", description: "", color: "#faad14" },
+          { score: 60, name: "Bueno", description: "", color: "#faad14" },
           {
-            score: 75,
+            score: 80,
             name: "Satisfactorio",
             description: "",
             color: "#7cb305",
@@ -711,6 +717,7 @@ export default class CreateEvent {
       "criterio",
       "descripcion_criterio",
       "peso_criterio",
+      "no_hay_entrega",
       "insatisfactorio",
       "necesitas_mejorar",
       "bueno",
@@ -729,6 +736,7 @@ export default class CreateEvent {
     const idxName = colIdx("criterio");
     const idxDesc = colIdx("descripcion_criterio");
     const idxWeight = colIdx("peso_criterio");
+    const idxL0 = colIdx("no_hay_entrega");
     const idxL1 = colIdx("insatisfactorio");
     const idxL2 = colIdx("necesitas_mejorar");
     const idxL3 = colIdx("bueno");
@@ -756,24 +764,30 @@ export default class CreateEvent {
       const levels = [
         {
           score: 0,
+          name: "No hay entrega",
+          description: String(row[idxL0] || "").trim() || "No se presentó evidencia o no aplica.",
+          color: "#8c8c8c",
+        },
+        {
+          score: 20,
           name: "Insatisfactorio",
           description: String(row[idxL1] || "").trim(),
           color: "#ff4d4f",
         },
         {
-          score: 25,
+          score: 40,
           name: "Necesitas Mejorar",
           description: String(row[idxL2] || "").trim(),
           color: "#ff7a45",
         },
         {
-          score: 50,
+          score: 60,
           name: "Bueno",
           description: String(row[idxL3] || "").trim(),
           color: "#faad14",
         },
         {
-          score: 75,
+          score: 80,
           name: "Satisfactorio",
           description: String(row[idxL4] || "").trim(),
           color: "#7cb305",
