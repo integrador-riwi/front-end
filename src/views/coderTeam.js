@@ -560,10 +560,10 @@ function renderAdditionalRepos(repos) {
       </div>
       <div class="ct-additional-repos-grid">
         ${repos.map((repo) => {
-          const label = repo.label || repo.repoName;
-          const title = repo.repoName && repo.repoName !== label ? repo.repoName : label;
-          return repo.url
-            ? `
+    const label = repo.label || repo.repoName;
+    const title = repo.repoName && repo.repoName !== label ? repo.repoName : label;
+    return repo.url
+      ? `
               <a href="${escAttr(repo.url)}" target="_blank" rel="noopener" class="ct-additional-repo-chip" title="${escAttr(title)}">
                 ${repoIcon()}
                 <span>
@@ -572,7 +572,7 @@ function renderAdditionalRepos(repos) {
                 </span>
               </a>
             `
-            : `
+      : `
               <span class="ct-additional-repo-chip ct-additional-repo-chip-muted" title="${escAttr(title)}">
                 ${repoIcon()}
                 <span>
@@ -581,7 +581,7 @@ function renderAdditionalRepos(repos) {
                 </span>
               </span>
             `;
-        }).join("")}
+  }).join("")}
       </div>
     </div>
   `;
@@ -1115,29 +1115,29 @@ export async function loadMemberGrades(projectId, context = {}) {
         return;
       }
     } else {
-       // Check if results are partial (missing final_score globally)
-       const hasGlobal = results.some(r => r.final_score != null);
-       const hasAnyArea = results.some(r => Array.isArray(r.area_scores) && r.area_scores.length > 0);
+      // Check if results are partial (missing final_score globally)
+      const hasGlobal = results.some(r => r.final_score != null);
+      const hasAnyArea = results.some(r => Array.isArray(r.area_scores) && r.area_scores.length > 0);
 
-       if (!hasGlobal) {
-         if (hasAnyArea) {
-           isPartial = true;
-           results = results.map(r => {
-             const areaScores = Array.isArray(r.area_scores) ? r.area_scores.filter(a => a.final_score != null) : [];
-             const sum = areaScores.reduce((acc, a) => acc + (parseFloat(a.final_score) || 0), 0);
-             const avg = areaScores.length > 0 ? sum / areaScores.length : 0;
-             return { ...r, final_score: avg, isPartial: true };
-           });
-         } else {
-           isPending = true;
-           // Keep placeholder results from members list if possible
-           if (results.length === 0 && members.length > 0) {
-              results = members.filter(m => m.id_user).map(m => ({
-                user_name: m.name, github_avatar_url: m.github_avatar_url, id_user: m.id_user, final_score: 0, area_scores: []
-              }));
-           }
-         }
-       }
+      if (!hasGlobal) {
+        if (hasAnyArea) {
+          isPartial = true;
+          results = results.map(r => {
+            const areaScores = Array.isArray(r.area_scores) ? r.area_scores.filter(a => a.final_score != null) : [];
+            const sum = areaScores.reduce((acc, a) => acc + (parseFloat(a.final_score) || 0), 0);
+            const avg = areaScores.length > 0 ? sum / areaScores.length : 0;
+            return { ...r, final_score: avg, isPartial: true };
+          });
+        } else {
+          isPending = true;
+          // Keep placeholder results from members list if possible
+          if (results.length === 0 && members.length > 0) {
+            results = members.filter(m => m.id_user).map(m => ({
+              user_name: m.name, github_avatar_url: m.github_avatar_url, id_user: m.id_user, final_score: 0, area_scores: []
+            }));
+          }
+        }
+      }
     }
 
     // Safeguard: Hide sidebar ONLY if interactive rubrics are visible (active evaluation)
@@ -1464,18 +1464,18 @@ export async function loadEvaluationPanel({
 
   // Check if every evaluable member has an evaluation for every rubric in this area
   const isFullyEvaluated = rubrics.length > 0 && evaluableMembers.length > 0 &&
-    evaluableMembers.every(m => 
+    evaluableMembers.every(m =>
       rubrics.every(r => existingMap[`${r.id_rubric}_${m.id_user}`])
     );
 
   if (isFullyEvaluated || alreadySubmitted) {
     const totalScore = existingEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (existingEvals.length || 1);
-    
+
     // Build a small member breakdown list
     const membersBreakdown = evaluableMembers.map(m => {
-       const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
-       const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
-       return `
+      const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
+      const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
+      return `
          <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
            <div class="d-flex align-items-center gap-2">
              <img src="${m.github_avatar_url || ''}" style="width:24px;height:24px;border-radius:50%;background:#eee;">
@@ -1559,7 +1559,7 @@ export async function loadEvaluationPanel({
                data-member-id="${member.id_user}"
                data-score="${g.score}">
             <div class="eval-card-bar" style="background: ${color}"></div>
-            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">puntos: ${g.score}</span>
+            <span class="eval-level-badge" style="background: ${color}15; color: ${color}">Puntos: ${g.score}</span>
             <div class="eval-level-name">${g.name || ""}</div>
             <div class="eval-level-desc">${g.description || t("coderTeam.noLevelDescription")}</div>
             <div class="eval-card-footer">
@@ -1577,9 +1577,7 @@ export async function loadEvaluationPanel({
               <h4 class="eval-rubric-title">${rubric.name}</h4>
               <div class="eval-rubric-meta">${rubric.area} • ${t("coderTeam.weight")}: ${rubric.weight}</div>
             </div>
-            <div class="eval-pts-badge" id="pts-badge-${rubric.id_rubric}-${member.id_user}">
-               PTS: ${existing ? existing.score : '--'}
-            </div>
+            
           </div>
           <div class="eval-levels-grid">
             ${levelsHtml}
@@ -1681,11 +1679,11 @@ export async function loadEvaluationPanel({
       await submitEvaluations(projectId, evaluations);
       try { await calculateProjectGrades(projectId); } catch (_) { }
       toast.success(t("common.successTitle"), t("coderTeam.evaluationsSaved"));
-      
+
       // Refresh sidebar grades immediately
-      loadMemberGrades(projectId, { 
-        members: evaluableMembers, 
-        rubrics, 
+      loadMemberGrades(projectId, {
+        members: evaluableMembers,
+        rubrics,
         existingEvals: evaluations.map(ev => ({
           evaluated_user_id: ev.evaluatedUserId,
           id_rubric: ev.gradeId ? rubrics.find(r => r.grades.some(g => g.id_grade === ev.gradeId))?.id_rubric : null,
