@@ -17,7 +17,6 @@ import {
 } from "./coderTeam.js";
 
 const TL_ROLES = ["TL_DEVELOPMENT", "TL_SOFT_SKILLS", "TL_ENGLISH", "ADMIN"];
-const MAX_PER_AREA = 3;
 const ROLE_AREA_MAP = {
   TL_DEVELOPMENT: "DEVELOPMENT",
   TL_SOFT_SKILLS: "SOFT_SKILLS",
@@ -371,12 +370,12 @@ export default class TLDashboardView {
 
     const badges = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"].map((area) => {
       const count = areas[area] ?? 0;
-      const isFull = count >= MAX_PER_AREA;
+      const hasCoverage = count > 0;
       const isUserArea = area === userArea;
       const label = AREA_LABELS[area];
 
       let bg, color, border;
-      if (isFull) {
+      if (hasCoverage) {
         bg = "rgba(90,204,164,0.12)"; color = "#059669"; border = "rgba(90,204,164,0.3)";
       } else if (isUserArea) {
         bg = "rgba(107,92,255,0.1)"; color = "var(--color-primary)"; border = "rgba(107,92,255,0.3)";
@@ -384,7 +383,7 @@ export default class TLDashboardView {
         bg = "rgba(0,0,0,0.04)"; color = "var(--text-muted)"; border = "transparent";
       }
 
-      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${label} ${count}/${MAX_PER_AREA}</span>`;
+      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${label} ${count}</span>`;
     }).join("");
 
     return `<div class="d-flex gap-1 flex-wrap mb-2">${badges}</div>`;
@@ -400,11 +399,6 @@ export default class TLDashboardView {
     const evalsClosed = evalStatus?.evaluations_closed ?? false;
     const alreadyDone = evalStatus?.already_submitted ?? team._alreadyEvaluated;
 
-    // Use teamAreaCounts for area cap check (more accurate than _evalStatus.area_closed)
-    const userArea = ROLE_AREA_MAP[this.user?.role] ?? null;
-    const areaCount = userArea ? (this.teamAreaCounts[team.id_team]?.[userArea] ?? 0) : 0;
-    const areaCapped = userArea ? areaCount >= MAX_PER_AREA : false;
-
     let content, disabled, cls, title;
 
     if (!hasProject) {
@@ -416,10 +410,6 @@ export default class TLDashboardView {
     } else if (alreadyDone) {
       content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">visibility</span> ${t("team.reviewEval")}`;
       disabled = ""; cls = "tld-eval-btn tld-eval-btn--reviewed"; title = "";
-    } else if (areaCapped && !this.isAdmin) {
-      content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">group_off</span> ${t("tl.areaFull") || "Area full"}`;
-      disabled = "disabled"; cls = "tld-eval-btn tld-eval-btn--locked";
-      title = `${areaCount}/${MAX_PER_AREA} ${t("tl.evaluators") || "evaluators"}`;
     } else {
       content = `<span class="material-icons-round" style="font-size:14px;vertical-align:middle;">rate_review</span> ${t("team.evaluate")}`;
       disabled = ""; cls = "tld-eval-btn tld-eval-btn--ready"; title = "";
@@ -511,6 +501,7 @@ export default class TLDashboardView {
             </div>
             <button id="btnCloseEvals" class="btn btn-sm btn-danger"
                     data-has-missing="${missing.length > 0}" data-missing-count="${missing.length}"
+                    ${canClose ? "" : "disabled"}
                     style="white-space:nowrap;">
               <span class="material-icons-round" style="font-size:.9rem;vertical-align:middle;">lock</span>
               ${t("tl.closeEvals") || "Close evaluations"}
@@ -527,9 +518,14 @@ export default class TLDashboardView {
       const btn = document.getElementById("btnCloseEvals");
       const hasMissing = btn.dataset.hasMissing === "true";
       const missingCount = parseInt(btn.dataset.missingCount ?? "0");
-      const msg = hasMissing
-          ? `⚠️ ${missingCount} project(s) missing evaluations.\n\nClose anyway?`
-          : t("tl.closeEvalsConfirm") || "Close evaluations?";
+      if (hasMissing) {
+        toast.error(
+            t("common.errorTitle"),
+            `${missingCount} project(s) still need at least one evaluation in each active area.`,
+        );
+        return;
+      }
+      const msg = t("tl.closeEvalsConfirm") || "Close evaluations?";
       if (!confirm(msg)) return;
       const { closeEventEvaluations, getEventEvalCoverage } = await import("../services/api.js");
       btn.disabled = true;

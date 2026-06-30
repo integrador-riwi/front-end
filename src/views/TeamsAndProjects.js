@@ -183,15 +183,14 @@ export default class Teams {
   _renderAreaCounts(team) {
     if (!this.isAdmin) return "";
     const areas = this.teamAreaCounts[team.id_team] ?? {};
-    const MAX = 3;
     const LABELS = { DEVELOPMENT: "Dev", SOFT_SKILLS: "Soft", ENGLISH: "Eng" };
     const badges = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"].map((area) => {
       const count = areas[area] ?? 0;
-      const isFull = count >= MAX;
-      const bg = isFull ? "rgba(90,204,164,0.12)" : "rgba(0,0,0,0.04)";
-      const color = isFull ? "#059669" : "var(--text-muted)";
-      const border = isFull ? "rgba(90,204,164,0.3)" : "transparent";
-      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${LABELS[area]} ${count}/${MAX}</span>`;
+      const hasCoverage = count > 0;
+      const bg = hasCoverage ? "rgba(90,204,164,0.12)" : "rgba(0,0,0,0.04)";
+      const color = hasCoverage ? "#059669" : "var(--text-muted)";
+      const border = hasCoverage ? "rgba(90,204,164,0.3)" : "transparent";
+      return `<span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};border:1px solid ${border};">${LABELS[area]} ${count}</span>`;
     }).join("");
     return `<div class="d-flex gap-1" style="flex-wrap:nowrap;">${badges}</div>`;
   }

@@ -360,7 +360,6 @@ export default class DashboardView {
   _renderTeamsTable() {
     const ALL_AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
     const requiredAreas = this.evalCoverage?.requiredAreas ?? ALL_AREAS;
-    const MAX = 3;
 
     const countsMap = {};
     for (const row of this.teamEvalCounts) {
@@ -414,16 +413,14 @@ export default class DashboardView {
           </td>`;
         }
         const count = areas[area] ?? 0;
-        const dots = Array.from({ length: MAX }, (_, i) => {
-          const filled = i < count;
-          const color = count === MAX ? "var(--mint)" : count > 0 ? "var(--accent)" : "#e2e8f0";
-          return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${filled ? color : "#e2e8f0"};"></span>`;
-        }).join("");
+        const hasCoverage = count > 0;
+        const color = hasCoverage ? "var(--mint)" : "var(--text-muted)";
+        const dotColor = hasCoverage ? "var(--mint)" : "#e2e8f0";
         return `
           <td style="text-align:center;padding:12px 8px;vertical-align:middle;">
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-              <span style="font-size:0.7rem;font-weight:700;color:${count === MAX ? "var(--mint)" : count > 0 ? "var(--accent)" : "var(--text-muted)"};">${count}/${MAX}</span>
-              <div style="display:flex;gap:3px;">${dots}</div>
+              <span style="font-size:0.7rem;font-weight:700;color:${color};">${count}</span>
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor};"></span>
             </div>
           </td>`;
       }).join("");
@@ -646,9 +643,9 @@ export default class DashboardView {
           <button id="btn-close-evals"
                   data-has-missing="${missing.length > 0}"
                   data-missing-count="${missing.length}"
-                  style="background:var(--accent);border:none;color:white;border-radius:999px;padding:6px 16px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;"
-                  onmouseover="this.style.background='var(--color-primary-dark)';"
-                  onmouseout="this.style.background='var(--accent)';">
+                  ${canClose ? "" : "disabled"}
+                  style="background:var(--accent);border:none;color:white;border-radius:999px;padding:6px 16px;font-size:0.75rem;font-weight:600;cursor:${canClose ? "pointer" : "not-allowed"};opacity:${canClose ? "1" : ".55"};white-space:nowrap;flex-shrink:0;transition:all .2s;"
+                  ${canClose ? `onmouseover="this.style.background='var(--color-primary-dark)';" onmouseout="this.style.background='var(--accent)';"` : ""}>
             <span class="material-icons-round" style="font-size:.8rem;vertical-align:middle;margin-right:4px;">lock</span>
             ${t("tl.closeEvals") || "Cerrar calificaciones"}
           </button>
@@ -798,9 +795,15 @@ export default class DashboardView {
       const hasMissing = btn.dataset.hasMissing === "true";
       const missingCount = parseInt(btn.dataset.missingCount ?? "0");
 
-      const confirmMsg = hasMissing
-          ? `⚠️ ${missingCount} proyecto(s) no tienen todas las áreas calificadas.\n\nAl cerrar, se calculará la nota con las evaluaciones existentes.\n\n¿Deseas cerrar de todas formas?`
-          : (t("tl.closeEvalsConfirm") || "¿Cerrar las calificaciones? Los TLs ya no podrán enviar más evaluaciones.");
+      if (hasMissing) {
+        toast.error(
+            t("common.errorTitle"),
+            `${missingCount} proyecto(s) deben tener al menos una calificación por área activa.`,
+        );
+        return;
+      }
+
+      const confirmMsg = t("tl.closeEvalsConfirm") || "¿Cerrar las calificaciones? Los TLs ya no podrán enviar más evaluaciones.";
 
       if (!confirm(confirmMsg)) return;
 

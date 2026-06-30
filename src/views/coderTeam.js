@@ -1395,7 +1395,6 @@ export async function loadEvaluationPanel({
   } catch (_) { }
 
   const evalsClosed = evalStatus?.evaluations_closed ?? false;
-  const areaCapped = evalStatus?.area_closed ?? false;
   const alreadySubmitted = evalStatus?.already_submitted ?? false;
 
   // Evals globally closed, and this TL didn't submit yet → show lock
@@ -1406,23 +1405,6 @@ export async function loadEvaluationPanel({
         <div>
           <p class="fw-bold mb-0" style="color:#dc2626;">${t("tl.evalsClosedBadge") || "Calificaciones cerradas"}</p>
           <p class="mb-0 small text-muted">${t("tl.evalsClosedDesc") || "El administrador ha cerrado el período de calificación."}</p>
-        </div>
-      </div>`;
-    submitBtn.classList.add("d-none");
-    return;
-  }
-
-  // Area already has enough evaluators and this TL hasn't submitted → show warning
-  if (areaCapped && !alreadySubmitted) {
-    const max = evalStatus?.max_evaluators ?? 3;
-    const count = evalStatus?.evaluator_count ?? max;
-    const area = evalStatus?.area ?? "";
-    container.innerHTML = `
-      <div class="d-flex align-items-center gap-3 p-4 rounded-3 border" style="background:#fffbeb;border-color:#fcd34d!important;">
-        <span class="material-icons-round" style="color:#d97706;font-size:2rem;">group_off</span>
-        <div>
-          <p class="fw-bold mb-0" style="color:#d97706;">${t("tl.areaFull") || "Área completa"}</p>
-          <p class="mb-0 small text-muted">${t("tl.areaFullHint") || "Ya hay"} ${count}/${max} ${t("tl.evaluators") || "calificadores"} ${area ? `en ${area}` : ""}.</p>
         </div>
       </div>`;
     submitBtn.classList.add("d-none");
