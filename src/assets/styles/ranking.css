@@ -92,7 +92,7 @@
 }
 
 .rk-action-btn {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
