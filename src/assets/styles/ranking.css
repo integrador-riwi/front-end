@@ -110,6 +110,13 @@
   color: white;
 }
 
+.rk-action-btn--secondary {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
 .rk-action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(107, 92, 255, 0.3);

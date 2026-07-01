@@ -25,6 +25,7 @@ export default class Ranking {
     this.rankingData = null;
     this.loadingRanking = false;
     this.publishing = false;
+    this.updatingExistingResults = false;
     this.confirmPublish = false;
     this.publishWarnings = [];
     this.error = null;
@@ -144,6 +145,43 @@ export default class Ranking {
     this._paint();
   }
 
+  async _updateExistingResults() {
+    if (!this.selectedEventId || this.updatingExistingResults) return;
+    this.updatingExistingResults = true;
+    this.error = null;
+    this._paint();
+
+    try {
+      const res = await apiFetch(
+          `/evaluations/event/${this.selectedEventId}/recalculate-existing-results`,
+          { method: "POST" },
+      );
+      const summary = res?.data ?? {};
+      toast.success(
+          t("common.successTitle") ?? "Success",
+          `Actualizadas ${summary.projectResultsUpdated ?? 0} calificaciones existentes.`,
+      );
+
+      const [statusRes, rankingRes] = await Promise.allSettled([
+        apiFetch(`/events/${this.selectedEventId}/ranking/status`, { method: "GET" }),
+        apiFetch(`/events/${this.selectedEventId}/ranking`, { method: "GET" }),
+      ]);
+
+      if (statusRes.status === "fulfilled") {
+        this.rankingStatus = statusRes.value?.data ?? null;
+      }
+      if (rankingRes.status === "fulfilled") {
+        this.rankingData = rankingRes.value?.data ?? null;
+      }
+    } catch (e) {
+      this.error = e.message ?? t("common.error");
+      toast.error(t("common.errorTitle"), this.error);
+    }
+
+    this.updatingExistingResults = false;
+    this._paint();
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   _paint() {
@@ -173,7 +211,7 @@ export default class Ranking {
       `;
     }
 
-    if (this.publishing) {
+    if (this.publishing || this.updatingExistingResults) {
       return `
         <div class="rk-calculating-state">
           <div class="rk-calc-animation">
@@ -182,8 +220,8 @@ export default class Ranking {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
             </div>
           </div>
-          <h2>${t("ranking.calculating") ?? "Recalculating Ranking..."}</h2>
-          <p>${t("ranking.calcDesc") ?? "We are processing final scores and rubrics. This won't take long."}</p>
+          <h2>${this.updatingExistingResults ? "Actualizando calificaciones existentes..." : (t("ranking.calculating") ?? "Recalculating Ranking...")}</h2>
+          <p>${this.updatingExistingResults ? "Se están actualizando solo los resultados ya creados, sin insertar registros nuevos." : (t("ranking.calcDesc") ?? "We are processing final scores and rubrics. This won't take long.")}</p>
         </div>
       `;
     }
@@ -221,8 +259,19 @@ export default class Ranking {
   }
 
   _renderAdminActions() {
-    const disabled = this.publishing;
+    const disabled = this.publishing || this.updatingExistingResults;
     return `
+      <button
+        class="rk-action-btn rk-action-btn--secondary ${disabled ? "rk-action-btn--disabled" : ""}"
+        id="rk-update-existing-btn"
+        type="button"
+        ${disabled ? "disabled" : ""}
+        style="${disabled ? "opacity:0.45;cursor:not-allowed;" : ""}"
+        title="Actualiza únicamente resultados ya existentes"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 15.6-6.1L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.6 6.1L3 16"/><path d="M3 21v-5h5"/></svg>
+        <span>Actualizar existentes</span>
+      </button>
       <button
         class="rk-action-btn rk-action-btn--primary ${this.publishing ? "rk-action-btn--loading" : ""} ${disabled ? "rk-action-btn--disabled" : ""}"
         id="rk-publish-btn"
@@ -547,6 +596,10 @@ export default class Ranking {
 
     document.getElementById("rk-publish-btn-confirm")?.addEventListener("click", () => {
       this._publishRanking();
+    });
+
+    document.getElementById("rk-update-existing-btn")?.addEventListener("click", () => {
+      this._updateExistingResults();
     });
 
     document.getElementById("rk-cancel-confirm-btn")?.addEventListener("click", () => {
