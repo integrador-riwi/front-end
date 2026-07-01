@@ -218,7 +218,7 @@ export default class Ranking {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="text" placeholder="${t("ranking.searchPlaceholder") ?? "Search teams..."}" id="rk-search-input">
             </div>
-            ${isAdmin(this.user) && this.rankingStatus ? this._renderAdminActions() : ""}
+            ${isAdmin(this.user) ? this._renderAdminActions() : ""}
           </div>
         </header>
 
