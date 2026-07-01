@@ -106,14 +106,6 @@ export default class Ranking {
   // ── Publish flow ───────────────────────────────────────────────────────────
 
   _requestPublish() {
-    const s = this.rankingStatus;
-    if (s?.hasIncompleteEvaluations) {
-      toast.error(
-          t("common.errorTitle"),
-          t("dashboard.publishDisabledHint") || "Se requiere evaluación al 100% para publicar",
-      );
-      return;
-    }
     this._publishRanking();
   }
 
@@ -229,21 +221,13 @@ export default class Ranking {
   }
 
   _renderAdminActions() {
-    const isFinished = this.eventStatus === "FINISHED";
-    const hasIncomplete = this.rankingStatus?.hasIncompleteEvaluations ?? false;
-    const disabled = this.publishing || isFinished || hasIncomplete;
-    const disabledTitle = isFinished
-        ? (t("ranking.disabledFinished") ?? "El evento está finalizado")
-        : hasIncomplete
-            ? (t("dashboard.publishDisabledHint") || "Se requiere evaluación al 100% para publicar")
-            : "";
+    const disabled = this.publishing;
     return `
       <button
         class="rk-action-btn rk-action-btn--primary ${this.publishing ? "rk-action-btn--loading" : ""} ${disabled ? "rk-action-btn--disabled" : ""}"
         id="rk-publish-btn"
         type="button"
         ${disabled ? "disabled" : ""}
-        ${disabledTitle ? `title="${disabledTitle}"` : ""}
         style="${disabled ? "opacity:0.45;cursor:not-allowed;" : ""}"
       >
         ${this.publishing
