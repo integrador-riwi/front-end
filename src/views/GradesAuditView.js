@@ -282,7 +282,6 @@ export default class GradesAuditView {
         <section class="ga-team-summary">
           <div class="ga-section-title">
             <strong>Nota general del equipo</strong>
-            <span>Calculada en backend con las areas evaluadas disponibles.</span>
           </div>
           ${teamSummaryRows.length ? this._teamSummaryTable(teamSummaryRows) : this._teamSummaryEmpty()}
         </section>
