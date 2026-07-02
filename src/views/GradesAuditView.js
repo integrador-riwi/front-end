@@ -36,6 +36,12 @@ const scoreClass = (score) => {
   return "ga-score--low";
 };
 
+const areaLabel = (area) => ({
+  DEVELOPMENT: "Development",
+  SOFT_SKILLS: "Soft Skills",
+  ENGLISH: "English",
+}[area] ?? area);
+
 export default class GradesAuditView {
   constructor(router) {
     this.router = router;
@@ -166,9 +172,17 @@ export default class GradesAuditView {
 
   _teamSummaryRows() {
     const rows = this.audit?.teamSummary ?? [];
+    const areaRows = this.audit?.areaSummary ?? [];
     return rows.filter((row) => {
       if (this.filters.team !== "ALL" && String(row.id_team) !== this.filters.team) {
         return false;
+      }
+      if (this.filters.area !== "ALL") {
+        const hasArea = areaRows.some((areaRow) =>
+          String(areaRow.id_project) === String(row.id_project) &&
+          areaRow.area === this.filters.area
+        );
+        if (!hasArea) return false;
       }
       const query = this.filters.query.trim().toLowerCase();
       if (!query) return true;
@@ -327,28 +341,68 @@ export default class GradesAuditView {
     `;
   }
 
+  _areasForTeam(team) {
+    const rows = this.audit?.areaSummary ?? [];
+    return rows
+      .filter((row) => String(row.id_project) === String(team.id_project))
+      .filter((row) => this.filters.area === "ALL" || row.area === this.filters.area)
+      .sort((a, b) => String(a.area).localeCompare(String(b.area)));
+  }
+
   _teamSummaryTable(rows) {
     return `
       <div class="ga-team-summary-grid">
-        ${rows.map((row) => `
-          <article class="ga-team-card ${row.is_complete ? "ga-team-card--complete" : "ga-team-card--partial"}">
-            <div>
-              <strong>${esc(row.team_name)}</strong>
-              <span>${esc(row.project_name)}</span>
-            </div>
-            <span class="ga-team-status">${row.is_complete ? "Completo" : "Parcial"}</span>
-            <div class="ga-team-score">
-              <span>Nota equipo</span>
-              <strong>${esc(row.team_score ?? "0.00")}</strong>
-            </div>
-            <div class="ga-area-counts">
-              <span>${esc(row.evaluated_area_count ?? 0)} areas evaluadas</span>
-              <span>${esc(row.required_area_count ?? 0)} areas requeridas</span>
-              <span>${row.is_complete ? "Ranking completo" : "Faltan areas"}</span>
-            </div>
-            <small>Ultima eval: ${formatDate(row.last_calculated_at)}</small>
-          </article>
-        `).join("")}
+        ${rows.map((row) => {
+          const areas = this._areasForTeam(row);
+          const score = Number(row.team_score ?? 0);
+          const width = Math.max(0, Math.min(100, score));
+          return `
+            <article class="ga-team-card ${row.is_complete ? "ga-team-card--complete" : "ga-team-card--partial"}">
+              <div class="ga-team-card-head">
+                <div>
+                  <strong>${esc(row.team_name)}</strong>
+                  <span>${esc(row.project_name)}</span>
+                </div>
+                <span class="ga-team-status">${row.is_complete ? "Completo" : "Parcial"}</span>
+              </div>
+
+              <div class="ga-team-score-panel">
+                <div class="ga-team-score">
+                  <span>Nota equipo</span>
+                  <strong>${esc(row.team_score ?? "0.00")}</strong>
+                </div>
+                <div class="ga-team-performance">
+                  <span>Desempeño</span>
+                  <div class="ga-performance-bar">
+                    <i style="width:${width}%"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ga-area-mini-grid">
+                ${areas.length ? areas.map((area) => `
+                  <div class="ga-area-mini">
+                    <strong>${esc(area.area_score ?? "0.00")}</strong>
+                    <span>${esc(areaLabel(area.area))}</span>
+                    <small>${esc(area.counted_member_count ?? 0)} incl. · ${esc(area.zero_member_count ?? 0)} en 0</small>
+                  </div>
+                `).join("") : `
+                  <div class="ga-area-mini ga-area-mini--empty">
+                    <strong>—</strong>
+                    <span>Sin areas</span>
+                    <small>No hay evaluaciones</small>
+                  </div>
+                `}
+              </div>
+
+              <div class="ga-team-card-foot">
+                <span>${esc(row.evaluated_area_count ?? 0)}/${esc(row.required_area_count ?? 0)} areas evaluadas</span>
+                <span>${row.is_complete ? "Ranking completo" : "Faltan areas"}</span>
+                <span>Ultima eval: ${formatDate(row.last_calculated_at)}</span>
+              </div>
+            </article>
+          `;
+        }).join("")}
       </div>
     `;
   }

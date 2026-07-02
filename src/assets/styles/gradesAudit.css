@@ -1,11 +1,12 @@
 .ga-page {
   width: 100%;
+  background: #f6f8fc;
 }
 
 .ga-shell {
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 24px 20px 72px;
+  padding: 28px 22px 76px;
 }
 
 .ga-header {
@@ -13,7 +14,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .ga-eyebrow {
@@ -45,6 +46,7 @@
   border-radius: 8px;
   padding: 10px 16px;
   min-height: 40px;
+  box-shadow: 0 10px 18px rgba(107, 92, 255, 0.18);
 }
 
 .ga-alert {
@@ -59,16 +61,17 @@
 
 .ga-metrics {
   display: grid;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin-bottom: 16px;
 }
 
 .ga-metric {
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
+  border: 1px solid #dfe5f2;
+  background: white;
   border-radius: 8px;
   padding: 12px;
+  box-shadow: 0 8px 18px rgba(20, 35, 70, 0.04);
 }
 
 .ga-metric span {
@@ -91,11 +94,12 @@
   grid-template-columns: minmax(160px, 1fr) minmax(140px, 0.8fr) minmax(180px, 1fr) minmax(260px, 1.5fr) auto;
   gap: 10px;
   align-items: end;
-  border: 1px solid var(--border);
+  border: 1px solid #dfe5f2;
   background: white;
   border-radius: 8px;
   padding: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 24px rgba(20, 35, 70, 0.04);
 }
 
 .ga-filters label {
@@ -116,11 +120,11 @@
 .ga-filters input[type="search"] {
   width: 100%;
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid #dfe5f2;
   border-radius: 8px;
   padding: 0 10px;
   color: var(--text-primary);
-  background: var(--bg-panel);
+  background: #f8faff;
 }
 
 .ga-check {
@@ -137,11 +141,7 @@
 
 .ga-team-summary,
 .ga-area-summary {
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .ga-section-title {
@@ -149,7 +149,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .ga-section-title strong {
@@ -166,29 +166,41 @@
 .ga-team-summary-grid,
 .ga-area-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .ga-team-card,
 .ga-area-card {
+  border: 1px solid #d8deea;
+  background: white;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 12px 24px rgba(20, 35, 70, 0.06);
+}
+
+.ga-area-card {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  border-radius: 8px;
-  padding: 12px;
 }
 
 .ga-team-card--partial {
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: #d8deea;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf5 100%);
 }
 
 .ga-team-card--complete {
   border-color: #bbf7d0;
-  background: #f0fdf4;
+  background: linear-gradient(180deg, #ffffff 0%, #f5fff8 100%);
+}
+
+.ga-team-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .ga-team-card > div:first-child,
@@ -208,7 +220,8 @@
 .ga-team-card > div:first-child strong,
 .ga-area-card > div:first-child strong {
   color: var(--text-primary);
-  font-size: 0.92rem;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
 .ga-team-card > div:first-child span,
@@ -221,17 +234,21 @@
 }
 
 .ga-team-status {
-  border: 1px solid var(--border);
-  background: white;
+  border: none;
+  background: #ffedac;
   border-radius: 999px;
-  color: var(--text-primary) !important;
-  font-size: 0.72rem;
+  color: #9a5a00 !important;
+  font-size: 0.66rem;
   font-weight: 900;
-  padding: 4px 8px;
+  padding: 5px 12px;
   text-transform: uppercase;
 }
 
-.ga-team-score,
+.ga-team-card--complete .ga-team-status {
+  background: #bbf7d0;
+  color: #067647 !important;
+}
+
 .ga-area-score {
   grid-column: 1 / -1;
   display: flex;
@@ -242,7 +259,6 @@
   padding-top: 10px;
 }
 
-.ga-team-score span,
 .ga-area-score span {
   color: var(--text-muted);
   font-size: 0.75rem;
@@ -250,11 +266,113 @@
   text-transform: uppercase;
 }
 
-.ga-team-score strong,
 .ga-area-score strong {
   color: var(--accent);
   font-size: 1.5rem;
   font-weight: 900;
+}
+
+.ga-team-score-panel {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 14px;
+  border-top: 1px dashed #dfe5f2;
+  padding-top: 14px;
+  margin-bottom: 14px;
+}
+
+.ga-team-score span,
+.ga-team-performance span {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ga-team-score strong {
+  color: var(--accent);
+  display: block;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin-top: 4px;
+}
+
+.ga-team-performance {
+  align-self: end;
+}
+
+.ga-performance-bar {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8ecf8;
+}
+
+.ga-performance-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.ga-team-card--complete .ga-performance-bar i {
+  background: #22c55e;
+}
+
+.ga-area-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ga-area-mini {
+  min-height: 76px;
+  border-radius: 8px;
+  background: #eef3ff;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.ga-area-mini strong {
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ga-area-mini span {
+  color: #26314d;
+  font-size: 0.66rem;
+  font-weight: 900;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.ga-area-mini small {
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.ga-area-mini--empty {
+  grid-column: 1 / -1;
+}
+
+.ga-team-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  border-top: 1px dashed #dfe5f2;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  margin-top: 14px;
+  padding-top: 12px;
 }
 
 .ga-area-counts {
@@ -423,6 +541,11 @@
   }
 
   .ga-area-counts {
+    grid-template-columns: 1fr;
+  }
+
+  .ga-team-score-panel,
+  .ga-area-mini-grid {
     grid-template-columns: 1fr;
   }
 }
