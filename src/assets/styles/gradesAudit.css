@@ -139,8 +139,7 @@
   height: 18px;
 }
 
-.ga-team-summary,
-.ga-area-summary {
+.ga-team-summary {
   margin-bottom: 18px;
 }
 
@@ -163,26 +162,18 @@
   font-weight: 700;
 }
 
-.ga-team-summary-grid,
-.ga-area-summary-grid {
+.ga-team-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px;
 }
 
-.ga-team-card,
-.ga-area-card {
+.ga-team-card {
   border: 1px solid #d8deea;
   background: white;
   border-radius: 8px;
   padding: 18px;
   box-shadow: 0 12px 24px rgba(20, 35, 70, 0.06);
-}
-
-.ga-area-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
 }
 
 .ga-team-card--partial {
@@ -203,31 +194,24 @@
   margin-bottom: 14px;
 }
 
-.ga-team-card > div:first-child,
-.ga-area-card > div:first-child {
+.ga-team-card > div:first-child {
   min-width: 0;
 }
 
 .ga-team-card strong,
 .ga-team-card span,
-.ga-team-card small,
-.ga-area-card strong,
-.ga-area-card span,
-.ga-area-card small {
+.ga-team-card small {
   display: block;
 }
 
-.ga-team-card > div:first-child strong,
-.ga-area-card > div:first-child strong {
+.ga-team-card > div:first-child strong {
   color: var(--text-primary);
   font-size: 1rem;
   line-height: 1.2;
 }
 
 .ga-team-card > div:first-child span,
-.ga-team-card small,
-.ga-area-card > div:first-child span,
-.ga-area-card small {
+.ga-team-card small {
   color: var(--text-muted);
   font-size: 0.75rem;
   margin-top: 3px;
@@ -247,29 +231,6 @@
 .ga-team-card--complete .ga-team-status {
   background: #bbf7d0;
   color: #067647 !important;
-}
-
-.ga-area-score {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-}
-
-.ga-area-score span {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.ga-area-score strong {
-  color: var(--accent);
-  font-size: 1.5rem;
-  font-weight: 900;
 }
 
 .ga-team-score-panel {
@@ -393,7 +354,7 @@
   text-align: center;
 }
 
-.ga-area-empty {
+.ga-summary-empty {
   border: 1px dashed var(--border);
   border-radius: 8px;
   color: var(--text-muted);

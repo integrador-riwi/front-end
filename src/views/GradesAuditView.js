@@ -220,7 +220,6 @@ export default class GradesAuditView {
 
     const rows = this.audit?.rows ?? [];
     const filtered = this._rows();
-    const areaSummaryRows = this._areaSummaryRows();
     const teamSummaryRows = this._teamSummaryRows();
     const summary = this.audit?.summary ?? {};
     const zeroCount = filtered.filter((row) => Number(row.grade_score) === 0).length;
@@ -286,14 +285,6 @@ export default class GradesAuditView {
             <span>Calculada en backend con las areas evaluadas disponibles.</span>
           </div>
           ${teamSummaryRows.length ? this._teamSummaryTable(teamSummaryRows) : this._teamSummaryEmpty()}
-        </section>
-
-        <section class="ga-area-summary">
-          <div class="ga-section-title">
-            <strong>Promedio por area del equipo</strong>
-            <span>Los miembros con 0 se excluyen solo del promedio de esa area.</span>
-          </div>
-          ${areaSummaryRows.length ? this._areaSummaryTable(areaSummaryRows) : this._areaSummaryEmpty()}
         </section>
 
         <section class="ga-table-wrap">
@@ -409,42 +400,8 @@ export default class GradesAuditView {
 
   _teamSummaryEmpty() {
     return `
-      <div class="ga-area-empty">
+      <div class="ga-summary-empty">
         No hay nota general de equipo para los filtros seleccionados.
-      </div>
-    `;
-  }
-
-  _areaSummaryTable(rows) {
-    return `
-      <div class="ga-area-summary-grid">
-        ${rows.map((row) => `
-          <article class="ga-area-card">
-            <div>
-              <strong>${esc(row.team_name)}</strong>
-              <span>${esc(row.project_name)}</span>
-            </div>
-            <span class="ga-area">${esc(row.area)}</span>
-            <div class="ga-area-score">
-              <span>Promedio area</span>
-              <strong>${esc(row.area_score ?? "0.00")}</strong>
-            </div>
-            <div class="ga-area-counts">
-              <span>${esc(row.counted_member_count ?? 0)} incluidos</span>
-              <span>${esc(row.zero_member_count ?? 0)} excluidos por 0</span>
-              <span>${esc(row.member_count ?? 0)} miembros con resultado</span>
-            </div>
-            <small>Ultima eval: ${formatDate(row.last_calculated_at)}</small>
-          </article>
-        `).join("")}
-      </div>
-    `;
-  }
-
-  _areaSummaryEmpty() {
-    return `
-      <div class="ga-area-empty">
-        No hay promedios de area calculados para los filtros seleccionados.
       </div>
     `;
   }
