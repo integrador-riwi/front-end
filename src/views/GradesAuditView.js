@@ -164,6 +164,22 @@ export default class GradesAuditView {
     });
   }
 
+  _teamSummaryRows() {
+    const rows = this.audit?.teamSummary ?? [];
+    return rows.filter((row) => {
+      if (this.filters.team !== "ALL" && String(row.id_team) !== this.filters.team) {
+        return false;
+      }
+      const query = this.filters.query.trim().toLowerCase();
+      if (!query) return true;
+      const haystack = [
+        row.team_name,
+        row.project_name,
+      ].join(" ").toLowerCase();
+      return haystack.includes(query);
+    });
+  }
+
   _options(rows, key, labelKey) {
     const map = new Map();
     rows.forEach((row) => {
@@ -191,6 +207,7 @@ export default class GradesAuditView {
     const rows = this.audit?.rows ?? [];
     const filtered = this._rows();
     const areaSummaryRows = this._areaSummaryRows();
+    const teamSummaryRows = this._teamSummaryRows();
     const summary = this.audit?.summary ?? {};
     const zeroCount = filtered.filter((row) => Number(row.grade_score) === 0).length;
 
@@ -249,6 +266,14 @@ export default class GradesAuditView {
           </label>
         </section>
 
+        <section class="ga-team-summary">
+          <div class="ga-section-title">
+            <strong>Nota general del equipo</strong>
+            <span>Calculada en backend con las areas evaluadas disponibles.</span>
+          </div>
+          ${teamSummaryRows.length ? this._teamSummaryTable(teamSummaryRows) : this._teamSummaryEmpty()}
+        </section>
+
         <section class="ga-area-summary">
           <div class="ga-section-title">
             <strong>Promedio por area del equipo</strong>
@@ -302,6 +327,40 @@ export default class GradesAuditView {
     `;
   }
 
+  _teamSummaryTable(rows) {
+    return `
+      <div class="ga-team-summary-grid">
+        ${rows.map((row) => `
+          <article class="ga-team-card ${row.is_complete ? "ga-team-card--complete" : "ga-team-card--partial"}">
+            <div>
+              <strong>${esc(row.team_name)}</strong>
+              <span>${esc(row.project_name)}</span>
+            </div>
+            <span class="ga-team-status">${row.is_complete ? "Completo" : "Parcial"}</span>
+            <div class="ga-team-score">
+              <span>Nota equipo</span>
+              <strong>${esc(row.team_score ?? "0.00")}</strong>
+            </div>
+            <div class="ga-area-counts">
+              <span>${esc(row.evaluated_area_count ?? 0)} areas evaluadas</span>
+              <span>${esc(row.required_area_count ?? 0)} areas requeridas</span>
+              <span>${row.is_complete ? "Ranking completo" : "Faltan areas"}</span>
+            </div>
+            <small>Ultima eval: ${formatDate(row.last_calculated_at)}</small>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  _teamSummaryEmpty() {
+    return `
+      <div class="ga-area-empty">
+        No hay nota general de equipo para los filtros seleccionados.
+      </div>
+    `;
+  }
+
   _areaSummaryTable(rows) {
     return `
       <div class="ga-area-summary-grid">
@@ -321,7 +380,7 @@ export default class GradesAuditView {
               <span>${esc(row.zero_member_count ?? 0)} excluidos por 0</span>
               <span>${esc(row.member_count ?? 0)} miembros con resultado</span>
             </div>
-            <small>Calc: ${formatDate(row.last_calculated_at)}</small>
+            <small>Ultima eval: ${formatDate(row.last_calculated_at)}</small>
           </article>
         `).join("")}
       </div>
