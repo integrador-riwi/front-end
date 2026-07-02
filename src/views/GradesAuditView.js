@@ -58,6 +58,8 @@ export default class GradesAuditView {
       evaluator: "ALL",
       query: "",
       onlyZero: false,
+      clans: [],
+      sort: "desc",
     };
   }
 
@@ -132,6 +134,9 @@ export default class GradesAuditView {
       if (this.filters.onlyZero && Number(row.grade_score) !== 0) {
         return false;
       }
+      if (this.filters.clans.length > 0 && row.evaluated_clan && !this.filters.clans.includes(row.evaluated_clan)) {
+        return false;
+      }
       const query = this.filters.query.trim().toLowerCase();
       if (!query) return true;
       const haystack = [
@@ -147,6 +152,10 @@ export default class GradesAuditView {
         row.feedback,
       ].join(" ").toLowerCase();
       return haystack.includes(query);
+    }).sort((a, b) => {
+      const aScore = Number(a.grade_score) || 0;
+      const bScore = Number(b.grade_score) || 0;
+      return this.filters.sort === "asc" ? aScore - bScore : bScore - aScore;
     });
   }
 
@@ -208,6 +217,34 @@ export default class GradesAuditView {
       .join("");
   }
 
+  _uniqueClans(rows) {
+    const set = new Set();
+    rows.forEach((row) => {
+      if (row.evaluated_clan) set.add(row.evaluated_clan);
+    });
+    return Array.from(set).sort();
+  }
+
+  _clanLabel() {
+    const { clans } = this.filters;
+    if (!clans.length) return "Todos los clanes";
+    if (clans.length <= 2) return clans.join(", ");
+    return `${clans.length} clanes seleccionados`;
+  }
+
+  _clanOptions(rows) {
+    const clans = this._uniqueClans(rows);
+    return clans.map((clan) => {
+      const checked = this.filters.clans.length === 0 || this.filters.clans.includes(clan);
+      return `
+        <label class="ga-multiselect-option">
+          <input type="checkbox" value="${esc(clan)}" ${checked ? "checked" : ""} />
+          <span>${esc(clan)}</span>
+        </label>
+      `;
+    }).join("");
+  }
+
   _html() {
     if (this.loading) {
       return `
@@ -267,6 +304,29 @@ export default class GradesAuditView {
             <select id="ga-evaluator-filter">
               <option value="ALL">Todos</option>
               ${this._options(rows, "evaluator_user_id", "evaluator_name")}
+            </select>
+          </label>
+          <label class="ga-multiselect">
+            <span>Clan</span>
+            <div class="ga-multiselect-wrapper" id="ga-clan-wrapper">
+              <button type="button" class="ga-multiselect-trigger" id="ga-clan-trigger">
+                <span id="ga-clan-label">${this._clanLabel()}</span>
+                <span class="ga-multiselect-arrow">▾</span>
+              </button>
+              <div class="ga-multiselect-dropdown" id="ga-clan-dropdown">
+                <label class="ga-multiselect-option ga-multiselect-option--all">
+                  <input type="checkbox" value="ALL" ${this.filters.clans.length === 0 ? "checked" : ""} />
+                  <span>Todos</span>
+                </label>
+                ${this._clanOptions(rows)}
+              </div>
+            </div>
+          </label>
+          <label>
+            <span>Ordenar nota</span>
+            <select id="ga-sort-filter">
+              <option value="desc" ${this.filters.sort === "desc" ? "selected" : ""}>Mayor a menor</option>
+              <option value="asc" ${this.filters.sort === "asc" ? "selected" : ""}>Menor a mayor</option>
             </select>
           </label>
           <label class="ga-search">
@@ -468,6 +528,7 @@ export default class GradesAuditView {
     bindFilter("ga-team-filter", "team");
     bindFilter("ga-area-filter", "area");
     bindFilter("ga-evaluator-filter", "evaluator");
+    bindFilter("ga-sort-filter", "sort");
 
     const queryInput = document.getElementById("ga-search-input");
     queryInput?.addEventListener("change", () => {
@@ -486,5 +547,47 @@ export default class GradesAuditView {
       this.filters.onlyZero = zeroFilter.checked;
       this._paint();
     });
+
+    const clanTrigger = document.getElementById("ga-clan-trigger");
+    const clanDropdown = document.getElementById("ga-clan-dropdown");
+    const clanWrapper = document.getElementById("ga-clan-wrapper");
+    if (clanTrigger && clanDropdown && clanWrapper) {
+      clanTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        clanDropdown.classList.toggle("ga-multiselect-open");
+      });
+
+      const closeDropdown = (e) => {
+        if (!clanWrapper.contains(e.target)) {
+          clanDropdown.classList.remove("ga-multiselect-open");
+        }
+      };
+      document.removeEventListener("click", this._clanCloseHandler);
+      this._clanCloseHandler = closeDropdown;
+      document.addEventListener("click", closeDropdown);
+
+      clanDropdown.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          const allCb = clanDropdown.querySelector("input[value='ALL']");
+          const clanCbs = clanDropdown.querySelectorAll("input[value]:not([value='ALL'])");
+
+          if (cb.value === "ALL") {
+            const isAll = cb.checked;
+            clanCbs.forEach((c) => { c.checked = isAll; });
+            this.filters.clans = isAll ? [] : Array.from(clanDropdown.querySelectorAll("input[type=checkbox]:checked:not([value='ALL'])")).map((c) => c.value);
+          } else {
+            const selectedClans = Array.from(clanDropdown.querySelectorAll("input[type=checkbox]:checked:not([value='ALL'])")).map((c) => c.value);
+            if (selectedClans.length === clanCbs.length) {
+              allCb.checked = true;
+              this.filters.clans = [];
+            } else {
+              allCb.checked = false;
+              this.filters.clans = selectedClans;
+            }
+          }
+          this._paint();
+        });
+      });
+    }
   }
 }

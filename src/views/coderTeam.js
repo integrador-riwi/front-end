@@ -1455,80 +1455,83 @@ export async function loadEvaluationPanel({
       rubrics.every(r => existingMap[`${r.id_rubric}_${m.id_user}`])
     );
 
+  const isEditing = alreadySubmitted && !evalsClosed;
+
   if (isFullyEvaluated || alreadySubmitted) {
-    const summaryAreas = Array.isArray(evaluationSummary?.areas)
-      ? evaluationSummary.areas
-      : [];
-    const visibleAreas = new Set(rubrics.map((rubric) => rubric.area));
-    const backendAreaSummary =
-      summaryAreas.find((area) => visibleAreas.has(area.area)) ?? summaryAreas[0] ?? null;
-    const backendMembers = Array.isArray(evaluationSummary?.members)
-      ? evaluationSummary.members.filter((member) => !backendAreaSummary || member.area === backendAreaSummary.area)
-      : [];
+    if (evalsClosed) {
+      const summaryAreas = Array.isArray(evaluationSummary?.areas)
+        ? evaluationSummary.areas
+        : [];
+      const visibleAreas = new Set(rubrics.map((rubric) => rubric.area));
+      const backendAreaSummary =
+        summaryAreas.find((area) => visibleAreas.has(area.area)) ?? summaryAreas[0] ?? null;
+      const backendMembers = Array.isArray(evaluationSummary?.members)
+        ? evaluationSummary.members.filter((member) => !backendAreaSummary || member.area === backendAreaSummary.area)
+        : [];
 
-    const memberScores = backendMembers.map((item) => ({
-      member: {
-        id_user: item.evaluated_user_id,
-        name: item.evaluated_name,
-        github_avatar_url: item.github_avatar_url,
-      },
-      score: parseFloat(item.member_score) || 0,
-    }));
-    const totalScore = backendAreaSummary
-      ? parseFloat(backendAreaSummary.area_score) || 0
-      : null;
-    const includedCount = backendAreaSummary
-      ? Number(backendAreaSummary.counted_member_count) || 0
-      : 0;
-    const memberCount = backendAreaSummary
-      ? Number(backendAreaSummary.member_count) || memberScores.length
-      : 0;
+      const memberScores = backendMembers.map((item) => ({
+        member: {
+          id_user: item.evaluated_user_id,
+          name: item.evaluated_name,
+          github_avatar_url: item.github_avatar_url,
+        },
+        score: parseFloat(item.member_score) || 0,
+      }));
+      const totalScore = backendAreaSummary
+        ? parseFloat(backendAreaSummary.area_score) || 0
+        : null;
+      const includedCount = backendAreaSummary
+        ? Number(backendAreaSummary.counted_member_count) || 0
+        : 0;
+      const memberCount = backendAreaSummary
+        ? Number(backendAreaSummary.member_count) || memberScores.length
+        : 0;
 
-    // Build a small member breakdown list
-    const membersBreakdown = memberScores.length ? memberScores.map(({ member: m, score: mScore }) => {
-      return `
-         <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
-           <div class="d-flex align-items-center gap-2">
-             <img src="${m.github_avatar_url || ''}" style="width:24px;height:24px;border-radius:50%;background:#eee;">
-             <span class="small fw-bold">${m.name}</span>
-           </div>
-           <div class="badge rounded-pill" style="background: var(--bg-card); color: var(--color-primary); border: 1px solid var(--border);">${mScore.toFixed(0)} pts</div>
-         </div>`;
-    }).join("") : `
-      <div class="p-3 rounded-3 text-muted small" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
-        Resumen no disponible desde backend.
-      </div>
-    `;
-
-    container.innerHTML = `
-      <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-        <div class="text-center mb-4">
-          <div class="material-icons-round mb-3" style="font-size: 3.5rem; color: var(--mint);">verified</div>
-          <h3 class="fw-bold mb-2">${t("coderTeam.evaluationFinished")}</h3>
-          <p class="text-muted">${t("coderTeam.evaluationFinishedDesc")}</p>
-        </div>
-        
-        <div class="row align-items-center g-4">
-           <div class="col-md-5">
-             <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
-               <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.areaAverage")}</div>
-               <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore == null ? "—" : totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
-               <div class="small text-muted mt-2">${backendAreaSummary ? `${includedCount}/${memberCount} miembros incluidos` : "Resumen no disponible desde backend"}</div>
+      const membersBreakdown = memberScores.length ? memberScores.map(({ member: m, score: mScore }) => {
+        return `
+           <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
+             <div class="d-flex align-items-center gap-2">
+               <img src="${m.github_avatar_url || ''}" style="width:24px;height:24px;border-radius:50%;background:#eee;">
+               <span class="small fw-bold">${m.name}</span>
              </div>
-           </div>
-           <div class="col-md-7">
-             <div class="ps-md-4 border-start">
-               <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.memberBreakdown")}</div>
-               ${membersBreakdown}
-             </div>
-           </div>
+             <div class="badge rounded-pill" style="background: var(--bg-card); color: var(--color-primary); border: 1px solid var(--border);">${mScore.toFixed(0)} pts</div>
+           </div>`;
+      }).join("") : `
+        <div class="p-3 rounded-3 text-muted small" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
+          Resumen no disponible desde backend.
         </div>
-        
-        <p class="mt-4 pt-4 border-top text-center small text-muted">${t("coderTeam.accumulatedNoteHint")}</p>
-      </div>`;
-    submitBtn.classList.add("d-none");
-    loadMemberGrades(projectId, { members: evaluableMembers, rubrics, existingEvals });
-    return;
+      `;
+
+      container.innerHTML = `
+        <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          <div class="text-center mb-4">
+            <div class="material-icons-round mb-3" style="font-size: 3.5rem; color: var(--mint);">verified</div>
+            <h3 class="fw-bold mb-2">${t("coderTeam.evaluationFinished")}</h3>
+            <p class="text-muted">${t("coderTeam.evaluationFinishedDesc")}</p>
+          </div>
+          
+          <div class="row align-items-center g-4">
+             <div class="col-md-5">
+               <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
+                 <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.areaAverage")}</div>
+                 <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore == null ? "—" : totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
+                 <div class="small text-muted mt-2">${backendAreaSummary ? `${includedCount}/${memberCount} miembros incluidos` : "Resumen no disponible desde backend"}</div>
+               </div>
+             </div>
+             <div class="col-md-7">
+               <div class="ps-md-4 border-start">
+                 <div class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.memberBreakdown")}</div>
+                 ${membersBreakdown}
+               </div>
+             </div>
+          </div>
+          
+          <p class="mt-4 pt-4 border-top text-center small text-muted">${t("coderTeam.accumulatedNoteHint")}</p>
+        </div>`;
+      submitBtn.classList.add("d-none");
+      loadMemberGrades(projectId, { members: evaluableMembers, rubrics, existingEvals });
+      return;
+    }
   }
 
   const membersHtml = evaluableMembers.map((member) => {
@@ -1614,6 +1617,9 @@ export async function loadEvaluationPanel({
 
   container.innerHTML = membersHtml;
   submitBtn.classList.remove("d-none");
+  submitBtn.textContent = isEditing
+    ? (t("coderTeam.updateEvaluations") || "Actualizar evaluaciones")
+    : t("coderTeam.submitEvaluations");
 
   container.querySelectorAll('.eval-level-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -1665,7 +1671,9 @@ export async function loadEvaluationPanel({
     try {
       await submitEvaluations(projectId, evaluations);
       try { await calculateProjectGrades(projectId); } catch (_) { }
-      toast.success(t("common.successTitle"), t("coderTeam.evaluationsSaved"));
+      toast.success(t("common.successTitle"), isEditing
+        ? (t("coderTeam.evaluationsUpdated") || "Evaluaciones actualizadas")
+        : t("coderTeam.evaluationsSaved"));
 
       // Refresh sidebar grades immediately
       loadMemberGrades(projectId, {
