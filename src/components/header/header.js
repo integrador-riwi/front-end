@@ -48,6 +48,10 @@ const HEADER_LINKS_BY_VIEW = () => ({
     { label: t("nav.events"), route: "events" },
     { label: t("nav.ranking"), route: "ranking" },
   ],
+  gradesAudit: [
+    { label: t("nav.events"), route: "events" },
+    { label: t("nav.gradeAudit") ?? "Auditoría de notas", route: "gradesAudit" },
+  ],
 });
 
 const HEADER_LAYOUT_BY_ROUTE = () => ({
@@ -86,6 +90,10 @@ const HEADER_LAYOUT_BY_ROUTE = () => ({
   ranking: {
     variant: "ranking",
     title: t("nav.ranking"),
+  },
+  gradesAudit: {
+    variant: "details",
+    title: t("nav.gradeAudit") ?? "Auditoría de notas",
   },
   details: {
     variant: "details",

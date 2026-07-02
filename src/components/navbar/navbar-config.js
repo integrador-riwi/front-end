@@ -20,6 +20,7 @@ const ADMIN_EVENT_LINKS = (eventStatus) => {
     { label: t("nav.metrics"), route: "dashboard", icon: "metrics" },
     { label: t("nav.projects"), route: "projects", icon: "globe" },
     { label: t("nav.ranking"), route: "ranking", icon: "ranking" },
+    { label: t("nav.gradeAudit") ?? "Auditoría de notas", route: "gradesAudit", icon: "edit" },
   ];
   if (!isFinished) {
     links.push({ label: t("nav.voting"), route: "qr", icon: "qr" });

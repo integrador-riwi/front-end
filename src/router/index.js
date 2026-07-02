@@ -21,6 +21,7 @@ import BrowseProjects from "../views/BrowseProjects.js";
 import PublicProfileView from "../views/PublicProfileView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import UsersAdminView from "../views/UsersAdminView.js";
+import GradesAuditView from "../views/GradesAuditView.js";
 import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
@@ -62,6 +63,7 @@ const ROUTE_PERMISSIONS = {
     "TL_ENGLISH",
   ],
   ranking: ["ADMIN", "STAFF"],
+  gradesAudit: ["ADMIN"],
   users: ["ADMIN"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -391,6 +393,10 @@ class App {
 
       case "ranking":
         this.currentView = new Ranking(this);
+        break;
+
+      case "gradesAudit":
+        this.currentView = new GradesAuditView(this);
         break;
 
       case "qr":
