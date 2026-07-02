@@ -50,18 +50,6 @@ export default class PublicProfileView {
         }
     }
 
-    _computeStats(projects) {
-        const count = projects.length;
-        const graded = projects.filter(p => p.project_final_grade != null);
-        const avg = graded.length > 0
-            ? Math.round(graded.reduce((s, p) => s + Number(p.project_final_grade), 0) / graded.length)
-            : null;
-        const best = graded.length > 0
-            ? Math.max(...graded.map(p => Number(p.project_final_grade)))
-            : null;
-        return { count, avg, best };
-    }
-
     render() {
         const app = document.getElementById("app");
         if (!app) return;
@@ -101,7 +89,7 @@ export default class PublicProfileView {
             return;
         }
 
-        const { name, role, clan, email, profile_description, github_avatar_url, github_username, projects = [] } = this.profileData;
+        const { name, role, clan, email, profile_description, github_avatar_url, github_username, projects = [], project_stats = null } = this.profileData;
 
         const viewerRole = this.user?.role;
         const isOwnProfile = String(this.user?.id_user) === String(this.userId);
@@ -121,7 +109,7 @@ export default class PublicProfileView {
             ? (canSeeAll ? safeProjects : safeProjects.filter(p => p.event_status === 'COMPLETED'))
             : safeProjects;
 
-        const stats = this._computeStats(filteredProjects);
+        const stats = project_stats ?? { count: filteredProjects.length, avg: null, best: null };
         const isCoder = profileIsCoder; // alias para el resto del template
 
         app.innerHTML = `

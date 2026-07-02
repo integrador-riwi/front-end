@@ -1093,12 +1093,15 @@ export async function loadMemberGrades(projectId, context = {}) {
   const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 
   try {
-    const { apiFetch } = await import("../services/api.js");
-    const res = await apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" }).catch(() => null);
+    const { apiFetch, getProjectResultsSummary } = await import("../services/api.js");
+    const [res, summaryRes] = await Promise.all([
+      apiFetch(`/evaluations/project/${projectId}/results`, { method: "GET" }).catch(() => null),
+      getProjectResultsSummary(projectId).catch(() => null),
+    ]);
     let results = res?.data ?? res ?? null;
+    const projectSummary = summaryRes?.data ?? summaryRes ?? null;
 
     let isPending = false;
-    let isPartial = false;
 
     if (!Array.isArray(results) || results.length === 0) {
       if (members.length > 0) {
@@ -1114,30 +1117,6 @@ export async function loadMemberGrades(projectId, context = {}) {
         container.innerHTML = "";
         return;
       }
-    } else {
-      // Check if results are partial (missing final_score globally)
-      const hasGlobal = results.some(r => r.final_score != null);
-      const hasAnyArea = results.some(r => Array.isArray(r.area_scores) && r.area_scores.length > 0);
-
-      if (!hasGlobal) {
-        if (hasAnyArea) {
-          isPartial = true;
-          results = results.map(r => {
-            const areaScores = Array.isArray(r.area_scores) ? r.area_scores.filter(a => a.final_score != null) : [];
-            const sum = areaScores.reduce((acc, a) => acc + (parseFloat(a.final_score) || 0), 0);
-            const avg = areaScores.length > 0 ? sum / areaScores.length : 0;
-            return { ...r, final_score: avg, isPartial: true };
-          });
-        } else {
-          isPending = true;
-          // Keep placeholder results from members list if possible
-          if (results.length === 0 && members.length > 0) {
-            results = members.filter(m => m.id_user).map(m => ({
-              user_name: m.name, github_avatar_url: m.github_avatar_url, id_user: m.id_user, final_score: 0, area_scores: []
-            }));
-          }
-        }
-      }
     }
 
     // Safeguard: Hide sidebar ONLY if interactive rubrics are visible (active evaluation)
@@ -1147,47 +1126,10 @@ export async function loadMemberGrades(projectId, context = {}) {
       return;
     }
 
-    const AREA_WEIGHTS = {
-      DEVELOPMENT: 0.55,
-      ENGLISH: 0.25,
-      SOFT_SKILLS: 0.2,
-    };
-
-    const teamAreaBreakdown = AREAS.map((area) => {
-      const scores = results
-        .map((r) => {
-          const entry = Array.isArray(r.area_scores)
-            ? r.area_scores.find((item) => item.area === area)
-            : null;
-          return entry?.final_score == null ? null : parseFloat(entry.final_score);
-        })
-        .filter((score) => score != null && !Number.isNaN(score));
-      const countedScores = scores.filter((score) => score !== 0);
-      const areaScore = countedScores.length
-        ? countedScores.reduce((sum, score) => sum + score, 0) / countedScores.length
-        : 0;
-
-      return {
-        area,
-        score: parseFloat(areaScore.toFixed(2)),
-        memberCount: scores.length,
-        countedMemberCount: countedScores.length,
-        zeroMemberCount: scores.filter((score) => score === 0).length,
-      };
-    });
-
-    let weightedAreaSum = 0;
-    let totalAreaWeight = 0;
-    teamAreaBreakdown.forEach((entry) => {
-      if (entry.memberCount === 0) return;
-      const weight = AREA_WEIGHTS[entry.area] ?? 0;
-      weightedAreaSum += entry.score * weight;
-      totalAreaWeight += weight;
-    });
-
-    const projectGrade = isPending || totalAreaWeight === 0
-      ? 0
-      : weightedAreaSum / totalAreaWeight;
+    const teamAreaBreakdown = Array.isArray(projectSummary?.area_summary)
+      ? projectSummary.area_summary
+      : [];
+    const projectGrade = isPending ? 0 : (parseFloat(projectSummary?.project_score) || 0);
 
     // Compute grade tier — uses CSS variables to stay palette-loyal
     const getTier = (g) => {
@@ -1203,11 +1145,12 @@ export async function loadMemberGrades(projectId, context = {}) {
       <div class="mg-area-summary">
         ${teamAreaBreakdown.map((entry) => {
           const meta = AREA_META[entry.area];
+          const score = parseFloat(entry.score) || 0;
           return `
             <div class="mg-area-summary-card">
-              <span class="mg-area-summary-label">${meta.short}</span>
-              <strong>${entry.score.toFixed(1)}</strong>
-              <small>${entry.countedMemberCount}/${entry.memberCount} incluidos - ${entry.zeroMemberCount} en 0</small>
+              <span class="mg-area-summary-label">${meta?.short ?? entry.area}</span>
+              <strong>${score.toFixed(1)}</strong>
+              <small>${entry.counted_member_count ?? 0}/${entry.member_count ?? 0} incluidos - ${entry.zero_member_count ?? 0} en 0</small>
             </div>
           `;
         }).join("")}
@@ -1217,8 +1160,9 @@ export async function loadMemberGrades(projectId, context = {}) {
     // Build members HTML
     const membersHtml = results.map((r, idx) => {
       const areaScores = Array.isArray(r.area_scores) ? r.area_scores : [];
-      const globalScore = parseFloat(r.final_score) || 0;
-      const memberTier = getTier(globalScore);
+      const parsedGlobalScore = r.final_score == null ? null : parseFloat(r.final_score);
+      const globalScore = Number.isFinite(parsedGlobalScore) ? parsedGlobalScore : null;
+      const memberTier = getTier(globalScore ?? 0);
       const userId = r.id_user || r.evaluated_user_id;
       const memberId = `mg-member-${userId || idx}`;
 
@@ -1276,7 +1220,7 @@ export async function loadMemberGrades(projectId, context = {}) {
             </div>
             <div class="mg-score-badge">
               <span class="mg-score-value" style="color:${isPending ? 'var(--text-dim)' : memberTier.colorVar};">
-                ${isPending ? "—" : Math.round(globalScore)}
+                ${isPending || globalScore == null ? "—" : Math.round(globalScore)}
               </span>
               <span class="mg-score-unit">${t("coderTeam.pts")}</span>
             </div>
@@ -1292,7 +1236,7 @@ export async function loadMemberGrades(projectId, context = {}) {
       <div class="mg-wrapper">
         <div class="ct-hero-card p-4 mb-3" style="border-radius:20px; ${isPending ? 'background: linear-gradient(135deg, #7b7fa8, #181e4b);' : ''}">
           <div style="position:relative;z-index:2;">
-            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? t("coderTeam.evaluationPhase") : (isPartial ? t("coderTeam.accumulatedGrade") : t("coderTeam.globalPerformance"))}</div>
+            <div class="ct-stat-label mb-1" style="color: rgba(255,255,255,0.8);">${isPending ? t("coderTeam.evaluationPhase") : t("coderTeam.globalPerformance")}</div>
             <div class="mg-hero-score-row">
               <span class="mg-hero-score">${isPending ? t("coderTeam.inProgress") : projectGrade.toFixed(1)}</span>
               ${isPending ? '' : '<span class="mg-hero-denom">/100</span>'}
@@ -1522,36 +1466,26 @@ export async function loadEvaluationPanel({
       ? evaluationSummary.members.filter((member) => !backendAreaSummary || member.area === backendAreaSummary.area)
       : [];
 
-    const fallbackMemberScores = evaluableMembers.map((m) => {
-      const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
-      const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
-      return { member: m, score: mScore };
-    });
-    const memberScores = backendMembers.length
-      ? backendMembers.map((item) => ({
-        member: {
-          id_user: item.evaluated_user_id,
-          name: item.evaluated_name,
-          github_avatar_url: item.github_avatar_url,
-        },
-        score: parseFloat(item.member_score) || 0,
-      }))
-      : fallbackMemberScores;
-    const countedMemberScores = memberScores.filter((item) => item.score !== 0);
+    const memberScores = backendMembers.map((item) => ({
+      member: {
+        id_user: item.evaluated_user_id,
+        name: item.evaluated_name,
+        github_avatar_url: item.github_avatar_url,
+      },
+      score: parseFloat(item.member_score) || 0,
+    }));
     const totalScore = backendAreaSummary
       ? parseFloat(backendAreaSummary.area_score) || 0
-      : countedMemberScores.length
-      ? countedMemberScores.reduce((acc, item) => acc + item.score, 0) / countedMemberScores.length
-      : 0;
+      : null;
     const includedCount = backendAreaSummary
       ? Number(backendAreaSummary.counted_member_count) || 0
-      : countedMemberScores.length;
+      : 0;
     const memberCount = backendAreaSummary
       ? Number(backendAreaSummary.member_count) || memberScores.length
-      : memberScores.length;
+      : 0;
 
     // Build a small member breakdown list
-    const membersBreakdown = memberScores.map(({ member: m, score: mScore }) => {
+    const membersBreakdown = memberScores.length ? memberScores.map(({ member: m, score: mScore }) => {
       return `
          <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
            <div class="d-flex align-items-center gap-2">
@@ -1560,7 +1494,11 @@ export async function loadEvaluationPanel({
            </div>
            <div class="badge rounded-pill" style="background: var(--bg-card); color: var(--color-primary); border: 1px solid var(--border);">${mScore.toFixed(0)} pts</div>
          </div>`;
-    }).join("");
+    }).join("") : `
+      <div class="p-3 rounded-3 text-muted small" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
+        Resumen no disponible desde backend.
+      </div>
+    `;
 
     container.innerHTML = `
       <div class="ct-eval-finished-card p-5" style="background: var(--bg-panel); border-radius: 28px; border: 1px dashed var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
@@ -1574,8 +1512,8 @@ export async function loadEvaluationPanel({
            <div class="col-md-5">
              <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
                <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.areaAverage")}</div>
-               <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
-               <div class="small text-muted mt-2">${includedCount}/${memberCount} miembros incluidos</div>
+               <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore == null ? "—" : totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
+               <div class="small text-muted mt-2">${backendAreaSummary ? `${includedCount}/${memberCount} miembros incluidos` : "Resumen no disponible desde backend"}</div>
              </div>
            </div>
            <div class="col-md-7">
@@ -1593,38 +1531,12 @@ export async function loadEvaluationPanel({
     return;
   }
 
-  const _calculateMemberTotal = (memberId) => {
-    let total = 0;
-    let totalW = 0;
-    rubrics.forEach(r => {
-      const card = container.querySelector(`.eval-level-card.selected[data-rubric-id="${r.id_rubric}"][data-member-id="${memberId}"]`);
-      if (card) {
-        const score = parseFloat(card.dataset.score) || 0;
-        total += (score / 100) * r.weight;
-        totalW += r.weight;
-      }
-    });
-
-    const final = totalW > 0 ? (total / totalW) * 100 : 0;
-    const scoreEl = document.getElementById(`member-score-${memberId}`);
-    const barEl = document.getElementById(`member-score-bar-${memberId}`);
-    const rounded = Math.round(final);
-    if (scoreEl) scoreEl.textContent = rounded;
-    if (barEl) barEl.style.width = `${rounded}%`;
-  };
-
   const membersHtml = evaluableMembers.map((member) => {
     const avatar = member.github_avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`;
 
-    let initTotal = 0;
-    let initW = 0;
     const rubricsHtml = rubrics.map((rubric) => {
       const key = `${rubric.id_rubric}_${member.id_user}`;
       const existing = existingMap[key];
-      if (existing) {
-        initTotal += (existing.score / 100) * rubric.weight;
-        initW += rubric.weight;
-      }
 
       const sortedGrades = [...rubric.grades].sort((a, b) => a.score - b.score);
       const levelsHtml = sortedGrades.map((g) => {
@@ -1673,8 +1585,6 @@ export async function loadEvaluationPanel({
       `;
     }).join("");
 
-    const initScore = initW > 0 ? (initTotal / initW) * 100 : 0;
-
     return `
       <div class="member-eval-block mb-5">
         <div class="eval-member-header d-flex justify-content-between align-items-center">
@@ -1688,12 +1598,12 @@ export async function loadEvaluationPanel({
           <div class="eval-score-container">
             <div class="eval-score-label" style="text-align:right;">${t("coderTeam.averageScore")}</div>
             <div class="eval-score-value" style="text-align:right;">
-              <span id="member-score-${member.id_user}">${Math.round(initScore)}</span>
+              <span id="member-score-${member.id_user}">—</span>
               <span class="eval-score-total">/100</span>
             </div>
             <div class="eval-score-bar-track mt-1" style="width:120px;height:5px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;">
               <div id="member-score-bar-${member.id_user}" 
-                   style="height:100%;width:${Math.round(initScore)}%;background:var(--color-primary);border-radius:99px;transition:width 0.4s ease;"></div>
+                   style="height:100%;width:0%;background:var(--color-primary);border-radius:99px;transition:width 0.4s ease;"></div>
             </div>
           </div>
         </div>
@@ -1719,7 +1629,6 @@ export async function loadEvaluationPanel({
       const badge = document.getElementById(`pts-badge-${rubricId}-${memberId}`);
       if (badge) badge.textContent = `${t("coderTeam.pts")}: ${score}`;
 
-      _calculateMemberTotal(memberId);
     });
   });
 

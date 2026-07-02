@@ -193,9 +193,6 @@ export default class GradesAuditView {
     const areaSummaryRows = this._areaSummaryRows();
     const summary = this.audit?.summary ?? {};
     const zeroCount = filtered.filter((row) => Number(row.grade_score) === 0).length;
-    const avgScore = filtered.length
-      ? (filtered.reduce((sum, row) => sum + Number(row.grade_score || 0), 0) / filtered.length).toFixed(2)
-      : "0.00";
 
     return `
       <section class="ga-shell">
@@ -218,7 +215,6 @@ export default class GradesAuditView {
           ${this._metric("Evaluadores", summary.evaluators ?? 0)}
           ${this._metric("Personas", summary.evaluatedMembers ?? 0)}
           ${this._metric("Notas 0", zeroCount)}
-          ${this._metric("Promedio filtro", avgScore)}
         </section>
 
         <section class="ga-filters">

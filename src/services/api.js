@@ -489,6 +489,13 @@ export async function calculateProjectGrades(projectId) {
   return response?.data ?? response;
 }
 
+export async function getProjectResultsSummary(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/results/summary`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
 export async function getMyEvaluationsForProject(projectId) {
   const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
     method: "GET",
