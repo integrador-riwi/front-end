@@ -200,6 +200,10 @@ export default class GradesAuditView {
         row.project_name,
       ].join(" ").toLowerCase();
       return haystack.includes(query);
+    }).sort((a, b) => {
+      const aScore = Number(a.team_score) || 0;
+      const bScore = Number(b.team_score) || 0;
+      return this.filters.sort === "asc" ? aScore - bScore : bScore - aScore;
     });
   }
 
