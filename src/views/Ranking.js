@@ -410,6 +410,35 @@ export default class Ranking {
     `;
   }
 
+  _renderAreaBreakdown(team) {
+    const areaLabels = {
+      DEVELOPMENT: "Development",
+      SOFT_SKILLS: "Soft Skills",
+      ENGLISH: "English",
+    };
+    const areas = Array.isArray(team.area_breakdown) ? team.area_breakdown : [];
+
+    if (!areas.length) {
+      return `
+        <div class="rk-area-breakdown rk-area-breakdown--empty">
+          <span>No hay desglose por area calculado.</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="rk-area-breakdown">
+        ${areas.map((area) => `
+          <div class="rk-area-breakdown-item">
+            <span>${areaLabels[area.area] ?? area.area}</span>
+            <strong>${area.score ?? 0}</strong>
+            <small>${area.counted_member_count ?? 0}/${area.member_count ?? 0} incluidos - ${area.zero_member_count ?? 0} en 0</small>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
   _renderRanking() {
     let ranking = this.rankingData?.ranking ?? [];
     const showPodium = !this.searchTerm;
@@ -500,6 +529,7 @@ export default class Ranking {
                         </div>
                       `).join("")}
                     </div>
+                    ${this._renderAreaBreakdown(team)}
                     <div class="rk-flyout-score-row">
                       <span>Total Score:</span>
                       <strong>${team.team_score}</strong>
@@ -564,6 +594,7 @@ export default class Ranking {
                            </div>
                          `).join("")}
                        </div>
+                       ${this._renderAreaBreakdown(team)}
                     </div>
                   </td>
                   <td class="spec-col"><span class="spec-badge">${team.clan_name || team.clan || "No Clan"}</span></td>

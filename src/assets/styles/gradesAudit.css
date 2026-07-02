@@ -135,6 +135,121 @@
   height: 18px;
 }
 
+.ga-area-summary {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.ga-section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ga-section-title strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.ga-section-title span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ga-area-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.ga-area-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.ga-area-card > div:first-child {
+  min-width: 0;
+}
+
+.ga-area-card strong,
+.ga-area-card span,
+.ga-area-card small {
+  display: block;
+}
+
+.ga-area-card > div:first-child strong {
+  color: var(--text-primary);
+  font-size: 0.92rem;
+}
+
+.ga-area-card > div:first-child span,
+.ga-area-card small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 3px;
+}
+
+.ga-area-score {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.ga-area-score span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ga-area-score strong {
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.ga-area-counts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ga-area-counts span {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  padding: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ga-area-empty {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 16px;
+  text-align: center;
+}
+
 .ga-table-wrap {
   border: 1px solid var(--border);
   background: white;
@@ -265,6 +380,15 @@
 
   .ga-metrics,
   .ga-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .ga-section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ga-area-counts {
     grid-template-columns: 1fr;
   }
 }

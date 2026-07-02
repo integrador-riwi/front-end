@@ -144,6 +144,26 @@ export default class GradesAuditView {
     });
   }
 
+  _areaSummaryRows() {
+    const rows = this.audit?.areaSummary ?? [];
+    return rows.filter((row) => {
+      if (this.filters.team !== "ALL" && String(row.id_team) !== this.filters.team) {
+        return false;
+      }
+      if (this.filters.area !== "ALL" && row.area !== this.filters.area) {
+        return false;
+      }
+      const query = this.filters.query.trim().toLowerCase();
+      if (!query) return true;
+      const haystack = [
+        row.team_name,
+        row.project_name,
+        row.area,
+      ].join(" ").toLowerCase();
+      return haystack.includes(query);
+    });
+  }
+
   _options(rows, key, labelKey) {
     const map = new Map();
     rows.forEach((row) => {
@@ -170,6 +190,7 @@ export default class GradesAuditView {
 
     const rows = this.audit?.rows ?? [];
     const filtered = this._rows();
+    const areaSummaryRows = this._areaSummaryRows();
     const summary = this.audit?.summary ?? {};
     const zeroCount = filtered.filter((row) => Number(row.grade_score) === 0).length;
     const avgScore = filtered.length
@@ -232,6 +253,14 @@ export default class GradesAuditView {
           </label>
         </section>
 
+        <section class="ga-area-summary">
+          <div class="ga-section-title">
+            <strong>Promedio por area del equipo</strong>
+            <span>Los miembros con 0 se excluyen solo del promedio de esa area.</span>
+          </div>
+          ${areaSummaryRows.length ? this._areaSummaryTable(areaSummaryRows) : this._areaSummaryEmpty()}
+        </section>
+
         <section class="ga-table-wrap">
           <div class="ga-table-toolbar">
             <strong>${filtered.length}</strong>
@@ -273,6 +302,40 @@ export default class GradesAuditView {
             ${rows.map((row) => this._row(row)).join("")}
           </tbody>
         </table>
+      </div>
+    `;
+  }
+
+  _areaSummaryTable(rows) {
+    return `
+      <div class="ga-area-summary-grid">
+        ${rows.map((row) => `
+          <article class="ga-area-card">
+            <div>
+              <strong>${esc(row.team_name)}</strong>
+              <span>${esc(row.project_name)}</span>
+            </div>
+            <span class="ga-area">${esc(row.area)}</span>
+            <div class="ga-area-score">
+              <span>Promedio area</span>
+              <strong>${esc(row.area_score ?? "0.00")}</strong>
+            </div>
+            <div class="ga-area-counts">
+              <span>${esc(row.counted_member_count ?? 0)} incluidos</span>
+              <span>${esc(row.zero_member_count ?? 0)} excluidos por 0</span>
+              <span>${esc(row.member_count ?? 0)} miembros con resultado</span>
+            </div>
+            <small>Calc: ${formatDate(row.last_calculated_at)}</small>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  _areaSummaryEmpty() {
+    return `
+      <div class="ga-area-empty">
+        No hay promedios de area calculados para los filtros seleccionados.
       </div>
     `;
   }

@@ -1147,10 +1147,47 @@ export async function loadMemberGrades(projectId, context = {}) {
       return;
     }
 
-    // Final check: Calculate project-wide grade from individual member global scores
+    const AREA_WEIGHTS = {
+      DEVELOPMENT: 0.55,
+      ENGLISH: 0.25,
+      SOFT_SKILLS: 0.2,
+    };
 
-    // Project grade calculation (if not pending)
-    const projectGrade = isPending ? 0 : results.reduce((acc, r) => acc + (parseFloat(r.final_score) || 0), 0) / results.length;
+    const teamAreaBreakdown = AREAS.map((area) => {
+      const scores = results
+        .map((r) => {
+          const entry = Array.isArray(r.area_scores)
+            ? r.area_scores.find((item) => item.area === area)
+            : null;
+          return entry?.final_score == null ? null : parseFloat(entry.final_score);
+        })
+        .filter((score) => score != null && !Number.isNaN(score));
+      const countedScores = scores.filter((score) => score !== 0);
+      const areaScore = countedScores.length
+        ? countedScores.reduce((sum, score) => sum + score, 0) / countedScores.length
+        : 0;
+
+      return {
+        area,
+        score: parseFloat(areaScore.toFixed(2)),
+        memberCount: scores.length,
+        countedMemberCount: countedScores.length,
+        zeroMemberCount: scores.filter((score) => score === 0).length,
+      };
+    });
+
+    let weightedAreaSum = 0;
+    let totalAreaWeight = 0;
+    teamAreaBreakdown.forEach((entry) => {
+      if (entry.memberCount === 0) return;
+      const weight = AREA_WEIGHTS[entry.area] ?? 0;
+      weightedAreaSum += entry.score * weight;
+      totalAreaWeight += weight;
+    });
+
+    const projectGrade = isPending || totalAreaWeight === 0
+      ? 0
+      : weightedAreaSum / totalAreaWeight;
 
     // Compute grade tier — uses CSS variables to stay palette-loyal
     const getTier = (g) => {
@@ -1161,6 +1198,21 @@ export async function loadMemberGrades(projectId, context = {}) {
     };
 
     const projTier = getTier(projectGrade);
+
+    const areaSummaryHtml = isPending ? "" : `
+      <div class="mg-area-summary">
+        ${teamAreaBreakdown.map((entry) => {
+          const meta = AREA_META[entry.area];
+          return `
+            <div class="mg-area-summary-card">
+              <span class="mg-area-summary-label">${meta.short}</span>
+              <strong>${entry.score.toFixed(1)}</strong>
+              <small>${entry.countedMemberCount}/${entry.memberCount} incluidos - ${entry.zeroMemberCount} en 0</small>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
 
     // Build members HTML
     const membersHtml = results.map((r, idx) => {
@@ -1260,6 +1312,7 @@ export async function loadMemberGrades(projectId, context = {}) {
             <div class="ct-stat-label mt-2" style="color: rgba(255,255,255,0.6);">${t("coderTeam.participants", { count: results.length, plural: results.length !== 1 ? "s" : "" })}</div>
           </div>
         </div>
+        ${areaSummaryHtml}
         <div class="mg-members-section">
           <div class="ct-section-title mb-2 px-1">${t("coderTeam.teamPerformance")}</div>
           <div id="mg-members-list">${membersHtml}</div>
@@ -1272,6 +1325,11 @@ export async function loadMemberGrades(projectId, context = {}) {
         .mg-hero-denom { font-size:1rem; font-weight:600; color:rgba(255,255,255,0.45); }
         .mg-hero-track { height:5px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
         .mg-hero-fill  { height:100%; border-radius:99px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
+        .mg-area-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+        .mg-area-summary-card { border:1px solid var(--border); background:var(--bg-panel); border-radius:12px; padding:10px; }
+        .mg-area-summary-label { display:block; color:var(--text-muted); font-size:0.68rem; font-weight:900; text-transform:uppercase; }
+        .mg-area-summary-card strong { display:block; color:var(--navy); font-size:1.15rem; font-weight:900; line-height:1.1; margin-top:3px; }
+        .mg-area-summary-card small { display:block; color:var(--text-muted); font-size:0.68rem; font-weight:700; line-height:1.25; margin-top:4px; }
         .mg-members-section { display:flex; flex-direction:column; }
         .mg-member-row { cursor:pointer; border-radius:14px; border:1px solid var(--border); background:var(--bg-panel); transition:border-color 0.2s,box-shadow 0.2s; margin-bottom:8px; overflow:hidden; }
         .mg-member-header { display:flex; align-items:center; gap:12px; padding:12px 14px; }
@@ -1384,6 +1442,7 @@ export async function loadEvaluationPanel({
     getRubricsByEvent,
     submitEvaluations,
     getMyEvaluationsForProject,
+    getMyEvaluationSummaryForProject,
     calculateProjectGrades,
     getProjectEvalStatus,
   } = await import("../services/api.js");
@@ -1416,11 +1475,13 @@ export async function loadEvaluationPanel({
 
   let rubrics = [];
   let existingEvals = [];
+  let evaluationSummary = null;
 
   try {
-    [rubrics, existingEvals] = await Promise.all([
+    [rubrics, existingEvals, evaluationSummary] = await Promise.all([
       getRubricsByEvent(eventId),
       getMyEvaluationsForProject(projectId),
+      getMyEvaluationSummaryForProject(projectId).catch(() => null),
     ]);
     if (allowedArea) rubrics = rubrics.filter((r) => r.area === allowedArea);
   } catch (err) {
@@ -1451,12 +1512,46 @@ export async function loadEvaluationPanel({
     );
 
   if (isFullyEvaluated || alreadySubmitted) {
-    const totalScore = existingEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (existingEvals.length || 1);
+    const summaryAreas = Array.isArray(evaluationSummary?.areas)
+      ? evaluationSummary.areas
+      : [];
+    const visibleAreas = new Set(rubrics.map((rubric) => rubric.area));
+    const backendAreaSummary =
+      summaryAreas.find((area) => visibleAreas.has(area.area)) ?? summaryAreas[0] ?? null;
+    const backendMembers = Array.isArray(evaluationSummary?.members)
+      ? evaluationSummary.members.filter((member) => !backendAreaSummary || member.area === backendAreaSummary.area)
+      : [];
 
-    // Build a small member breakdown list
-    const membersBreakdown = evaluableMembers.map(m => {
+    const fallbackMemberScores = evaluableMembers.map((m) => {
       const mEvals = existingEvals.filter(ev => ev.evaluated_user_id === m.id_user);
       const mScore = mEvals.reduce((acc, ev) => acc + (parseFloat(ev.score) || 0), 0) / (mEvals.length || 1);
+      return { member: m, score: mScore };
+    });
+    const memberScores = backendMembers.length
+      ? backendMembers.map((item) => ({
+        member: {
+          id_user: item.evaluated_user_id,
+          name: item.evaluated_name,
+          github_avatar_url: item.github_avatar_url,
+        },
+        score: parseFloat(item.member_score) || 0,
+      }))
+      : fallbackMemberScores;
+    const countedMemberScores = memberScores.filter((item) => item.score !== 0);
+    const totalScore = backendAreaSummary
+      ? parseFloat(backendAreaSummary.area_score) || 0
+      : countedMemberScores.length
+      ? countedMemberScores.reduce((acc, item) => acc + item.score, 0) / countedMemberScores.length
+      : 0;
+    const includedCount = backendAreaSummary
+      ? Number(backendAreaSummary.counted_member_count) || 0
+      : countedMemberScores.length;
+    const memberCount = backendAreaSummary
+      ? Number(backendAreaSummary.member_count) || memberScores.length
+      : memberScores.length;
+
+    // Build a small member breakdown list
+    const membersBreakdown = memberScores.map(({ member: m, score: mScore }) => {
       return `
          <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border);">
            <div class="d-flex align-items-center gap-2">
@@ -1480,6 +1575,7 @@ export async function loadEvaluationPanel({
              <div class="p-4 rounded-4 text-center h-100 d-flex flex-column justify-content-center" style="background: var(--bg-card); border: 1px solid var(--border);">
                <div class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 0.05em;">${t("coderTeam.areaAverage")}</div>
                <div class="h2 fw-bold mb-0" style="color: var(--color-primary);">${totalScore.toFixed(1)} <small style="font-size: 0.9rem; opacity: 0.6;">/100</small></div>
+               <div class="small text-muted mt-2">${includedCount}/${memberCount} miembros incluidos</div>
              </div>
            </div>
            <div class="col-md-7">

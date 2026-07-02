@@ -496,6 +496,13 @@ export async function getMyEvaluationsForProject(projectId) {
   return response?.data ?? response;
 }
 
+export async function getMyEvaluationSummaryForProject(projectId) {
+  const response = await apiFetch(`/evaluations/project/${projectId}/my/summary`, {
+    method: "GET",
+  });
+  return response?.data ?? response;
+}
+
 export async function getProjectEvalStatus(projectId) {
   const response = await apiFetch(`/evaluations/project/${projectId}/eval-status`, {
     method: "GET",

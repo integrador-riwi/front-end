@@ -983,6 +983,51 @@
 .fm-name { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
 .fm-score { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
 
+.rk-area-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rk-area-breakdown--empty {
+  display: block;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.rk-area-breakdown-item {
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.rk-area-breakdown-item span,
+.rk-area-breakdown-item small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.rk-area-breakdown-item span {
+  text-transform: uppercase;
+}
+
+.rk-area-breakdown-item strong {
+  display: block;
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 900;
+  margin: 3px 0;
+}
+
 .rk-flyout-score-row {
   display: flex;
   justify-content: space-between;
@@ -1013,6 +1058,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
+  margin-bottom: 14px;
 }
 
 .mini-member-row {
