@@ -145,6 +145,11 @@
   box-shadow: 0 12px 28px rgba(107, 92, 255, 0.15);
 }
 
+.ranking-card-selectable {
+  cursor: pointer;
+  user-select: none;
+}
+
 .ranking-card-bar        { height: 6px; width: 100%; }
 .ranking-card-bar.finalist { background: #5acca4; }
 .ranking-card-bar.regular  { background: #6b5cff; }
@@ -182,6 +187,11 @@
   color: #5acca4;
   font-size: 0.65rem;
   letter-spacing: 0.05em;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 /* ── Live Results ── */

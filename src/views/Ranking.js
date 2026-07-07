@@ -229,7 +229,15 @@ export default class Ranking {
     return `
       <div class="rk-view-container">
         ${this.error ? `<div class="rk-alert rk-alert--error">${this.error}</div>` : ""}
-        
+        ${!this.error && this.publishWarnings.length > 0 ? `
+          <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
+            <strong>${t("ranking.partialWarningTitle") ?? "Some teams are not fully graded yet:"}</strong>
+            <ul style="margin:6px 0 0;padding-left:20px;">
+              ${this.publishWarnings.map((w) => `<li>${w.message}</li>`).join("")}
+            </ul>
+          </div>
+        ` : ""}
+
         <!-- Premium Header Area -->
         <header class="rk-view-header">
           <div class="rk-view-header-left">

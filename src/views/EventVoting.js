@@ -22,7 +22,7 @@ export default class QRVoting {
 
     this.ranking = [];
     this.finalists = [];
-    this.finalistsCount = 3;
+    this.selectedTeamIds = new Set();
     this.qrActive = false;
     this.finalistsApproved = false;
 
@@ -53,7 +53,19 @@ export default class QRVoting {
 
   updateFinalists() {
     if (!Array.isArray(this.ranking)) return;
-    this.finalists = this.ranking.slice(0, this.finalistsCount);
+    this.finalists = this.ranking.filter((team) => this.selectedTeamIds.has(team.id_team));
+  }
+
+  toggleTeamSelection(id_team) {
+    if (this.finalistsApproved) return;
+    if (this.selectedTeamIds.has(id_team)) {
+      this.selectedTeamIds.delete(id_team);
+    } else {
+      this.selectedTeamIds.add(id_team);
+    }
+    this.updateFinalists();
+    this.renderRankingPanel();
+    this.updateQrButtonState();
   }
 
   /* -------------------------- QR -------------------------- */
@@ -182,19 +194,11 @@ export default class QRVoting {
                 ? JSON.parse(activeQr.finalist_ids || "[]")
                 : []);
 
-        this.finalistsCount = finalistIds.length || activeQr.top_n || this.finalistsCount;
         // Map finalist_ids back to ranking teams
-        if (finalistIds.length > 0) {
-          this.finalists = finalistIds
-              .map(id => this.ranking.find(t => t.id_project === id || t.id_team === id))
-              .filter(Boolean);
-          // Fallback: if mapping fails, just take top N from ranking
-          if (this.finalists.length === 0) {
-            this.finalists = this.ranking.slice(0, this.finalistsCount);
-          }
-        } else {
-          this.finalists = this.ranking.slice(0, this.finalistsCount);
-        }
+        this.finalists = finalistIds
+            .map(id => this.ranking.find(t => t.id_project === id || t.id_team === id))
+            .filter(Boolean);
+        this.selectedTeamIds = new Set(this.finalists.map((team) => team.id_team));
 
         const btn = document.getElementById("generate-qr-btn");
         if (btn) {
@@ -753,31 +757,34 @@ export default class QRVoting {
         <p class="mb-0" style="color:#7b7fa8;font-size:0.85rem;">${t("qrVoting.topTeams")}</p>
       </div>
       <div class="d-flex align-items-center gap-2">
+        ${!this.finalistsApproved ? `
+          <button id="refresh-ranking-btn" type="button" title="${t("qrVoting.refreshRanking")}"
+                  style="background:none;border:1.5px solid rgba(107,92,255,0.3);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#6b5cff;cursor:pointer;">
+            <span class="material-symbols-outlined" style="font-size:1rem;">refresh</span>
+          </button>
+        ` : ""}
         <span style="color:#7b7fa8;font-size:0.85rem;">${t("qrVoting.finalists")}</span>
-        <select id="finalists-count" class="form-select form-select-sm"
-                style="width:auto;border-color:rgba(107,92,255,0.3);color:#181e4b;font-size:0.85rem;">
-          <option value="3">Top 3</option>
-          <option value="4">Top 4</option>
-          <option value="5">Top 5</option>
-          <option value="6">Top 6</option>
-          <option value="7">Top 7</option>
-          <option value="8">Top 8</option>
-        </select>
+        <span style="color:#181e4b;font-weight:700;font-size:0.9rem;">${this.selectedTeamIds.size}</span>
       </div>
     </div>
 
     <!-- Cards -->
     <div class="ranking-cards-grid">
-      ${this.ranking
-        .slice(0, 8)
+      ${this.ranking.length === 0 ? `
+        <div class="text-center py-4" style="grid-column:1/-1;color:#7b7fa8;">
+          <span class="material-symbols-outlined d-block mb-2" style="font-size:2rem;opacity:0.4;">leaderboard</span>
+          <p class="fw-bold mb-1">${t("qrVoting.noRanking")}</p>
+          <p style="font-size:0.85rem;">${t("qrVoting.noRankingDesc")}</p>
+        </div>
+      ` : this.ranking
         .map((team, index) => {
-          const isFinalist = this.finalists.find(
-              (t) => t.id_team === team.id_team,
-          );
+          const isFinalist = this.selectedTeamIds.has(team.id_team);
           const av = avatarColors[index % avatarColors.length];
 
           return `
-          <div class="ranking-card rounded-4 overflow-hidden d-flex flex-column align-items-center">
+          <div class="ranking-card rounded-4 overflow-hidden d-flex flex-column align-items-center${this.finalistsApproved ? "" : " ranking-card-selectable"}"
+               data-team-id="${team.id_team}"
+               style="${this.finalistsApproved && !isFinalist ? "opacity:0.5;" : ""}">
 
             <!-- Top accent bar -->
             <div class="ranking-card-bar ${isFinalist ? "finalist" : "regular"}"></div>
@@ -839,9 +846,12 @@ export default class QRVoting {
           <span style="color:#059669;font-size:0.85rem;font-weight:700;">
             ${t("qrVoting.finalistsApprovedCount", { count: this.finalists.length, plural: this.finalists.length !== 1 ? "s" : "" })}
           </span>
-        </div>` : `<div></div>`}
+        </div>` : this.selectedTeamIds.size === 0
+          ? `<div style="color:#7b7fa8;font-size:0.8rem;">${t("qrVoting.selectTeamsHint")}</div>`
+          : `<div></div>`}
       <button class="btn btn-approve fw-bold px-4 py-2 rounded-3" id="approve-finalists-btn"
-              ${this.finalistsApproved ? "disabled" : ""}>
+              ${this.finalistsApproved || this.selectedTeamIds.size === 0 ? "disabled" : ""}
+              ${!this.finalistsApproved && this.selectedTeamIds.size === 0 ? `title="${t("qrVoting.selectTeamsHint")}"` : ""}>
         ${this.finalistsApproved ? t("qrVoting.finalistsApproved") : t("qrVoting.approveFinalists")}
       </button>
     </div>
@@ -1007,18 +1017,23 @@ export default class QRVoting {
   }
 
   attachRankingHandlers() {
-    const select = document.getElementById("finalists-count");
+    if (!this.finalistsApproved) {
+      document.querySelectorAll(".ranking-card-selectable").forEach((card) => {
+        card.addEventListener("click", () => {
+          const id_team = Number(card.dataset.teamId);
+          this.toggleTeamSelection(id_team);
+        });
+      });
+    }
 
-    if (select) {
-      select.value = this.finalistsCount;
-
-      select.addEventListener("change", (e) => {
-        this.finalistsCount = Number(e.target.value);
-        this.finalistsApproved = false;
-
-        this.updateFinalists();
+    const refreshBtn = document.getElementById("refresh-ranking-btn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", async () => {
+        refreshBtn.disabled = true;
+        const icon = refreshBtn.querySelector(".material-symbols-outlined");
+        if (icon) icon.style.animation = "spin 0.6s linear infinite";
+        await this.fetchRanking();
         this.renderRankingPanel();
-        this.updateQrButtonState();
       });
     }
 
@@ -1026,13 +1041,10 @@ export default class QRVoting {
 
     if (approveBtn) {
       approveBtn.addEventListener("click", () => {
+        if (this.selectedTeamIds.size === 0) return;
         this.finalistsApproved = true;
 
-        approveBtn.disabled = true;
-        approveBtn.innerHTML = t("qrVoting.finalistsApproved");
-        approveBtn.classList.remove("btn-success");
-        approveBtn.classList.add("btn-secondary");
-
+        this.renderRankingPanel();
         this.updateQrButtonState();
         this.renderStaffQRSection();
 
