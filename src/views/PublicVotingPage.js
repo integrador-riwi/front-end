@@ -31,13 +31,20 @@ export default class PublicVotingPage {
     } catch (e) { console.error(e); }
   }
 
+  // Teams whose name starts with "B" (e.g. "Balto") go first, everyone
+  // else keeps their existing relative order after them.
+  _sortTeamsBFirst(teams) {
+    const startsWithB = (team) => /^b/i.test(team.team_name?.trim() ?? "");
+    return [...teams.filter(startsWithB), ...teams.filter((t) => !startsWithB(t))];
+  }
+
   async fetchRanking() {
     try {
       const res = this.isStaff
           ? await getStaffVotingProjects(this.staffToken)
           : await getVotingProjects(this.eventId);
 
-      this.ranking = res?.projects || [];
+      this.ranking = this._sortTeamsBFirst(res?.projects || []);
       this.bench = [...this.ranking];
       this.podium = [null, null, null];
       this.qrVoteId = res?.qr_vote_id;
@@ -616,6 +623,34 @@ export default class PublicVotingPage {
     const getBenchAt = (x, y) => document.elementsFromPoint(x, y).some(el => el.closest("#v-bench"));
 
     let touchStartX = 0, touchStartY = 0, hasMoved = false;
+    let lastTouchX = 0, lastTouchY = 0;
+    let autoScrollRAF = null;
+
+    // Auto-scroll the page while dragging near the top/bottom viewport edge —
+    // lets you drag a team from deep in the bench back up to the podium
+    // without lifting your finger, since touchmove alone is prevented below.
+    const EDGE = 70;       // px from viewport edge that triggers scrolling
+    const MAX_SPEED = 16;  // px scrolled per frame at the very edge
+
+    const autoScrollTick = () => {
+      if (!td || !hasMoved) { autoScrollRAF = null; return; }
+
+      let dy = 0;
+      if (lastTouchY < EDGE) {
+        dy = -MAX_SPEED * (1 - lastTouchY / EDGE);
+      } else if (lastTouchY > window.innerHeight - EDGE) {
+        dy = MAX_SPEED * (1 - (window.innerHeight - lastTouchY) / EDGE);
+      }
+      if (dy !== 0) {
+        window.scrollBy(0, dy);
+        // Refresh drop-target highlight since content moved under a finger
+        // that isn't itself generating new touchmove events.
+        this._clearDragOver();
+        const slot = getSlotAt(lastTouchX, lastTouchY);
+        if (slot) slot.classList.add("v-slot--over");
+      }
+      autoScrollRAF = requestAnimationFrame(autoScrollTick);
+    };
 
     root.addEventListener("touchstart", (e) => {
       const el = e.target.closest("[draggable='true']");
@@ -623,8 +658,9 @@ export default class PublicVotingPage {
       const touch = e.touches[0];
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
       hasMoved = false;
-      const rect = el.getBoundingClientRect();
       td = { id: el.dataset.id, from: el.dataset.from, slotIndex: el.dataset.slot !== undefined ? parseInt(el.dataset.slot) : null };
       // Don't start clone yet — wait for move to confirm drag intent
     }, { passive: true });
@@ -641,6 +677,10 @@ export default class PublicVotingPage {
 
       // Prevent page scroll while dragging
       e.preventDefault();
+
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+      if (autoScrollRAF === null) autoScrollRAF = requestAnimationFrame(autoScrollTick);
 
       if (!clone) {
         // Create clone now that we know it's a real drag
@@ -669,6 +709,7 @@ export default class PublicVotingPage {
       this._clearDragOver();
       document.querySelectorAll(".v-dragging").forEach(el => el.classList.remove("v-dragging"));
       if (clone) { clone.remove(); clone = null; }
+      if (autoScrollRAF !== null) { cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
       if (!td) return;
 
       // Only process drop if user actually dragged
