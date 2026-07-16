@@ -1,6 +1,6 @@
-// const API_BASE_URL = "http://localhost:3010/api";
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3010/api";
+const API_BASE_URL = "https://api-teamup.duckdns.org/api";
+// const API_BASE_URL =
+    // import.meta.env.VITE_API_URL || "https://api-teamup.duckdns.org/";
 
 function getToken() {
   return localStorage.getItem("token");
