@@ -8,6 +8,7 @@ import {
 import Navbar from "../components/navbar/navbar.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import { getCurrentUser } from "../utils/helpers.js";
 
 export default class CoderEventSelect {
   constructor(app) {
@@ -279,7 +280,8 @@ export default class CoderEventSelect {
       "ADMIN",
     ];
     document.querySelectorAll(".ces-btn-join").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
         const eventId = parseInt(btn.dataset.eventId);
         const event = this.events.find((e) => e.id === eventId);
         sessionStorage.setItem("selectedEvent", JSON.stringify(event));
@@ -290,7 +292,8 @@ export default class CoderEventSelect {
           localStorage.setItem("currentEventName", event.title || event.name);
         }
 
-        const userRole = this.app.user?.role;
+        const currentUser = getCurrentUser() || this.app.user;
+        const userRole = currentUser?.role;
         const destination = TL_ROLES.includes(userRole)
             ? "tlDashboard"
             : "coderHome";
