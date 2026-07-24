@@ -242,7 +242,7 @@ export function renderCoderTeam({
       .join("")}
             </ul>
 
-            ${isLeader && !isSubmitted && !isClosed
+            ${isLeader && !isClosed
       ? `
             <button class="ct-btn-add-member d-flex align-items-center justify-content-center gap-2 w-100 mt-3"
                     id="addMemberBtn">
@@ -1912,7 +1912,6 @@ export function initDeliverables(projectId) {
             el.style.display = "none";
           });
 
-        document.getElementById("addMemberBtn")?.remove();
         document.getElementById("leaveTeamBtn")?.remove();
       } catch (err) {
         toast.error(t("common.errorTitle"), err?.message ?? t("coderTeam.submitProjectError"));
