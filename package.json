@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend SPA for RIWI integrator project platform",
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
