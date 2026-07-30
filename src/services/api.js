@@ -120,7 +120,7 @@ export async function loginUser(email, password) {
 }
 
 export async function registerUser(payload) {
-  return apiFetch(`${REGISTER_API_BASE_URL}/auth/register`, {
+  return apiFetch(`/auth/register`, {
     method: "POST",
     body: payload,
   });
