@@ -1,5 +1,5 @@
-const API_BASE_URL = "team-up-production-c533.up.railway.app/api";
-// const API_BASE_URL = import.meta.env.VITE_API_URL || "team-up-production-c533.up.railway.app/api";
+const API_BASE_URL = "https://team-up-production-c533.up.railway.app/api";
+// const API_BASE_URL = import.meta.env.VITE_API_URL || "https://team-up-production-c533.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
