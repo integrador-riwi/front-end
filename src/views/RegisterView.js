@@ -12,7 +12,6 @@ export default class RegisterView {
     this.documentNumber = "";
     this.password = "";
     this.documentType = "CC";
-    this.role = "CODER";
     this.clan = "";
     this.error = "";
     this.loading = false;
@@ -217,7 +216,6 @@ export default class RegisterView {
         documentNumber,
         password: this.password,
         documentType: this.documentType,
-        role: this.role || "CODER",
         clan: this.clan.trim(),
       };
 
