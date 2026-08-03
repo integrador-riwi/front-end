@@ -119,13 +119,6 @@ export async function loginUser(email, password) {
   });
 }
 
-export async function registerUser(payload) {
-  return apiFetch(`/auth/register`, {
-    method: "POST",
-    body: payload,
-  });
-}
-
 export async function createQR(id_event, expires_at, finalists) {
   return apiFetch("/qr-votes", {
     method: "POST",

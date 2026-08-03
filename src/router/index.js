@@ -1,7 +1,6 @@
 import "../assets/styles/main.css";
 import "../components/Toast/index.js";
 import LoginView from "../views/LoginView.js";
-import RegisterView from "../views/RegisterView.js";
 import ForgotPasswordView from "../views/ForgotPasswordView.js";
 import ResetPasswordView from "../views/ResetPasswordView.js";
 import DashboardView from "../views/DashboardView.js";
@@ -47,7 +46,6 @@ import NotFoundView from "../views/NotFoundView.js";
 const ROUTE_PERMISSIONS = {
   landing: "PUBLIC",
   login: "PUBLIC",
-  register: "PUBLIC",
   dashboard: ["ADMIN", "STAFF"],
   events: ["ADMIN", "STAFF"],
   "events/create": ["ADMIN"],
@@ -319,7 +317,7 @@ class App {
 
     // Persistir la ruta actual para restaurarla si el usuario recarga
     // Solo guardar rutas privadas (no landing/login/vote/staffVote)
-    const publicRoutes = ["landing", "login", "register", "vote", "staffVote", "not-found"];
+    const publicRoutes = ["landing", "login", "vote", "staffVote", "not-found"];
     if (!publicRoutes.includes(route)) {
       sessionStorage.setItem("lastRoute", JSON.stringify({ route, params }));
     }
@@ -343,10 +341,6 @@ class App {
 
       case "login":
         this.currentView = new LoginView(this);
-        break;
-
-      case "register":
-        this.currentView = new RegisterView(this);
         break;
 
       case "forgotPassword":
