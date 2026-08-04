@@ -132,6 +132,7 @@ async function refreshSession() {
 }
 
 export async function apiFetch(endpoint, options = {}) {
+  const { suppressAuthRedirect = false, ...fetchOptions } = options;
   const isFormData = options.body instanceof FormData;
   const url = endpoint.startsWith("http")
     ? endpoint
@@ -139,7 +140,7 @@ export async function apiFetch(endpoint, options = {}) {
   const headers = await buildHeaders(options);
 
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     credentials: "include",
     headers,
     body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
@@ -160,7 +161,9 @@ export async function apiFetch(endpoint, options = {}) {
 
     } catch (refreshError) {
       await clearClientSession();
-      window.location.href = "/";
+      if (!suppressAuthRedirect) {
+        window.location.href = "/";
+      }
       throw refreshError;
     }
   }
@@ -258,8 +261,8 @@ export async function logoutUser() {
   return apiFetch("/auth/logout", { method: "POST" });
 }
 
-export async function getMe() {
-  return apiFetch("/auth/me", { method: "GET" });
+export async function getMe(options = {}) {
+  return apiFetch("/auth/me", { method: "GET", ...options });
 }
 
 export async function refreshTokens() {

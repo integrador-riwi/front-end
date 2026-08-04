@@ -186,7 +186,7 @@ class App {
 
       try {
         const { getMe } = await import("../services/api.js");
-        const me = await getMe();
+        const me = await getMe({ suppressAuthRedirect: true });
         const user = me?.data ?? me;
         if (user) {
           const { saveUser } = await import("../utils/auth.js");
@@ -210,7 +210,7 @@ class App {
     // Verificar si existe sesión válida en cookies HttpOnly o access token en memoria.
     try {
       const { getMe } = await import("../services/api.js");
-      const me = await getMe();
+      const me = await getMe({ suppressAuthRedirect: true });
       const user = me?.data ?? me;
       if (user) {
         const { saveUser } = await import("../utils/auth.js");
