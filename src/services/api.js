@@ -23,16 +23,6 @@ function readCookie(name) {
     ?.slice(name.length + 1);
 }
 
-async function getAccessToken() {
-  const { getToken } = await import("../utils/auth.js");
-  return getToken();
-}
-
-async function persistAccessToken(token) {
-  const { setToken } = await import("../utils/auth.js");
-  setToken(token);
-}
-
 async function clearClientSession() {
   const { clearAuth } = await import("../utils/auth.js");
   clearAuth();
@@ -70,12 +60,10 @@ async function ensureCsrfToken() {
 }
 
 async function buildHeaders(options = {}) {
-  const token = await getAccessToken();
   const isFormData = options.body instanceof FormData;
   const method = options.method || "GET";
 
   const headers = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -88,6 +76,13 @@ async function buildHeaders(options = {}) {
   }
 
   return headers;
+}
+
+function captureCsrfToken(response) {
+  const csrfToken = response.headers.get(CSRF_HEADER_NAME);
+  if (csrfToken) {
+    _csrfToken = csrfToken;
+  }
 }
 
 async function refreshSession() {
@@ -106,24 +101,16 @@ async function refreshSession() {
       },
     });
 
+    captureCsrfToken(refreshRes);
+
     if (!refreshRes.ok) {
       throw new Error("Refresh failed");
     }
 
     const refreshData = await refreshRes.json();
-    const newToken = refreshData?.data?.token ?? refreshData?.token;
+    _csrfToken = refreshData?.data?.csrfToken || _csrfToken;
 
-    if (!newToken) {
-      throw new Error("No token in refresh response");
-    }
-
-    await persistAccessToken(newToken);
-    _csrfToken =
-      refreshRes.headers.get(CSRF_HEADER_NAME) ||
-      refreshData?.data?.csrfToken ||
-      _csrfToken;
-
-    return newToken;
+    return true;
   })().finally(() => {
     _refreshPromise = null;
   });
@@ -146,18 +133,17 @@ export async function apiFetch(endpoint, options = {}) {
     body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
   });
 
+  captureCsrfToken(response);
+
   if (response.status === 204) return null;
 
   // 401 — renovar con refresh cookie HttpOnly. Una sola rotación queda en vuelo.
   if (response.status === 401 && endpoint !== "/auth/refresh" && endpoint !== "/auth/login") {
     try {
-      const newToken = await refreshSession();
+      await refreshSession();
 
-      // Reintentar la request original con el nuevo token
-      return apiFetch(endpoint, {
-        ...options,
-        headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
-      });
+      // Reintentar la request original con cookies de sesión actualizadas.
+      return apiFetch(endpoint, options);
 
     } catch (refreshError) {
       await clearClientSession();
