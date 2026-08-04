@@ -184,7 +184,16 @@ class App {
     if (githubSuccess === "success" || githubError) {
       window.history.replaceState({}, "", "/");
 
-      if (!isAuthenticated()) {
+      try {
+        const { getMe } = await import("../services/api.js");
+        const me = await getMe();
+        const user = me?.data ?? me;
+        if (user) {
+          const { saveUser } = await import("../utils/auth.js");
+          saveUser(user);
+          this.user = user;
+        }
+      } catch {
         this.navigate("landing");
         return;
       }
@@ -198,13 +207,7 @@ class App {
       return;
     }
 
-    // Sin token → landing directamente
-    if (!isAuthenticated()) {
-      this.navigate("landing");
-      return;
-    }
-
-    // Hay token — verificar que sigue siendo válido
+    // Verificar si existe sesión válida en cookies HttpOnly o access token en memoria.
     try {
       const { getMe } = await import("../services/api.js");
       const me = await getMe();
@@ -234,14 +237,7 @@ class App {
 
       this.navigate(this.getHomeRoute());
     } catch (err) {
-      // Si el token sigue en localStorage, el error fue transitorio (red, CORS, etc.)
-      // No cerrar sesión — redirigir al home de todas formas
-      // Solo ir a landing si apiFetch ya limpió el token (auth realmente falló)
-      if (isAuthenticated()) {
-        this.navigate(this.getHomeRoute());
-      } else {
-        this.navigate("landing");
-      }
+      this.navigate("landing");
     }
   }
 

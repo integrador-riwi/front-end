@@ -1,6 +1,7 @@
 import { initSocket, disconnectSocket } from "../services/socket.js";
 
 const PERSISTED_STORAGE_KEYS = ["teamup_lang"];
+let accessToken = null;
 
 function preserveLocalStorage(keys) {
   return keys.reduce((values, key) => {
@@ -17,24 +18,27 @@ function restoreLocalStorage(values) {
 }
 
 export const setToken = (token) => {
-  localStorage.setItem("token", token);
+  accessToken = token || null;
+  localStorage.removeItem("token");
 };
 
 export const getToken = () => {
-  return localStorage.getItem("token");
+  return accessToken;
 };
 
 export const setRefreshToken = (token) => {
-  localStorage.setItem("refreshToken", token);
+  localStorage.removeItem("refreshToken");
 };
 
 export const getRefreshToken = () => {
-  return localStorage.getItem("refreshToken");
+  localStorage.removeItem("refreshToken");
+  return null;
 };
 
 export const clearStoredSession = () => {
   const persistedValues = preserveLocalStorage(PERSISTED_STORAGE_KEYS);
 
+  accessToken = null;
   disconnectSocket();
   sessionStorage.clear();
   localStorage.clear();
@@ -46,7 +50,7 @@ export const clearAuth = () => {
 };
 
 export const isAuthenticated = () => {
-  return !!getToken();
+  return !!getToken() || !!getUser();
 };
 
 export const getUser = () => {
@@ -58,10 +62,9 @@ export function saveUser(user) {
   localStorage.setItem("user", JSON.stringify(user));
 }
 
-export function saveSession(token, refreshToken, user) {
+export function saveSession(token, _refreshToken, user) {
   clearStoredSession();
-  localStorage.setItem("token", token);
-  localStorage.setItem("refreshToken", refreshToken);
+  accessToken = token || null;
   localStorage.setItem("user", JSON.stringify(user));
   initSocket();
 }

@@ -43,8 +43,15 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-export const logout = (router) => {
-  clearSession(router);
+export const logout = async (router) => {
+  try {
+    const { logoutUser } = await import("../services/api.js");
+    await logoutUser();
+  } catch {
+    // La sesión local se limpia incluso si la cookie ya expiró o la red falla.
+  } finally {
+    clearSession(router);
+  }
 };
 
 export const getEventIdFromUrl = () => {

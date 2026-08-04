@@ -20,8 +20,6 @@ export function initSocket() {
   const token = getToken();
   const user = getUser();
 
-  if (!token) return null;
-
   if (!user || !user.id_user) {
     setTimeout(() => initSocket(), 500);
     return null;
@@ -37,7 +35,8 @@ export function initSocket() {
   }
 
   socket = io(SOCKET_URL, {
-    auth: { token },
+    ...(token ? { auth: { token } } : {}),
+    withCredentials: true,
     transports: ["websocket", "polling"],
     reconnection: true,
     reconnectionAttempts: 5,

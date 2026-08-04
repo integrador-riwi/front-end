@@ -150,7 +150,7 @@ export default class LoginView {
       clearStoredSession();
       const response = await loginUser(this.email, this.password);
       const user = response.data.user;
-      saveSession(response.data.token, response.data.refreshToken, user);
+      saveSession(response.data.token, null, user);
 
       if (!user.github_username) {
         toast.warning(

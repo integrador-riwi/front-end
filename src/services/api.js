@@ -1,26 +1,78 @@
 const API_BASE_URL = "https://team-up-production-c533.up.railway.app/api";
 // const API_BASE_URL = import.meta.env.VITE_API_URL || "https://team-up-production-c533.up.railway.app/api";
 
-function getToken() {
-  return localStorage.getItem("token");
+const CSRF_COOKIE_NAME = "teamup_csrf";
+const CSRF_HEADER_NAME = "X-CSRF-Token";
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+let _csrfToken = null;
+let _refreshPromise = null;
+
+function clearLegacyTokenStorage() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
 }
 
-let _isRefreshing = false;
-let _refreshQueue = [];
+clearLegacyTokenStorage();
 
-function _processQueue(error, token = null) {
-  _refreshQueue.forEach(({ resolve, reject }) =>
-      error ? reject(error) : resolve(token)
-  );
-  _refreshQueue = [];
+function readCookie(name) {
+  return document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
 }
 
-export async function apiFetch(endpoint, options = {}) {
-  const token = getToken();
+async function getAccessToken() {
+  const { getToken } = await import("../utils/auth.js");
+  return getToken();
+}
+
+async function persistAccessToken(token) {
+  const { setToken } = await import("../utils/auth.js");
+  setToken(token);
+}
+
+async function clearClientSession() {
+  const { clearAuth } = await import("../utils/auth.js");
+  clearAuth();
+}
+
+function isUnsafeRequest(method = "GET") {
+  return UNSAFE_METHODS.has(method.toUpperCase());
+}
+
+async function ensureCsrfToken() {
+  if (_csrfToken && readCookie(CSRF_COOKIE_NAME)) {
+    return _csrfToken;
+  }
+
+  const csrfResponse = await fetch(`${API_BASE_URL}/auth/csrf`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!csrfResponse.ok) {
+    throw new Error("No se pudo preparar la sesión");
+  }
+
+  const csrfData = await csrfResponse.json();
+  _csrfToken =
+    csrfResponse.headers.get(CSRF_HEADER_NAME) ||
+    csrfData?.data?.csrfToken ||
+    csrfData?.csrfToken;
+
+  if (!_csrfToken) {
+    throw new Error("No se recibió token CSRF");
+  }
+
+  return _csrfToken;
+}
+
+async function buildHeaders(options = {}) {
+  const token = await getAccessToken();
   const isFormData = options.body instanceof FormData;
-  const url = endpoint.startsWith("http")
-    ? endpoint
-    : `${API_BASE_URL}${endpoint}`;
+  const method = options.method || "GET";
 
   const headers = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -31,53 +83,74 @@ export async function apiFetch(endpoint, options = {}) {
     headers["Content-Type"] = "application/json";
   }
 
+  if (isUnsafeRequest(method) && !headers[CSRF_HEADER_NAME]) {
+    headers[CSRF_HEADER_NAME] = await ensureCsrfToken();
+  }
+
+  return headers;
+}
+
+async function refreshSession() {
+  if (_refreshPromise) {
+    return _refreshPromise;
+  }
+
+  _refreshPromise = (async () => {
+    const csrfToken = await ensureCsrfToken();
+    const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        [CSRF_HEADER_NAME]: csrfToken,
+      },
+    });
+
+    if (!refreshRes.ok) {
+      throw new Error("Refresh failed");
+    }
+
+    const refreshData = await refreshRes.json();
+    const newToken = refreshData?.data?.token ?? refreshData?.token;
+
+    if (!newToken) {
+      throw new Error("No token in refresh response");
+    }
+
+    await persistAccessToken(newToken);
+    _csrfToken =
+      refreshRes.headers.get(CSRF_HEADER_NAME) ||
+      refreshData?.data?.csrfToken ||
+      _csrfToken;
+
+    return newToken;
+  })().finally(() => {
+    _refreshPromise = null;
+  });
+
+  return _refreshPromise;
+}
+
+export async function apiFetch(endpoint, options = {}) {
+  const isFormData = options.body instanceof FormData;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${API_BASE_URL}${endpoint}`;
+  const headers = await buildHeaders(options);
+
   const response = await fetch(url, {
     ...options,
+    credentials: "include",
     headers,
     body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
   });
 
   if (response.status === 204) return null;
 
-  // 401 — intentar renovar con el refreshToken de localStorage
+  // 401 — renovar con refresh cookie HttpOnly. Una sola rotación queda en vuelo.
   if (response.status === 401 && endpoint !== "/auth/refresh" && endpoint !== "/auth/login") {
-    if (_isRefreshing) {
-      return new Promise((resolve, reject) => {
-        _refreshQueue.push({ resolve, reject });
-      }).then((newToken) => {
-        return apiFetch(endpoint, {
-          ...options,
-          headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
-        });
-      });
-    }
-
-    _isRefreshing = true;
-
     try {
-      const { getRefreshToken, setToken, setRefreshToken, clearAuth } = await import("../utils/auth.js");
-      const refreshToken = getRefreshToken();
-
-      if (!refreshToken) throw new Error("No refresh token");
-
-      const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!refreshRes.ok) throw new Error("Refresh failed");
-
-      const refreshData = await refreshRes.json();
-      const newToken = refreshData?.data?.token ?? refreshData?.token;
-      const newRefreshToken = refreshData?.data?.refreshToken ?? refreshData?.refreshToken;
-
-      if (!newToken) throw new Error("No token in refresh response");
-
-      setToken(newToken);
-      if (newRefreshToken) setRefreshToken(newRefreshToken);
-
-      _processQueue(null, newToken);
+      const newToken = await refreshSession();
 
       // Reintentar la request original con el nuevo token
       return apiFetch(endpoint, {
@@ -86,13 +159,9 @@ export async function apiFetch(endpoint, options = {}) {
       });
 
     } catch (refreshError) {
-      _processQueue(refreshError);
-      const { clearAuth } = await import("../utils/auth.js");
-      clearAuth();
+      await clearClientSession();
       window.location.href = "/";
       throw refreshError;
-    } finally {
-      _isRefreshing = false;
     }
   }
 
