@@ -2,6 +2,7 @@ import { initSocket, disconnectSocket } from "../services/socket.js";
 
 const PERSISTED_STORAGE_KEYS = ["teamup_lang"];
 let accessToken = null;
+let sessionVerified = false;
 
 function preserveLocalStorage(keys) {
   return keys.reduce((values, key) => {
@@ -19,6 +20,7 @@ function restoreLocalStorage(values) {
 
 export const setToken = (token) => {
   accessToken = token || null;
+  sessionVerified = Boolean(token);
   localStorage.removeItem("token");
 };
 
@@ -39,6 +41,7 @@ export const clearStoredSession = () => {
   const persistedValues = preserveLocalStorage(PERSISTED_STORAGE_KEYS);
 
   accessToken = null;
+  sessionVerified = false;
   disconnectSocket();
   sessionStorage.clear();
   localStorage.clear();
@@ -50,7 +53,7 @@ export const clearAuth = () => {
 };
 
 export const isAuthenticated = () => {
-  return !!getToken() || !!getUser();
+  return !!getToken() || sessionVerified;
 };
 
 export const getUser = () => {
@@ -59,12 +62,14 @@ export const getUser = () => {
 };
 
 export function saveUser(user) {
+  sessionVerified = true;
   localStorage.setItem("user", JSON.stringify(user));
 }
 
 export function saveSession(token, _refreshToken, user) {
   clearStoredSession();
   accessToken = token || null;
+  sessionVerified = true;
   localStorage.setItem("user", JSON.stringify(user));
   initSocket();
 }
