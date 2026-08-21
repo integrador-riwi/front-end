@@ -8,6 +8,7 @@ import {
   acceptJoinRequest,
   rejectJoinRequest,
 } from "./api.js";
+import { normalizeServiceUrl } from "./url.js";
 
 let socket = null;
 const eventHandlers = new Map();
@@ -16,7 +17,7 @@ let isDegraded = false;
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_SOCKET_URL;
   if (envUrl) {
-    return envUrl.replace(/\/api\/?$/, "");
+    return normalizeServiceUrl(envUrl).replace(/\/api\/?$/, "");
   }
   return "https://backend-production-2nd.up.railway.app";
 };

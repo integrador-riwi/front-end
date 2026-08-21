@@ -1,6 +1,9 @@
-const API_BASE_URL =
+import { normalizeServiceUrl } from "./url.js";
+
+const API_BASE_URL = normalizeServiceUrl(
   import.meta.env.VITE_API_URL ||
-  "https://team-up-production-c533.up.railway.app/api";
+  "https://team-up-production-c533.up.railway.app/api"
+);
 
 const CSRF_COOKIE_NAME = "teamup_csrf";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
