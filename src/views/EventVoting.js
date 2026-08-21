@@ -1119,12 +1119,49 @@ export default class QRVoting {
       this.subscribeToVotes();
       this.startPolling();
     } else if (this.voteResults?.length) {
-
       this.pollingInterval = setInterval(async () => {
         await this.fetchVoteResults();
         this.renderResults();
       }, 15000);
     }
+
+    // Escuchar estado de degradación de Socket para mostrar banner y permitir recuperación manual
+    if (this._unsubscribeDegraded) this._unsubscribeDegraded();
+    this._unsubscribeDegraded = on("connection:degraded", () => {
+      this.renderDegradationNotice();
+    });
+
+    if (isSocketDegraded()) {
+      this.renderDegradationNotice();
+    }
+  }
+
+  renderDegradationNotice() {
+    let notice = document.getElementById("socket-degraded-notice");
+    if (!notice) {
+      const container = document.querySelector(".dashboard-main");
+      if (!container) return;
+      notice = document.createElement("div");
+      notice.id = "socket-degraded-notice";
+      notice.className = "alert alert-warning d-flex align-items-center justify-content-between m-3 p-3 rounded-3";
+      notice.style.cssText = "background: #fffbe6; border: 1px solid #ffe58f; color: #856404;";
+      container.insertBefore(notice, container.firstChild);
+    }
+
+    notice.innerHTML = `
+      <div class="d-flex align-items-center gap-2">
+        <span class="material-symbols-outlined">wifi_off</span>
+        <span><strong>Conexión en tiempo real interrumpida:</strong> Se están utilizando actualizaciones periódicas por polling.</span>
+      </div>
+      <button id="retry-socket-conn-btn" class="btn btn-sm btn-outline-warning fw-bold">
+        Reintentar Conexión
+      </button>
+    `;
+
+    document.getElementById("retry-socket-conn-btn")?.addEventListener("click", () => {
+      retryConnection();
+      notice.remove();
+    });
   }
 
   // ── Auditoría de votos ────────────────────────────────────────────────────
@@ -1260,6 +1297,10 @@ export default class QRVoting {
       this._unsubscribeVote = null;
     } else {
       off("vote:new");
+    }
+    if (this._unsubscribeDegraded) {
+      this._unsubscribeDegraded();
+      this._unsubscribeDegraded = null;
     }
     this.stopPolling();
   }
