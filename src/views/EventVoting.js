@@ -9,7 +9,7 @@ import "../assets/styles/qr-voting.css";
 import template from "../../pages/admin_qr.html?raw";
 import { getSelectedEvent } from "../utils/helpers.js";
 import defaultLogo from "../assets/logo.svg";
-import { initSocket, on, off } from "../services/socket.js";
+import { initSocket, on, off, joinEvent, leaveEvent, retryConnection, isSocketDegraded } from "../services/socket.js";
 import { icons } from "../utils/icons.js";
 import { t, onLangChange } from "../utils/i18n.js";
 
@@ -863,18 +863,20 @@ export default class QRVoting {
   /* -------------------------- LIVE RESULTS -------------------------- */
 
   subscribeToVotes() {
-    // Wait for socket to connect before registering handler
-    setTimeout(async () => {
-      const { getSocket } = await import("../services/socket.js");
-      const socket = getSocket();
-      console.log("socket after init:", socket?.connected);
+    const eventId = getSelectedEvent();
+    if (eventId) {
+      joinEvent(eventId);
+    }
 
-      on("vote:new", async (data) => {
-        console.log("vote:new received:", data);
-        await this.fetchVoteResults();
-        this.renderResults();
-      });
-    }, 2000);
+    if (this._unsubscribeVote) {
+      this._unsubscribeVote();
+    }
+
+    this._unsubscribeVote = on("vote:new", async (data) => {
+      console.log("[EventVoting] vote:new received:", data);
+      await this.fetchVoteResults();
+      this.renderResults();
+    });
   }
 
   startPolling() {
@@ -1248,8 +1250,17 @@ export default class QRVoting {
   }
 
   destroy() {
+    const eventId = getSelectedEvent();
+    if (eventId) {
+      leaveEvent(eventId);
+    }
     if (this._offLangChange) this._offLangChange();
-    off("vote:new");
+    if (this._unsubscribeVote) {
+      this._unsubscribeVote();
+      this._unsubscribeVote = null;
+    } else {
+      off("vote:new");
+    }
     this.stopPolling();
   }
 }

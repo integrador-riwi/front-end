@@ -1111,7 +1111,7 @@ export default class CoderHome {
   _renderPendingInvitationsBanner() {
     return `
       <div class="pending-invitations-banner">
-        <p class="pib-title">📬 You have ${this.pendingInvitations.length} pending invitation(s)</p>
+        <p class="pib-title">You have ${this.pendingInvitations.length} pending invitation(s)</p>
         <div class="pib-list">
           ${this.pendingInvitations
         .map(
@@ -1137,7 +1137,7 @@ export default class CoderHome {
     if (this.pendingJoinRequests.length === 0) return "";
     return `
       <div class="pending-invitations-banner" style="background: #fef3c7; border-color: #f59e0b;">
-        <p class="pib-title">📤 You have ${this.pendingJoinRequests.length} pending join request(s)</p>
+        <p class="pib-title">You have ${this.pendingJoinRequests.length} pending join request(s)</p>
         <div class="pib-list">
           ${this.pendingJoinRequests
         .map(

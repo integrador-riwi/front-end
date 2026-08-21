@@ -10,29 +10,49 @@ import {
 } from "./api.js";
 
 let socket = null;
-let eventHandlers = {};
+const eventHandlers = new Map();
+let isDegraded = false;
 
-const SOCKET_URL =
-  import.meta.env.VITE_API_URL?.replace("/api", "") ||
-  "https://backend-production-2nd.up.railway.app";
+const getSocketUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_SOCKET_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/api\/?$/, "");
+  }
+  return "https://backend-production-2nd.up.railway.app";
+};
+
+const SOCKET_URL = getSocketUrl();
+
+const emitToHandlers = (event, data) => {
+  const handlers = eventHandlers.get(event);
+  if (handlers) {
+    handlers.forEach((callback) => {
+      try {
+        callback(data);
+      } catch (err) {
+        console.error(`[Socket] Error in handler for event "${event}":`, err);
+      }
+    });
+  }
+};
 
 export function initSocket() {
   const token = getToken();
   const user = getUser();
 
   if (!user || !user.id_user) {
-    setTimeout(() => initSocket(), 500);
     return null;
   }
 
-  if (socket?.connected) return socket;
-  if (socket?.active) return socket;
+  if (socket?.connected || socket?.active) return socket;
 
   if (socket) {
     socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }
+
+  isDegraded = false;
 
   socket = io(SOCKET_URL, {
     ...(token ? { auth: { token } } : {}),
@@ -41,13 +61,41 @@ export function initSocket() {
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
+    reconnectionDelayMax: 10000,
+    randomizationFactor: 0.5,
   });
 
-  socket.on("connect", () => console.log("[Socket] Connected:", socket.id));
-  socket.on("disconnect", () => {});
-  socket.on("connect_error", (error) =>
-    console.error("[Socket] Connection error:", error.message),
-  );
+  socket.on("connect", () => {
+    console.log("[Socket] Connected:", socket.id);
+    isDegraded = false;
+    emitToHandlers("connection:status", { status: "connected", socketId: socket.id });
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.warn("[Socket] Disconnected:", reason);
+    emitToHandlers("connection:status", { status: "disconnected", reason });
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error("[Socket] Connection error:", error.message);
+    emitToHandlers("connection:error", { message: error.message });
+  });
+
+  socket.io.on("reconnect_attempt", (attempt) => {
+    console.log(`[Socket] Reconnection attempt #${attempt}`);
+    emitToHandlers("connection:status", { status: "reconnecting", attempt });
+  });
+
+  socket.io.on("reconnect_failed", () => {
+    console.error("[Socket] Reconnection failed after max attempts. Entering degraded mode.");
+    isDegraded = true;
+    emitToHandlers("connection:degraded", { degraded: true });
+    toast.warn(
+      t("common.errorTitle") || "Conexión en Tiempo Real",
+      "Actualizaciones por WebSocket no disponibles. Se utilizará polling de respaldo.",
+      { duration: 6000 }
+    );
+  });
 
   setupEventListeners();
   return socket;
@@ -112,7 +160,7 @@ function setupEventListeners() {
         },
       },
     );
-    if (eventHandlers["invitation:new"]) eventHandlers["invitation:new"](data);
+    emitToHandlers("invitation:new", data);
   });
 
   // join_request:new
@@ -145,8 +193,9 @@ function setupEventListeners() {
                 t("invite.requestAcceptedMsg"),
               );
             } catch (err) {
-              if (eventHandlers["join_request:new:accept"]) {
-                await eventHandlers["join_request:new:accept"](item);
+              const handlers = eventHandlers.get("join_request:new:accept");
+              if (handlers && handlers.size > 0) {
+                handlers.forEach((fn) => fn(item));
               } else {
                 toast.error(
                   t("common.errorTitle"),
@@ -164,8 +213,9 @@ function setupEventListeners() {
                 t("invite.requestDeclinedMsg", { team: data.teamName }),
               );
             } catch (err) {
-              if (eventHandlers["join_request:new:deny"]) {
-                await eventHandlers["join_request:new:deny"](item);
+              const handlers = eventHandlers.get("join_request:new:deny");
+              if (handlers && handlers.size > 0) {
+                handlers.forEach((fn) => fn(item));
               } else {
                 toast.error(
                   t("common.errorTitle"),
@@ -177,8 +227,7 @@ function setupEventListeners() {
         },
       },
     );
-    if (eventHandlers["join_request:new"])
-      eventHandlers["join_request:new"](data);
+    emitToHandlers("join_request:new", data);
   });
 
   // invitation:accepted
@@ -191,8 +240,7 @@ function setupEventListeners() {
       }),
       { duration: 5000 },
     );
-    if (eventHandlers["invitation:accepted"])
-      eventHandlers["invitation:accepted"](data);
+    emitToHandlers("invitation:accepted", data);
   });
 
   // invitation:rejected
@@ -205,8 +253,7 @@ function setupEventListeners() {
       }),
       { duration: 5000 },
     );
-    if (eventHandlers["invitation:rejected"])
-      eventHandlers["invitation:rejected"](data);
+    emitToHandlers("invitation:rejected", data);
   });
 
   // join_request:accepted
@@ -225,8 +272,7 @@ function setupEventListeners() {
         },
       },
     );
-    if (eventHandlers["join_request:accepted"])
-      eventHandlers["join_request:accepted"](data);
+    emitToHandlers("join_request:accepted", data);
   });
 
   // join_request:rejected
@@ -239,8 +285,7 @@ function setupEventListeners() {
     setTimeout(() => {
       window.location.hash = "#/coderEventSelect";
     }, 2000);
-    if (eventHandlers["join_request:rejected"])
-      eventHandlers["join_request:rejected"](data);
+    emitToHandlers("join_request:rejected", data);
   });
 
   // comment:new
@@ -252,7 +297,7 @@ function setupEventListeners() {
       }),
       { duration: 5000 },
     );
-    if (eventHandlers["comment:new"]) eventHandlers["comment:new"](data);
+    emitToHandlers("comment:new", data);
   });
 
   // team:member_removed
@@ -266,28 +311,62 @@ function setupEventListeners() {
       window.location.hash = "#/coderEventSelect";
       setTimeout(() => window.location.reload(), 100);
     }, 2500);
-    if (eventHandlers["team:member_removed"])
-      eventHandlers["team:member_removed"](data);
+    emitToHandlers("team:member_removed", data);
   });
 
   // vote:new
   socket.on("vote:new", (data) => {
     console.log("[Socket] vote:new received:", data);
-    if (eventHandlers["vote:new"]) eventHandlers["vote:new"](data);
+    emitToHandlers("vote:new", data);
   });
 }
 
 export function on(event, callback) {
-  eventHandlers[event] = callback;
+  if (!eventHandlers.has(event)) {
+    eventHandlers.set(event, new Set());
+  }
+  eventHandlers.get(event).add(callback);
+
+  return () => off(event, callback);
 }
-export function off(event) {
-  delete eventHandlers[event];
+
+export function off(event, callback) {
+  if (!callback) {
+    eventHandlers.delete(event);
+  } else if (eventHandlers.has(event)) {
+    eventHandlers.get(event).delete(callback);
+    if (eventHandlers.get(event).size === 0) {
+      eventHandlers.delete(event);
+    }
+  }
 }
+
 export function joinProject(projectId) {
   if (socket?.connected) socket.emit("join_project", projectId);
 }
+
 export function leaveProject(projectId) {
   if (socket?.connected) socket.emit("leave_project", projectId);
+}
+
+export function joinEvent(eventId) {
+  if (socket?.connected) socket.emit("join_event", eventId);
+}
+
+export function leaveEvent(eventId) {
+  if (socket?.connected) socket.emit("leave_event", eventId);
+}
+
+export function retryConnection() {
+  if (socket) {
+    socket.connect();
+  } else {
+    initSocket();
+  }
+}
+
+export function isSocketDegraded() {
+  return isDegraded;
 }
 
 export function disconnectSocket() {
@@ -296,7 +375,8 @@ export function disconnectSocket() {
     socket.disconnect();
     socket = null;
   }
-  eventHandlers = {};
+  eventHandlers.clear();
+  isDegraded = false;
 }
 
 export function getSocket() {
@@ -309,6 +389,10 @@ export default {
   off,
   joinProject,
   leaveProject,
+  joinEvent,
+  leaveEvent,
+  retryConnection,
+  isSocketDegraded,
   disconnectSocket,
   getSocket,
 };
