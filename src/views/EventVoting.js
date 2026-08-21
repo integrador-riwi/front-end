@@ -635,10 +635,14 @@ export default class QRVoting {
     if (!btn) return;
 
     btn.addEventListener("click", async () => {
-      const confirmed = confirm(
-          t("qrVoting.resetConfirm")
-      );
+      const confirmed = confirm(t("qrVoting.resetConfirm"));
       if (!confirmed) return;
+
+      const typedText = prompt("Esta acción es DESTRUCTIVA e IRREVERSIBLE.\n\nEscribe 'ELIMINAR' en mayúsculas para confirmar la eliminación de todos los votos del evento:");
+      if (typedText !== "ELIMINAR") {
+        alert("Confirmación cancelada: El texto ingresado no coincide con 'ELIMINAR'.");
+        return;
+      }
 
       btn.disabled  = true;
       btn.innerHTML = `

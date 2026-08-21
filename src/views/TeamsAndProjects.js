@@ -790,7 +790,14 @@ export default class Teams {
   async _handleCloseTeam(teamId) {
     const team = this.allTeams.find((item) => String(item.id_team) === String(teamId));
     const name = team?.name ?? "este equipo";
-    const confirmed = confirm(`¿Cerrar ${name}? Ya no aparecerá en la lista de equipos open ni aceptará nuevas solicitudes.`);
+    const membersCount = team?.members?.length ?? 0;
+    const impactMsg = `Acción Destructiva: Cierre de Equipo\n\n` +
+      `• Equipo: ${name} (ID: ${teamId})\n` +
+      `• Integrantes actuales: ${membersCount}\n` +
+      `• Impacto: El equipo cambiará a estado cerrado, ya no aceptará nuevos integrantes ni solicitudes.\n\n` +
+      `¿Confirmar el cierre definitivo del equipo?`;
+
+    const confirmed = confirm(impactMsg);
     if (!confirmed) return;
 
     const buttons = document.querySelectorAll(`[data-action="close-team"][data-team-id="${teamId}"]`);
@@ -806,7 +813,7 @@ export default class Teams {
         String(item.id_team) === String(teamId) ? { ...item, closed_at: closedAt } : item,
       );
       this._applyFilters();
-      toast.success("Equipo cerrado", "Ya no aparecerá en la lista open.");
+      toast.success("Equipo cerrado", "El equipo ha sido cerrado y auditado.");
     } catch (err) {
       toast.error("Error", err?.message ?? "No se pudo cerrar el equipo.");
       buttons.forEach((btn) => {
