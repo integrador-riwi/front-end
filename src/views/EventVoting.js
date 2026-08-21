@@ -910,8 +910,13 @@ export default class QRVoting {
       this.totalVotes = Math.round((totalPublic + totalStaff) / 3);
     } catch (err) {
       console.error("Failed to fetch vote results:", err);
-      this.voteResults = [];
-      this.totalVotes = 0;
+      this.fetchError = err;
+      if (this.voteResults?.length > 0) {
+        this.isStale = true;
+      } else {
+        this.voteResults = null; // null indicates error state, not 0 votes
+        this.totalVotes = null;
+      }
     }
   }
 
@@ -920,14 +925,38 @@ export default class QRVoting {
     const totalEl = document.getElementById("total-votes");
     if (!container) return;
 
-    // When QR is active or finalists are approved, show all results from the event
-    // (the QR already scopes to the approved finalists on the backend)
+    if (this.voteResults === null) {
+      if (totalEl) totalEl.textContent = "—";
+      const correlationId = this.fetchError?.correlationId;
+      const correlationHtml = correlationId
+        ? `<div class="mt-1 text-muted font-monospace" style="font-size: 0.75rem;">ID de correlación: <code>${correlationId}</code></div>`
+        : "";
+
+      container.innerHTML = `
+        <div class="alert alert-danger text-center p-3 rounded-3" role="alert">
+          <span class="material-symbols-outlined mb-1" style="font-size: 2rem;">error</span>
+          <h6 class="fw-bold mb-1">Error al obtener los resultados de la votación</h6>
+          <p class="mb-1" style="font-size: 0.85rem;">${this.fetchError?.message || "Ocurrió un error al cargar la información."}</p>
+          ${correlationHtml}
+          <button id="retry-vote-results-btn" class="btn btn-sm btn-outline-danger mt-2 px-3 fw-bold">
+            <span class="material-symbols-outlined align-middle me-1" style="font-size: 1rem;">refresh</span>Reintentar
+          </button>
+        </div>
+      `;
+
+      container.querySelector("#retry-vote-results-btn")?.addEventListener("click", async () => {
+        await this.fetchVoteResults();
+        this.renderResults();
+      });
+      return;
+    }
+
     const finalistIds = this.finalists.map((f) => f.id_project).filter(Boolean);
-    const filteredResults = (this.finalistsApproved && this.voteResults.length > 0)
-        ? this.voteResults  // show all — QR already filtered on backend
+    const filteredResults = (this.finalistsApproved && (this.voteResults?.length ?? 0) > 0)
+        ? this.voteResults
         : finalistIds.length > 0
-            ? this.voteResults.filter((t) => finalistIds.includes(t.id_project ?? t.id))
-            : this.voteResults;
+            ? (this.voteResults || []).filter((t) => finalistIds.includes(t.id_project ?? t.id))
+            : (this.voteResults || []);
 
     // Show unique voters count, not total points
     const totalPublicBallots = filteredResults.reduce((sum, t) => sum + Number(t.public_ballots ?? 0), 0);

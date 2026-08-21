@@ -120,50 +120,71 @@ async function refreshSession() {
 }
 
 export async function apiFetch(endpoint, options = {}) {
-  const { suppressAuthRedirect = false, ...fetchOptions } = options;
+  const { suppressAuthRedirect = false, timeout = 15000, signal, ...fetchOptions } = options;
   const isFormData = options.body instanceof FormData;
   const url = endpoint.startsWith("http")
     ? endpoint
     : `${API_BASE_URL}${endpoint}`;
   const headers = await buildHeaders(options);
 
-  const response = await fetch(url, {
-    ...fetchOptions,
-    credentials: "include",
-    headers,
-    body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  captureCsrfToken(response);
+  if (signal) {
+    signal.addEventListener("abort", () => controller.abort());
+  }
 
-  if (response.status === 204) return null;
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      credentials: "include",
+      headers,
+      signal: controller.signal,
+      body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
+    });
 
-  // 401 — renovar con refresh cookie HttpOnly. Una sola rotación queda en vuelo.
-  if (response.status === 401 && endpoint !== "/auth/refresh" && endpoint !== "/auth/login") {
-    try {
-      await refreshSession();
+    clearTimeout(timeoutId);
+    captureCsrfToken(response);
 
-      // Reintentar la request original con cookies de sesión actualizadas.
-      return apiFetch(endpoint, options);
+    if (response.status === 204) return null;
 
-    } catch (refreshError) {
-      await clearClientSession();
-      if (!suppressAuthRedirect) {
-        window.location.href = "/";
+    // 401 — renovar con refresh cookie HttpOnly. Una sola rotación queda en vuelo.
+    if (response.status === 401 && endpoint !== "/auth/refresh" && endpoint !== "/auth/login") {
+      try {
+        await refreshSession();
+
+        // Reintentar la request original con cookies de sesión actualizadas.
+        return apiFetch(endpoint, options);
+
+      } catch (refreshError) {
+        await clearClientSession();
+        if (!suppressAuthRedirect) {
+          window.location.href = "/";
+        }
+        throw refreshError;
       }
-      throw refreshError;
     }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.message || data.error || "Error en la petición");
+      error.response = { data, status: response.status };
+      error.correlationId = data.correlationId || response.headers.get("X-Correlation-Id") || null;
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      const timeoutError = new Error(signal?.aborted ? "Petición cancelada" : "Tiempo de espera agotado (Timeout)");
+      timeoutError.isTimeout = !signal?.aborted;
+      timeoutError.isAborted = !!signal?.aborted;
+      throw timeoutError;
+    }
+    throw err;
   }
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    const error = new Error(data.message || data.error || "Error en la petición");
-    error.response = { data, status: response.status };
-    throw error;
-  }
-
-  return data;
 }
 
 // Auth

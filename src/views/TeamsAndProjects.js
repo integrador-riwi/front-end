@@ -104,6 +104,28 @@ export default class Teams {
     </div>`;
   }
 
+  showError(container, err, onRetry) {
+    const correlationId = err?.correlationId;
+    const correlationHtml = correlationId
+      ? `<div class="mt-1 text-muted font-monospace" style="font-size: 0.75rem;">ID de correlación: <code>${correlationId}</code></div>`
+      : "";
+
+    container.innerHTML = `
+    <div class="col-12">
+      <div class="alert alert-danger d-flex flex-column align-items-center text-center p-4 rounded-3 shadow-sm">
+        <span class="material-symbols-outlined mb-2" style="font-size: 2.5rem;">error</span>
+        <h6 class="fw-bold mb-1">Error al cargar equipos y proyectos</h6>
+        <p class="mb-2" style="font-size: 0.88rem;">${err?.message || "No se pudo obtener la lista de equipos."}</p>
+        ${correlationHtml}
+        ${onRetry ? `<button id="teams-retry-btn" class="btn btn-sm btn-outline-danger mt-2 px-3 fw-bold">Reintentar</button>` : ""}
+      </div>
+    </div>`;
+
+    if (onRetry) {
+      container.querySelector("#teams-retry-btn")?.addEventListener("click", onRetry);
+    }
+  }
+
   async render() {
     const app = document.getElementById("app");
 
@@ -153,27 +175,33 @@ export default class Teams {
     if (this.allTeams.length === 0) {
       this.showLoading(teamsContainer);
 
-      const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true&includeClosed=true`, { method: "GET" });
-      const totalTeams = fetchTeams.data.teams;
+      try {
+        const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true&includeClosed=true`, { method: "GET" });
+        const totalTeams = fetchTeams.data.teams;
 
-      if (!totalTeams || totalTeams.length === 0) {
-        this.showEmpty(teamsContainer);
-        this.renderClanFilters([]);
+        if (!totalTeams || totalTeams.length === 0) {
+          this.showEmpty(teamsContainer);
+          this.renderClanFilters([]);
+          return;
+        }
+
+        this.allTeams = totalTeams;
+        this.renderClanFilters(totalTeams);
+
+        // Admin: cargar contadores de calificaciones por área
+        if (this.isAdmin && this.eventId) {
+          try {
+            const { getTeamEvalCounts } = await import("../services/api.js");
+            const counts = await getTeamEvalCounts(this.eventId);
+            counts.forEach((row) => {
+              this.teamAreaCounts[row.id_team] = row.areas ?? {};
+            });
+          } catch (_) {}
+        }
+      } catch (err) {
+        console.error("Error loading teams grid:", err);
+        this.showError(teamsContainer, err, () => this.renderTeamsGrid());
         return;
-      }
-
-      this.allTeams = totalTeams;
-      this.renderClanFilters(totalTeams);
-
-      // Admin: cargar contadores de calificaciones por área
-      if (this.isAdmin && this.eventId) {
-        try {
-          const { getTeamEvalCounts } = await import("../services/api.js");
-          const counts = await getTeamEvalCounts(this.eventId);
-          counts.forEach((row) => {
-            this.teamAreaCounts[row.id_team] = row.areas ?? {};
-          });
-        } catch (_) {}
       }
     }
 
