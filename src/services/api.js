@@ -1,5 +1,6 @@
-const API_BASE_URL = "https://team-up-production-c533.up.railway.app/api";
-// const API_BASE_URL = import.meta.env.VITE_API_URL || "https://team-up-production-c533.up.railway.app/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://team-up-production-c533.up.railway.app/api";
 
 const CSRF_COOKIE_NAME = "teamup_csrf";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
@@ -166,9 +167,6 @@ export async function apiFetch(endpoint, options = {}) {
 }
 
 // Auth
-const REGISTER_API_BASE_URL = "team-up-production-c533.up.railway.app/api";
-//const REGISTER_API_BASE_URL =
-//  import.meta.env.VITE_API_URL || "team-up-production-c533.up.railway.app/api";
 
 export async function loginUser(email, password) {
   return apiFetch("/auth/login", {
