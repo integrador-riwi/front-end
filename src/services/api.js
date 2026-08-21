@@ -44,10 +44,15 @@ async function ensureCsrfToken() {
   });
 
   if (!csrfResponse.ok) {
-    throw new Error("No se pudo preparar la sesión");
+    throw new Error(`No se pudo preparar la sesión (${csrfResponse.status})`);
   }
 
-  const csrfData = await csrfResponse.json();
+  const contentType = csrfResponse.headers.get("content-type") || "";
+  let csrfData = {};
+  if (contentType.includes("application/json")) {
+    csrfData = await csrfResponse.json();
+  }
+
   _csrfToken =
     csrfResponse.headers.get(CSRF_HEADER_NAME) ||
     csrfData?.data?.csrfToken ||
@@ -165,10 +170,18 @@ export async function apiFetch(endpoint, options = {}) {
       }
     }
 
-    const data = await response.json();
+    let data = {};
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { error: `Respuesta no válida del servidor (${response.status})`, message: text };
+    }
 
     if (!response.ok) {
-      const error = new Error(data.message || data.error || "Error en la petición");
+      const error = new Error(data.message || data.error || `Error HTTP ${response.status}`);
       error.response = { data, status: response.status };
       error.correlationId = data.correlationId || response.headers.get("X-Correlation-Id") || null;
       throw error;
