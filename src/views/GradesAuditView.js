@@ -3,6 +3,12 @@ import Header from "../components/header/header-config.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/gradesAudit.css";
@@ -52,6 +58,8 @@ export default class GradesAuditView {
     this.loading = false;
     this.error = null;
     this.audit = null;
+    this.dataState = createStateContainer();
+    this._auditRequest = { current: null };
     this.filters = {
       team: "ALL",
       area: "ALL",
@@ -89,26 +97,36 @@ export default class GradesAuditView {
   }
 
   destroy() {
+    abortStateRequest(this._auditRequest);
     this._offLangChange?.();
   }
 
   async _loadAudit() {
-    this.loading = true;
-    this.error = null;
-    this._paint();
-
-    try {
+    await runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._auditRequest,
+      preserveData: true,
+      isEmpty: (data) => (data?.rows ?? []).length === 0,
+      onChange: () => {
+        this.loading = this.dataState.state === UI_STATES.LOADING;
+        this.error = this.dataState.error?.message ?? null;
+        this._paint();
+      },
+      request: async ({ signal }) => {
       const response = await apiFetch(
         `/evaluations/event/${this.eventId}/grade-audit`,
-        { method: "GET" },
+        { method: "GET", signal },
       );
       this.audit = response?.data ?? null;
-    } catch (error) {
-      this.error = error.message ?? "No se pudo cargar la auditoria.";
-      toast.error(t("common.errorTitle"), this.error);
-    }
+      return this.audit;
+      },
+    });
 
-    this.loading = false;
+    this.loading = this.dataState.state === UI_STATES.LOADING;
+    this.error = this.dataState.error?.message ?? null;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      toast.error(t("common.errorTitle"), this.error ?? "No se pudo cargar la auditoria.");
+    }
     this._paint();
   }
 
@@ -250,11 +268,28 @@ export default class GradesAuditView {
   }
 
   _html() {
-    if (this.loading) {
+    if (this.dataState.state === UI_STATES.LOADING) {
       return `
         <div class="ga-loading">
           <div class="ce-spinner"></div>
           <p>Cargando auditoria de notas...</p>
+        </div>
+      `;
+    }
+
+    if (this.dataState.state === UI_STATES.ERROR) {
+      const correlationHtml = this.dataState.correlationId
+        ? `<div class="mt-2 text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${esc(this.dataState.correlationId)}</code></div>`
+        : "";
+      return `
+        <div class="alert alert-danger d-flex flex-column align-items-center text-center p-4 my-4 rounded-3" role="alert">
+          <span class="material-symbols-outlined mb-2" style="font-size:2.5rem;">error</span>
+          <h2 class="h6 fw-bold mb-1">No se pudo cargar la auditoría</h2>
+          <p class="mb-2" style="font-size:.9rem;">${esc(this.dataState.error?.message ?? "No se pudo cargar la auditoria.")}</p>
+          ${correlationHtml}
+          <button id="ga-refresh-btn" class="btn btn-sm btn-outline-danger mt-2 fw-bold" type="button">
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">refresh</span>${t("common.retry")}
+          </button>
         </div>
       `;
     }
@@ -267,6 +302,12 @@ export default class GradesAuditView {
 
     return `
       <section class="ga-shell">
+        ${this.dataState.isStale ? `
+          <div class="alert alert-warning py-2 px-3 mb-3 rounded-2 d-flex align-items-center gap-2" role="status">
+            <span class="material-symbols-outlined" style="font-size:1rem;">history</span>
+            <span>Mostrando auditoría desactualizada porque falló la última sincronización.</span>
+          </div>
+        ` : ""}
         <header class="ga-header">
           <div>
             <span class="ga-eyebrow">${esc(this.eventName)}</span>

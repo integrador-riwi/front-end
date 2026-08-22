@@ -54,16 +54,16 @@ export async function deleteEventRubric(eventId, rubricId) {
   });
 }
 
-export async function getEventRankingStatus(eventId) {
-  return apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" });
+export async function getEventRankingStatus(eventId, options = {}) {
+  return apiFetch(`/events/${eventId}/ranking/status`, { method: "GET", ...options });
 }
 
 export async function publishEventRanking(eventId) {
   return apiFetch(`/events/${eventId}/ranking/publish`, { method: "POST" });
 }
 
-export async function getEventRanking(eventId) {
-  return apiFetch(`/events/${eventId}/ranking`, { method: "GET" });
+export async function getEventRanking(eventId, options = {}) {
+  return apiFetch(`/events/${eventId}/ranking`, { method: "GET", ...options });
 }
 
 export async function getEventPublicRanking(eventId) {

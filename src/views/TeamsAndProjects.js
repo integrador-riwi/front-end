@@ -8,8 +8,13 @@ import "../assets/styles/components.css";
 import { apiFetch, closeTeam, searchProjectsSemantic } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
-import { getTeamsByEvent } from "../services/api.js";
 import { getSelectedEvent } from "../utils/helpers.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 
 export default class Teams {
   constructor(router) {
@@ -25,6 +30,8 @@ export default class Teams {
     this.currentView = "grid"; // "grid" | "list"
     this._semanticMode = false; // admin-only toggle
     this.teamAreaCounts = {}; // id_team -> { DEVELOPMENT: N, SOFT_SKILLS: N, ENGLISH: N }
+    this.dataState = createStateContainer([]);
+    this._teamsRequest = { current: null };
   }
 
   renderAvatars(users) {
@@ -149,19 +156,9 @@ export default class Teams {
   }
 
   async loadTeams() {
-    try {
-      const event = getSelectedEvent();
-
-      if (!event) {
-        console.warn("No selected event found");
-        return;
-      }
-
-      this.teams = await getTeamsByEvent(event.id);
-      await this.renderTeamsGrid();
-    } catch (error) {
-      console.error("Error loading teams:", error);
-    }
+    this.eventId = getSelectedEvent();
+    this.allTeams = [];
+    await this.renderTeamsGrid();
   }
 
   async renderTeamsGrid() {
@@ -173,36 +170,51 @@ export default class Teams {
 
     // Solo fetchear si aún no tenemos datos
     if (this.allTeams.length === 0) {
-      this.showLoading(teamsContainer);
-
-      try {
-        const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true&includeClosed=true`, { method: "GET" });
+      const loadedTeams = await runStateRequest({
+        stateContainer: this.dataState,
+        controllerRef: this._teamsRequest,
+        preserveData: true,
+        isEmpty: (data) => Array.isArray(data) && data.length === 0,
+        onChange: () => {
+          if (this.dataState.state === UI_STATES.LOADING) this.showLoading(teamsContainer);
+          if (this.dataState.state === UI_STATES.ERROR) {
+            this.showError(teamsContainer, this.dataState.error, () => this.renderTeamsGrid());
+          }
+        },
+        request: async ({ signal }) => {
+          const fetchTeams = await apiFetch(`/teams?idEvent=${this.eventId}&limit=50&includeSubmitted=true&includeClosed=true`, { method: "GET", signal });
         const totalTeams = fetchTeams.data.teams;
 
         if (!totalTeams || totalTeams.length === 0) {
-          this.showEmpty(teamsContainer);
           this.renderClanFilters([]);
-          return;
+          return [];
         }
-
-        this.allTeams = totalTeams;
-        this.renderClanFilters(totalTeams);
 
         // Admin: cargar contadores de calificaciones por área
         if (this.isAdmin && this.eventId) {
-          try {
             const { getTeamEvalCounts } = await import("../services/api.js");
-            const counts = await getTeamEvalCounts(this.eventId);
+            const counts = await getTeamEvalCounts(this.eventId, { signal });
             counts.forEach((row) => {
               this.teamAreaCounts[row.id_team] = row.areas ?? {};
             });
-          } catch (_) {}
         }
-      } catch (err) {
-        console.error("Error loading teams grid:", err);
-        this.showError(teamsContainer, err, () => this.renderTeamsGrid());
+
+          return totalTeams;
+        },
+      });
+
+      if (this.dataState.state === UI_STATES.ERROR) {
+        console.error("Error loading teams grid:", this.dataState.error);
         return;
       }
+
+      if (!loadedTeams || loadedTeams.length === 0) {
+        this.showEmpty(teamsContainer);
+        return;
+      }
+
+      this.allTeams = loadedTeams;
+      this.renderClanFilters(loadedTeams);
     }
 
     this._applyFilters();
@@ -232,7 +244,9 @@ export default class Teams {
       return;
     }
 
-    container.innerHTML = "";
+    container.innerHTML = this.dataState.isStale
+      ? `<div class="col-12"><div class="alert alert-warning py-2 px-3 mb-2 rounded-2" role="status">Mostrando equipos desactualizados porque falló la última sincronización.</div></div>`
+      : "";
 
     teams.forEach((team) => {
       const members = team.members ?? [];
@@ -579,13 +593,28 @@ export default class Teams {
 
     // Si aún no hay datos (caso borde), fetchear
     if (this.allTeams.length === 0) {
-      this.showLoading(teamsContainer);
+      const loadedTeams = await runStateRequest({
+        stateContainer: this.dataState,
+        controllerRef: this._teamsRequest,
+        preserveData: true,
+        isEmpty: (data) => Array.isArray(data) && data.length === 0,
+        onChange: () => {
+          if (this.dataState.state === UI_STATES.LOADING) this.showLoading(teamsContainer);
+          if (this.dataState.state === UI_STATES.ERROR) {
+            this.showError(teamsContainer, this.dataState.error, () => this.renderTeamsList());
+          }
+        },
+        request: async ({ signal }) => {
+          const fetchTeams = await apiFetch(
+              `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}&includeSubmitted=true&includeClosed=true`,
+              { method: "GET", signal },
+          );
+          return fetchTeams.data.teams;
+        },
+      });
 
-      const fetchTeams = await apiFetch(
-          `/teams?limit=100${this.eventId ? `&idEvent=${this.eventId}` : ""}&includeSubmitted=true&includeClosed=true`,
-          { method: "GET" },
-      );
-      const totalTeams = fetchTeams.data.teams;
+      if (this.dataState.state === UI_STATES.ERROR) return;
+      const totalTeams = loadedTeams;
 
       if (!totalTeams || totalTeams.length === 0) {
         this.showEmpty(teamsContainer);
@@ -611,6 +640,7 @@ export default class Teams {
 
     teamsContainer.innerHTML = `
       <div class="col-12 px-0">
+        ${this.dataState.isStale ? `<div class="alert alert-warning py-2 px-3 mb-2 rounded-2" role="status">Mostrando equipos desactualizados porque falló la última sincronización.</div>` : ""}
         <div class="app-project-card-list p-3">
           <table class="table table-hover mb-0" style="width:100%;">
             <thead>
@@ -852,6 +882,7 @@ export default class Teams {
   }
 
   destroy() {
+    abortStateRequest(this._teamsRequest);
     if (this._offLangChange) this._offLangChange();
     if (this._avatarMouseOver) {
       document.removeEventListener("mouseover", this._avatarMouseOver);

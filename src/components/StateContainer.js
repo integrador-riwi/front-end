@@ -7,6 +7,24 @@ export const UI_STATES = {
   STALE: "stale",
 };
 
+export function isEmptyData(data) {
+  if (data == null) return true;
+  if (Array.isArray(data)) return data.length === 0;
+  if (typeof data === "object") {
+    if (Array.isArray(data.items)) return data.items.length === 0;
+    if (Array.isArray(data.rows)) return data.rows.length === 0;
+  }
+  return false;
+}
+
+export function isAbortError(error) {
+  return error?.name === "AbortError" || error?.isAborted === true;
+}
+
+export function getCorrelationId(error) {
+  return error?.correlationId || error?.response?.data?.correlationId || null;
+}
+
 /**
  * Creates a standardized state container for async data fetching.
  */
@@ -19,6 +37,75 @@ export function createStateContainer(initialData = null) {
     lastUpdated: null,
     isStale: false,
   };
+}
+
+export function setStateLoading(stateContainer, { preserveData = false } = {}) {
+  const hasData = !isEmptyData(stateContainer.data);
+  stateContainer.state = preserveData && hasData ? UI_STATES.STALE : UI_STATES.LOADING;
+  stateContainer.error = null;
+  stateContainer.correlationId = null;
+  stateContainer.isStale = preserveData && hasData;
+  return stateContainer;
+}
+
+export function setStateSuccess(stateContainer, data, { isEmpty = isEmptyData } = {}) {
+  stateContainer.data = data;
+  stateContainer.error = null;
+  stateContainer.correlationId = null;
+  stateContainer.lastUpdated = new Date().toISOString();
+  stateContainer.isStale = false;
+  stateContainer.state = isEmpty(data) ? UI_STATES.EMPTY : UI_STATES.SUCCESS;
+  return stateContainer;
+}
+
+export function setStateError(stateContainer, error, { preserveData = false } = {}) {
+  const hasData = !isEmptyData(stateContainer.data);
+  stateContainer.error = error;
+  stateContainer.correlationId = getCorrelationId(error);
+  if (preserveData && hasData) {
+    stateContainer.state = UI_STATES.STALE;
+    stateContainer.isStale = true;
+  } else {
+    stateContainer.data = null;
+    stateContainer.state = UI_STATES.ERROR;
+    stateContainer.isStale = false;
+  }
+  return stateContainer;
+}
+
+export async function runStateRequest({
+  stateContainer,
+  request,
+  controllerRef = null,
+  onChange = null,
+  preserveData = false,
+  isEmpty = isEmptyData,
+}) {
+  controllerRef?.current?.abort();
+  const controller = new AbortController();
+  if (controllerRef) controllerRef.current = controller;
+
+  setStateLoading(stateContainer, { preserveData });
+  onChange?.();
+
+  try {
+    const data = await request({ signal: controller.signal });
+    if (controller.signal.aborted) return null;
+    setStateSuccess(stateContainer, data, { isEmpty });
+    return data;
+  } catch (error) {
+    if (isAbortError(error)) return null;
+    setStateError(stateContainer, error, { preserveData });
+    return null;
+  } finally {
+    if (controllerRef?.current === controller) controllerRef.current = null;
+    if (!controller.signal.aborted) onChange?.();
+  }
+}
+
+export function abortStateRequest(controllerRef) {
+  controllerRef?.current?.abort();
+  if (controllerRef) controllerRef.current = null;
 }
 
 /**

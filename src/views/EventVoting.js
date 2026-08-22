@@ -12,6 +12,12 @@ import defaultLogo from "../assets/logo.svg";
 import { initSocket, on, off, joinEvent, leaveEvent, retryConnection, isSocketDegraded } from "../services/socket.js";
 import { icons } from "../utils/icons.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 
 export default class QRVoting {
   constructor(router) {
@@ -35,20 +41,29 @@ export default class QRVoting {
 
     this.pollingInterval = null;
     this._offLangChange = onLangChange(() => this.render());
+    this.rankingState = createStateContainer([]);
+    this.resultsState = createStateContainer([]);
+    this._rankingRequest = { current: null };
+    this._resultsRequest = { current: null };
   }
 
   /* -------------------------- RANKING -------------------------- */
 
   async fetchRanking() {
-    try {
+    await runStateRequest({
+      stateContainer: this.rankingState,
+      controllerRef: this._rankingRequest,
+      preserveData: true,
+      isEmpty: (data) => Array.isArray(data) && data.length === 0,
+      request: async ({ signal }) => {
       const eventId = getSelectedEvent();
-      const response = await getEventRanking(eventId);
+      const response = await getEventRanking(eventId, { signal });
 
       this.ranking = response?.data?.ranking || [];
       this.updateFinalists();
-    } catch (err) {
-      console.error("Failed to fetch ranking:", err);
-    }
+      return this.ranking;
+      },
+    });
   }
 
   updateFinalists() {
@@ -743,6 +758,28 @@ export default class QRVoting {
     const container = document.getElementById("ranking-container");
     if (!container) return;
 
+    if (this.rankingState.state === UI_STATES.ERROR) {
+      const correlationHtml = this.rankingState.correlationId
+        ? `<div class="mt-1 text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.rankingState.correlationId}</code></div>`
+        : "";
+      container.innerHTML = `
+        <div class="alert alert-danger text-center p-3 rounded-3" role="alert">
+          <span class="material-symbols-outlined mb-1" style="font-size:2rem;">error</span>
+          <h6 class="fw-bold mb-1">Error al cargar el ranking de votación</h6>
+          <p class="mb-1" style="font-size:.85rem;">${this.rankingState.error?.message || "Ocurrió un error al cargar la información."}</p>
+          ${correlationHtml}
+          <button id="retry-voting-ranking-btn" class="btn btn-sm btn-outline-danger mt-2 px-3 fw-bold" type="button">
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">refresh</span>Reintentar
+          </button>
+        </div>
+      `;
+      container.querySelector("#retry-voting-ranking-btn")?.addEventListener("click", async () => {
+        await this.fetchRanking();
+        this.renderRankingPanel();
+      });
+      return;
+    }
+
     const avatarColors = [
       { bg: "#e0e7ff", color: "#6b5cff" },
       { bg: "#d1fae5", color: "#059669" },
@@ -753,6 +790,7 @@ export default class QRVoting {
     ];
 
     container.innerHTML = `
+    ${this.rankingState.isStale ? `<div class="alert alert-warning py-2 px-3 mb-3 rounded-2" role="status">Mostrando ranking desactualizado porque falló la última sincronización.</div>` : ""}
 
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -898,9 +936,14 @@ export default class QRVoting {
   }
 
   async fetchVoteResults() {
-    try {
+    await runStateRequest({
+      stateContainer: this.resultsState,
+      controllerRef: this._resultsRequest,
+      preserveData: true,
+      isEmpty: (data) => Array.isArray(data) && data.length === 0,
+      request: async ({ signal }) => {
       const eventId = getSelectedEvent();
-      const res = await getVoteResults(eventId);
+      const res = await getVoteResults(eventId, { signal });
       this.voteResults = res?.results ?? res ?? [];
       // Count unique ballots cast (people who voted), not point totals
       const totalPublic = this.voteResults.reduce((sum, t) => sum + Number(t.public_ballots ?? 0), 0);
@@ -908,15 +951,21 @@ export default class QRVoting {
       // Each person votes once, so sum of ballots across all teams / 3 positions = unique voters
       // Use the max public_ballots of any single team as proxy, or sum divided by 3
       this.totalVotes = Math.round((totalPublic + totalStaff) / 3);
-    } catch (err) {
-      console.error("Failed to fetch vote results:", err);
-      this.fetchError = err;
-      if (this.voteResults?.length > 0) {
-        this.isStale = true;
-      } else {
-        this.voteResults = null; // null indicates error state, not 0 votes
-        this.totalVotes = null;
-      }
+      this.fetchError = null;
+      return this.voteResults;
+      },
+    });
+
+    if (this.resultsState.state === UI_STATES.ERROR) {
+      console.error("Failed to fetch vote results:", this.resultsState.error);
+      this.fetchError = this.resultsState.error;
+      this.voteResults = null;
+      this.totalVotes = null;
+    } else if (this.resultsState.state === UI_STATES.STALE) {
+      this.fetchError = this.resultsState.error;
+      this.isStale = true;
+    } else {
+      this.isStale = false;
     }
   }
 
@@ -957,6 +1006,9 @@ export default class QRVoting {
         : finalistIds.length > 0
             ? (this.voteResults || []).filter((t) => finalistIds.includes(t.id_project ?? t.id))
             : (this.voteResults || []);
+    const staleNotice = this.resultsState.isStale
+        ? `<div class="alert alert-warning py-2 px-3 mb-3 rounded-2" role="status">Mostrando resultados desactualizados porque falló la última sincronización.</div>`
+        : "";
 
     // Show unique voters count, not total points
     const totalPublicBallots = filteredResults.reduce((sum, t) => sum + Number(t.public_ballots ?? 0), 0);
@@ -972,6 +1024,7 @@ export default class QRVoting {
 
     if (!filteredResults.length) {
       container.innerHTML = `
+      ${staleNotice}
       <div class="text-center py-5 result-empty">
         <span class="material-symbols-outlined d-block mb-2">how_to_vote</span>
         <p class="mb-0 fw-bold">${t("qrVoting.noVotesYet")}</p>
@@ -1005,6 +1058,7 @@ export default class QRVoting {
     const medals = ["🥇", "🥈", "🥉"];
 
     container.innerHTML = `
+    ${staleNotice}
     <div class="d-flex flex-column gap-2">
       ${sorted
         .map((team, index) => {
@@ -1320,6 +1374,8 @@ export default class QRVoting {
   }
 
   destroy() {
+    abortStateRequest(this._rankingRequest);
+    abortStateRequest(this._resultsRequest);
     const eventId = getSelectedEvent();
     if (eventId) {
       leaveEvent(eventId);

@@ -4,6 +4,12 @@ import { getUser } from "../utils/auth.js";
 import { apiFetch } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 import "../assets/styles/ranking.css";
@@ -30,6 +36,8 @@ export default class Ranking {
     this.publishWarnings = [];
     this.error = null;
     this.searchTerm = "";
+    this.dataState = createStateContainer();
+    this._rankingRequest = { current: null };
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -63,44 +71,59 @@ export default class Ranking {
   // ── Data fetching ──────────────────────────────────────────────────────────
 
   async _loadRanking(eventId) {
-    this.rankingData = null;
-    this.rankingStatus = null;
-    this.error = null;
     this.confirmPublish = false;
-    this.loadingRanking = true;
-    this._paint();
 
-    try {
+    await runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._rankingRequest,
+      preserveData: true,
+      isEmpty: () => false,
+      onChange: () => {
+        this.loadingRanking = this.dataState.state === UI_STATES.LOADING;
+        this.error = this.dataState.error?.message ?? null;
+        this._paint();
+      },
+      request: async ({ signal }) => {
       if (isAdmin(this.user)) {
         const [statusRes, rankingRes] = await Promise.allSettled([
-          apiFetch(`/events/${eventId}/ranking/status`, { method: "GET" }),
-          apiFetch(`/events/${eventId}/ranking`, { method: "GET" }),
+          apiFetch(`/events/${eventId}/ranking/status`, { method: "GET", signal }),
+          apiFetch(`/events/${eventId}/ranking`, { method: "GET", signal }),
         ]);
         if (statusRes.status === "fulfilled") {
           this.rankingStatus = statusRes.value?.data ?? null;
         } else {
-          this.error = statusRes.reason?.message ?? t("common.error");
-          toast.error(t("common.errorTitle"), this.error);
+          throw statusRes.reason;
         }
         if (rankingRes.status === "fulfilled") {
           this.rankingData = rankingRes.value?.data ?? null;
+        } else if (rankingRes.reason?.response?.status === 404) {
+          this.rankingData = null;
+        } else {
+          throw rankingRes.reason;
         }
         // 404 on ranking just means not published yet — not an error
       } else {
-        const res = await apiFetch(`/events/${eventId}/ranking`, {
+        try {
+          const res = await apiFetch(`/events/${eventId}/ranking`, {
           method: "GET",
+          signal,
         });
-        this.rankingData = res?.data ?? null;
+          this.rankingData = res?.data ?? null;
+        } catch (error) {
+          const is404 = error.response?.status === 404 || error.message?.includes("404");
+          if (!is404) throw error;
+          this.rankingData = null;
+        }
       }
-    } catch (e) {
-      const is404 = e.response?.status === 404 || e.message?.includes("404");
-      if (!is404) {
-        this.error = e.message ?? t("common.error");
-        toast.error(t("common.errorTitle"), this.error);
-      }
-    }
+      return { rankingData: this.rankingData, rankingStatus: this.rankingStatus };
+      },
+    });
 
-    this.loadingRanking = false;
+    this.loadingRanking = this.dataState.state === UI_STATES.LOADING;
+    this.error = this.dataState.error?.message ?? null;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      toast.error(t("common.errorTitle"), this.error ?? t("common.error"));
+    }
     this._paint();
   }
 
@@ -202,11 +225,28 @@ export default class Ranking {
   }
 
   _renderMain() {
-    if (this.loadingRanking) {
+    if (this.dataState.state === UI_STATES.LOADING) {
       return `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: rgba(107,92,255,0.2); border-top-color: var(--color-primary, #6b5cff);"></div>
           <p class="text-muted fw-medium">Loading Ranking...</p>
+        </div>
+      `;
+    }
+
+    if (this.dataState.state === UI_STATES.ERROR) {
+      const correlationHtml = this.dataState.correlationId
+        ? `<div class="mt-2 text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.dataState.correlationId}</code></div>`
+        : "";
+      return `
+        <div class="alert alert-danger d-flex flex-column align-items-center text-center p-4 my-4 rounded-3" role="alert">
+          <span class="material-symbols-outlined mb-2" style="font-size:2.5rem;">error</span>
+          <h2 class="h6 fw-bold mb-1">No se pudo cargar el ranking</h2>
+          <p class="mb-2" style="font-size:.9rem;">${this.dataState.error?.message ?? t("common.error")}</p>
+          ${correlationHtml}
+          <button id="rk-retry-btn" class="btn btn-sm btn-outline-danger mt-2 fw-bold" type="button">
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">refresh</span>${t("common.retry")}
+          </button>
         </div>
       `;
     }
@@ -228,6 +268,12 @@ export default class Ranking {
 
     return `
       <div class="rk-view-container">
+        ${this.dataState.isStale ? `
+          <div class="alert alert-warning py-2 px-3 mb-3 rounded-2 d-flex align-items-center gap-2" role="status">
+            <span class="material-symbols-outlined" style="font-size:1rem;">history</span>
+            <span>Mostrando ranking desactualizado porque falló la última sincronización.</span>
+          </div>
+        ` : ""}
         ${this.error ? `<div class="rk-alert rk-alert--error">${this.error}</div>` : ""}
         ${!this.error && this.publishWarnings.length > 0 ? `
           <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#92400e;font-size:.875rem;">
@@ -625,6 +671,10 @@ export default class Ranking {
   // ── Event handlers ─────────────────────────────────────────
 
   _attachHandlers() {
+    document.getElementById("rk-retry-btn")?.addEventListener("click", () => {
+      this._loadRanking(this.eventId);
+    });
+
     document.getElementById("rk-publish-btn")?.addEventListener("click", () => {
       if (this.confirmPublish) {
         this._publishRanking();
@@ -699,6 +749,7 @@ export default class Ranking {
   }
 
   destroy() {
+    abortStateRequest(this._rankingRequest);
     if (this._offLangChange) this._offLangChange();
   }
 }

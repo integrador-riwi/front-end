@@ -1,7 +1,7 @@
 import { normalizeServiceUrl } from "./url.js";
 
 const API_BASE_URL = normalizeServiceUrl(
-  import.meta.env.VITE_API_URL ||
+  import.meta.env?.VITE_API_URL ||
   "https://team-up-production-c533.up.railway.app/api"
 );
 
@@ -139,7 +139,11 @@ export async function apiFetch(endpoint, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   if (signal) {
-    signal.addEventListener("abort", () => controller.abort());
+    if (signal.aborted) {
+      controller.abort();
+    } else {
+      signal.addEventListener("abort", () => controller.abort());
+    }
   }
 
   try {
@@ -268,14 +272,18 @@ export async function toggleQR(qr_id) {
   });
 }
 
-export async function getVotingProjects(id_event) {
+export async function getVotingProjects(id_event, options = {}) {
   return apiFetch(`/qr-votes/vote/${id_event}/projects`, {
-    method: "GET"})
+    method: "GET",
+    ...options,
+  })
 }
 
-export async function getStaffVotingProjects(staffToken) {
+export async function getStaffVotingProjects(staffToken, options = {}) {
   return apiFetch(`/qr-votes/vote/staff/${staffToken}/projects`, {
-    method: "GET"})
+    method: "GET",
+    ...options,
+  })
 }
 
 export async function logoutUser() {
@@ -290,8 +298,8 @@ export async function refreshTokens() {
   return apiFetch("/auth/refresh", { method: "POST" });
 }
 
-export async function getVoteResults(eventId) {
-  const response = await apiFetch(`/qr-votes/event/${eventId}/results`, { method: "GET" });
+export async function getVoteResults(eventId, options = {}) {
+  const response = await apiFetch(`/qr-votes/event/${eventId}/results`, { method: "GET", ...options });
   return response?.data ?? response;
 }
 
@@ -309,9 +317,10 @@ export async function getMyTeams() {
   return response.data;
 }
 
-export async function getTeamsByEvent(eventId) {
+export async function getTeamsByEvent(eventId, options = {}) {
   const response = await apiFetch(`/teams?idEvent=${eventId}`, {
     method: "GET",
+    ...options,
   });
 
   return response.data ?? response;
@@ -352,7 +361,7 @@ export async function createTeam(teamData) {
   });
 }
 
-export const getTeams = async (params = {}) => {
+export const getTeams = async (params = {}, options = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.append('search', params.search);
   if (params.page) query.append('page', params.page);
@@ -361,7 +370,7 @@ export const getTeams = async (params = {}) => {
   if (params.includeSubmitted !== undefined) query.append('includeSubmitted', params.includeSubmitted);
   if (params.includeClosed !== undefined) query.append('includeClosed', params.includeClosed);
   const queryStr = query.toString() ? `?${query.toString()}` : '';
-  const response = await apiFetch(`/teams${queryStr}`, { method: 'GET' });
+  const response = await apiFetch(`/teams${queryStr}`, { method: 'GET', ...options });
   return response.data ?? response;
 };
 
@@ -381,7 +390,7 @@ export async function getPublicProfile(userId) {
   return outer;
 }
 
-export const getUsers = async (params = {}) => {
+export const getUsers = async (params = {}, options = {}) => {
   const query = new URLSearchParams();
   if (params.role) query.append('role', params.role);
   if (params.clan) query.append('clan', params.clan);
@@ -389,7 +398,7 @@ export const getUsers = async (params = {}) => {
   if (params.search) query.append('search', params.search);
   if (params.page) query.append('page', params.page);
   if (params.limit) query.append('limit', params.limit);
-  return apiFetch(`/users?${query.toString()}`, { method: 'GET' });
+  return apiFetch(`/users?${query.toString()}`, { method: 'GET', ...options });
 };
 
 export const createUser = async (payload) => {
@@ -457,8 +466,8 @@ export async function getGithubOrgs() {
 }
 
 // Events
-export async function getEvents() {
-  return apiFetch("/events", { method: "GET" });
+export async function getEvents(options = {}) {
+  return apiFetch("/events", { method: "GET", ...options });
 }
 
 export async function getActiveEvents() {
@@ -582,9 +591,10 @@ export async function getProjectResultsSummary(projectId) {
   return response?.data ?? response;
 }
 
-export async function getMyEvaluationsForProject(projectId) {
+export async function getMyEvaluationsForProject(projectId, options = {}) {
   const response = await apiFetch(`/evaluations/project/${projectId}/my`, {
     method: "GET",
+    ...options,
   });
   return response?.data ?? response;
 }
@@ -596,23 +606,26 @@ export async function getMyEvaluationSummaryForProject(projectId) {
   return response?.data ?? response;
 }
 
-export async function getProjectEvalStatus(projectId) {
+export async function getProjectEvalStatus(projectId, options = {}) {
   const response = await apiFetch(`/evaluations/project/${projectId}/eval-status`, {
     method: "GET",
+    ...options,
   });
   return response?.data ?? response;
 }
 
-export async function getEventEvalCoverage(eventId) {
+export async function getEventEvalCoverage(eventId, options = {}) {
   const response = await apiFetch(`/evaluations/event/${eventId}/coverage`, {
     method: "GET",
+    ...options,
   });
   return response?.data ?? response;
 }
 
-export async function getTeamEvalCounts(eventId) {
+export async function getTeamEvalCounts(eventId, options = {}) {
   const response = await apiFetch(`/evaluations/event/${eventId}/team-eval-counts`, {
     method: "GET",
+    ...options,
   });
   return response?.data ?? response;
 }
@@ -660,8 +673,8 @@ export async function removeMember(teamId, userId) {
   return apiFetch(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
 }
 
-export async function listAdditionalRepos(teamId) {
-  return apiFetch(`/teams/${teamId}/repos`, { method: "GET" });
+export async function listAdditionalRepos(teamId, options = {}) {
+  return apiFetch(`/teams/${teamId}/repos`, { method: "GET", ...options });
 }
 
 export async function createAdditionalRepo(teamId, label) {
@@ -693,8 +706,8 @@ export async function searchProjectsSemantic(query, eventId = null, limit = 20) 
   if (eventId) url += `&eventId=${eventId}`;
   return apiFetch(url, { method: "GET" });
 }
-export async function auditVotesByEvent(eventId) {
-  const response = await apiFetch(`/qr-votes/event/${eventId}/audit`, { method: "GET" });
+export async function auditVotesByEvent(eventId, options = {}) {
+  const response = await apiFetch(`/qr-votes/event/${eventId}/audit`, { method: "GET", ...options });
   return response;
 }
 

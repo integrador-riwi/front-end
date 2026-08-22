@@ -14,6 +14,12 @@ import {
 import { toast } from "../components/Toast/index.js";
 import { icons } from "../utils/icons.js";
 import { t } from "../utils/i18n.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/usersAdmin.css";
 
@@ -112,6 +118,10 @@ export default class UsersAdminView {
     // Set of id_user (strings) who belong to a team in the currently-selected event
     this.eventTeamMemberIds = null;
     this.searchPaintTimeout = null;
+    this.error = null;
+    this.dataState = createStateContainer([]);
+    this._usersRequest = { current: null };
+    this._eventTeamsRequest = { current: null };
   }
 
   async render() {
@@ -131,11 +141,23 @@ export default class UsersAdminView {
   }
 
   async loadUsers() {
-    try {
-      this.loading = true;
+    await runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._usersRequest,
+      preserveData: true,
+      isEmpty: (data) => Array.isArray(data?.users) && data.users.length === 0,
+      onChange: () => {
+        this.loading = this.dataState.state === UI_STATES.LOADING;
+        this.error = this.dataState.error?.message ?? null;
+        this.paint();
+      },
+      request: async ({ signal }) => {
       const [usersRes, eventsRes] = await Promise.all([
-        getUsers({ limit: 1000 }),
-        getEvents().catch(() => null),
+        getUsers({ limit: 1000 }, { signal }),
+        getEvents({ signal }).catch((error) => {
+          if (error?.isAborted) throw error;
+          return null;
+        }),
       ]);
       this.users = usersRes.data?.users ?? usersRes.users ?? (Array.isArray(usersRes.data) ? usersRes.data : []);
       const eventsData = eventsRes?.data ?? eventsRes;
@@ -143,27 +165,35 @@ export default class UsersAdminView {
 
       // Cargar lista de clanes/equipos desde backend para poblar selects
       try {
-        const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true });
+        const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true }, { signal });
         this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
       } catch (tErr) {
+        if (tErr?.isAborted) throw tErr;
         console.warn(t("usersAdmin.console.teamsLoadError"), tErr);
         this.teams = [...new Set(this.users.map(u => u.clan).filter(Boolean))];
       }
-    } catch (error) {
-      console.error("Error loading users:", error);
-      toast.error(t("common.errorTitle"), t("usersAdmin.toast.loadUsersError"));
-    } finally {
-      this.loading = false;
-      this.paint();
+      return { users: this.users, events: this.events, teams: this.teams };
+      },
+    });
+
+    this.loading = this.dataState.state === UI_STATES.LOADING;
+    this.error = this.dataState.error?.message ?? null;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      console.error("Error loading users:", this.dataState.error);
+      toast.error(t("common.errorTitle"), this.error ?? t("usersAdmin.toast.loadUsersError"));
     }
+    this.paint();
   }
 
   async loadEventTeamMembers(eventId) {
+    abortStateRequest(this._eventTeamsRequest);
     if (!eventId) {
       this.eventTeamMemberIds = null;
       this.paint();
       return;
     }
+    const controller = new AbortController();
+    this._eventTeamsRequest.current = controller;
     try {
       const ids = new Set();
       let currentPage = 1;
@@ -176,7 +206,7 @@ export default class UsersAdminView {
           includeClosed: true,
           limit: 100,
           page: currentPage,
-        });
+        }, { signal: controller.signal });
 
         const teams = res?.teams ?? res?.data?.teams ?? (Array.isArray(res) ? res : []);
         for (const team of teams) {
@@ -193,8 +223,13 @@ export default class UsersAdminView {
 
       this.eventTeamMemberIds = ids;
     } catch (err) {
+      if (err?.isAborted) return;
       console.warn("Could not load event teams:", err);
       this.eventTeamMemberIds = null;
+    } finally {
+      if (this._eventTeamsRequest.current === controller) {
+        this._eventTeamsRequest.current = null;
+      }
     }
     this.paint();
   }
@@ -208,12 +243,23 @@ export default class UsersAdminView {
       return;
     }
 
+    if (this.dataState.state === UI_STATES.ERROR) {
+      root.innerHTML = this.renderError();
+      root.querySelector("#users-retry-btn")?.addEventListener("click", () => this.loadUsers());
+      return;
+    }
+
     const stats = this.getStats();
     const clans = this.getClans();
     const filteredUsers = this.getFilteredUsers();
     const importStats = this.getImportStats();
 
     root.innerHTML = `
+      ${this.dataState.isStale ? `
+        <div class="alert alert-warning py-2 px-3 mb-3 rounded-2" role="status">
+          Mostrando usuarios desactualizados porque falló la última sincronización.
+        </div>
+      ` : ""}
       ${this.renderHeader(stats)}
       ${this.renderMetrics(stats)}
       <section class="ua-actions-grid">
@@ -236,6 +282,23 @@ export default class UsersAdminView {
       <div class="ua-loading">
         <div class="ce-spinner ua-spinner"></div>
         <p>${t("usersAdmin.loading")}</p>
+      </div>
+    `;
+  }
+
+  renderError() {
+    const correlationHtml = this.dataState.correlationId
+      ? `<div class="mt-2 text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.dataState.correlationId}</code></div>`
+      : "";
+    return `
+      <div class="alert alert-danger d-flex flex-column align-items-center text-center p-4 rounded-3" role="alert">
+        <span class="material-symbols-outlined mb-2" style="font-size:2.5rem;">error</span>
+        <h2 class="h6 fw-bold mb-1">No se pudieron cargar los usuarios</h2>
+        <p class="mb-2" style="font-size:.9rem;">${this.dataState.error?.message || t("usersAdmin.toast.loadUsersError")}</p>
+        ${correlationHtml}
+        <button id="users-retry-btn" class="btn btn-sm btn-outline-danger mt-2 fw-bold" type="button">
+          <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">refresh</span>${t("common.retry")}
+        </button>
       </div>
     `;
   }
@@ -1084,6 +1147,8 @@ export default class UsersAdminView {
   }
 
   destroy() {
+    abortStateRequest(this._usersRequest);
+    abortStateRequest(this._eventTeamsRequest);
     clearTimeout(this.searchPaintTimeout);
   }
 }

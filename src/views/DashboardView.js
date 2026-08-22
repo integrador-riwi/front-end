@@ -7,6 +7,12 @@ import { icons } from "../utils/icons.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import logoUrl from "../assets/logo.svg";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/components.css";
 
@@ -31,6 +37,8 @@ export default class DashboardView {
     this.teamSearch = "";
     this.loading = true;
     this.error = null;
+    this.dataState = createStateContainer();
+    this._dashboardRequest = { current: null };
   }
 
   async render() {
@@ -55,31 +63,46 @@ export default class DashboardView {
   }
 
   async _loadDashboardData() {
-    this.loading = true;
-    this._paint();
-
     if (!this.eventId) {
       this.router.navigate("events");
       return;
     }
 
-    try {
+    await runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._dashboardRequest,
+      preserveData: true,
+      onChange: () => {
+        this.loading = this.dataState.state === UI_STATES.LOADING;
+        this.error = this.dataState.error?.message ?? null;
+        this._paint();
+        this._attachLocalHandlers();
+      },
+      request: async ({ signal }) => {
       // Parallel fetch for dashboard data
       const [metricsRes, rankingRes, statusRes, eventRes, coverageRes, teamCountsRes, teamsRes] = await Promise.allSettled([
-        apiFetch(`/events/${this.eventId}/metrics`, { method: "GET" }),
-        apiFetch(`/events/${this.eventId}/ranking`, { method: "GET" }),
-        apiFetch(`/events/${this.eventId}/ranking/status`, { method: "GET" }),
-        apiFetch(`/events/${this.eventId}`, { method: "GET" }),
-        getEventEvalCoverage(this.eventId),
-        getTeamEvalCounts(this.eventId),
-        apiFetch(`/teams?idEvent=${this.eventId}&limit=100&includeSubmitted=true&includeClosed=true`, { method: "GET" }),
+        apiFetch(`/events/${this.eventId}/metrics`, { method: "GET", signal }),
+        apiFetch(`/events/${this.eventId}/ranking`, { method: "GET", signal }),
+        apiFetch(`/events/${this.eventId}/ranking/status`, { method: "GET", signal }),
+        apiFetch(`/events/${this.eventId}`, { method: "GET", signal }),
+        getEventEvalCoverage(this.eventId, { signal }),
+        getTeamEvalCounts(this.eventId, { signal }),
+        apiFetch(`/teams?idEvent=${this.eventId}&limit=100&includeSubmitted=true&includeClosed=true`, { method: "GET", signal }),
       ]);
+
+      const critical = [metricsRes, statusRes, eventRes, coverageRes, teamCountsRes, teamsRes];
+      const criticalError = critical.find((result) => result.status === "rejected");
+      if (criticalError) throw criticalError.reason;
 
       if (metricsRes.status === "fulfilled") {
         this.metrics = metricsRes.value?.data ?? null;
       }
       if (rankingRes.status === "fulfilled") {
         this.ranking = rankingRes.value?.data?.ranking?.slice(0, 3) ?? [];
+      } else if (rankingRes.reason?.response?.status === 404) {
+        this.ranking = [];
+      } else {
+        throw rankingRes.reason;
       }
       if (statusRes.status === "fulfilled") {
         this.status = statusRes.value?.data ?? null;
@@ -98,16 +121,23 @@ export default class DashboardView {
       if (teamsRes.status === "fulfilled") {
         this.allTeams = teamsRes.value?.data?.teams ?? teamsRes.value?.teams ?? [];
       }
-    } catch (e) {
-      console.error("Dashboard data load error:", e);
-      if (!this.metrics) {
-        this.error = e.message ?? t("common.error");
-        toast.error(t("common.error"), this.error);
-      }
+      return {
+        metrics: this.metrics,
+        ranking: this.ranking,
+        status: this.status,
+        eventInfo: this.eventInfo,
+        evalCoverage: this.evalCoverage,
+        teamEvalCounts: this.teamEvalCounts,
+        allTeams: this.allTeams,
+      };
+      },
+    });
+
+    this.loading = this.dataState.state === UI_STATES.LOADING;
+    this.error = this.dataState.error?.message ?? null;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      toast.error(t("common.errorTitle"), this.error ?? t("common.error"));
     }
-    this.loading = false;
-    this._paint();
-    this._attachLocalHandlers();
   }
 
   _paint() {
@@ -117,7 +147,7 @@ export default class DashboardView {
   }
 
   _html() {
-    if (this.loading) {
+    if (this.dataState.state === UI_STATES.LOADING) {
       return `
         <div class="d-flex flex-column align-items-center justify-content-center" style="height: 60vh; gap: 16px;">
           <div class="ce-spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: var(--accent);"></div>
@@ -126,10 +156,29 @@ export default class DashboardView {
       `;
     }
 
-    if (this.error && !this.metrics) {
-      return `<div class="rk-alert rk-alert--error" style="margin:24px">${this.error}</div>`;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      const correlationHtml = this.dataState.correlationId
+        ? `<div class="mt-2 text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.dataState.correlationId}</code></div>`
+        : "";
+      return `
+        <div class="alert alert-danger d-flex flex-column align-items-center text-center p-4 m-4 rounded-3" role="alert">
+          <span class="material-symbols-outlined mb-2" style="font-size:2.5rem;">error</span>
+          <h2 class="h6 fw-bold mb-1">No se pudieron cargar las métricas</h2>
+          <p class="mb-2" style="font-size:.9rem;">${this.dataState.error?.message ?? t("common.error")}</p>
+          ${correlationHtml}
+          <button id="db-retry-btn" class="btn btn-sm btn-outline-danger mt-2 fw-bold" type="button">
+            <span class="material-symbols-outlined align-middle me-1" style="font-size:1rem;">refresh</span>${t("common.retry")}
+          </button>
+        </div>
+      `;
     }
 
+    const staleNotice = this.dataState.isStale
+      ? `<div class="alert alert-warning py-2 px-3 mb-3 rounded-2 d-flex align-items-center gap-2" role="status">
+           <span class="material-symbols-outlined" style="font-size:1rem;">history</span>
+           <span>Mostrando métricas desactualizadas porque falló la última sincronización.</span>
+         </div>`
+      : "";
     const totalTeams = this.metrics?.totalTeams ?? 0;
     const evaluatedTeams = this.metrics?.evaluatedProjects ?? 0;
     const evalPercentage =
@@ -138,6 +187,7 @@ export default class DashboardView {
 
     return `
       <div class="db-container">
+        ${staleNotice}
         <div class="d-flex justify-content-end gap-2 flex-wrap">
           <button id="db-teams-excel-btn" class="btn fw-semibold d-inline-flex align-items-center gap-2" style="background:var(--accent);border:1px solid var(--accent);color:white;">
             <span class="material-icons-round" style="font-size:1rem;">table_view</span>
@@ -704,6 +754,10 @@ export default class DashboardView {
   }
 
   _attachLocalHandlers() {
+    document.getElementById("db-retry-btn")?.addEventListener("click", () => {
+      this._loadDashboardData();
+    });
+
     document
         .querySelector(".navigate-ranking")
         ?.addEventListener("click", (e) => {
@@ -1583,6 +1637,7 @@ export default class DashboardView {
   }
 
   destroy() {
+    abortStateRequest(this._dashboardRequest);
     if (this._offLangChange) this._offLangChange();
     if (this._avatarMouseOver) {
       document.removeEventListener("mouseover", this._avatarMouseOver);

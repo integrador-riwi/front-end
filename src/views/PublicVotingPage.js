@@ -1,6 +1,12 @@
 import "../assets/styles/voting.css";
 import { submitVote, getVotingProjects, getStaffVotingProjects, checkCedulaVoted } from "../services/api.js";
 import { t, onLangChange } from "../utils/i18n.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 
 export default class PublicVotingPage {
   constructor(app, params) {
@@ -20,6 +26,8 @@ export default class PublicVotingPage {
     this.voterIdentified = false;
     this.voterDocumento = null;
     this.voterNombre = null;
+    this.dataState = createStateContainer([]);
+    this._rankingRequest = { current: null };
   }
 
   /* ── FETCH ──────────────────────────────────────────────── */
@@ -39,10 +47,15 @@ export default class PublicVotingPage {
   }
 
   async fetchRanking() {
-    try {
+    return runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._rankingRequest,
+      preserveData: true,
+      isEmpty: (data) => Array.isArray(data?.projects) && data.projects.length === 0,
+      request: async ({ signal }) => {
       const res = this.isStaff
-          ? await getStaffVotingProjects(this.staffToken)
-          : await getVotingProjects(this.eventId);
+          ? await getStaffVotingProjects(this.staffToken, { signal })
+          : await getVotingProjects(this.eventId, { signal });
 
       this.ranking = this._sortTeamsBFirst(res?.projects || []);
       this.bench = [...this.ranking];
@@ -54,11 +67,9 @@ export default class PublicVotingPage {
           ? `voter_token_staff_${this.staffToken}`
           : `voter_token_${this.eventId}`;
       if (!localStorage.getItem(key)) localStorage.setItem(key, crypto.randomUUID());
-    } catch (e) {
-      console.error(e);
-      this.ranking = [];
-      this.bench = [];
-    }
+      return { projects: this.ranking, qrVoteId: this.qrVoteId };
+      },
+    });
   }
 
   /* ── VOTE SUBMIT ────────────────────────────────────────── */
@@ -165,6 +176,33 @@ export default class PublicVotingPage {
   }
 
   /* ── RENDER ─────────────────────────────────────────────── */
+
+  buildLoadingScreen() {
+    return `
+      <div class="v-page">
+        <div class="v-empty" role="status">
+          <div class="v-spinner"></div>
+          <h2>${t("publicVoting.loading") || t("common.loading")}</h2>
+        </div>
+      </div>`;
+  }
+
+  buildErrorScreen() {
+    const correlationHtml = this.dataState.correlationId
+      ? `<p class="v-empty-sub">ID de correlación: <code>${this.dataState.correlationId}</code></p>`
+      : "";
+    return `
+      <div class="v-page">
+        <div class="v-empty" role="alert">
+          <h2>${t("common.errorTitle")}</h2>
+          <p>${this.dataState.error?.message || t("publicVoting.voteError")}</p>
+          ${correlationHtml}
+          <button class="v-submit" id="public-voting-retry-btn" type="button">
+            ${t("common.retry")}
+          </button>
+        </div>
+      </div>`;
+  }
 
   renderPodiumSlot(pos) {
     // pos: 0=1st, 1=2nd, 2=3rd
@@ -733,7 +771,14 @@ export default class PublicVotingPage {
 
   async render(container) {
     await this.fetchEvent();
+    container.innerHTML = this.buildLoadingScreen();
     await this.fetchRanking();
+
+    if (this.dataState.state === UI_STATES.ERROR) {
+      container.innerHTML = this.buildErrorScreen();
+      document.getElementById("public-voting-retry-btn")?.addEventListener("click", () => this.render(container));
+      return;
+    }
 
     if (!this.isStaff && !this.event) {
       container.innerHTML = `<div class="v-empty"><h2>${t("publicVoting.eventNotFoundTitle")}</h2><p>${t("publicVoting.eventNotFoundDesc")}</p></div>`;
@@ -761,6 +806,7 @@ export default class PublicVotingPage {
   }
 
   destroy() {
+    abortStateRequest(this._rankingRequest);
     if (this._offLangChange) this._offLangChange();
   }
 }

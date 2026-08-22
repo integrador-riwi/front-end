@@ -8,6 +8,12 @@ import { getUser } from "../utils/auth.js";
 import { t, onLangChange } from "../utils/i18n.js";
 import { apiFetch, getTeamEvalCounts, listAdditionalRepos } from "../services/api.js";
 import { toast } from "../components/Toast/index.js";
+import {
+  UI_STATES,
+  abortStateRequest,
+  createStateContainer,
+  runStateRequest,
+} from "../components/StateContainer.js";
 import mainContent from "/pages/teams_dashboard.html?raw";
 import {
   renderCoderTeam,
@@ -57,6 +63,8 @@ export default class TLDashboardView {
 
     this.detailTeam = null;
     this.commentsCleanup = null;
+    this.dataState = createStateContainer([]);
+    this._teamsRequest = { current: null };
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -78,10 +86,21 @@ export default class TLDashboardView {
       return;
     }
 
-    try {
+    await runStateRequest({
+      stateContainer: this.dataState,
+      controllerRef: this._teamsRequest,
+      preserveData: true,
+      isEmpty: (data) => Array.isArray(data) && data.length === 0,
+      onChange: () => {
+        this.isLoading = this.dataState.state === UI_STATES.LOADING;
+        this.error = this.dataState.error?.message ?? null;
+        if (this.currentView === "list") this._paintList();
+        else this._paintGrid();
+      },
+      request: async ({ signal }) => {
       const res = await apiFetch(
           `/teams?idEvent=${this.selectedEvent.id}&limit=100&includeSubmitted=true&includeClosed=true`,
-          { method: "GET" },
+          { method: "GET", signal },
       );
       const raw = res?.data?.teams ?? res?.teams ?? [];
 
@@ -92,20 +111,17 @@ export default class TLDashboardView {
       } = await import("../services/api.js");
 
       // Fetch per-area evaluator counts for the whole event at once
-      try {
-        const counts = await getTeamEvalCounts(this.selectedEvent.id);
-        // counts: [{ id_team, team_name, areas: { DEVELOPMENT: N, SOFT_SKILLS: N, ENGLISH: N } }]
-        counts.forEach((row) => {
-          this.teamAreaCounts[row.id_team] = row.areas ?? {};
-        });
-      } catch (_) {}
+      const counts = await getTeamEvalCounts(this.selectedEvent.id, { signal });
+      // counts: [{ id_team, team_name, areas: { DEVELOPMENT: N, SOFT_SKILLS: N, ENGLISH: N } }]
+      counts.forEach((row) => {
+        this.teamAreaCounts[row.id_team] = row.areas ?? {};
+      });
 
       this.allTeams = await Promise.all(
           raw.map(async (team) => {
-            try {
               const [detail, reposRes] = await Promise.all([
-                apiFetch(`/teams/${team.id_team}`, { method: "GET" }),
-                listAdditionalRepos(team.id_team).catch(() => null),
+                apiFetch(`/teams/${team.id_team}`, { method: "GET", signal }),
+                listAdditionalRepos(team.id_team, { signal }),
               ]);
               const full = detail?.data ?? detail;
               const reposData = reposRes?.data ?? reposRes;
@@ -115,14 +131,12 @@ export default class TLDashboardView {
               let _evalStatus = null;
 
               if (projectId) {
-                try {
                   const [evals, evalStatus] = await Promise.all([
-                    getMyEvaluationsForProject(projectId),
-                    getProjectEvalStatus(projectId),
+                    getMyEvaluationsForProject(projectId, { signal }),
+                    getProjectEvalStatus(projectId, { signal }),
                   ]);
                   _alreadyEvaluated = Array.isArray(evals) && evals.length > 0;
                   _evalStatus = evalStatus;
-                } catch (_) {}
               }
 
               return {
@@ -135,25 +149,23 @@ export default class TLDashboardView {
                 _alreadyEvaluated,
                 _evalStatus,
               };
-            } catch {
-              return { ...team, members: [], project: null, _alreadyEvaluated: false, _evalStatus: null };
-            }
           }),
       );
 
       this.teams = [...this.allTeams];
 
       if (this.isAdmin && this.selectedEvent?.id) {
-        try {
-          this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id);
-        } catch (_) {}
+        this.evalCoverage = await getEventEvalCoverage(this.selectedEvent.id, { signal });
       }
-    } catch (err) {
-      this.error = t("tl.loadError");
-      toast.error(t("common.errorTitle"), this.error);
-    }
+      return this.allTeams;
+      },
+    });
 
-    this.isLoading = false;
+    this.isLoading = this.dataState.state === UI_STATES.LOADING;
+    this.error = this.dataState.error?.message ?? null;
+    if (this.dataState.state === UI_STATES.ERROR) {
+      toast.error(t("common.errorTitle"), this.error ?? t("tl.loadError"));
+    }
     this.renderClanFilters(this.allTeams);
     this._applyFilters();
     this._attachHandlers();
@@ -234,8 +246,14 @@ export default class TLDashboardView {
     const container = document.getElementById("teamsContainer");
     if (!container || this.isLoading) return;
 
-    if (this.error) {
-      container.innerHTML = this._emptyHtml(`<span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">error_outline</span><p class="app-page-subtitle mb-0">${this.error}</p>`);
+    if (this.dataState.state === UI_STATES.ERROR) {
+      container.innerHTML = this._emptyHtml(`
+        <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">error_outline</span>
+        <p class="app-page-subtitle mb-2">${this.dataState.error?.message ?? t("tl.loadError")}</p>
+        ${this.dataState.correlationId ? `<p class="text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.dataState.correlationId}</code></p>` : ""}
+        <button id="tl-retry-btn" class="btn btn-sm btn-outline-danger fw-bold" type="button">${t("common.retry")}</button>
+      `);
+      container.querySelector("#tl-retry-btn")?.addEventListener("click", () => this._loadTeams());
       return;
     }
 
@@ -245,7 +263,9 @@ export default class TLDashboardView {
     }
 
     const fallbackImg = "https://lh3.googleusercontent.com/aida-public/AB6AXuBkiRe_OIFc5LnfH8E47l0JCD12t1WIUi-0jZCaj4pKMIED7WLD80FOkYpZMh9EzRCwKulfJkGWTtRHFykfSawQoMnQ0V9sOC2WXLAQecUyQFk6nn7oFqSBCWRIBTbouoiFMtC3phUERbubp7XZ-x5b59GrloQC5Eyts7NSudlzGFtFpX4FHJZ8QQR8klcHxzx2sBK6fpogWOMmlFNB9EChbZ_fMZ32SKMMd9h1u__l9dT5pU0a0mgPGH8qfoLKodNVNjpH1bFOOZk";
-    container.innerHTML = "";
+    container.innerHTML = this.dataState.isStale
+      ? `<div class="col-12"><div class="alert alert-warning py-2 px-3 mb-2 rounded-2" role="status">Mostrando equipos desactualizados porque falló la última sincronización.</div></div>`
+      : "";
 
     this.teams.forEach((team) => {
       const members = team.members ?? [];
@@ -299,6 +319,17 @@ export default class TLDashboardView {
     const container = document.getElementById("teamsContainer");
     if (!container || this.isLoading) return;
 
+    if (this.dataState.state === UI_STATES.ERROR) {
+      container.innerHTML = this._emptyHtml(`
+        <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">error_outline</span>
+        <p class="app-page-subtitle mb-2">${this.dataState.error?.message ?? t("tl.loadError")}</p>
+        ${this.dataState.correlationId ? `<p class="text-muted font-monospace" style="font-size:.75rem;">ID de correlación: <code>${this.dataState.correlationId}</code></p>` : ""}
+        <button id="tl-retry-btn" class="btn btn-sm btn-outline-danger fw-bold" type="button">${t("common.retry")}</button>
+      `);
+      container.querySelector("#tl-retry-btn")?.addEventListener("click", () => this._loadTeams());
+      return;
+    }
+
     if (!this.teams.length) {
       container.innerHTML = this._emptyHtml(`<span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);">group_off</span><p class="app-page-title mb-1" style="font-size:1rem;">${t("tl.noTeamsFound")}</p>`);
       return;
@@ -306,6 +337,7 @@ export default class TLDashboardView {
 
     container.innerHTML = `
       <div class="col-12 px-0">
+        ${this.dataState.isStale ? `<div class="alert alert-warning py-2 px-3 mb-2 rounded-2" role="status">Mostrando equipos desactualizados porque falló la última sincronización.</div>` : ""}
         <div class="app-project-card-list p-3">
           <table class="table table-hover mb-0" style="width:100%;">
             <thead>
@@ -687,6 +719,7 @@ export default class TLDashboardView {
   }
 
   destroy() {
+    abortStateRequest(this._teamsRequest);
     if (this._offLangChange) this._offLangChange();
     if (this._avatarMouseOver) document.removeEventListener("mouseover", this._avatarMouseOver);
     if (this._avatarMouseOut) document.removeEventListener("mouseout", this._avatarMouseOut);
