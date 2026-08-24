@@ -20,6 +20,10 @@ import {
   createStateContainer,
   runStateRequest,
 } from "../components/StateContainer.js";
+import {
+  assertSafeSpreadsheetFile,
+  sanitizeSpreadsheetRows,
+} from "../utils/spreadsheetSecurity.js";
 import "../assets/styles/dashboard.css";
 import "../assets/styles/usersAdmin.css";
 
@@ -152,27 +156,36 @@ export default class UsersAdminView {
         this.paint();
       },
       request: async ({ signal }) => {
-      const [usersRes, eventsRes] = await Promise.all([
-        getUsers({ limit: 1000 }, { signal }),
-        getEvents({ signal }).catch((error) => {
-          if (error?.isAborted) throw error;
-          return null;
-        }),
-      ]);
-      this.users = usersRes.data?.users ?? usersRes.users ?? (Array.isArray(usersRes.data) ? usersRes.data : []);
-      const eventsData = eventsRes?.data ?? eventsRes;
-      this.events = eventsData?.events ?? (Array.isArray(eventsData) ? eventsData : []);
+        const [usersRes, eventsRes] = await Promise.all([
+          getUsers({ limit: 1000 }, { signal }),
+          getEvents({ signal }).catch((error) => {
+            if (error?.isAborted) throw error;
+            return null;
+          }),
+        ]);
+        this.users =
+          usersRes.data?.users ??
+          usersRes.users ??
+          (Array.isArray(usersRes.data) ? usersRes.data : []);
+        const eventsData = eventsRes?.data ?? eventsRes;
+        this.events = eventsData?.events ?? (Array.isArray(eventsData) ? eventsData : []);
 
-      // Cargar lista de clanes/equipos desde backend para poblar selects
-      try {
-        const teamsRes = await getTeams({ limit: 1000, includeSubmitted: true, includeClosed: true }, { signal });
-        this.teams = teamsRes.data?.teams ?? teamsRes.teams ?? (Array.isArray(teamsRes) ? teamsRes : teamsRes.data ?? []);
-      } catch (tErr) {
-        if (tErr?.isAborted) throw tErr;
-        console.warn(t("usersAdmin.console.teamsLoadError"), tErr);
-        this.teams = [...new Set(this.users.map(u => u.clan).filter(Boolean))];
-      }
-      return { users: this.users, events: this.events, teams: this.teams };
+        // Cargar lista de clanes/equipos desde backend para poblar selects
+        try {
+          const teamsRes = await getTeams(
+            { limit: 1000, includeSubmitted: true, includeClosed: true },
+            { signal },
+          );
+          this.teams =
+            teamsRes.data?.teams ??
+            teamsRes.teams ??
+            (Array.isArray(teamsRes) ? teamsRes : (teamsRes.data ?? []));
+        } catch (tErr) {
+          if (tErr?.isAborted) throw tErr;
+          console.warn(t("usersAdmin.console.teamsLoadError"), tErr);
+          this.teams = [...new Set(this.users.map((u) => u.clan).filter(Boolean))];
+        }
+        return { users: this.users, events: this.events, teams: this.teams };
       },
     });
 
@@ -200,13 +213,16 @@ export default class UsersAdminView {
       let totalPages = 1;
 
       while (currentPage <= totalPages) {
-        const res = await getTeams({
-          idEvent: eventId,
-          includeSubmitted: true,
-          includeClosed: true,
-          limit: 100,
-          page: currentPage,
-        }, { signal: controller.signal });
+        const res = await getTeams(
+          {
+            idEvent: eventId,
+            includeSubmitted: true,
+            includeClosed: true,
+            limit: 100,
+            page: currentPage,
+          },
+          { signal: controller.signal },
+        );
 
         const teams = res?.teams ?? res?.data?.teams ?? (Array.isArray(res) ? res : []);
         for (const team of teams) {
@@ -255,11 +271,15 @@ export default class UsersAdminView {
     const importStats = this.getImportStats();
 
     root.innerHTML = `
-      ${this.dataState.isStale ? `
+      ${
+        this.dataState.isStale
+          ? `
         <div class="alert alert-warning py-2 px-3 mb-3 rounded-2" role="status">
           Mostrando usuarios desactualizados porque falló la última sincronización.
         </div>
-      ` : ""}
+      `
+          : ""
+      }
       ${this.renderHeader(stats)}
       ${this.renderMetrics(stats)}
       <section class="ua-actions-grid">
@@ -324,16 +344,38 @@ export default class UsersAdminView {
   renderMetrics(stats) {
     const cards = [
       { label: roleLabel("CODER"), value: stats.roles.CODER, tone: "accent", icon: icons.code() },
-      { label: roleLabel("TL_DEVELOPMENT"), value: stats.roles.TL_DEVELOPMENT, tone: "mint", icon: icons.settings() },
-      { label: roleLabel("TL_SOFT_SKILLS"), value: stats.roles.TL_SOFT_SKILLS, tone: "gold", icon: icons.bulb() },
-      { label: roleLabel("TL_ENGLISH"), value: stats.roles.TL_ENGLISH, tone: "lilac", icon: icons.chat() },
+      {
+        label: roleLabel("TL_DEVELOPMENT"),
+        value: stats.roles.TL_DEVELOPMENT,
+        tone: "mint",
+        icon: icons.settings(),
+      },
+      {
+        label: roleLabel("TL_SOFT_SKILLS"),
+        value: stats.roles.TL_SOFT_SKILLS,
+        tone: "gold",
+        icon: icons.bulb(),
+      },
+      {
+        label: roleLabel("TL_ENGLISH"),
+        value: stats.roles.TL_ENGLISH,
+        tone: "lilac",
+        icon: icons.chat(),
+      },
       { label: roleLabel("STAFF"), value: stats.roles.STAFF, tone: "muted", icon: icons.blocks() },
-      { label: roleLabel("ADMIN"), value: stats.roles.ADMIN, tone: "coral", icon: icons.settings() },
+      {
+        label: roleLabel("ADMIN"),
+        value: stats.roles.ADMIN,
+        tone: "coral",
+        icon: icons.settings(),
+      },
     ];
 
     return `
       <section class="ua-metrics">
-        ${cards.map((card) => `
+        ${cards
+          .map(
+            (card) => `
           <article class="ua-metric ua-tone-${card.tone}">
             <div>
               <span>${card.label}</span>
@@ -341,14 +383,22 @@ export default class UsersAdminView {
             </div>
             <span class="ua-metric-icon">${card.icon}</span>
           </article>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </section>
     `;
   }
 
   renderToolbar(clans, count) {
-    const hasActiveFilters = this.filters.role || this.filters.clan || this.filters.isActive
-      || this.filters.github || this.filters.search || this.filters.event || this.filters.teamStatus;
+    const hasActiveFilters =
+      this.filters.role ||
+      this.filters.clan ||
+      this.filters.isActive ||
+      this.filters.github ||
+      this.filters.search ||
+      this.filters.event ||
+      this.filters.teamStatus;
     const eventActive = Boolean(this.filters.event);
     const loadingTeams = eventActive && this.eventTeamMemberIds === null;
 
@@ -382,11 +432,15 @@ export default class UsersAdminView {
             <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
           </select>
           <span class="ua-count">${t("usersAdmin.results", { count })}</span>
-          ${hasActiveFilters ? `
+          ${
+            hasActiveFilters
+              ? `
             <button id="clearFiltersBtn" class="ua-btn ua-btn-ghost ua-btn-sm" type="button" title="Limpiar filtros">
               ${actionIcons.close} Limpiar
             </button>
-          ` : ""}
+          `
+              : ""
+          }
         </div>
 
         <!-- Row 2: event cross-filter -->
@@ -402,11 +456,15 @@ export default class UsersAdminView {
             <option value="no-team" ${this.filters.teamStatus === "no-team" ? "selected" : ""}>Sin equipo</option>
           </select>
           ${loadingTeams ? `<span class="ua-event-hint ua-event-loading">Cargando equipos…</span>` : ""}
-          ${eventActive && !loadingTeams ? `
+          ${
+            eventActive && !loadingTeams
+              ? `
             <span class="ua-event-hint">
               ${this.eventTeamMemberIds ? this.eventTeamMemberIds.size : 0} coder(s) en equipo en este evento
             </span>
-          ` : ""}
+          `
+              : ""
+          }
           ${!eventActive ? `<span class="ua-event-hint">Selecciona un evento para filtrar por equipo</span>` : ""}
         </div>
       </section>
@@ -495,9 +553,10 @@ export default class UsersAdminView {
             type="button"
             title="${escapeHtml(profileTitle)}"
           >
-            ${avatarUrl
-              ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
-              : `<span class="ua-user-avatar ua-user-avatar-fallback">${escapeHtml(initial)}</span>`
+            ${
+              avatarUrl
+                ? `<img class="ua-user-avatar" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(user.name)}">`
+                : `<span class="ua-user-avatar ua-user-avatar-fallback">${escapeHtml(initial)}</span>`
             }
             <div class="ua-user-info">
               <strong>${escapeHtml(user.name)}</strong>
@@ -571,14 +630,19 @@ export default class UsersAdminView {
           <span class="ua-btn-icon">${icons.upload()}</span>
           ${t("usersAdmin.import.chooseFile")}
         </button>
-        ${this.importRows.length > 0 ? `
+        ${
+          this.importRows.length > 0
+            ? `
           <div class="ua-import-stats">
             <span><strong>${validRows.length}</strong> ${t("usersAdmin.import.ready")}</span>
             <span><strong>${duplicateRows.length}</strong> ${t("usersAdmin.import.duplicates")}</span>
             <span><strong>${invalidRows.length}</strong> ${t("usersAdmin.import.incomplete")}</span>
           </div>
           <div class="ua-import-preview">
-            ${this.importRows.slice(0, 6).map((row) => `
+            ${this.importRows
+              .slice(0, 6)
+              .map(
+                (row) => `
               <div class="ua-import-row is-${row.status}">
                 <div>
                   <strong>${escapeHtml(row.name || t("usersAdmin.import.noName"))}</strong>
@@ -586,13 +650,17 @@ export default class UsersAdminView {
                 </div>
                 <small>${t("usersAdmin.import.row", { row: row.rowNumber })}</small>
               </div>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </div>
           <button class="ua-btn ua-btn-primary ua-full" id="createImportedUsersBtn" type="button" ${validRows.length === 0 ? "disabled" : ""}>
             ${t("usersAdmin.import.createUsers", { count: validRows.length })}
           </button>
           <button class="ua-text-btn" id="clearImportBtn" type="button">${t("usersAdmin.import.clear")}</button>
-        ` : ""}
+        `
+            : ""
+        }
       </section>
     `;
   }
@@ -644,24 +712,31 @@ export default class UsersAdminView {
                 </select>
               </label>
               <label class="ua-label">${t("usersAdmin.form.clan")}
-                ${this.teams && this.teams.length > 0 ? `
+                ${
+                  this.teams && this.teams.length > 0
+                    ? `
                   <select class="ua-field ua-select" name="clan">
                     <option value="">${t("usersAdmin.noClanOption")}</option>
-                    ${this.teams.map((t) => `<option value="${escapeHtml(t.name || t)}" ${(t.name === user?.clan || t === user?.clan) ? 'selected' : ''}>${escapeHtml(t.name || t)}</option>`).join("")}
+                    ${this.teams.map((t) => `<option value="${escapeHtml(t.name || t)}" ${t.name === user?.clan || t === user?.clan ? "selected" : ""}>${escapeHtml(t.name || t)}</option>`).join("")}
                   </select>
-                ` : `
+                `
+                    : `
                   <input class="ua-field" name="clan" value="${escapeHtml(user?.clan || "")}" placeholder="G3 (McCarthy)">
-                `}
+                `
+                }
               </label>
             </div>
-            ${isEditing ? `
+            ${
+              isEditing
+                ? `
               <div class="ua-inline-actions">
                 <button class="ua-btn ua-btn-secondary" id="sendIndividualInviteBtn" type="button">
                   <span class="ua-btn-icon">${actionIcons.mail}</span>
                   ${t("usersAdmin.modal.sendInvite")}
                 </button>
               </div>
-            ` : `
+            `
+                : `
               <label class="ua-label">${t("usersAdmin.form.initialPassword")}
                 <input class="ua-field" name="password" placeholder="${t("usersAdmin.form.initialPasswordPlaceholder")}">
               </label>
@@ -669,7 +744,8 @@ export default class UsersAdminView {
                 <input type="checkbox" name="sendInvite" id="sendInviteCheckbox">
                 <span>${t("usersAdmin.form.sendInviteOnCreate")}</span>
               </label>
-            `}
+            `
+            }
             <p class="ua-form-note">
               ${clanPassword ? t("usersAdmin.form.passwordPreview", { password: escapeHtml(clanPassword) }) : t("usersAdmin.form.passwordNeedsClan")}
             </p>
@@ -756,16 +832,34 @@ export default class UsersAdminView {
       this.paint();
     });
     document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
-      this.filters = { search: "", role: "", clan: "", isActive: "", github: "", event: "", teamStatus: "" };
+      this.filters = {
+        search: "",
+        role: "",
+        clan: "",
+        isActive: "",
+        github: "",
+        event: "",
+        teamStatus: "",
+      };
       this.eventTeamMemberIds = null;
       this.paint();
     });
 
-    document.getElementById("sendSelectedBtn")?.addEventListener("click", () => this.sendSelectedInvites());
-    document.getElementById("sendClanInviteBtn")?.addEventListener("click", () => this.sendClanInvites());
-    document.getElementById("chooseXlsxBtn")?.addEventListener("click", () => document.getElementById("xlsxInput")?.click());
-    document.getElementById("xlsxInput")?.addEventListener("change", (event) => this.handleXlsxFile(event));
-    document.getElementById("createImportedUsersBtn")?.addEventListener("click", () => this.createImportedUsers());
+    document
+      .getElementById("sendSelectedBtn")
+      ?.addEventListener("click", () => this.sendSelectedInvites());
+    document
+      .getElementById("sendClanInviteBtn")
+      ?.addEventListener("click", () => this.sendClanInvites());
+    document
+      .getElementById("chooseXlsxBtn")
+      ?.addEventListener("click", () => document.getElementById("xlsxInput")?.click());
+    document
+      .getElementById("xlsxInput")
+      ?.addEventListener("change", (event) => this.handleXlsxFile(event));
+    document
+      .getElementById("createImportedUsersBtn")
+      ?.addEventListener("click", () => this.createImportedUsers());
     document.getElementById("clearImportBtn")?.addEventListener("click", () => {
       this.importRows = [];
       this.paint();
@@ -810,8 +904,12 @@ export default class UsersAdminView {
       if (!user) return;
       this.sendIndividualInvite(user);
     });
-    document.getElementById("userForm")?.addEventListener("submit", (event) => this.submitUserForm(event));
-    document.getElementById("passwordForm")?.addEventListener("submit", (event) => this.submitPasswordForm(event));
+    document
+      .getElementById("userForm")
+      ?.addEventListener("submit", (event) => this.submitUserForm(event));
+    document
+      .getElementById("passwordForm")
+      ?.addEventListener("submit", (event) => this.submitPasswordForm(event));
   }
 
   scheduleSearchPaint() {
@@ -874,18 +972,23 @@ export default class UsersAdminView {
         await updateUser(this.modal.user.id_user, payload);
         toast.success(t("usersAdmin.toast.updatedTitle"), t("usersAdmin.toast.updatedMessage"));
       } else {
-        payload.password = data.password?.trim() || buildClanPassword(payload.clan) || payload.documentNumber;
+        payload.password =
+          data.password?.trim() || buildClanPassword(payload.clan) || payload.documentNumber;
         const created = await createUser(payload);
         toast.success(t("usersAdmin.toast.createdTitle"), t("usersAdmin.toast.createdMessage"));
 
         // If checkbox sendInvite present, send invitation to the created user
         const formData = new FormData(form);
         const sendInvite = formData.get("sendInvite");
-        const createdUserId = created?.data?.user?.id_user ?? created?.user?.id_user ?? created?.id_user ?? null;
+        const createdUserId =
+          created?.data?.user?.id_user ?? created?.user?.id_user ?? created?.id_user ?? null;
         if (sendInvite && createdUserId) {
           try {
             await sendWelcomeEmailsToUsers({ userIds: [createdUserId] });
-            toast.success(t("usersAdmin.toast.inviteSentTitle"), t("usersAdmin.toast.welcomeEmailSent"));
+            toast.success(
+              t("usersAdmin.toast.inviteSentTitle"),
+              t("usersAdmin.toast.welcomeEmailSent"),
+            );
           } catch (e) {
             toast.error(t("common.errorTitle"), t("usersAdmin.toast.inviteError"));
           }
@@ -916,7 +1019,9 @@ export default class UsersAdminView {
       await updateUserStatus(user.id_user, !user.is_active);
       toast.success(
         t("usersAdmin.toast.statusUpdatedTitle"),
-        t(user.is_active ? "usersAdmin.toast.nowInactive" : "usersAdmin.toast.nowActive", { name: user.name }),
+        t(user.is_active ? "usersAdmin.toast.nowInactive" : "usersAdmin.toast.nowActive", {
+          name: user.name,
+        }),
       );
       await this.loadUsers();
     } catch (error) {
@@ -941,7 +1046,10 @@ export default class UsersAdminView {
   async sendIndividualInvite(user) {
     try {
       const response = await sendWelcomeEmailsToUsers({ userIds: [user.id_user] });
-      toast.success(t("usersAdmin.toast.inviteSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.emailSent"));
+      toast.success(
+        t("usersAdmin.toast.inviteSentTitle"),
+        response.data?.message || response.message || t("usersAdmin.toast.emailSent"),
+      );
     } catch (error) {
       toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.inviteError"));
     }
@@ -953,7 +1061,10 @@ export default class UsersAdminView {
 
     try {
       const response = await sendWelcomeEmailsToUsers({ userIds });
-      toast.success(t("usersAdmin.toast.invitesSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.emailsSent"));
+      toast.success(
+        t("usersAdmin.toast.invitesSentTitle"),
+        response.data?.message || response.message || t("usersAdmin.toast.emailsSent"),
+      );
       this.selectedUsers.clear();
       this.paint();
     } catch (error) {
@@ -973,7 +1084,12 @@ export default class UsersAdminView {
 
     try {
       const response = await sendWelcomeEmailsToUsers({ clan });
-      toast.success(t("usersAdmin.toast.invitesSentTitle"), response.data?.message || response.message || t("usersAdmin.toast.clanEmailsSent", { clan }));
+      toast.success(
+        t("usersAdmin.toast.invitesSentTitle"),
+        response.data?.message ||
+          response.message ||
+          t("usersAdmin.toast.clanEmailsSent", { clan }),
+      );
     } catch (error) {
       toast.error(t("common.errorTitle"), error.message || t("usersAdmin.toast.invitesError"));
     }
@@ -984,10 +1100,11 @@ export default class UsersAdminView {
     if (!file) return;
 
     try {
+      assertSafeSpreadsheetFile(file);
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const rows = sanitizeSpreadsheetRows(XLSX.utils.sheet_to_json(sheet, { defval: "" }));
       this.importRows = this.normalizeImportRows(rows);
       this.paint();
     } catch (error) {
@@ -1009,19 +1126,26 @@ export default class UsersAdminView {
     const roleKey = findKey(keys, ["rol", "role"]);
     const documentTypeKey = findKey(keys, ["tipo", "document_type", "document type"]);
 
-    const existingEmails = new Set(this.users.map((user) => String(user.email || "").toLowerCase()));
+    const existingEmails = new Set(
+      this.users.map((user) => String(user.email || "").toLowerCase()),
+    );
     const existingDocuments = new Set(this.users.map((user) => String(user.document_number || "")));
     const fileEmails = new Set();
     const fileDocuments = new Set();
 
     return rows.map((row, index) => {
-      const email = String(row[emailKey] || "").trim().toLowerCase();
+      const email = String(row[emailKey] || "")
+        .trim()
+        .toLowerCase();
       const documentNumber = String(row[documentKey] || "").trim();
       const name = String(row[nameKey] || "").trim();
       const clan = normalizeClan(row[clanKey]);
       const roleRaw = normalizeText(row[roleKey] || "CODER");
       const role = ROLES.some((item) => item.value === roleRaw) ? roleRaw : "CODER";
-      const documentType = String(row[documentTypeKey] || "CC").trim().toUpperCase() || "CC";
+      const documentType =
+        String(row[documentTypeKey] || "CC")
+          .trim()
+          .toUpperCase() || "CC";
 
       let status = "valid";
       let reasonKey = "";
@@ -1029,7 +1153,12 @@ export default class UsersAdminView {
       if (!email || !documentNumber || !name) {
         status = "invalid";
         reasonKey = "usersAdmin.import.missingFields";
-      } else if (existingEmails.has(email) || existingDocuments.has(documentNumber) || fileEmails.has(email) || fileDocuments.has(documentNumber)) {
+      } else if (
+        existingEmails.has(email) ||
+        existingDocuments.has(documentNumber) ||
+        fileEmails.has(email) ||
+        fileDocuments.has(documentNumber)
+      ) {
         status = "duplicate";
         reasonKey = "usersAdmin.import.duplicateReason";
       }
@@ -1084,7 +1213,10 @@ export default class UsersAdminView {
       }
     }
 
-    toast.success(t("usersAdmin.toast.importDoneTitle"), t("usersAdmin.toast.importDoneMessage", { created, failed }));
+    toast.success(
+      t("usersAdmin.toast.importDoneTitle"),
+      t("usersAdmin.toast.importDoneMessage", { created, failed }),
+    );
     this.importRows = [];
     await this.loadUsers();
   }
@@ -1093,18 +1225,21 @@ export default class UsersAdminView {
     const search = normalizeText(this.filters.search);
 
     return this.users.filter((user) => {
-      const matchesSearch = !search
-        || normalizeText(user.name).includes(search)
-        || normalizeText(user.email).includes(search)
-        || normalizeText(user.document_number).includes(search)
-        || normalizeText(user.github_username).includes(search);
+      const matchesSearch =
+        !search ||
+        normalizeText(user.name).includes(search) ||
+        normalizeText(user.email).includes(search) ||
+        normalizeText(user.document_number).includes(search) ||
+        normalizeText(user.github_username).includes(search);
       const matchesRole = !this.filters.role || user.role === this.filters.role;
       const matchesClan = !this.filters.clan || user.clan === this.filters.clan;
-      const matchesStatus = this.filters.isActive === "" || String(user.is_active) === this.filters.isActive;
+      const matchesStatus =
+        this.filters.isActive === "" || String(user.is_active) === this.filters.isActive;
       const hasGithub = Boolean(user.github_username);
-      const matchesGithub = !this.filters.github
-        || (this.filters.github === "linked" && hasGithub)
-        || (this.filters.github === "unlinked" && !hasGithub);
+      const matchesGithub =
+        !this.filters.github ||
+        (this.filters.github === "linked" && hasGithub) ||
+        (this.filters.github === "unlinked" && !hasGithub);
 
       // Team-membership filter (requires a selected event)
       let matchesTeamStatus = true;
@@ -1121,12 +1256,21 @@ export default class UsersAdminView {
         }
       }
 
-      return matchesSearch && matchesRole && matchesClan && matchesStatus && matchesGithub && matchesTeamStatus;
+      return (
+        matchesSearch &&
+        matchesRole &&
+        matchesClan &&
+        matchesStatus &&
+        matchesGithub &&
+        matchesTeamStatus
+      );
     });
   }
 
   getClans() {
-    return [...new Set(this.users.map((user) => user.clan).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    return [...new Set(this.users.map((user) => user.clan).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
   }
 
   getStats() {

@@ -1,0 +1,52 @@
+.react-shell {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  color: var(--text-main, #181e4b);
+}
+
+.react-shell__header {
+  display: grid;
+  gap: 6px;
+}
+
+.react-shell__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.react-shell__subtitle {
+  margin: 0;
+  max-width: 720px;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.react-shell__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.react-foundation-status {
+  display: grid;
+  gap: 4px;
+  min-height: 88px;
+  padding: 16px;
+  border: 1px solid var(--border-card, #e5e7eb);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.react-foundation-status span {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.react-foundation-status strong {
+  font-size: 1rem;
+}

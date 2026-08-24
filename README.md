@@ -107,8 +107,10 @@ Webhook to record activity from GitHub repositories linked to projects. GitHub O
 ### Frontend
 | Technology | Version | Purpose |
 |---|---|---|
-| Vanilla JS (ES Modules) | ES2023 | Core SPA logic — no framework overhead |
-| Vite | 5.x | Build tool, HMR, environment variables |
+| Vanilla JS (ES Modules) | ES2023 | Current SPA shell and legacy route views |
+| React | 19.x | Incremental feature islands for migrated modules |
+| TypeScript | 5.x | Strict typing for new React code |
+| Vite | 7.x | Build tool, HMR, environment variables |
 | Bootstrap 5 | 5.3 | Responsive layout and components |
 | Socket.IO Client | 4.x | Real-time bi-directional communication |
 | i18next | 25.x | Internationalization (ES/EN) |
@@ -144,6 +146,12 @@ Router
   ├── navigate(path)     ← pushState + view rendering
   └── onLangChange()     ← re-renders current view on language switch
 ```
+
+### React + TypeScript Incremental Migration
+
+New React modules live under `src/react` and are mounted from Vanilla views through a
+small island adapter. The migration convention, folder boundaries, lifecycle rules and
+router retirement path are documented in [`docs/react-migration.md`](docs/react-migration.md).
 
 The router enforces **RBAC at the client level** (mirrored server-side). Unauthenticated or unauthorized users are redirected before any view renders.
 

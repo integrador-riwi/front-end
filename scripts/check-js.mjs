@@ -59,7 +59,11 @@ const resolveImport = (fromFile, specifier) => {
   const basePath = resolve(join(fromFile, ".."), cleanSpecifier);
   if (assetExtensions.has(extname(cleanSpecifier))) return true;
   if (extname(cleanSpecifier)) return existsSync(basePath);
-  return existsSync(`${basePath}.js`) || existsSync(join(basePath, "index.js"));
+  return [".js", ".ts", ".tsx"]
+    .some((extension) => existsSync(`${basePath}${extension}`)) ||
+    [".js", ".ts", ".tsx"].some((extension) =>
+      existsSync(join(basePath, `index${extension}`)),
+    );
 };
 
 const checkImports = () => {

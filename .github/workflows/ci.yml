@@ -23,25 +23,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Enable pnpm
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Type check
-        run: pnpm run type-check
-
-      - name: Smoke E2E
-        run: pnpm test
+      - name: Verify
+        run: npm run verify
         env:
           E2E_API_URL: ${{ vars.E2E_API_URL }}
           E2E_WEB_URL: ${{ vars.E2E_WEB_URL }}
           E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
-
-      - name: Build
-        run: pnpm run build

@@ -17,6 +17,10 @@ import {
 } from "../services/api-events.js";
 import { toast } from "../components/Toast/index.js";
 import * as XLSX from "xlsx";
+import {
+  assertSafeSpreadsheetFile,
+  sanitizeSpreadsheetRows,
+} from "../utils/spreadsheetSecurity.js";
 
 const AREAS = ["DEVELOPMENT", "SOFT_SKILLS", "ENGLISH"];
 const AREA_LABELS = {
@@ -101,17 +105,12 @@ export default class CreateEvent {
   _getEventData() {
     return {
       title: document.getElementById("ev-title")?.value?.trim() ?? "",
-      description:
-        document.getElementById("ev-description")?.value?.trim() ?? "",
+      description: document.getElementById("ev-description")?.value?.trim() ?? "",
       eventType: document.getElementById("ev-type")?.value ?? "CAPSTONE",
       route: document.getElementById("ev-route")?.value ?? "BASIC",
       githubOrg:
-        document.getElementById("ev-github-org")?.value?.trim() ||
-        this.selectedGithubOrg ||
-        null,
-      maxTeamSize: parseInt(
-        document.getElementById("ev-max-team")?.value ?? "5",
-      ),
+        document.getElementById("ev-github-org")?.value?.trim() || this.selectedGithubOrg || null,
+      maxTeamSize: parseInt(document.getElementById("ev-max-team")?.value ?? "5"),
       eventDate: document.getElementById("ev-start-date")?.value
         ? `${document.getElementById("ev-start-date").value}T10:00:00`
         : null,
@@ -163,9 +162,9 @@ export default class CreateEvent {
         ${t("createEvent.allClans")}
       </button>
       ${ALL_CLANS.map((clan) => {
-      const active = this.targetClans.includes(clan);
-      return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
-    }).join("")}
+        const active = this.targetClans.includes(clan);
+        return `<button class="ce-clan-chip ${active ? "ce-clan-chip--active" : ""}" data-clan="${clan}" type="button">${clan}</button>`;
+      }).join("")}
     `;
   }
 
@@ -226,10 +225,8 @@ export default class CreateEvent {
 
   _validate() {
     const ev = this._getEventData();
-    if (!ev.title)
-      return t("createEvent.validTitle") ?? "Event title is required.";
-    if (!ev.eventDate)
-      return t("createEvent.validDate") ?? "Start date is required.";
+    if (!ev.title) return t("createEvent.validTitle") ?? "Event title is required.";
+    if (!ev.eventDate) return t("createEvent.validDate") ?? "Start date is required.";
 
     if (this.rubricMode === "platform") {
       this._recalculateWeights();
@@ -237,10 +234,8 @@ export default class CreateEvent {
       for (const a of this.rubricAreas) {
         for (const c of a.criteria) {
           if (!c.name?.trim()) return `A criteria for ${a.title} has no name.`;
-          if (!c.description?.trim())
-            return `The criteria "${c.name}" requires a description.`;
-          if (c.levels.length === 0)
-            return `The criteria "${c.name}" has no performance levels.`;
+          if (!c.description?.trim()) return `The criteria "${c.name}" requires a description.`;
+          if (c.levels.length === 0) return `The criteria "${c.name}" has no performance levels.`;
 
           for (let i = 0; i < c.levels.length; i++) {
             if (!c.levels[i].description?.trim()) {
@@ -280,21 +275,16 @@ export default class CreateEvent {
     try {
       const body = {
         ...this._getEventData(),
-        rubrics:
-          this.rubricMode === "platform" ? this._buildRubricsPayload() : [],
+        rubrics: this.rubricMode === "platform" ? this._buildRubricsPayload() : [],
       };
       await apiFetch("/events", { method: "POST", body });
       toast.success(
         t("createEvent.successTitle") ?? "Event Created!",
-        t("createEvent.successMsg") ??
-        "The event has been created successfully.",
+        t("createEvent.successMsg") ?? "The event has been created successfully.",
       );
       setTimeout(() => this.router.navigate("events"), 1600);
     } catch (e) {
-      toast.error(
-        t("common.errorTitle"),
-        e.message ?? t("createEvent.errorCreating"),
-      );
+      toast.error(t("common.errorTitle"), e.message ?? t("createEvent.errorCreating"));
     } finally {
       this._setLoading(false);
     }
@@ -326,8 +316,7 @@ export default class CreateEvent {
 
       toast.success(
         t("createEvent.updateSuccessTitle") ?? "Event Updated!",
-        t("createEvent.updateSuccessMsg") ??
-        "The event has been updated successfully.",
+        t("createEvent.updateSuccessMsg") ?? "The event has been updated successfully.",
       );
       setTimeout(() => this.router.navigate("details", { eventId: this.eventId }), 1200);
     } catch (e) {
@@ -358,9 +347,7 @@ export default class CreateEvent {
     );
 
     if (toDelete.length > 0) {
-      await Promise.all(
-        toDelete.map((id) => deleteEventRubric(this.eventId, id)),
-      );
+      await Promise.all(toDelete.map((id) => deleteEventRubric(this.eventId, id)));
     }
 
     if (toUpdate.length > 0) {
@@ -372,9 +359,7 @@ export default class CreateEvent {
     }
 
     if (toCreate.length > 0) {
-      const rubrics = toCreate.map(({ area, crit }) =>
-        this._buildRubricPayload(area, crit),
-      );
+      const rubrics = toCreate.map(({ area, crit }) => this._buildRubricPayload(area, crit));
       await addEventRubrics(this.eventId, rubrics);
     }
   }
@@ -422,11 +407,7 @@ export default class CreateEvent {
       try {
         const rubricsRes = await getEventRubrics(this.eventId);
         this._loadedRubrics =
-          rubricsRes?.data?.rubrics ??
-          rubricsRes?.rubrics ??
-          rubricsRes?.data ??
-          rubricsRes ??
-          [];
+          rubricsRes?.data?.rubrics ?? rubricsRes?.rubrics ?? rubricsRes?.data ?? rubricsRes ?? [];
         this._applyRubricsForEdit(this._loadedRubrics);
       } catch (rubricErr) {
         toast.warning(
@@ -451,8 +432,7 @@ export default class CreateEvent {
     const route = event.route ?? "BASIC";
     const maxTeam = event.max_team_size ?? event.maxTeamSize ?? 5;
     const startDate = event.start_date ?? event.date ?? event.eventDate ?? null;
-    const endDate =
-      event.end_date ?? event.final_delivery_date ?? event.endDate ?? null;
+    const endDate = event.end_date ?? event.final_delivery_date ?? event.endDate ?? null;
 
     const titleInput = document.getElementById("ev-title");
     if (titleInput) titleInput.value = title;
@@ -479,11 +459,7 @@ export default class CreateEvent {
 
   _applyRubricsForEdit(rubricsRes) {
     const raw =
-      rubricsRes?.data?.rubrics ??
-      rubricsRes?.rubrics ??
-      rubricsRes?.data ??
-      rubricsRes ??
-      [];
+      rubricsRes?.data?.rubrics ?? rubricsRes?.rubrics ?? rubricsRes?.data ?? rubricsRes ?? [];
 
     const rubrics = Array.isArray(raw) ? raw : [];
     this._originalRubrics.clear();
@@ -586,10 +562,7 @@ export default class CreateEvent {
     link.click();
     document.body.removeChild(link);
 
-    toast.success(
-      t("createEvent.templateDownloadTitle"),
-      t("createEvent.templateDownloadMsg"),
-    );
+    toast.success(t("createEvent.templateDownloadTitle"), t("createEvent.templateDownloadMsg"));
   }
 
   _addCriteria(areaId) {
@@ -676,6 +649,14 @@ export default class CreateEvent {
     const file = event.target.files[0];
     if (!file) return;
 
+    try {
+      assertSafeSpreadsheetFile(file);
+    } catch (err) {
+      toast.error(t("createEvent.importErrorTitle"), t("createEvent.importProcessError"));
+      event.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -688,22 +669,20 @@ export default class CreateEvent {
             header: 1,
             defval: "",
           });
-          for (let i = 0; i < Math.min(rows.length, 15); i++) {
-            const row = rows[i].map((c) =>
+          const safeRows = sanitizeSpreadsheetRows(rows);
+          for (let i = 0; i < Math.min(safeRows.length, 15); i++) {
+            const row = safeRows[i].map((c) =>
               String(c || "")
                 .trim()
                 .toLowerCase(),
             );
             if (row.includes("area") && row.includes("criterio")) {
-              this._parseExcelRubric(row, rows.slice(i + 1));
+              this._parseExcelRubric(row, safeRows.slice(i + 1));
               return;
             }
           }
         }
-        toast.error(
-          t("createEvent.formatErrorTitle"),
-          t("createEvent.missingRubricColumns"),
-        );
+        toast.error(t("createEvent.formatErrorTitle"), t("createEvent.missingRubricColumns"));
       } catch (err) {
         toast.error(t("createEvent.importErrorTitle"), t("createEvent.importProcessError"));
       }
@@ -728,7 +707,10 @@ export default class CreateEvent {
     // Check for missing columns
     const missingCols = requiredCols.filter((c) => colIdx(c) === -1);
     if (missingCols.length > 0) {
-      toast.error(t("createEvent.formatErrorTitle"), t("createEvent.missingColumns", { columns: missingCols.join(", ") }));
+      toast.error(
+        t("createEvent.formatErrorTitle"),
+        t("createEvent.missingColumns", { columns: missingCols.join(", ") }),
+      );
       return;
     }
 
@@ -748,8 +730,8 @@ export default class CreateEvent {
 
     // Map existing criteria to reuse IDs and avoid unique constraint errors on update
     const oldCriteriaMap = new Map();
-    this.rubricAreas.forEach(a => {
-      a.criteria.forEach(c => {
+    this.rubricAreas.forEach((a) => {
+      a.criteria.forEach((c) => {
         if (c.id) oldCriteriaMap.set(`${a.type}_${c.name.trim().toLowerCase()}`, c);
       });
     });
@@ -809,20 +791,18 @@ export default class CreateEvent {
 
       levels.forEach((lvl) => {
         if (!lvl.description)
-          errors.push(
-            `Row ${rowNum}: Missing description for level '${lvl.name}'.`,
-          );
+          errors.push(`Row ${rowNum}: Missing description for level '${lvl.name}'.`);
       });
 
       totalWeight += weight;
-      
+
       const key = `${areaType}_${name.trim().toLowerCase()}`;
       const oldCrit = oldCriteriaMap.get(key);
       const critId = oldCrit ? oldCrit.id : this._generateId();
 
       if (oldCrit && oldCrit.levels) {
-        levels.forEach(lvl => {
-          const oldLvl = oldCrit.levels.find(l => l.score === lvl.score);
+        levels.forEach((lvl) => {
+          const oldLvl = oldCrit.levels.find((l) => l.score === lvl.score);
           if (oldLvl) lvl.id_grade = oldLvl.id_grade ?? oldLvl.id;
         });
       }
@@ -844,9 +824,9 @@ export default class CreateEvent {
       toast.error(
         t("createEvent.validationFailed"),
         errors.slice(0, 3).join("<br>") +
-        (errors.length > 3
-          ? `<br>${t("createEvent.moreErrors", { count: errors.length - 3 })}`
-          : ""),
+          (errors.length > 3
+            ? `<br>${t("createEvent.moreErrors", { count: errors.length - 3 })}`
+            : ""),
       );
       return;
     }
@@ -872,10 +852,7 @@ export default class CreateEvent {
     this.rubricMode = "platform";
     this._recalculateWeights();
     this._rerenderRubricSection();
-    toast.success(
-      "Import Successful",
-      `Processed ${newCriteria.length} criteria successfully.`,
-    );
+    toast.success("Import Successful", `Processed ${newCriteria.length} criteria successfully.`);
   }
 
   _mapArea(val) {
@@ -956,10 +933,7 @@ export default class CreateEvent {
     this._recalculateWeights();
     const totalW = this._getTotalWeight();
     const isWeightOk = Math.abs(totalW - 100) < 0.1;
-    const compCriteria = this.rubricAreas.reduce(
-      (s, a) => s + a.criteria.length,
-      0,
-    );
+    const compCriteria = this.rubricAreas.reduce((s, a) => s + a.criteria.length, 0);
 
     return `
        <div class="rubric-builder fade-in">
@@ -984,20 +958,21 @@ export default class CreateEvent {
                     <span class="badge bg-white text-dark border me-2">Areas: 3</span>
                     <span class="badge bg-white text-dark border me-2">Criteria: ${compCriteria}</span>
                   </div>
-                  ${!isWeightOk
-        ? `
+                  ${
+                    !isWeightOk
+                      ? `
                     <div class="text-warning small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Total weight must be 100%
                     </div>
                   `
-        : `
+                      : `
                      <div class="text-success small fw-semibold d-flex align-items-center gap-1">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Weight correctly assigned
                     </div>
                   `
-      }
+                  }
                </div>
             </div>
           </div>
@@ -1012,9 +987,7 @@ export default class CreateEvent {
   _renderAreaItem(area) {
     const hasCrit = area.criteria.length > 0;
     const isActivated = area.weight > 0;
-    const badgeColor = isActivated
-      ? AREA_COLOR[area.type] || "#6c63ff"
-      : AREA_COLOR.INACTIVE;
+    const badgeColor = isActivated ? AREA_COLOR[area.type] || "#6c63ff" : AREA_COLOR.INACTIVE;
 
     return `
         <div class="card shadow-sm mb-3 rubric-area-card ${!isActivated ? "area-inactive" : ""}" style="border-left: 4px solid ${badgeColor}; border-radius: 8px; overflow:hidden;">
@@ -1032,21 +1005,23 @@ export default class CreateEvent {
               </div>
            </div>
            
-           ${area.isExpanded
-        ? `
+           ${
+             area.isExpanded
+               ? `
              <div class="card-body bg-light border-top">
-                ${!hasCrit
-          ? `
+                ${
+                  !hasCrit
+                    ? `
                    <div class="text-center py-3">
                      <p class="text-muted small mb-0">Start by adding your first evaluation criteria.</p>
                    </div>
                 `
-          : `
+                    : `
                    <div class="criteria-list">
                       ${area.criteria.map((crit) => this._renderCriteriaItem(area, crit)).join("")}
                    </div>
                 `
-        }
+                }
                 <div class="mt-3">
                   <button class="btn btn-outline-primary btn-sm btn-add-criteria" data-area="${area.id}">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1055,8 +1030,8 @@ export default class CreateEvent {
                 </div>
              </div>
            `
-        : ""
-      }
+               : ""
+           }
         </div>
      `;
   }
@@ -1087,8 +1062,8 @@ export default class CreateEvent {
 
             <div class="ce-levels-grid pt-3 border-top">
                 ${crit.levels
-        .map(
-          (lvl, index) => `
+                  .map(
+                    (lvl, index) => `
                         <div class="level-card h-100 p-3 border rounded-3 bg-light-soft" style="border-top: 4px solid ${lvl.color} !important; transition: all 0.2s ease;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="badge rounded-pill" style="background-color: ${lvl.color}20; color: ${lvl.color}; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; padding: 4px 10px;">
@@ -1102,8 +1077,8 @@ export default class CreateEvent {
                             <input type="hidden" class="lvl-input" data-area="${area.id}" data-crit="${crit.id}" data-index="${index}" data-field="score" value="${lvl.score}">
                         </div>
                     `,
-        )
-        .join("")}
+                  )
+                  .join("")}
             </div>
         </div>
     `;
@@ -1132,8 +1107,7 @@ export default class CreateEvent {
         if (a) {
           const c = a.criteria.find((crit) => crit.id === cId);
           if (c && c.levels[index]) {
-            if (field === "score")
-              c.levels[index].score = parseFloat(el.value) || 0;
+            if (field === "score") c.levels[index].score = parseFloat(el.value) || 0;
             if (field === "name") c.levels[index].name = el.value;
             if (field === "description") c.levels[index].description = el.value;
             if (field === "color") c.levels[index].color = el.value;
@@ -1142,36 +1116,28 @@ export default class CreateEvent {
       });
     };
 
-    document
-      .getElementById("btn-mode-platform")
-      ?.addEventListener("click", () => {
-        this.rubricMode = "platform";
-        this._rerenderRubricSection();
-      });
+    document.getElementById("btn-mode-platform")?.addEventListener("click", () => {
+      this.rubricMode = "platform";
+      this._rerenderRubricSection();
+    });
 
-    document
-      .getElementById("btn-mode-template")
-      ?.addEventListener("click", () => {
-        this.rubricMode = "template";
-        this._rerenderRubricSection();
-      });
+    document.getElementById("btn-mode-template")?.addEventListener("click", () => {
+      this.rubricMode = "template";
+      this._rerenderRubricSection();
+    });
 
-    document
-      .getElementById("btn-download-tpl")
-      ?.addEventListener("click", () => {
-        this._downloadTemplate();
-      });
+    document.getElementById("btn-download-tpl")?.addEventListener("click", () => {
+      this._downloadTemplate();
+    });
 
     document.getElementById("btn-mode-back")?.addEventListener("click", () => {
       this.rubricMode = null;
       this._rerenderRubricSection();
     });
 
-    document
-      .getElementById("excel-upload-input")
-      ?.addEventListener("change", (e) => {
-        this._handleFileUpload(e);
-      });
+    document.getElementById("excel-upload-input")?.addEventListener("change", (e) => {
+      this._handleFileUpload(e);
+    });
 
     document.querySelectorAll(".area-toggle-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1205,23 +1171,19 @@ export default class CreateEvent {
       });
     });
 
-    document
-      .querySelectorAll('.lvl-input[data-field="color"]')
-      .forEach((input) => {
-        input.addEventListener("change", () => {
-          saveInputs();
-          this._rerenderRubricSection();
-        });
+    document.querySelectorAll('.lvl-input[data-field="color"]').forEach((input) => {
+      input.addEventListener("change", () => {
+        saveInputs();
+        this._rerenderRubricSection();
       });
+    });
 
-    document
-      .querySelectorAll('.lvl-input[data-field="score"]')
-      .forEach((input) => {
-        input.addEventListener("change", () => {
-          saveInputs();
-          this._rerenderRubricSection();
-        });
+    document.querySelectorAll('.lvl-input[data-field="score"]').forEach((input) => {
+      input.addEventListener("change", () => {
+        saveInputs();
+        this._rerenderRubricSection();
       });
+    });
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -1328,9 +1290,7 @@ export default class CreateEvent {
     }
 
     // Setup listeners
-    document
-      .getElementById("ce-submit-btn")
-      ?.addEventListener("click", () => this._handleSubmit());
+    document.getElementById("ce-submit-btn")?.addEventListener("click", () => this._handleSubmit());
     document
       .getElementById("ce-back-btn")
       ?.addEventListener("click", () => this.router.navigate("events"));
@@ -1365,8 +1325,7 @@ export default class CreateEvent {
 
       const preferredOrg = this.selectedGithubOrg;
       this.selectedGithubOrg =
-        preferredOrg &&
-          this.githubOrgs.some((org) => org.login === preferredOrg)
+        preferredOrg && this.githubOrgs.some((org) => org.login === preferredOrg)
           ? preferredOrg
           : this.githubOrgs[0].login;
       picker.innerHTML = `
@@ -1396,17 +1355,13 @@ export default class CreateEvent {
       try {
         const urlData = await getGithubAuthUrl();
         authUrl = urlData?.url ?? urlData ?? "#";
-      } catch (_) { }
+      } catch (_) {}
 
-      toast.warning(
-        t("createEvent.githubRequiredTitle"),
-        t("createEvent.githubRequiredMsg"),
-      );
+      toast.warning(t("createEvent.githubRequiredTitle"), t("createEvent.githubRequiredMsg"));
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.title =
-          t("createEvent.connectGithub") ?? "Connect GitHub first";
+        submitBtn.title = t("createEvent.connectGithub") ?? "Connect GitHub first";
       }
     }
   }
@@ -1417,12 +1372,12 @@ export default class CreateEvent {
     btn.disabled = on;
     btn.innerHTML = on
       ? `<span class="spinner-border spinner-border-sm me-2"></span> ${this.isEdit ? (t("createEvent.saving") ?? "Saving…") : (t("noTeam.creating") ?? "Creating…")}`
-      : (this.isEdit
+      : this.isEdit
         ? (t("createEvent.updateBtn") ?? "Save Changes")
-        : (t("createEvent.createBtn") ?? "Create Event"));
+        : (t("createEvent.createBtn") ?? "Create Event");
   }
 
-  _clearFeedback() { }
+  _clearFeedback() {}
   _showError(msg) {
     toast.error(t("common.errorTitle"), msg);
   }

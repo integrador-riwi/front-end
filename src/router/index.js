@@ -21,6 +21,7 @@ import PublicProfileView from "../views/PublicProfileView.js";
 import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import UsersAdminView from "../views/UsersAdminView.js";
 import GradesAuditView from "../views/GradesAuditView.js";
+import ReactShellView from "../views/ReactShellView.js";
 import { getMyTeams } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
@@ -62,6 +63,7 @@ const ROUTE_PERMISSIONS = {
   ],
   ranking: ["ADMIN", "STAFF"],
   gradesAudit: ["ADMIN"],
+  reactShell: ["ADMIN", "STAFF"],
   users: ["ADMIN"],
   qr: ["ADMIN"],
   coderEventSelect: [
@@ -168,6 +170,11 @@ class App {
     if (path.startsWith("/profile/")) {
       const userId = path.split("/")[2];
       this.navigate("publicProfile", { userId });
+      return;
+    }
+
+    if (path === "/react-shell") {
+      this.navigate("reactShell", { source: "direct-url" });
       return;
     }
 
@@ -387,6 +394,10 @@ class App {
 
       case "gradesAudit":
         this.currentView = new GradesAuditView(this);
+        break;
+
+      case "reactShell":
+        this.currentView = new ReactShellView(this, params);
         break;
 
       case "qr":
