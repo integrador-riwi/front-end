@@ -1,5 +1,5 @@
 import { clearStoredSession, saveSession } from "../utils/auth.js";
-import { loginUser } from "../services/api.js";
+import { getOrbitaLoginUrl, loginUser } from "../services/api.js";
 import { renderErrorBox } from "../utils/helpers.js";
 import { toast } from "../components/Toast/index.js";
 import { t, onLangChange } from "../utils/i18n.js";
@@ -12,6 +12,12 @@ export default class LoginView {
     this.password = "";
     this.error = "";
     this.loading = false;
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (error === "role_assignment_pending") {
+      this.error = "Tu identidad fue verificada, pero todavía necesitas que te asignen un rol de TeamUp en Órbita.";
+    } else if (error === "orbita_sso_failed") {
+      this.error = "No fue posible completar el acceso con Órbita. Intenta nuevamente o contacta a un administrador.";
+    }
   }
 
   render() {
@@ -55,6 +61,11 @@ export default class LoginView {
             </header>
 
             ${renderErrorBox(this.error)}
+
+            <button type="button" class="btn btn-submit btn-orbita w-100 mb-3" id="orbitaLoginBtn">
+              Continuar con Órbita
+            </button>
+            <div class="login-divider"><span>Acceso local temporal</span></div>
 
             <form id="loginForm" novalidate>
 
@@ -124,6 +135,9 @@ export default class LoginView {
     const form = document.getElementById("loginForm");
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
+    document.getElementById("orbitaLoginBtn")?.addEventListener("click", () => {
+      window.location.assign(getOrbitaLoginUrl());
+    });
 
     emailInput.addEventListener("input", (e) => {
       this.email = e.target.value;

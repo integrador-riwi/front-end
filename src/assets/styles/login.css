@@ -221,6 +221,28 @@
   color: var(--text-muted);
 }
 
+.btn-orbita {
+  min-height: 46px;
+  font-weight: 700;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.25rem 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(107, 92, 255, 0.18);
+}
+
 /* Error box */
 .error-box {
   display: flex;
@@ -392,4 +414,3 @@
     transform: rotate(360deg);
   }
 }
-

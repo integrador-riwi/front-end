@@ -115,6 +115,7 @@ export default class UsersAdminView {
       clan: "",
       isActive: "",
       github: "",
+      identitySource: "",
       event: "",
       teamStatus: "",
     };
@@ -396,6 +397,7 @@ export default class UsersAdminView {
       this.filters.clan ||
       this.filters.isActive ||
       this.filters.github ||
+      this.filters.identitySource ||
       this.filters.search ||
       this.filters.event ||
       this.filters.teamStatus;
@@ -430,6 +432,12 @@ export default class UsersAdminView {
             <option value="">Todos (GitHub)</option>
             <option value="linked" ${this.filters.github === "linked" ? "selected" : ""}>Con GitHub</option>
             <option value="unlinked" ${this.filters.github === "unlinked" ? "selected" : ""}>Sin GitHub</option>
+          </select>
+          <select id="identityFilter" class="ua-control ua-select" aria-label="Filtrar por origen de identidad">
+            <option value="">Todas las identidades</option>
+            <option value="local" ${this.filters.identitySource === "local" ? "selected" : ""}>Local</option>
+            <option value="linked" ${this.filters.identitySource === "linked" ? "selected" : ""}>Vinculado</option>
+            <option value="sso" ${this.filters.identitySource === "sso" ? "selected" : ""}>SSO</option>
           </select>
           <span class="ua-count">${t("usersAdmin.results", { count })}</span>
           ${
@@ -561,6 +569,7 @@ export default class UsersAdminView {
             <div class="ua-user-info">
               <strong>${escapeHtml(user.name)}</strong>
               <span>${escapeHtml(user.email)}</span>
+              <small class="ua-identity-badge">${user.identity_source === "sso" ? "SSO" : user.identity_source === "linked" ? "Vinculado" : "Local"}${user.orbita_last_sync_at ? ` · ${escapeHtml(new Date(user.orbita_last_sync_at).toLocaleDateString())}` : ""}</small>
               <small class="${user.github_username ? "ua-github-user" : "ua-github-missing"}">
                 ${escapeHtml(githubUsername)}
               </small>
@@ -578,7 +587,7 @@ export default class UsersAdminView {
           <div class="ua-row-actions">
             <button class="ua-icon-btn" data-action="send" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.send")}">${actionIcons.mail}</button>
             <button class="ua-icon-btn" data-action="edit" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.edit")}">${icons.edit()}</button>
-            <button class="ua-icon-btn" data-action="password" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.password")}">${actionIcons.lock}</button>
+            <button class="ua-icon-btn" data-action="password" data-userid="${userId}" type="button" title="${user.orbita_user_id ? "Administrado por Órbita" : t("usersAdmin.actions.password")}" ${user.orbita_user_id ? "disabled" : ""}>${actionIcons.lock}</button>
             <button class="ua-icon-btn ua-icon-danger" data-action="delete" data-userid="${userId}" type="button" title="${t("usersAdmin.actions.delete")}">${actionIcons.trash}</button>
           </div>
         </td>
@@ -707,9 +716,10 @@ export default class UsersAdminView {
             </div>
             <div class="ua-form-grid">
               <label class="ua-label">${t("usersAdmin.form.role")}
-                <select class="ua-field ua-select" name="role">
+                <select class="ua-field ua-select" name="role" ${user?.orbita_user_id ? "disabled" : ""}>
                   ${ROLES.map((role) => `<option value="${role.value}" ${(user?.role || "CODER") === role.value ? "selected" : ""}>${roleLabel(role.value)}</option>`).join("")}
                 </select>
+                ${user?.orbita_user_id ? '<small class="ua-muted">Administrado por Órbita</small>' : ""}
               </label>
               <label class="ua-label">${t("usersAdmin.form.clan")}
                 ${
@@ -813,6 +823,10 @@ export default class UsersAdminView {
       this.filters.github = event.target.value;
       this.paint();
     });
+    document.getElementById("identityFilter")?.addEventListener("change", (event) => {
+      this.filters.identitySource = event.target.value;
+      this.paint();
+    });
     document.getElementById("eventFilter")?.addEventListener("change", (event) => {
       this.filters.event = event.target.value;
       this.filters.teamStatus = "";
@@ -838,6 +852,7 @@ export default class UsersAdminView {
         clan: "",
         isActive: "",
         github: "",
+        identitySource: "",
         event: "",
         teamStatus: "",
       };
@@ -1240,6 +1255,7 @@ export default class UsersAdminView {
         !this.filters.github ||
         (this.filters.github === "linked" && hasGithub) ||
         (this.filters.github === "unlinked" && !hasGithub);
+      const matchesIdentity = !this.filters.identitySource || user.identity_source === this.filters.identitySource;
 
       // Team-membership filter (requires a selected event)
       let matchesTeamStatus = true;
@@ -1262,6 +1278,7 @@ export default class UsersAdminView {
         matchesClan &&
         matchesStatus &&
         matchesGithub &&
+        matchesIdentity &&
         matchesTeamStatus
       );
     });

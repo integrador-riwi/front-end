@@ -1173,3 +1173,15 @@
     width: 100%;
   }
 }
+.ua-identity-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.2rem;
+  color: #6254d9;
+  font-weight: 600;
+}
+
+.ua-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}

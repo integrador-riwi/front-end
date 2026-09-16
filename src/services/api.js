@@ -5,6 +5,8 @@ const API_BASE_URL = normalizeServiceUrl(
   "https://team-up-production-c533.up.railway.app/api"
 );
 
+export const getOrbitaLoginUrl = () => `${API_BASE_URL}/auth/orbita/login`;
+
 const CSRF_COOKIE_NAME = "teamup_csrf";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -169,9 +171,16 @@ export async function apiFetch(endpoint, options = {}) {
         return apiFetch(endpoint, options);
 
       } catch (refreshError) {
+        let shouldReenterOrbita = false;
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+          shouldReenterOrbita = currentUser?.identity_source && currentUser.identity_source !== "local";
+        } catch {
+          shouldReenterOrbita = false;
+        }
         await clearClientSession();
         if (!suppressAuthRedirect) {
-          window.location.href = "/";
+          window.location.href = shouldReenterOrbita ? getOrbitaLoginUrl() : "/login";
         }
         throw refreshError;
       }

@@ -185,6 +185,11 @@ class App {
     }
 
     const params = new URLSearchParams(window.location.search);
+    const authError = params.get("error");
+    if (authError === "role_assignment_pending" || authError === "orbita_sso_failed") {
+      this.navigate("login");
+      return;
+    }
     const githubSuccess = params.get("github");
     const githubError = params.get("error");
 

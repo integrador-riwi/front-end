@@ -44,13 +44,16 @@ export const getCurrentUser = () => {
 };
 
 export const logout = async (router) => {
+  let centralLogoutUrl = null;
   try {
     const { logoutUser } = await import("../services/api.js");
-    await logoutUser();
+    const response = await logoutUser();
+    centralLogoutUrl = response?.data?.logoutUrl || null;
   } catch {
     // La sesión local se limpia incluso si la cookie ya expiró o la red falla.
   } finally {
     clearSession(router);
+    if (centralLogoutUrl) window.location.assign(centralLogoutUrl);
   }
 };
 
