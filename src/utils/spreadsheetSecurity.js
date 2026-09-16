@@ -1,4 +1,4 @@
-const SPREADSHEET_EXTENSIONS = [".xlsx", ".xls"];
+const SPREADSHEET_EXTENSIONS = [".xlsx"];
 const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export const MAX_SPREADSHEET_BYTES = 5 * 1024 * 1024;

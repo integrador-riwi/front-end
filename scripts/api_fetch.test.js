@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 function installBrowserMocks() {
   globalThis.localStorage = {
+    getItem() { return null; },
     removeItem() {},
   };
   globalThis.document = {
@@ -41,6 +42,16 @@ test("apiFetch converts request timeout into timeout error", async () => {
       return true;
     },
   );
+});
+
+test("session recovery reenters Orbita only for linked and SSO identities", async () => {
+  installBrowserMocks();
+  const { getOrbitaLoginUrl, getSessionRecoveryUrl } = await import("../src/services/api.js");
+
+  assert.equal(getSessionRecoveryUrl({ identity_source: "sso" }), getOrbitaLoginUrl());
+  assert.equal(getSessionRecoveryUrl({ identity_source: "linked" }), getOrbitaLoginUrl());
+  assert.equal(getSessionRecoveryUrl({ identity_source: "local" }), "/login");
+  assert.equal(getSessionRecoveryUrl(null), "/login");
 });
 
 test("apiFetch distinguishes caller cancellation from timeout", async () => {

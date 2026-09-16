@@ -22,7 +22,7 @@ import TeamDetailView from "../views/TeamDetailView.js"; // ← NUEVO
 import UsersAdminView from "../views/UsersAdminView.js";
 import GradesAuditView from "../views/GradesAuditView.js";
 import ReactShellView from "../views/ReactShellView.js";
-import { getMyTeams } from "../services/api.js";
+import { getMyTeams, getSessionRecoveryUrl } from "../services/api.js";
 import { getCurrentUser } from "../utils/helpers.js";
 import PublicVotingPage from "../views/PublicVotingPage.js";
 import FinalistsView from "../views/Finalists.js";
@@ -219,6 +219,9 @@ class App {
       return;
     }
 
+    // Conservar el origen antes de que apiFetch limpie una sesión expirada.
+    const previousUser = getCurrentUser();
+
     // Verificar si existe sesión válida en cookies HttpOnly o access token en memoria.
     try {
       const { getMe } = await import("../services/api.js");
@@ -249,6 +252,10 @@ class App {
 
       this.navigate(this.getHomeRoute());
     } catch (err) {
+      if (previousUser?.identity_source && previousUser.identity_source !== "local") {
+        window.location.assign(getSessionRecoveryUrl(previousUser));
+        return;
+      }
       this.navigate("landing");
     }
   }

@@ -16,7 +16,7 @@ import {
   updateEventRubric,
 } from "../services/api-events.js";
 import { toast } from "../components/Toast/index.js";
-import * as XLSX from "xlsx";
+import { readWorkbookRows } from "../utils/excel.js";
 import {
   assertSafeSpreadsheetFile,
   sanitizeSpreadsheetRows,
@@ -658,17 +658,11 @@ export default class CreateEvent {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        let sheetData = [];
+        const sheetData = await readWorkbookRows(e.target.result);
 
-        for (const sn of workbook.SheetNames) {
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {
-            header: 1,
-            defval: "",
-          });
+        for (const rows of sheetData) {
           const safeRows = sanitizeSpreadsheetRows(rows);
           for (let i = 0; i < Math.min(safeRows.length, 15); i++) {
             const row = safeRows[i].map((c) =>
@@ -921,7 +915,7 @@ export default class CreateEvent {
                 <button class="btn btn-outline-primary" type="button" id="btn-download-tpl">Download Template (.xlsx)</button>
                 <label class="btn btn-primary" style="cursor: pointer;">
                   Select File
-                  <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;">
+                  <input type="file" id="excel-upload-input" accept=".xlsx" style="display: none;">
                 </label>
               </div>
             </div>

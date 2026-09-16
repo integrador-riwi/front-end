@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import { readFirstWorksheetObjects } from "../utils/excel.js";
 import Navbar from "../components/navbar/navbar.js";
 import {
   createUser,
@@ -634,7 +634,7 @@ export default class UsersAdminView {
           <span>${t("usersAdmin.import.expectedColumns")}</span>
           <strong>${t("usersAdmin.import.columns")}</strong>
         </div>
-        <input id="xlsxInput" type="file" accept=".xlsx,.xls" hidden>
+        <input id="xlsxInput" type="file" accept=".xlsx" hidden>
         <button class="ua-btn ua-btn-secondary ua-full" id="chooseXlsxBtn" type="button">
           <span class="ua-btn-icon">${icons.upload()}</span>
           ${t("usersAdmin.import.chooseFile")}
@@ -1117,9 +1117,7 @@ export default class UsersAdminView {
     try {
       assertSafeSpreadsheetFile(file);
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = sanitizeSpreadsheetRows(XLSX.utils.sheet_to_json(sheet, { defval: "" }));
+      const rows = sanitizeSpreadsheetRows(await readFirstWorksheetObjects(buffer));
       this.importRows = this.normalizeImportRows(rows);
       this.paint();
     } catch (error) {

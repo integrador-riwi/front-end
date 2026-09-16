@@ -24,6 +24,15 @@ describe("spreadsheetSecurity", () => {
     ).toThrow("Unsupported spreadsheet file type");
   });
 
+  it("rejects legacy XLS files unsupported by the safe reader", () => {
+    expect(() =>
+      assertSafeSpreadsheetFile({
+        name: "usuarios.xls",
+        size: 128,
+      }),
+    ).toThrow("Unsupported spreadsheet file type");
+  });
+
   it("rejects spreadsheets over the size limit before parsing", () => {
     expect(() =>
       assertSafeSpreadsheetFile({

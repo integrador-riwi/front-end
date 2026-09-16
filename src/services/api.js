@@ -7,6 +7,11 @@ const API_BASE_URL = normalizeServiceUrl(
 
 export const getOrbitaLoginUrl = () => `${API_BASE_URL}/auth/orbita/login`;
 
+export const getSessionRecoveryUrl = (user) =>
+  user?.identity_source && user.identity_source !== "local"
+    ? getOrbitaLoginUrl()
+    : "/login";
+
 const CSRF_COOKIE_NAME = "teamup_csrf";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -171,16 +176,16 @@ export async function apiFetch(endpoint, options = {}) {
         return apiFetch(endpoint, options);
 
       } catch (refreshError) {
-        let shouldReenterOrbita = false;
+        let currentUser = null;
         try {
-          const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-          shouldReenterOrbita = currentUser?.identity_source && currentUser.identity_source !== "local";
+          currentUser = JSON.parse(localStorage.getItem("user") || "null");
         } catch {
-          shouldReenterOrbita = false;
+          currentUser = null;
         }
+        const recoveryUrl = getSessionRecoveryUrl(currentUser);
         await clearClientSession();
         if (!suppressAuthRedirect) {
-          window.location.href = shouldReenterOrbita ? getOrbitaLoginUrl() : "/login";
+          window.location.href = recoveryUrl;
         }
         throw refreshError;
       }

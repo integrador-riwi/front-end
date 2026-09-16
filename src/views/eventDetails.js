@@ -1,6 +1,6 @@
 import Navbar from "../components/navbar/navbar.js";
 import Header from "../components/header/header-config.js";
-import * as XLSX from "xlsx";
+import { downloadWorkbook } from "../utils/excel.js";
 import { getEventById } from "../services/api-events.js";
 import { apiFetch } from "../services/api.js";
 import { getUser } from "../utils/auth.js";
@@ -207,7 +207,7 @@ export default class EventDetails {
           toast.info(t("dashboard.reportEmptyTitle"), t("dashboard.reportEmptyMsg"));
           return;
         }
-        this.downloadTeamsExcel(teams);
+        await this.downloadTeamsExcel(teams);
         toast.success(t("dashboard.excelReadyTitle"), t("dashboard.excelReadyMsg"));
       } catch (err) {
         console.error("Teams Excel report error:", err);
@@ -250,8 +250,7 @@ export default class EventDetails {
     return teams;
   }
 
-  downloadTeamsExcel(teams) {
-    const workbook = XLSX.utils.book_new();
+  async downloadTeamsExcel(teams) {
     const sortedTeams = [...teams].sort((a, b) =>
       String(a.name ?? "").localeCompare(String(b.name ?? ""), "es", { sensitivity: "base" }),
     );
@@ -281,30 +280,17 @@ export default class EventDetails {
       };
     });
 
-    const teamsSheet = XLSX.utils.json_to_sheet(teamsRows);
-    teamsSheet["!cols"] = [
-      { wch: 6 },
-      { wch: 10 },
-      { wch: 28 },
-      { wch: 60 },
-      { wch: 18 },
-      { wch: 60 },
-      { wch: 28 },
-      { wch: 36 },
-      { wch: 14 },
-      { wch: 22 },
-    ];
-
-    XLSX.utils.book_append_sheet(workbook, teamsSheet, "Equipos");
-    workbook.Props = {
-      Title: `Reporte de equipos - ${eventName} - ${createdDate}`,
-      Subject: "Reporte de equipos por evento",
-      Author: "TeamUp",
-      Company: "TeamUp",
-      CreatedDate: createdAt,
-    };
-
-    XLSX.writeFile(workbook, `${this.fileSafeName(`reporte-equipos-${eventName}-${createdDate}`)}.xlsx`);
+    await downloadWorkbook({
+      rows: teamsRows,
+      sheetName: "Equipos",
+      fileName: `${this.fileSafeName(`reporte-equipos-${eventName}-${createdDate}`)}.xlsx`,
+      widths: [6, 10, 28, 60, 18, 60, 28, 36, 14, 22],
+      properties: {
+        title: `Reporte de equipos - ${eventName} - ${createdDate}`,
+        subject: "Reporte de equipos por evento",
+        createdAt,
+      },
+    });
   }
 
   teamMemberCount(team) {
