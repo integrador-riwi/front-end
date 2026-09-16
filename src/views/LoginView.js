@@ -63,7 +63,8 @@ export default class LoginView {
             ${renderErrorBox(this.error)}
 
             <button type="button" class="btn btn-submit btn-orbita w-100 mb-3" id="orbitaLoginBtn">
-              Continuar con Órbita
+              <img class="btn-orbita__logo" src="/orbita-mark.svg" alt="" aria-hidden="true" />
+              <span class="btn-orbita__label">Continuar con Órbita</span>
             </button>
             <div class="login-divider"><span>Acceso local temporal</span></div>
 
